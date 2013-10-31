@@ -3,33 +3,26 @@
 {% block title %}Modelr Dashboard{% endblock %}
 {% block content %}
 
-<div class="container">
-<!-- List of scenarios -->
+<div class="row">
 
-<h3>Scenarios</h3>
+  <div class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Welcome</h3>
+      </div>
+      <div class="panel-body">
+<p><strong>Welcome to Modelr!</strong> To get started, make some rocks using the form on the right. Then make a scenario in the box below.</p>
+<p>Have fun!</p>
+      </div>
+    </div>
+  </div>
 
-<ul>
-{% for scenario in scenarios %}
-
-    <form name="input" action="remove_scenario" method="get">
-    <input type="hidden" name="name" value="{{scenario.name}}" />
-    <li><a href='/scenario#{{scenario.name}}'>{{scenario.name}}</a> <input type="submit" value="remove" /></li>
-    </form>
-
-{% endfor %}
-</ul>
-
-<!-- Add a new scenario -->
-<a href="scenario">new scenario</a>
-
-
-</div>
-
-<div class="container">
-<!--  List of rocks. -->
-
-<h3>Rocks</h3>
-
+  <div class="col-md-8">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Rocks</h3>
+      </div>
+      <div class="panel-body">
 <ul>
 {% for rock in rocks %}
 
@@ -40,10 +33,43 @@
 
 {% endfor %}
 </ul>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<div class="container">
-<h3>Add Rock</h3>
+
+
+<div class="row">
+
+  <div class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Scenarios</h3>
+      </div>
+      <div class="panel-body">
+        <ul>
+          {% for scenario in scenarios %}
+            <form name="input" action="remove_scenario" method="get">
+              <input type="hidden" name="name" value="{{scenario.name}}" />
+              <li>
+                <a href='/scenario#{{scenario.name}}'>{{scenario.name}}</a> <input type="submit" value="remove" />
+              </li>
+            </form>
+          {% endfor %}
+        </ul>
+        <a href="scenario">Make a new scenario</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Add rock</h3>
+      </div>
+      <div class="panel-body">
 <form name="input" action="add_rock" method="get">
 <table>
 <tr>
@@ -70,10 +96,15 @@
 </tr>
 </table>
 
-<input type="submit" value="add" />
+<input type="submit" value="add this rock" />
 
 </form>
+      </div>
+    </div>
+  </div>
+
 </div>
+
 
 {% endblock %}
 
