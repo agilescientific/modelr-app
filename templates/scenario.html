@@ -1,7 +1,11 @@
 {% extends "base_template.html" %} 
-{% block title %}Scenario{% endblock %} 
+{% block title %}Modelr &middot; Scenario{% endblock %} 
 
 {% block content %}
+
+<!-- JAVASCRIPT and DATA
+====================================================================================== -->
+
 <script type="text/javascript">
 <!-- 
 var host = '{{HOSTNAME}}';
@@ -44,15 +48,12 @@ var host = '{{HOSTNAME}}';
                 //may want to use $.trim in here
                 return $(this).val() == value; 
             }).attr('selected', true);
-            
-            
 
-            
         }
         
         // This is Specific to this display.
 	    server.update_img = function(scenario){
-	        
+	    
             var qs = scenario.qs();
 	        var url = server.hostname +'/plot.jpeg' + qs;
             var img = $('img#plot_image');
@@ -102,6 +103,8 @@ var host = '{{HOSTNAME}}';
 
 </datalist>
 
+<!-- SCENARIO PANEL
+====================================================================================== -->
 <div class="row">
 
   <div class="col-md-6">
@@ -109,50 +112,58 @@ var host = '{{HOSTNAME}}';
       <div class="panel-heading">
         <h3 class="panel-title">Scenario</h3>
       </div>
+      
       <div class="panel-body">
+      
+        <form class="form-horizontal" role="form">
+        
+          <div class="form-group">
+            <label for="scenario_name" class="col-sm-2 control-label">Scenario</label>
+            <div class="col-sm-6">
+              <input class="form-control" id='scenario_name' onchange="scenario.name = this.value;"></input>
+              <button class="btn btn-default" onclick="scenario.put()">
+                Save
+              </button>
+              <button class="btn btn-default" onclick="scenario.get()">
+                Load
+              </button>
+            </div>
+          </div>
 
-<form class="form-horizontal" role="form">
-  <div class="form-group">
-    <label for="scenario_name" class="col-sm-2 control-label">Scenario</label>
-    <div class="col-sm-6">
-<input class="form-control" id='scenario_name' onchange="scenario.name = this.value;"></input>
-<button class="btn btn-default" onclick="scenario.put()">
-Save
-</button>
-<button class="btn btn-default" onclick="scenario.get()">
-Load
-</button>
-</div>
-  </div>
-  <div class="form-group">
-    <label for="select_script" class="col-sm-2 control-label">Script</label>
-    <div class="col-sm-6">
-<select class="form-control" id="select_script"
-	onchange="scenario.set_current_script($(this).val(), scenario.arguments)">
-	<option>Please wait ... </option>
-</select>
-<div class="col-sm-4">
-<button class="btn btn-default" type="button" onclick="populate_scripts(server, 'select#select_script')">refresh</button>
-</div>
+          <div class="form-group">
+            <label for="select_script" class="col-sm-2 control-label">Script</label>
+            <div class="col-sm-6">
+              <select class="form-control" id="select_script" onchange="scenario.set_current_script($(this).val(), scenario.arguments)">
+              <option>Please wait... </option>
+              </select>
+              <div class="col-sm-4">
+                <button class="btn btn-default" type="button" onclick="populate_scripts(server, 'select#select_script')">
+                  refresh
+                </button>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Div to place the form into see Scenario.display and display_form functions-->
+          <div class="container" id="scenario_place">
+          </div>
+  
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-6">
+              <button class="btn btn-default" id='create_image' onclick="server.update_img(scenario)">
+                Create image
+              </button>
+            </div>
+          </div>
+
+        </form>
+
+      </div>  <!-- end of panel-body -->
     </div>
-  </div>
-
-    <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-6">
-<button class="btn btn-default" id='create_image' onclick="server.update_img(scenario)">Create Image</button>
-    </div>
-  </div>
-
-</form>
-
-  <!-- Div to place the form into see Scenario.display and display_form functions-->
-  <div id="scenario_place">
   </div>
   
-
-      </div>
-    </div>
-  </div>
+<!-- RESULT PANEL
+====================================================================================== -->
 
   <div class="col-md-6">
     <div class="panel panel-default">
@@ -160,14 +171,19 @@ Load
         <h3 class="panel-title">Result</h3>
       </div>
       <div class="panel-body">
-<!-- Updated by the  create_image button above-->
-<img class="img-thumbnail" id="plot_image" href="does_not_exist.jpeg" alt="Plot image"></img>
+
+        <img class="img-thumbnail" id="plot_image" href="does_not_exist.jpeg" alt="Plot image">
+          <!-- Updated by the  create_image button above-->
+        </img>
 
       </div>
     </div>
   </div>
 
 </div>
+
+<!-- URL PANEL
+====================================================================================== -->
 
 <div class="row">
   <div class="col-md-12">
@@ -176,8 +192,8 @@ Load
         <h3 class="panel-title">URL</h3>
       </div>
       <div class="panel-body">
-<!-- Create and display the image / see the user defined server.update_img -->
-<p id="image_link" style="font-size: 10px;">URL</p>
+        <!-- Create and display the image / see the user defined server.update_img -->
+        <p id="image_link" style="font-size: 10px;">URL</p>
       </div>
     </div>
   </div>

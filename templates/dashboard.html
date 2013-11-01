@@ -1,6 +1,6 @@
 {% extends "base_template.html" %}
 
-{% block title %}Modelr Dashboard{% endblock %}
+{% block title %}Modelr &middot; Dashboard{% endblock %}
 {% block content %}
 
 <div class="row">
@@ -11,8 +11,8 @@
         <h3 class="panel-title">Welcome</h3>
       </div>
       <div class="panel-body">
-<p><strong>Welcome to Modelr!</strong> To get started, make some rocks using the form on the right. Then make a scenario in the box below.</p>
-<p>Have fun!</p>
+        <p><strong>Welcome to Modelr!</strong> To get started, make some rocks using the form on the right. Then make a scenario in the box below.</p>
+        <p>Have fun!</p>
       </div>
     </div>
   </div>
@@ -23,7 +23,7 @@
         <h3 class="panel-title">Rocks</h3>
       </div>
       <div class="panel-body">
-      <table class="table">
+      <table class="table table-condensed table-hover">
         <thead>
           <tr>
             <th></th>
@@ -54,8 +54,6 @@
 
 </div>
 
-
-
 <div class="row">
 
   <div class="col-md-4">
@@ -64,16 +62,21 @@
         <h3 class="panel-title">Scenarios</h3>
       </div>
       <div class="panel-body">
-        <ul>
+      <table class="table table-condensed table-hover">
+        <tbody>
           {% for scenario in scenarios %}
-            <form name="input" action="remove_scenario" method="get">
-              <input type="hidden" name="name" value="{{scenario.name}}" />
-              <li>
-                <a href='/scenario#{{scenario.name}}'>{{scenario.name}}</a> <input type="submit" value="remove" />
-              </li>
+          
+          <tr>
+            <form class="form-horizontal" name="input" action="remove_scenario" method="get">
+            <input type="hidden" name="name" value="{{scenario.name}}" />
+            <td><stong><a href='/scenario#{{scenario.name}}'>{{scenario.name}}</a></strong></td>
+            <td>{{scenario.script}}</td>
+            <td><button class="btn btn-success btn-xs">&nbsp;edit&nbsp;</button>&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" value="remove" /></td>
             </form>
+          </tr>
           {% endfor %}
-        </ul>
+        </tbody>
+      </table>
         <a href="scenario">Make a new scenario</a>
       </div>
     </div>
@@ -90,14 +93,12 @@
 
 <form class="form-horizontal" role="form">
 
-  <p>
   <div class="form-group">
     <label for="name" class="col-sm-2 control-label">Name</label>
     <div class="col-sm-10">
       <input class="form-control" type="text" name="name" value="" placeholder=""/>
     </div>
   </div>
-  </p>
   
   <div class="form-group">
     <label for="description" class="col-sm-2 control-label">Description</label>

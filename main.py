@@ -124,8 +124,6 @@ class MainHandler(webapp2.RequestHandler):
 providers = {
     'Google'   : 'www.google.com/accounts/o8/id', # shorter alternative: "Gmail.com"
     'Yahoo'    : 'yahoo.com',
-    'MySpace'  : 'myspace.com',
-    'AOL'      : 'aol.com',
     'MyOpenID' : 'myopenid.com'
     # add more here
 }
@@ -296,7 +294,51 @@ class DashboardHandler(ModelrPageRequest):
         html = template.render(template_params)
 
         self.response.out.write(html)
+
+class AboutHandler(ModelrPageRequest):
+    def get(self):
+        user = self.require_login()
+        if not user:
+            return
             
+        template_params = self.get_base_params(user)
+        template = env.get_template('about.html')
+        html = template.render(template_params)
+        self.response.out.write(html)          
+                                    
+class PricingHandler(ModelrPageRequest):
+    def get(self):
+        user = self.require_login()
+        if not user:
+            return
+            
+        template_params = self.get_base_params(user)
+        template = env.get_template('pricing.html')
+        html = template.render(template_params)
+        self.response.out.write(html)        
+          
+class ProfileHandler(ModelrPageRequest):
+    def get(self):
+        user = self.require_login()
+        if not user:
+            return
+            
+        template_params = self.get_base_params(user)
+        template = env.get_template('profile.html')
+        html = template.render(template_params)
+        self.response.out.write(html)          
+                                    
+class SettingsHandler(ModelrPageRequest):
+    def get(self):
+        user = self.require_login()
+        if not user:
+            return
+            
+        template_params = self.get_base_params(user)
+        template = env.get_template('settings.html')
+        html = template.render(template_params)
+        self.response.out.write(html)          
+                                    
 #Create the web app
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
@@ -305,6 +347,10 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/scenario', ScenarioHandler),
                                ('/save_scenario', ModifyScenarioHandler),
                                ('/remove_scenario', RemoveScenarioHandler),
+                               ('/pricing', PricingHandler),
+                               ('/profile', ProfileHandler),
+                               ('/settings', SettingsHandler),
+                               ('/about', AboutHandler)
                                ],
                               debug=True)
 
