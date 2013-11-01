@@ -10,10 +10,7 @@ var host = '{{HOSTNAME}}';
 
 <script type="text/javascript">
 <!--
-    
-    
-    
-    
+
     $(document).ready(function() {
         
         server = new PlotServer(host, get_rocks('datalist#list_of_rocks'));
@@ -104,34 +101,96 @@ var host = '{{HOSTNAME}}';
 	{% endfor %}
 
 </datalist>
-<h3>Scenario</h3>
 
-<!-- Text box to put  the scenario name. -->
-Scenario Name: <input id='scenario_name' onchange="scenario.name = this.value;"></input><button onclick="scenario.put()">Save</button><button onclick="scenario.get()">Load</button>
-</br>
-</br>
+<div class="row">
 
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Scenario</h3>
+      </div>
+      <div class="panel-body">
 
-<!-- Drop box of scripts -->
-<select id="select_script"
+<form class="form-horizontal" role="form">
+  <div class="form-group">
+    <label for="inputEmail3" class="col-sm-2 control-label">Scenario</label>
+    <div class="col-sm-6">
+<input class="form-control" id='scenario_name' onchange="scenario.name = this.value;"></input>
+<button class="btn btn-default" onclick="scenario.put()">
+Save
+</button>
+<button class="btn btn-default" onclick="scenario.get()">
+Load
+</button>
+</div>
+  </div>
+  <div class="form-group">
+    <label for="inputPassword3" class="col-sm-2 control-label">Script</label>
+    <div class="col-sm-6">
+<select class="form-control" id="select_script"
 	onchange="scenario.set_current_script($(this).val(), scenario.arguments)">
 	<option>Please wait ... </option>
 </select>
+<div class="col-sm-offset-0 col-sm-6">
+<button class="btn btn-default" type="button" onclick="populate_scripts(server, 'select#select_script')">refresh</button>
+</div>
+    </div>
+  </div>
 
-<!-- Refresh the drop box -->
-<button type="button" onclick="populate_scripts(server, 'select#select_script')">refresh</button>
+  <!-- Div to place the form into see Scenario.display and display_form functions-->
+  <div id="scenario_place">
+  </div>
+  
+    <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-6">
+<button class="btn btn-default" id='create_image' onclick="server.update_img(scenario)">Create Image</button>
+    </div>
+  </div>
 
-<!-- Div to place the form into see Scenario.display and display_form functions-->
-<div id="scenario_place"></div>
+</form>
+      </div>
+    </div>
+  </div>
 
-<!-- Create and display the image / see the user defined server.update_img -->
-<button id='create_image' onclick="server.update_img(scenario)">Create Image</button>
-
-
-<p id="image_link">URL</p>
-
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Result</h3>
+      </div>
+      <div class="panel-body">
 <!-- Updated by the  create_image button above-->
-<img id="plot_image" href="does_not_exist.jpeg" alt="Plot image"></img>
+<img class="img-thumbnail" id="plot_image" href="does_not_exist.jpeg" alt="Plot image"></img>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">URL</h3>
+      </div>
+      <div class="panel-body">
+<!-- Create and display the image / see the user defined server.update_img -->
+<p id="image_link" style="font-size: 10px;">URL</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Text box to put  the scenario name.
+Scenario Name: <input id='scenario_name' onchange="scenario.name = this.value;"></input><button onclick="scenario.put()">Save</button><button onclick="scenario.get()">Load</button>
+</br>
+</br>
+-->
+
+
+
+
 
 
 {% endblock %}
