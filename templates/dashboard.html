@@ -23,16 +23,31 @@
         <h3 class="panel-title">Rocks</h3>
       </div>
       <div class="panel-body">
-<ul>
-{% for rock in rocks %}
-
-    <form name="input" action="remove_rock" method="get">
-    <input type="hidden" name="name" value="{{rock.name}}" />
-    <li>Name: {{rock.name}} rho={{rock.rho}} Vp={{rock.vp}} Vs={{rock.vs}} <input type="submit" value="remove" /></li>
-    </form>
-
-{% endfor %}
-</ul>
+      <table class="table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>V<sub>P</sub></th>
+            <th>V<sub>S</sub></th>
+            <th>Rho</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for rock in rocks %}
+          <tr>
+            <form class="form-horizontal" name="input" action="remove_rock" method="get">
+            <input type="hidden" name="name" value="{{rock.name}}" />
+            <td><stong>{{rock.name}}</strong></td>
+            <td>{{rock.vp}}</td>
+            <td>{{rock.vs}}</td>
+            <td>{{rock.rho}}</td>
+            <td><button class="btn btn-success btn-xs">&nbsp;edit&nbsp;</button>&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" value="remove" /></td>
+            </form>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
       </div>
     </div>
   </div>
@@ -71,34 +86,56 @@
       </div>
       <div class="panel-body">
 <form name="input" action="add_rock" method="get">
-<table>
-<tr>
-    <td>Name</td>
-    <td><input type="text" name="name" value="rock" /></td>
-</tr>
-<tr>
-    <td>Description</td>
-    <td><input type="text" name="description" value="" /></td>
-</tr>
-<tr>
-    <td>Rho</td>
-    <td><input type="number" name="rho" value="" /></td>
-</tr>
 
-<tr>
-    <td>Vp</td>
-    <td><input type="number" name="vp" value="" /></td>
-</tr>
 
-<tr>
-    <td>Vs</td>
-    <td><input type="number" name="vs" value="" /></td>
-</tr>
-</table>
+<form class="form-horizontal" role="form">
 
-<input type="submit" value="add this rock" />
+  <p>
+  <div class="form-group">
+    <label for="name" class="col-sm-2 control-label">Name</label>
+    <div class="col-sm-10">
+      <input class="form-control" type="text" name="name" value="" placeholder=""/>
+    </div>
+  </div>
+  </p>
+  
+  <div class="form-group">
+    <label for="description" class="col-sm-2 control-label">Description</label>
+    <div class="col-sm-10">
+      <input class="form-control" type="text" name="description" value="" />
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="description" class="col-sm-2 control-label">Rho</label>
+    <div class="col-sm-10">
+      <input class="form-control" type="text" name="rho" value="" />
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="description" class="col-sm-2 control-label">V<sub>P</sub></label>
+    <div class="col-sm-10">
+      <input class="form-control" type="text" name="vp" value="" />
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="description" class="col-sm-2 control-label">V<sub>S</sub></label>
+    <div class="col-sm-10">
+      <input class="form-control" type="text" name="vs" value="" />
+    </div>
+  </div>
+  
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-default">Add this rock</button>
+    </div>
+  </div>
 
 </form>
+
+
       </div>
     </div>
   </div>

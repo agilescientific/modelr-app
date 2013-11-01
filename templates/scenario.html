@@ -113,7 +113,7 @@ var host = '{{HOSTNAME}}';
 
 <form class="form-horizontal" role="form">
   <div class="form-group">
-    <label for="inputEmail3" class="col-sm-2 control-label">Scenario</label>
+    <label for="scenario_name" class="col-sm-2 control-label">Scenario</label>
     <div class="col-sm-6">
 <input class="form-control" id='scenario_name' onchange="scenario.name = this.value;"></input>
 <button class="btn btn-default" onclick="scenario.put()">
@@ -125,22 +125,18 @@ Load
 </div>
   </div>
   <div class="form-group">
-    <label for="inputPassword3" class="col-sm-2 control-label">Script</label>
+    <label for="select_script" class="col-sm-2 control-label">Script</label>
     <div class="col-sm-6">
 <select class="form-control" id="select_script"
 	onchange="scenario.set_current_script($(this).val(), scenario.arguments)">
 	<option>Please wait ... </option>
 </select>
-<div class="col-sm-offset-0 col-sm-6">
+<div class="col-sm-4">
 <button class="btn btn-default" type="button" onclick="populate_scripts(server, 'select#select_script')">refresh</button>
 </div>
     </div>
   </div>
 
-  <!-- Div to place the form into see Scenario.display and display_form functions-->
-  <div id="scenario_place">
-  </div>
-  
     <div class="form-group">
     <div class="col-sm-offset-2 col-sm-6">
 <button class="btn btn-default" id='create_image' onclick="server.update_img(scenario)">Create Image</button>
@@ -148,6 +144,12 @@ Load
   </div>
 
 </form>
+
+  <!-- Div to place the form into see Scenario.display and display_form functions-->
+  <div id="scenario_place">
+  </div>
+  
+
       </div>
     </div>
   </div>
@@ -180,17 +182,5 @@ Load
     </div>
   </div>
 </div>
-
-
-<!-- Text box to put  the scenario name.
-Scenario Name: <input id='scenario_name' onchange="scenario.name = this.value;"></input><button onclick="scenario.put()">Save</button><button onclick="scenario.get()">Load</button>
-</br>
-</br>
--->
-
-
-
-
-
 
 {% endblock %}
