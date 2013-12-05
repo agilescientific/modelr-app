@@ -68,7 +68,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
     
     #For the plot server
     # Ideally this should be settable by an admin console.
-    HOSTNAME = 'http://server.modelr.org:8080'
+    HOSTNAME = 'http://server.modelr.org:8081'
     
     def rocks(self):
         '''
@@ -114,12 +114,21 @@ class ModelrPageRequest(webapp2.RequestHandler):
         return user
 
 
-class MainHandler(webapp2.RequestHandler):
+class MainHandler(ModelrPageRequest):
     '''
     main page
     '''
     def get(self):
-        self.redirect('/dashboard')
+        
+        user = self.require_login()
+        if not user:
+            return
+
+        template_params = self.get_base_params(user)
+        template = env.get_template('index.html')
+        html = template.render(template_params)
+
+        self.response.out.write(html)
 
 providers = {
     'Google'   : 'www.google.com/accounts/o8/id', # shorter alternative: "Gmail.com"
@@ -346,6 +355,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/remove_rock', RemoveRockHandler),
                                ('/scenario', ScenarioHandler),
                                ('/save_scenario', ModifyScenarioHandler),
+                               ('/edit_scenario', ModifyScenarioHandler),
                                ('/remove_scenario', RemoveScenarioHandler),
                                ('/pricing', PricingHandler),
                                ('/profile', ProfileHandler),
