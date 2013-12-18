@@ -120,10 +120,7 @@ class MainHandler(ModelrPageRequest):
     '''
     def get(self):
         
-        user = self.require_login()
-        if not user:
-            return
-
+        user = users.get_current_user()
         template_params = self.get_base_params(user)
         template = env.get_template('index.html')
         html = template.render(template_params)
@@ -306,10 +303,7 @@ class DashboardHandler(ModelrPageRequest):
 
 class AboutHandler(ModelrPageRequest):
     def get(self):
-        user = self.require_login()
-        if not user:
-            return
-            
+        user = users.get_current_user()
         template_params = self.get_base_params(user)
         template = env.get_template('about.html')
         html = template.render(template_params)
@@ -317,14 +311,11 @@ class AboutHandler(ModelrPageRequest):
                                     
 class PricingHandler(ModelrPageRequest):
     def get(self):
-        user = self.require_login()
-        if not user:
-            return
-            
+        user = users.get_current_user()
         template_params = self.get_base_params(user)
         template = env.get_template('pricing.html')
         html = template.render(template_params)
-        self.response.out.write(html)        
+        self.response.out.write(html)          
           
 class ProfileHandler(ModelrPageRequest):
     def get(self):
