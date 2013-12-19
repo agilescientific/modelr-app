@@ -97,7 +97,7 @@ var host = '{{HOSTNAME}}';
 <!-- This list is used by javascript and not directly seen by the user -->
 <datalist id="list_of_rocks">
 	{% for rock in rocks %}
-	<option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}}"
+	<option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},{{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
 		data-name="{{rock.name}}">{{rock.name}}</option>
 	{% endfor %}
 
@@ -172,7 +172,7 @@ var host = '{{HOSTNAME}}';
       </div>
       <div class="panel-body">
 
-        <img class="img-thumbnail" id="plot_image" href="does_not_exist.jpeg" alt="Plot image">
+        <img class="img-thumbnail" id="plot_image" href=URL alt="Plot image">
           <!-- Updated by the  create_image button above-->
         </img>
 

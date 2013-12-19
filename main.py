@@ -7,15 +7,18 @@
 from google.appengine.api import users
 from google.appengine.ext import webapp as webapp2
 from google.appengine.ext import db
+from google.appengine.ext import ndb
 from google.appengine.ext.webapp.util import run_wsgi_app
 from jinja2 import Environment, FileSystemLoader
 from os.path import join, dirname
 import hashlib
 import logging
 import urllib
+import time
 
 # Jinja2 environment to load templates
-env = Environment(loader=FileSystemLoader(join(dirname(__file__), 'templates')))
+env = Environment(loader=FileSystemLoader(join(dirname(__file__),
+                                               'templates')))
 
 #===============================================================================
 # 
@@ -41,6 +44,9 @@ class Rock(db.Model):
     vp = db.FloatProperty()
     vs = db.FloatProperty()
     rho = db.FloatProperty()
+    vp_std = db.FloatProperty()
+    vs_std = db.FloatProperty()
+    rho_std = db.FloatProperty()
     
 #===============================================================================
 # 
@@ -74,6 +80,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
         '''
         return all the rocks this user has saved
         '''
+
         rocks = Rock.all()
         rocks.filter("user =", users.get_current_user())
         
@@ -226,11 +233,16 @@ class AddRockHandler(webapp2.RequestHandler):
         rock.vp = float(self.request.get('vp'))
         rock.vs = float(self.request.get('vs'))
         rock.rho = float(self.request.get('rho'))
-            
-        rock.put()
-        
-        self.redirect('/dashboard')
 
+        rock.vp_std = float(self.request.get('vp_std'))
+        rock.vs_std = float(self.request.get('vs_std'))
+        rock.rho_std = float(self.request.get('rho_std'))
+
+        rock.put()
+
+        self.redirect('/dashboard')
+    
+        
 class RemoveRockHandler(webapp2.RequestHandler):
     '''
     remove a rock by name.
@@ -245,6 +257,7 @@ class RemoveRockHandler(webapp2.RequestHandler):
         
         for rock in rocks:
             rock.delete()
+            
             
         self.redirect('/dashboard')
 
@@ -354,9 +367,12 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/add_rock', AddRockHandler),
                                ('/remove_rock', RemoveRockHandler),
                                ('/scenario', ScenarioHandler),
-                               ('/save_scenario', ModifyScenarioHandler),
-                               ('/edit_scenario', ModifyScenarioHandler),
-                               ('/remove_scenario', RemoveScenarioHandler),
+                               ('/save_scenario',
+                                  ModifyScenarioHandler),
+                               ('/edit_scenario',
+                                  ModifyScenarioHandler),
+                               ('/remove_scenario',
+                                  RemoveScenarioHandler),
                                ('/pricing', PricingHandler),
                                ('/profile', ProfileHandler),
                                ('/settings', SettingsHandler),
