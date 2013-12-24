@@ -74,7 +74,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
     
     #For the plot server
     # Ideally this should be settable by an admin console.
-    HOSTNAME = 'http://server.modelr.org:8081'
+    HOSTNAME = 'localhost:8080/'
     
     def rocks(self):
         '''
@@ -90,10 +90,15 @@ class ModelrPageRequest(webapp2.RequestHandler):
         '''
         get the default parameters used in base_template.html
         '''
+
+        default_rock = dict(vp=0,vs=0, rho=0, vp_std=0,
+                            rho_std=0, vs_std=0, description='description',
+                            name = 'name')
         params = dict(nickname=user.nickname() if user else '',
                       logout=users.create_logout_url(self.request.uri),
                       avatar=get_gravatar_url(user.email()) if user else 'No avatar',
-                      HOSTNAME=self.HOSTNAME)
+                      HOSTNAME=self.HOSTNAME,
+                      current_rock = default_rock)
         
         params.update(kwargs)
         
@@ -240,25 +245,54 @@ class AddRockHandler(webapp2.RequestHandler):
         self.redirect('/dashboard')
     
         
-class RemoveRockHandler(webapp2.RequestHandler):
+class ModifyRockHandler(ModelrPageRequest):
     '''
-    remove a rock by name.
+    remove a rock or modify it by name.
     '''
     def get(self):
-        name = self.request.get('name')
+
+        user = self.require_login()
+        if not user:
+            return
+        scenarios = Scenario.all()
+        scenarios.filter("user =", user)
+        scenarios.order("-date")
         
-        rocks = Rock.all()
-        rocks.filter("user =", users.get_current_user())
-        rocks.filter("name =", name)
-        rocks = rocks.fetch(100)
+        for s in scenarios.fetch(100):
+            logging.info((s.name, s))
+        all_rocks = Rock.all()
+        all_rocks.filter("user =", user)
+        selected_rock = Rock.all()
+        selected_rock.filter("user =", user)
+        selected_rock.filter("name =", self.request.get('name'))
+        print( 'test', self.request.get('name') )
+        template_params = self.get_base_params(user)
         
-        for rock in rocks:
-            rock.delete()
+        if( self.request.get('action') == 'remove' ):
+        
+            for rock in selected_rock.fetch(100):
+                rock.delete()
+
+            template_params.update(rocks=all_rocks.fetch(100),
+                                   scenarios=scenarios.fetch(100) )
+                 
+        else:
+            current_rock = selected_rock.fetch(100)
+            template_params.update(rocks=all_rocks.fetch(100),
+                                   scenarios=scenarios.fetch(100),
+                                   current_rock=current_rock[0]
+                                     )
+        
+        
+        
+        template = env.get_template('dashboard.html')
+        html = template.render(template_params)
+
+        self.response.out.write(html)
             
-            
-        self.redirect('/dashboard')
 
 
+    
 class ScenarioHandler(ModelrPageRequest):
     '''
     Display the scenario page (uses scenario.html template)
@@ -356,7 +390,7 @@ class SettingsHandler(ModelrPageRequest):
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
                                ('/add_rock', AddRockHandler),
-                               ('/remove_rock', RemoveRockHandler),
+                               ('/edit_rock', ModifyRockHandler),
                                ('/scenario', ScenarioHandler),
                                ('/save_scenario',
                                   ModifyScenarioHandler),

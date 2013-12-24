@@ -39,7 +39,7 @@
         <tbody>
         {% for rock in rocks %}
           <tr>
-            <form class="form-horizontal" name="input" action="remove_rock" method="get">
+            <form class="form-horizontal" name="input" action="edit_rock" method="get">
             <input type="hidden" name="name" value="{{rock.name}}" />
             <td><stong>{{rock.name}}</strong></td>
             <td>{{rock.vp}}</td>
@@ -49,7 +49,7 @@
             <td>{{rock.vs_std}}</td>
             <td>{{rock.rho_std}}</td>
 	    
-            <td><button class="btn btn-success btn-xs">&nbsp;edit&nbsp;</button>&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" value="remove" /></td>
+            <td><input class="btn btn-success btn-xs" type="submit" name="action" value="edit">&nbsp;&nbsp;&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" name="action" value="remove" /></td>
             </form>
           </tr>
           {% endfor %}
@@ -78,7 +78,7 @@
             <input type="hidden" name="name" value="{{scenario.name}}" />
             <td><stong><a href='/scenario#{{scenario.name}}'>{{scenario.name}}</a></strong></td>
             <td>{{scenario.script}}</td>
-            <td><button class="btn btn-success btn-xs">&nbsp;edit&nbsp;</button>&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" value="remove" /></td>
+            <td> <button class="btn btn-success btn-xs" type="submit" formaction="/scenario#{{scenario.name}}" > edit&nbsp;</button> &nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" value="remove" /></td>
             </form>
           </tr>
           {% endfor %}
@@ -103,56 +103,56 @@
   <div class="form-group">
     <label for="name" class="col-sm-2 control-label">Name</label>
     <div class="col-sm-10">
-      <input class="form-control" type="text" name="name" value="" placeholder=""/>
+      <input class="form-control" type="text" name="name" value={{current_rock.name}} placeholder=""/>
     </div>
   </div>
   
   <div class="form-group">
     <label for="description" class="col-sm-2 control-label">Description</label>
     <div class="col-sm-10">
-      <input class="form-control" type="text" name="description" value="" />
+      <input class="form-control" type="text" name="description" value={{current_rock.description}} />
     </div>
   </div>
 
   <div class="form-group">
     <label for="description" class="col-sm-2 control-label">Rho</label>
     <div class="col-sm-10">
-      <input class="form-control" type="text" name="rho" value="" />
+      <input class="form-control" type="text" name="rho" value={{current_rock.rho}} />
     </div>
   </div>
 
   <div class="form-group">
     <label for="description" class="col-sm-2 control-label">V<sub>P</sub></label>
     <div class="col-sm-10">
-      <input class="form-control" type="text" name="vp" value="" />
+      <input class="form-control" type="text" name="vp" value={{current_rock.vp}} />
     </div>
   </div>
 
   <div class="form-group">
     <label for="description" class="col-sm-2 control-label">V<sub>S</sub></label>
     <div class="col-sm-10">
-      <input class="form-control" type="text" name="vs" value="" />
+      <input class="form-control" type="text" name="vs" value={{current_rock.vs}}  />
     </div>
   </div>
 
   <div class="form-group">
     <label for="description" class="col-sm-2 control-label">Rho std</label>
     <div class="col-sm-10">
-      <input class="form-control" type="text" name="rho_std" value="0" />
+      <input class="form-control" type="text" name="rho_std" value={{current_rock.rho_std}} />
     </div>
   </div>
 
   <div class="form-group">
     <label for="description" class="col-sm-2 control-label">V<sub>P</sub> std</label>
     <div class="col-sm-10">
-      <input class="form-control" type="text" name="vp_std" value="0" />
+      <input class="form-control" type="text" name="vp_std" value={{current_rock.vp_std}} />
     </div>
   </div>
 
   <div class="form-group">
     <label for="description" class="col-sm-2 control-label">V<sub>S</sub> std</label>
     <div class="col-sm-10">
-      <input class="form-control" type="text" name="vs_std" value="0" />
+      <input class="form-control" type="text" name="vs_std" value={{current_rock.vs_std}} />
     </div>
   </div>
   
