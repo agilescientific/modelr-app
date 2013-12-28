@@ -16,7 +16,21 @@ indexes:
   - name: date
     direction: desc
 
+- kind: Rock
+  ancestor: yes
+  properties:
+  - name: user
+  - name: date
+    direction: desc
+
 - kind: Scenario
+  properties:
+  - name: user
+  - name: date
+    direction: desc
+
+- kind: Scenario
+  ancestor: yes
   properties:
   - name: user
   - name: date

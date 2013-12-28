@@ -53,6 +53,18 @@
             </form>
           </tr>
           {% endfor %}
+        {% for rock in default_rocks %}
+          <tr>
+            <input type="hidden" name="name" value="{{rock.name}}" />
+            <td><stong>{{rock.name}}</strong></td>
+            <td>{{rock.vp}}</td>
+            <td>{{rock.vs}}</td>
+            <td>{{rock.rho}}</td>
+	    <td>{{rock.vp_std}}</td>
+            <td>{{rock.vs_std}}</td>
+            <td>{{rock.rho_std}}</td>
+           </tr>
+           {% endfor %}
         </tbody>
       </table>
       </div>
@@ -84,7 +96,7 @@
           {% endfor %}
         </tbody>
       </table>
-        <a href="scenario">Make a new scenario</a>
+        <a href="scenario#">Make a new scenario</a>
       </div>
     </div>
   </div>

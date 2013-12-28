@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#
+# -*- coding: utf-8 -*-
 # modelr web app
 # Agile Geoscience
 # 2012-2013
@@ -15,6 +15,7 @@ import hashlib
 import logging
 import urllib
 import time
+from default_rocks import default_rocks
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
@@ -23,6 +24,8 @@ env = Environment(loader=FileSystemLoader(join(dirname(__file__),
 #===============================================================================
 # 
 #===============================================================================
+
+
 class Scenario(db.Model):
     '''
     Database of Scenarios 
@@ -47,7 +50,15 @@ class Rock(db.Model):
     vp_std = db.FloatProperty()
     vs_std = db.FloatProperty()
     rho_std = db.FloatProperty()
-    
+
+ancestor = Rock()
+ancestor.put()
+ancestor_key = ancestor.key()
+
+scen_ancestor = Scenario()
+scen_ancestor.put()
+scen_key = scen_ancestor.key()
+
 #===============================================================================
 # 
 #===============================================================================
@@ -73,8 +84,8 @@ class ModelrPageRequest(webapp2.RequestHandler):
     '''
     
     #For the plot server
-    # Ideally this should be settable by an admin console.
-    HOSTNAME = 'localhost:8080/'
+    # Ideally this should be settable by an admin_user console.
+    HOSTNAME = 'http://localhost:8081'
     
     def rocks(self):
         '''
@@ -82,6 +93,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
         '''
 
         rocks = Rock.all()
+        rocks.ancestor( ancestor )
         rocks.filter("user =", users.get_current_user())
         
         return rocks
@@ -96,7 +108,8 @@ class ModelrPageRequest(webapp2.RequestHandler):
                             name = 'name')
         params = dict(nickname=user.nickname() if user else '',
                       logout=users.create_logout_url(self.request.uri),
-                      avatar=get_gravatar_url(user.email()) if user else 'No avatar',
+                      avatar=get_gravatar_url(user.email()) \
+                       if user else 'No avatar',
                       HOSTNAME=self.HOSTNAME,
                       current_rock = default_rock)
         
@@ -154,6 +167,7 @@ class RemoveScenarioHandler(webapp2.RequestHandler):
         name = self.request.get('name')
         
         scenarios = Scenario.all()
+        scenarios.ancestor( scen_ancestor )
         scenarios.filter("user =", users.get_current_user())
         scenarios.filter("name =", name)
         scenarios = scenarios.fetch(100)
@@ -174,6 +188,7 @@ class ModifyScenarioHandler(webapp2.RequestHandler):
         name = self.request.get('name')
         
         scenarios = Scenario.all()
+        scenarios.ancestor( scen_ancestor )
         scenarios.filter("user =", users.get_current_user())
         scenarios.filter("name =", name)
         scenarios = scenarios.fetch(1)
@@ -200,13 +215,14 @@ class ModifyScenarioHandler(webapp2.RequestHandler):
         
         logging.info(data)
         scenarios = Scenario.all()
+        scenarios.ancestor( scen_ancestor )
         scenarios.filter("user =", user)
         scenarios.filter("name =", name)
         scenarios = scenarios.fetch(1)
         if scenarios:
             scenario = scenarios[0]
         else:
-            scenario = Scenario()
+            scenario = Scenario(parent=scen_ancestor)
             scenario.user = user
             scenario.name = name
             
@@ -221,6 +237,7 @@ class AddRockHandler(webapp2.RequestHandler):
         name = self.request.get('name')
         
         rocks = Rock.all()
+        rocks.ancestor( ancestor )
         rocks.filter("user =", users.get_current_user())
         rocks.filter("name =", name)
         rocks = rocks.fetch(1)
@@ -228,7 +245,7 @@ class AddRockHandler(webapp2.RequestHandler):
         if rocks:
             rock = rocks[0]
         else:
-            rock = Rock()
+            rock = Rock(parent=ancestor)
             rock.user = users.get_current_user()
             rock.name = self.request.get('name')
             
@@ -255,18 +272,24 @@ class ModifyRockHandler(ModelrPageRequest):
         if not user:
             return
         scenarios = Scenario.all()
+        scenarios.ancestor( scen_ancestor )
         scenarios.filter("user =", user)
         scenarios.order("-date")
         
         for s in scenarios.fetch(100):
             logging.info((s.name, s))
         all_rocks = Rock.all()
+        all_rocks.ancestor( ancestor )
         all_rocks.filter("user =", user)
         selected_rock = Rock.all()
+        selected_rock.ancestor( ancestor )
         selected_rock.filter("user =", user)
-        selected_rock.filter("name =", self.request.get('name'))
-        print( 'test', self.request.get('name') )
+        selected_rock.filter("name =", self.request.get('name'))     
         template_params = self.get_base_params(user)
+
+        default_rocks = Rock.all()
+        default_rocks.filter("user =", admin_user)
+        
         
         if( self.request.get('action') == 'remove' ):
         
@@ -274,14 +297,17 @@ class ModifyRockHandler(ModelrPageRequest):
                 rock.delete()
 
             template_params.update(rocks=all_rocks.fetch(100),
-                                   scenarios=scenarios.fetch(100) )
+                                   scenarios=scenarios.fetch(100),
+                                   default_rocks =
+                                     default_rocks.fetch(100))
                  
         else:
             current_rock = selected_rock.fetch(100)
             template_params.update(rocks=all_rocks.fetch(100),
                                    scenarios=scenarios.fetch(100),
-                                   current_rock=current_rock[0]
-                                     )
+                                   current_rock=current_rock[0],
+                                   default_rocks =
+                                     default_rocks.fetch(100))
         
         
         
@@ -307,10 +333,17 @@ class ScenarioHandler(ModelrPageRequest):
         if not user:
             return
 
+
+        default_rocks = Rock.all()
+        default_rocks.filter("user =", admin_user)
         template_params = self.get_base_params(user,
-                                               rocks=self.rocks().fetch(100))
+                                rocks=self.rocks().fetch(100),
+                                default_rocks =
+                                   default_rocks.fetch(100))
         
         template = env.get_template('scenario.html')
+
+
         html = template.render(template_params)
 
         self.response.out.write(html)
@@ -328,10 +361,16 @@ class DashboardHandler(ModelrPageRequest):
             return
             
         rocks = Rock.all()
+        rocks.ancestor( ancestor )
         rocks.filter("user =", user)
+        
         rocks.order("-date")
 
+        default_rocks = Rock.all()
+        default_rocks.filter("user =", admin_user)
+
         scenarios = Scenario.all()
+        scenarios.ancestor( scen_ancestor )
         scenarios.filter("user =", user)
         scenarios.order("-date")
         
@@ -340,7 +379,9 @@ class DashboardHandler(ModelrPageRequest):
             
         template_params = self.get_base_params(user)
         template_params.update(rocks=rocks.fetch(100),
-                               scenarios=scenarios.fetch(100))
+                               scenarios=scenarios.fetch(100),
+                               default_rocks =
+                                 default_rocks.fetch(100))
         
         
         template = env.get_template('dashboard.html')
@@ -404,6 +445,35 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/about', AboutHandler)
                                ],
                               debug=True)
+
+# Put in the default rock database
+admin_user = users.User(email='modelr.app.agile@gmail.com',
+                        _user_id='118397192216125159104')
+for i in default_rocks:
+
+    rocks = Rock.all()
+    rocks.filter("user =", admin_user
+                 )
+    rocks.filter("name =",i['name'] )
+    rocks = rocks.fetch(1)
+        
+    if rocks:
+        rock = rocks[0]
+    else:
+        rock = Rock()
+        rock.user = admin_user
+        rock.name = i['name']
+            
+    rock.vp = float(i['vp'])
+    rock.vs = float(i['vs'])
+    rock.rho = float(i['rho'])
+
+    rock.vp_std = float(i['vp_std'])
+    rock.vs_std = float(i['vs_std'])
+    rock.rho_std = float(i['rho_std'])
+
+    rock.put()
+   
 
 
 def main():

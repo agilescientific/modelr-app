@@ -100,7 +100,11 @@ var host = '{{HOSTNAME}}';
 	<option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},{{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
 		data-name="{{rock.name}}">{{rock.name}}</option>
 	{% endfor %}
-
+        {% for rock in default_rocks %}
+	<option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},{{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+		data-name="{{rock.name}}">{{rock.name}}</option>
+	{% endfor %}
+	
 </datalist>
 
 <!-- SCENARIO PANEL
