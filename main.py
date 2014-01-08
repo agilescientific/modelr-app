@@ -21,9 +21,9 @@ from default_rocks import default_rocks
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
                                                'templates')))
 
-#===============================================================================
+#=====================================================================
 # 
-#===============================================================================
+#=====================================================================
 
 
 class Scenario(db.Model):
@@ -51,17 +51,53 @@ class Rock(db.Model):
     vs_std = db.FloatProperty()
     rho_std = db.FloatProperty()
 
+#=====================================================================
+# Define Global Variables
+#=====================================================================
+# Initialize the ancestor databases to allow for strongly consistent
+# queries
 ancestor = Rock()
 ancestor.put()
-ancestor_key = ancestor.key()
 
 scen_ancestor = Scenario()
 scen_ancestor.put()
-scen_key = scen_ancestor.key()
 
-#===============================================================================
+# Put in the default rock database
+admin_user = users.User(email='modelr.app.agile@gmail.com',
+                        _user_id='118397192216125159104')
+for i in default_rocks:
+
+    rocks = Rock.all()
+    rocks.filter("user =", admin_user)
+    rocks.filter("name =",i['name'] )
+    rocks = rocks.fetch(1)
+        
+    if rocks:
+        rock = rocks[0]
+    else:
+        rock = Rock()
+        rock.user = admin_user
+        rock.name = i['name']
+            
+    rock.vp = float(i['vp'])
+    rock.vs = float(i['vs'])
+    rock.rho = float(i['rho'])
+
+    rock.vp_std = float(i['vp_std'])
+    rock.vs_std = float(i['vs_std'])
+    rock.rho_std = float(i['rho_std'])
+
+    rock.put()
+
+providers = {
+    'Google'   : 'www.google.com/accounts/o8/id', # shorter alternative: "Gmail.com"
+    'Yahoo'    : 'yahoo.com',
+    'MyOpenID' : 'myopenid.com'
+    # add more here
+}
+#====================================================================
 # 
-#===============================================================================
+#====================================================================
 
 
 def get_gravatar_url(email, default=None, size=40):
@@ -69,7 +105,8 @@ def get_gravatar_url(email, default=None, size=40):
     Get the url of this users gravatar 
     '''
     # construct the url
-    gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(email.lower()).hexdigest() + "?"
+    gravatar_url = ("http://www.gravatar.com/avatar/" +
+                    hashlib.md5(email.lower()).hexdigest() + "?")
     if default:
         gravatar_url += urllib.urlencode({'s':str(size), 'd':default})
     else:
@@ -83,7 +120,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
     Base class for modelr app pages.
     '''
     
-    #For the plot server
+    # For the plot server
     # Ideally this should be settable by an admin_user console.
     HOSTNAME = "http://server.modelr.org:8081"
     
@@ -104,10 +141,12 @@ class ModelrPageRequest(webapp2.RequestHandler):
         '''
 
         default_rock = dict(vp=0,vs=0, rho=0, vp_std=0,
-                            rho_std=0, vs_std=0, description='description',
+                            rho_std=0, vs_std=0,
+                            description='description',
                             name = 'name')
+        
         params = dict(nickname=user.nickname() if user else '',
-                      logout=users.create_logout_url(self.request.uri),
+                    logout=users.create_logout_url(self.request.uri),
                       avatar=get_gravatar_url(user.email()) \
                        if user else 'No avatar',
                       HOSTNAME=self.HOSTNAME,
@@ -130,7 +169,10 @@ class ModelrPageRequest(webapp2.RequestHandler):
             template = env.get_template('require_login.html')
             
             template_params = self.get_base_params()
-            template_params.update(provider_links={name:users.create_login_url(self.request.uri, federated_identity=uri) for (name, uri) in providers.items()})
+            template_params.update(
+                provider_links={name:users.create_login_url(
+                    self.request.uri, federated_identity=uri)
+                    for (name, uri) in providers.items()})
             
             html = template.render(template_params)
             
@@ -152,18 +194,13 @@ class MainHandler(ModelrPageRequest):
 
         self.response.out.write(html)
 
-providers = {
-    'Google'   : 'www.google.com/accounts/o8/id', # shorter alternative: "Gmail.com"
-    'Yahoo'    : 'yahoo.com',
-    'MyOpenID' : 'myopenid.com'
-    # add more here
-}
+
 
 class RemoveScenarioHandler(webapp2.RequestHandler):
     '''
     remove a scenario from a users db
     '''
-    def get(self):
+    def post(self):
         name = self.request.get('name')
         
         scenarios = Scenario.all()
@@ -233,7 +270,7 @@ class AddRockHandler(webapp2.RequestHandler):
     '''
     add a rock 
     '''
-    def get(self):
+    def post(self):
         name = self.request.get('name')
         
         rocks = Rock.all()
@@ -266,7 +303,7 @@ class ModifyRockHandler(ModelrPageRequest):
     '''
     remove a rock or modify it by name.
     '''
-    def get(self):
+    def post(self):
 
         user = self.require_login()
         if not user:
@@ -446,33 +483,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ],
                               debug=True)
 
-# Put in the default rock database
-admin_user = users.User(email='modelr.app.agile@gmail.com',
-                        _user_id='118397192216125159104')
-for i in default_rocks:
 
-    rocks = Rock.all()
-    rocks.filter("user =", admin_user
-                 )
-    rocks.filter("name =",i['name'] )
-    rocks = rocks.fetch(1)
-        
-    if rocks:
-        rock = rocks[0]
-    else:
-        rock = Rock()
-        rock.user = admin_user
-        rock.name = i['name']
-            
-    rock.vp = float(i['vp'])
-    rock.vs = float(i['vs'])
-    rock.rho = float(i['rho'])
-
-    rock.vp_std = float(i['vp_std'])
-    rock.vs_std = float(i['vs_std'])
-    rock.rho_std = float(i['rho_std'])
-
-    rock.put()
    
 
 

@@ -39,7 +39,7 @@
         <tbody>
         {% for rock in rocks %}
           <tr>
-            <form class="form-horizontal" name="input" action="edit_rock" method="get">
+            <form class="form-horizontal" name="input" action="edit_rock" method="post">
             <input type="hidden" name="name" value="{{rock.name}}" />
             <td><stong>{{rock.name}}</strong></td>
             <td>{{rock.vp}}</td>
@@ -86,7 +86,7 @@
           {% for scenario in scenarios %}
           
           <tr>
-            <form class="form-horizontal" name="input" action="remove_scenario" method="get">
+            <form class="form-horizontal" name="input" action="remove_scenario" method="post">
             <input type="hidden" name="name" value="{{scenario.name}}" />
             <td><stong><a href='/scenario#{{scenario.name}}'>{{scenario.name}}</a></strong></td>
             <td>{{scenario.script}}</td>
@@ -107,7 +107,7 @@
         <h3 class="panel-title">Add rock</h3>
       </div>
       <div class="panel-body">
-<form name="input" action="add_rock" method="get">
+<form name="input" action="add_rock" method="post">
 
 
 <form class="form-horizontal" role="form">
