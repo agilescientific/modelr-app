@@ -6,8 +6,6 @@
 #
 from google.appengine.api import users
 from google.appengine.ext import webapp as webapp2
-from google.appengine.ext import db
-from google.appengine.ext import ndb
 from google.appengine.ext.webapp.util import run_wsgi_app
 from jinja2 import Environment, FileSystemLoader
 from os.path import join, dirname
@@ -20,36 +18,6 @@ from default_rocks import default_rocks
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
                                                'templates')))
-
-#=====================================================================
-# 
-#=====================================================================
-
-
-class Scenario(db.Model):
-    '''
-    Database of Scenarios 
-    '''
-    user = db.UserProperty()
-    name = db.StringProperty(multiline=False)
-    data = db.BlobProperty()
-    date = db.DateTimeProperty(auto_now_add=True)
-
-class Rock(db.Model):
-    """
-    Database of Rocks
-    """
-    user = db.UserProperty()
-    name = db.StringProperty(multiline=False)
-    description = db.StringProperty(multiline=True)
-    date = db.DateTimeProperty(auto_now_add=True)
-    
-    vp = db.FloatProperty()
-    vs = db.FloatProperty()
-    rho = db.FloatProperty()
-    vp_std = db.FloatProperty()
-    vs_std = db.FloatProperty()
-    rho_std = db.FloatProperty()
 
 #=====================================================================
 # Define Global Variables
