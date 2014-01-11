@@ -15,10 +15,12 @@ class User(db.Model):
     password = db.StringProperty()
     salt = db.StringProperty()
 
+ 
+
 class Group(db.Model):
     
     name = db.StringProperty()
-    users = db.ListProperty()
+    users = db.ListProperty(int)
 
 
 class Item(db.Model):
@@ -47,10 +49,10 @@ class Rock(Item):
     description = db.StringProperty(multiline=True)
     date = db.DateTimeProperty(auto_now_add=True)
 
-    
     vp = db.FloatProperty()
     vs = db.FloatProperty()
     rho = db.FloatProperty()
     vp_std = db.FloatProperty()
     vs_std = db.FloatProperty()
     rho_std = db.FloatProperty()
+

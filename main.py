@@ -14,6 +14,9 @@ import logging
 import urllib
 import time
 from default_rocks import default_rocks
+from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
+     verify
+from ModelrDb import Rock, Scenario, User
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
@@ -33,6 +36,7 @@ scen_ancestor.put()
 # Put in the default rock database
 admin_user = users.User(email='modelr.app.agile@gmail.com',
                         _user_id='118397192216125159104')
+
 for i in default_rocks:
 
     rocks = Rock.all()
@@ -113,10 +117,8 @@ class ModelrPageRequest(webapp2.RequestHandler):
                             description='description',
                             name = 'name')
         
-        params = dict(nickname=user.nickname() if user else '',
+        params = dict(
                     logout=users.create_logout_url(self.request.uri),
-                      avatar=get_gravatar_url(user.email()) \
-                       if user else 'No avatar',
                       HOSTNAME=self.HOSTNAME,
                       current_rock = default_rock)
         
@@ -168,6 +170,7 @@ class RemoveScenarioHandler(webapp2.RequestHandler):
     '''
     remove a scenario from a users db
     '''
+    
     def post(self):
         name = self.request.get('name')
         
@@ -360,9 +363,16 @@ class DashboardHandler(ModelrPageRequest):
 
     def get(self):
         self.response.headers['Content-Type'] = 'text/html'
+
+        cookie = self.request.cookies.get('user')
+        if cookie is None:
+            self.redirect('/signin')
+            return
         
-        user = self.require_login()
-        if not user:
+        user, password = cookie.split('|')
+        print( '+++++++++++++++++++++++++++++++', user)
+        if not verify(user, password):
+            self.redirect('/signin')
             return
             
         rocks = Rock.all()
@@ -430,9 +440,76 @@ class SettingsHandler(ModelrPageRequest):
         template_params = self.get_base_params(user)
         template = env.get_template('settings.html')
         html = template.render(template_params)
-        self.response.out.write(html)          
-                                    
-#Create the web app
+        self.response.out.write(html)
+
+class SignIn(webapp2.RequestHandler):
+
+    def get(self):
+
+        template = env.get_template('signin.html')
+        html = template.render()
+        self.response.out.write(html)
+
+    def post(self):
+
+        email = self.request.get('email')
+        password = self.request.get('password')
+
+        try:
+            signin(email, password)
+            cookie = get_cookie_string(email)
+            self.response.headers.add_header('Set-Cookie', cookie)
+            self.redirect('/dashboard')
+            
+        except AuthExcept as e:
+            template = env.get_template('signin.html')
+            msg = e.msg
+            html = template.render(email=email,
+                                   error=msg)
+            self.response.out.write(html)
+
+        
+            
+        
+class SignUp(webapp2.RequestHandler):
+    """
+    Class for registering users
+    """
+
+    def get(self):
+
+        template = env.get_template('signup.html')
+        html = template.render()
+        self.response.out.write(html)
+        
+    def post(self):
+
+        email = self.request.get('email')
+        password = self.request.get('password')
+        verify = self.request.get('verify')
+
+        if password != verify:
+            template = env.get_template('signup.html')
+            msg = "Password Mismatch"
+            html = template.render(email=email,
+                                   error=msg)
+            self.response.out.write(html)
+            
+        else:
+            try:
+                signup(email, password)
+                self.redirect('signin')
+                
+            except AuthExcept as e:
+                template = env.get_template('signup.html')
+                msg = e.msg
+                html = template.render(email=email,
+                                   error=msg)
+                self.response.out.write(html)
+                
+            
+        
+    
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
                                ('/add_rock', AddRockHandler),
@@ -447,7 +524,9 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/pricing', PricingHandler),
                                ('/profile', ProfileHandler),
                                ('/settings', SettingsHandler),
-                               ('/about', AboutHandler)
+                               ('/about', AboutHandler),
+                               ('/signup', SignUp),
+                               ('/signin', SignIn)
                                ],
                               debug=True)
 
