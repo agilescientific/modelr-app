@@ -28,7 +28,7 @@ class Item(db.Model):
     Base class for items in the modelr database
     """
     
-    user = db.UserProperty()
+    user = db.IntegerProperty()
     permissions = db.StringListProperty()
     
 class Scenario(Item):

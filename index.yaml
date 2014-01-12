@@ -23,6 +23,13 @@ indexes:
   - name: date
     direction: desc
 
+- kind: Rock
+  ancestor: yes
+  properties:
+  - name: user_id
+  - name: date
+    direction: desc
+
 - kind: Scenario
   properties:
   - name: user

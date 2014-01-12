@@ -49,7 +49,7 @@
             <td>{{rock.vs_std}}</td>
             <td>{{rock.rho_std}}</td>
 	    
-            <td><input class="btn btn-success btn-xs" type="submit" name="action" value="edit">&nbsp;&nbsp;&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" name="action" value="remove" /></td>
+            <td><input class="btn btn-success btn-xs" type="submit" name="action" value="edit">&nbsp;&nbsp;&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" formaction="/remove_rock" method="post" value="remove" /></td>
             </form>
           </tr>
           {% endfor %}
