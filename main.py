@@ -7,6 +7,8 @@
 from google.appengine.api import users
 from google.appengine.ext import webapp as webapp2
 from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.ext import db
+
 from jinja2 import Environment, FileSystemLoader
 
 from os.path import join, dirname
@@ -18,7 +20,7 @@ import time
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      verify
-from ModelrDb import Rock, Scenario, User
+from ModelrDb import Rock, Scenario, User, ModelrParent
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
@@ -32,6 +34,13 @@ admin_id = 0
 admin_user = User(email='modelr.app.agile@gmail.com',
                   user_id=admin_id)
 admin_user.put()
+
+# Ancestor dB for all of modelr
+ModelrRoot = ModelrParent.all().get()
+if not ModelrRoot:
+    ModelrRoot = ModelrParent()
+    ModelrRoot.put()
+
 
 for i in default_rocks:
 
@@ -79,7 +88,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
         default_rock = dict(vp=0,vs=0, rho=0, vp_std=0,
                             rho_std=0, vs_std=0,
                             description='description',
-                            name = 'name')
+                            name='name', group='public')
         
         params = dict(
                     logout=users.create_logout_url(self.request.uri),
@@ -93,27 +102,28 @@ class ModelrPageRequest(webapp2.RequestHandler):
     def verify(self):
 
         cookie = self.request.cookies.get('user')
-        
         if cookie is None:
-            self.redirect('/signin')
+            return
+
+        try:
+            user, password = cookie.split('|')
+        except ValueError:
             return
         
-        user, password = cookie.split('|')
-
-        if not verify(user, password):
-            self.redirect('/signin')
-            return
-
-        return User.all().filter("user_id =", int(user)).fetch(1)[0]
+        return verify(user, password, ModelrRoot)
+    
 
 class MainHandler(ModelrPageRequest):
     '''
     main page
     '''
     def get(self):
+
+        user = self.verify()
+        if user:
+            self.redirect('/dashboard')
         
-        user = users.get_current_user()
-        template_params = self.get_base_params(user)
+        template_params = self.get_base_params()
         template = env.get_template('index.html')
         html = template.render(template_params)
 
@@ -129,6 +139,10 @@ class RemoveScenarioHandler(ModelrPageRequest):
     def post(self):
 
         user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+            
         name = self.request.get('name')
         
         scenarios = Scenario.all()
@@ -151,6 +165,10 @@ class ModifyScenarioHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+        
         self.response.headers['Content-Type'] = 'application/json'
         name = self.request.get('name')
         
@@ -173,10 +191,15 @@ class ModifyScenarioHandler(ModelrPageRequest):
     def post(self):
 
         user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+            
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
 
         name = self.request.get('name')
+        group = self.request.get('group')
         
         logging.info(('name', name))
         data = self.request.get('json')
@@ -187,12 +210,14 @@ class ModifyScenarioHandler(ModelrPageRequest):
         scenarios.filter("user =", user.user_id)
         scenarios.filter("name =", name)
         scenarios = scenarios.fetch(1)
+        
         if scenarios:
             scenario = scenarios[0]
         else:
             scenario = Scenario(parent=user)
             scenario.user = user.user_id
             scenario.name = name
+            scenario.group = group
             
         scenario.data = data.encode()
         scenario.put()
@@ -204,6 +229,8 @@ class AddRockHandler(ModelrPageRequest):
     def post(self):
 
         user = self.verify()
+        if user is None:
+            self.redirect('/signup')
         
         name = self.request.get('name')
         
@@ -218,7 +245,7 @@ class AddRockHandler(ModelrPageRequest):
         else:
             rock = Rock(parent=user)
             rock.user = user.user_id
-            rock.name = self.request.get('name')
+
             
         rock.vp = float(self.request.get('vp'))
         rock.vs = float(self.request.get('vs'))
@@ -228,6 +255,8 @@ class AddRockHandler(ModelrPageRequest):
         rock.vs_std = float(self.request.get('vs_std'))
         rock.rho_std = float(self.request.get('rho_std'))
 
+        rock.name = self.request.get('name')
+        rock.group = self.request.get('group')
         rock.put()
 
         self.redirect('/dashboard')
@@ -237,6 +266,10 @@ class RemoveRockHandler(ModelrPageRequest):
 
     def post(self):
         user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+            
         selected_rock = Rock.all()
         selected_rock.ancestor(user)
         selected_rock.filter("user =", user.user_id)
@@ -258,6 +291,9 @@ class ModifyRockHandler(ModelrPageRequest):
     def post(self):
 
         user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
 
         selected_rock = Rock.all()
         selected_rock.ancestor(user)
@@ -280,6 +316,9 @@ class ScenarioHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
         
         self.response.headers['Content-Type'] = 'text/html'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
@@ -292,8 +331,7 @@ class ScenarioHandler(ModelrPageRequest):
         default_rocks.filter("user =", admin_id)
         rocks = Rock.all().ancestor(user)
         template_params = \
-          self.get_base_params(user,
-                               rocks=rocks.fetch(100),
+          self.get_base_params(user,rocks=rocks.fetch(100),
                                default_rocks =
                                 default_rocks.fetch(100))
         
@@ -312,6 +350,9 @@ class DashboardHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
 
         template_params = self.get_base_params(user)
         
@@ -324,6 +365,13 @@ class DashboardHandler(ModelrPageRequest):
 
         default_rocks = Rock.all()
         default_rocks.filter("user =", admin_id)
+
+        rock_groups = []
+        for name in user.group:
+            dic = {'name': name.capitalize(),
+                   'rocks':
+                      Rock.all().ancestor(ModelrRoot).filter("group =", name).fetch(100)}
+            rock_groups.append(dic) 
             
         scenarios = Scenario.all()
         scenarios.ancestor(user)
@@ -337,7 +385,8 @@ class DashboardHandler(ModelrPageRequest):
         template_params.update(rocks=rocks.fetch(100),
                                scenarios=scenarios.fetch(100),
                                default_rocks =
-                                 default_rocks.fetch(100))
+                                 default_rocks.fetch(100),
+                               rock_groups=rock_groups)
 
         # Check if a rock is being edited
         if self.request.get("selected_rock"):
@@ -353,34 +402,64 @@ class DashboardHandler(ModelrPageRequest):
 
 class AboutHandler(ModelrPageRequest):
     def get(self):
-        user = users.get_current_user()
-        template_params = self.get_base_params(user)
+    
+        template_params = self.get_base_params()
         template = env.get_template('about.html')
         html = template.render(template_params)
         self.response.out.write(html)          
                                     
 class PricingHandler(ModelrPageRequest):
     def get(self):
-        user = users.get_current_user()
-        template_params = self.get_base_params(user)
+      
+        template_params = self.get_base_params()
         template = env.get_template('pricing.html')
         html = template.render(template_params)
         self.response.out.write(html)          
           
 class ProfileHandler(ModelrPageRequest):
+    
     def get(self):
         user = self.verify()
-            
-        template_params = self.get_base_params(user)
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        template_params = self.get_base_params(user,
+                                               groups=user.group)
+
         template = env.get_template('profile.html')
         html = template.render(template_params)
-        self.response.out.write(html)          
+        self.response.out.write(html)
+
+    def post(self):
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        # Join a group
+        group = self.request.get("group")
+
+        if group:
+            user.group.append(group)
+            user.put()
+
+        # Leave a group
+        group = self.request.get("name")
+        if group in user.group:
+            user.group.remove(group)
+            user.put()
+        
+        self.redirect('/profile')
                                     
 class SettingsHandler(ModelrPageRequest):
     
     def get(self):
         user = self.verify()
-            
+        if user is None:
+            self.redirect('/signup')
+            return
+        
         template_params = self.get_base_params(user)
         template = env.get_template('settings.html')
         html = template.render(template_params)
@@ -404,7 +483,7 @@ class SignIn(webapp2.RequestHandler):
             cookie = get_cookie_string(email)
             self.response.headers.add_header('Set-Cookie', cookie)
             self.redirect('/dashboard')
-            
+
         except AuthExcept as e:
             template = env.get_template('signin.html')
             msg = e.msg
@@ -441,7 +520,7 @@ class SignUp(webapp2.RequestHandler):
             
         else:
             try:
-                signup(email, password)
+                signup(email, password, parent=ModelrRoot)
                 self.redirect('signin')
                 
             except AuthExcept as e:
@@ -457,6 +536,9 @@ class Logout(ModelrPageRequest):
     def get(self):
         
         user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
 
         self.response.headers.add_header('Set-Cookie',
                                          'user=""; Path=/')

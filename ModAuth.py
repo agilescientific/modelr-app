@@ -2,7 +2,7 @@
 Functions related user logins, signups, password authentications,
 logouts, etc ...
 """
-from ModelrDb import User, Group, UserID
+from ModelrDb import User, UserID
 import hashlib
 import random
 import re
@@ -21,17 +21,15 @@ class AuthExcept(Exception):
         
 def get_cookie_string(email):
     """
-    Creates a cookie string to sue for authenticating users.
+    Creates a cookie string to use for authenticating users.
     user_id|encrypted_password
     """
 
     user = User.all().filter("email =", email).fetch(1)[0]
     name = 'user'
     value = str(user.user_id) + '|' + str(user.password)
-    return '%s=%s; Path=/'%(name,value)
-    
 
-    return value
+    return '%s=%s; Path=/'%(name,value)
 
 def make_salt():
     """
@@ -69,13 +67,13 @@ def make_userid():
     return current_id
 
         
-def signup(email, password, group='public'):
+def signup(email, password, group='public', parent=None):
     """
     Checks for valid inputs then adds a user to the User database.
     """
 
     exists = User.all().filter("email =", email)
-    if len(exists.fetch(1)):
+    if (exists.fetch(1)):
         raise AuthExcept("Account Exists")
 
     if not EMAIL_RE.match(email):
@@ -87,19 +85,11 @@ def signup(email, password, group='public'):
     salt = make_salt()
     encrypted_password = encrypt_password(password, salt)
     
-    """
-    group = Group.all()
-    group.filter(name=group)
-    g = group.fetch(100)[0]
-    """
-
     user = User(email=email, password=encrypted_password,
-                salt=salt, user_id=make_userid())
-
-    # g.users.append(user.user_id)
-
+                salt=salt, user_id=make_userid(),
+                group=[group], parent=parent)
     user.put()
-    # g.put()
+
     
     
 
@@ -109,9 +99,8 @@ def signin(email, password):
     if they are not.
     """
 
-    user = User.all().filter("email =", email).fetch(100)
-    
-    if len(user) == 0:
+    user = User.all().filter("email =", email).fetch(1)
+    if not user:
         raise AuthExcept('invalid email')
     
     user = user[0]
@@ -122,20 +111,19 @@ def signin(email, password):
         raise AuthExcept('invalid password')
     
 
-def verify(userid, password):
+def verify(userid, password, ancestor):
     """
     Verifies that the userid and encrypted password from a cookie
     match the database
     """
 
     try:
-        user = User.all().filter("user_id =",int(userid)).fetch(1)[0]
+        user = User.all().ancestor(ancestor).filter("user_id =",int(userid)).fetch(1)[0]
         verified = (user.password == password)
-
+        return user
     except IndexError:
-        verfied = False
+        verified = False
 
-    return verified
 
 
 

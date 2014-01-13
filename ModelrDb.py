@@ -5,6 +5,15 @@ Authentication and permissions will be structured similar to linux
 wuth groups and users. Group permissions can be added to an item to
 allow other users permission to view and edit the item.
 """
+
+
+class ModelrParent(db.Model):
+    """
+    parent to all of modelr to allow for strongly consistent queries
+    """
+    
+    pass
+
 class UserID(db.Model):
     next_id = db.IntegerProperty()
 
@@ -14,22 +23,14 @@ class User(db.Model):
     email = db.EmailProperty()
     password = db.StringProperty()
     salt = db.StringProperty()
-
- 
-
-class Group(db.Model):
+    group = db.StringListProperty()
     
-    name = db.StringProperty()
-    users = db.ListProperty(int)
-
-
 class Item(db.Model):
     """
     Base class for items in the modelr database
     """
-    
     user = db.IntegerProperty()
-    permissions = db.StringListProperty()
+    group = db.StringProperty()
     
 class Scenario(Item):
     '''
