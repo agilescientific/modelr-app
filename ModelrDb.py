@@ -11,7 +11,6 @@ class ModelrParent(db.Model):
     """
     parent to all of modelr to allow for strongly consistent queries
     """
-    
     pass
 
 class UserID(db.Model):
@@ -29,6 +28,17 @@ class Item(db.Model):
     """
     Base class for items in the modelr database
     """
+    user = db.IntegerProperty()
+    group = db.StringProperty()
+
+class Group(db.Model):
+
+    name = db.StringProperty()
+    allowed_users = db.ListProperty(int)
+    admin = db.IntegerProperty()
+
+class GroupRequest(db.Model):
+
     user = db.IntegerProperty()
     group = db.StringProperty()
     

@@ -9,6 +9,7 @@ from google.appengine.ext import webapp as webapp2
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 
+import cgi
 from jinja2 import Environment, FileSystemLoader
 
 from os.path import join, dirname
@@ -20,7 +21,8 @@ import time
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      verify
-from ModelrDb import Rock, Scenario, User, ModelrParent
+from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
+     GroupRequest
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
@@ -90,7 +92,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
                             description='description',
                             name='name', group='public')
         
-        params = dict(
+        params = dict(email=user.email if user is not None else '',
                     logout=users.create_logout_url(self.request.uri),
                       HOSTNAME=self.HOSTNAME,
                       current_rock = default_rock)
@@ -161,7 +163,6 @@ class ModifyScenarioHandler(ModelrPageRequest):
     '''
     fetch or update a scenario.
     '''
-
     def get(self):
 
         user = self.verify()
@@ -370,7 +371,8 @@ class DashboardHandler(ModelrPageRequest):
         for name in user.group:
             dic = {'name': name.capitalize(),
                    'rocks':
-                      Rock.all().ancestor(ModelrRoot).filter("group =", name).fetch(100)}
+                    Rock.all().ancestor(ModelrRoot).filter("group =",
+                                                    name).fetch(100)}
             rock_groups.append(dic) 
             
         scenarios = Scenario.all()
@@ -402,16 +404,18 @@ class DashboardHandler(ModelrPageRequest):
 
 class AboutHandler(ModelrPageRequest):
     def get(self):
-    
-        template_params = self.get_base_params()
+
+        user = self.verify()
+        template_params = self.get_base_params(user)
         template = env.get_template('about.html')
         html = template.render(template_params)
         self.response.out.write(html)          
                                     
 class PricingHandler(ModelrPageRequest):
     def get(self):
-      
-        template_params = self.get_base_params()
+
+        user = self.verify()
+        template_params = self.get_base_params(user)
         template = env.get_template('pricing.html')
         html = template.render(template_params)
         self.response.out.write(html)          
@@ -426,7 +430,37 @@ class ProfileHandler(ModelrPageRequest):
 
         template_params = self.get_base_params(user,
                                                groups=user.group)
+        
+        if self.request.get("createfailed"):
+            create_error = "Group name exists"
+            template_params.update(create_error=create_error)
+        if self.request.get("joinfailed"):
+            join_error = "Group does not exists"
+            template_params.update(join_error=join_error)
 
+        # Get the user requests
+        req = \
+          GroupRequest.all().ancestor(ModelrRoot).filter("user =",
+                                                         user.user_id)
+        if req:
+            template_params.update(requests=req)
+
+        # Get the adminstrative requests
+        admin_groups = \
+          Group.all().ancestor(ModelrRoot).filter("admin =",
+                                                  user.user_id)
+        admin_groups = admin_groups.fetch(100)
+        req = []
+        for group in admin_groups:
+            # Check for a request
+            g_req = GroupRequest.all().ancestor(ModelrRoot)
+            g_req = g_req.filter("group =", group.name).fetch(100)
+            req = req + \
+              [{'group': group.name,
+                'user': User.all().filter("user_id =", i.user).get()}
+               for i in g_req]
+        
+        template_params.update(admin_req=req)
         template = env.get_template('profile.html')
         html = template.render(template_params)
         self.response.out.write(html)
@@ -437,20 +471,72 @@ class ProfileHandler(ModelrPageRequest):
             self.redirect('/signup')
             return
 
+        err_string = []
         # Join a group
-        group = self.request.get("group")
+        join_group = self.request.get("join_group")
+        if join_group:
+            
+            try:
+                group = Group.all().ancestor(ModelrRoot)
+                group = group.filter("name =", join_group).fetch(1)[0]
+                if user.user_id in group.allowed_users: 
+                    if group.name not in user.group:
+                        user.group.append(group.name)
+                        user.put()
+                else:
+                    GroupRequest(user=user.user_id,
+                                 group=group.name,
+                                 parent=ModelrRoot).put()
 
-        if group:
-            user.group.append(group)
-            user.put()
-
+            except IndexError:
+                err_string.append("joinfailed=1")
+               
         # Leave a group
-        group = self.request.get("name")
+        group = self.request.get("leave_group")
         if group in user.group:
             user.group.remove(group)
             user.put()
-        
-        self.redirect('/profile')
+
+        # Create a group
+        group = self.request.get("create_group")
+
+        if group:
+            if not Group.all().ancestor(ModelrRoot).filter("name =",
+                                                    group).fetch(1):
+                Group(name=group, admin=user.user_id,
+                      allowed_users=[user.user_id],
+                      parent=ModelrRoot).put()
+                user.group.append(group)
+                user.put()
+            else:
+                err_string.append("createfailed=1")
+
+        # Handle a group request
+        request_user = self.request.get("request_user")
+       
+        if request_user:
+            user_id = int(request_user)
+            group = self.request.get("request_group")
+            if self.request.get("allow") == "True":
+                u = User.all().ancestor(ModelrRoot)
+                u = u.filter("user_id =", user_id).fetch(1)
+                if u:
+                    u[0].group.append(group)
+                    g = Group.all().ancestor(ModelrRoot)
+                    g = g.filter("name =", group).fetch(1)[0]
+                    g.allowed_users.append(u[0].user_id)
+                    u[0].put()
+                    g.put()
+                
+                    
+            g_req = GroupRequest.all().ancestor(ModelrRoot)
+            g_req = g_req.filter("user =", user_id)
+            g_req = g_req.filter("group =", group).fetch(100)
+            for g in g_req:
+                g.delete()
+                
+        err_string = '&'.join(err_string) if err_string else ''
+        self.redirect('/profile?' + err_string)
                                     
 class SettingsHandler(ModelrPageRequest):
     

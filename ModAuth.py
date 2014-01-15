@@ -2,7 +2,7 @@
 Functions related user logins, signups, password authentications,
 logouts, etc ...
 """
-from ModelrDb import User, UserID
+from ModelrDb import User, UserID, Group
 import hashlib
 import random
 import re
@@ -11,7 +11,7 @@ import string
 PASS_RE =  re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+\.[\S]+$" )
 
-# Define some convenience exceptions for potential errors
+# Define an exception for authentication errors
 class AuthExcept(Exception):
     msg = ''
 
@@ -88,11 +88,20 @@ def signup(email, password, group='public', parent=None):
     user = User(email=email, password=encrypted_password,
                 salt=salt, user_id=make_userid(),
                 group=[group], parent=parent)
+
+    g = Group.all().filter("name =", group).fetch(1)
+    if not g:
+        g = Group(name=group, admin=user.user_id,
+                  parent=parent)
+    else:
+        g = g[0]
+        
+    g.allowed_users.append(user.user_id)
+    
     user.put()
+    g.put()
 
     
-    
-
 def signin(email, password):
     """
     Checks if a email and password are valid. Will throw a AuthExcept
@@ -110,7 +119,6 @@ def signin(email, password):
     if not encrypted_password==user.password:
         raise AuthExcept('invalid password')
     
-
 def verify(userid, password, ancestor):
     """
     Verifies that the userid and encrypted password from a cookie
@@ -118,14 +126,15 @@ def verify(userid, password, ancestor):
     """
 
     try:
-        user = User.all().ancestor(ancestor).filter("user_id =",int(userid)).fetch(1)[0]
+        user = \
+          User.all().ancestor(ancestor).filter("user_id =",
+                                            int(userid)).fetch(1)[0]
         verified = (user.password == password)
         return user
     except IndexError:
         verified = False
 
-
-
+    
 
     
 

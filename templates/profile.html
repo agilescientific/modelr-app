@@ -1,6 +1,6 @@
 {% extends "base_template.html" %}
 
-{% block title %}Modelr &middot; Settings{% endblock %}
+{% block title %}Modelr &middot; Profile{% endblock %}
 {% block content %}
 
 <div class="container">
@@ -14,7 +14,7 @@
       <div class="panel-body">
 	{% for group in groups %}
 	<form class="form-horizontal" name="input" action="/profile" method="post">
-	  <input type="hidden" name="name" value="{{group}}" />
+	  <input type="hidden" name="leave_group" value="{{group}}" />
 	  <div class="row">
 	    <div class="col-md-2">
 	      {{group}}
@@ -27,6 +27,35 @@
 	{% endfor %}
       </div>
     </div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Requests</h3>
+      </div>
+      <div class="panel-body">
+	{% for req in requests %}
+	<div class="row">
+	  <div class="col-sm-8">
+	    Waiting to join {{ req.group }}
+	  </div>
+	</div>
+	{% endfor %}
+	<br>
+	{% for req in admin_req %}
+	<form name="req_form" action="/profile" method="post">
+	  <input type="hidden" name="request_user" value="{{req['user'].user_id}}">
+	  <input type="hidden" name="request_group" value="{{req['group']}}">
+	  <div class="row">
+	    <div class="col-sm-6">
+	      {{ req['user'].email }} | {{ req['group'] }} 
+	    </div>
+	    <div class="col-md-6">
+	      <button class="btn btn-success btn-xs" type="submit" name="allow" value="True"/> allow </button>&nbsp&nbsp<button class="btn btn-danger btn-xs" type="submit" name="allow" value="False">deny</button>
+	    </div>
+	  </div>
+	</form>
+	{% endfor %}
+      </div>
+    </div>  
   </div>
   
   <div class="col-md-6">
@@ -35,12 +64,12 @@
         <h3 class="panel-title">Join Group</h3>
       </div>
       <div class="panel-body">
+	{{ join_error }}
 	<form name="join" action="/profile" method="post">
 	  <div class="form-group">
-	    <label for="name" class="col-sm-2 control-label">Name</label>
 	    <div class="row">
 	      <div class="col-sm-6">
-		<input class="form-control" type="text" name="group"  placeholder=""/>
+		<input class="form-control" type="text" name="join_group"  placeholder=""/>
 	      </div>
 	      <button type="submit" class="btn btn-default">Join</button>
 	    </div>
@@ -48,6 +77,30 @@
 	</form>
       </div>
     </div>          
+  </div>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Create Group</h3>
+      </div>
+      <div class="panel-body">
+	{{ create_error }}
+	<form name="create" action="/profile" method="post">
+	  <div class="form-group">
+	    <div class="row">
+	      <div class="col-sm-6">
+		<input class="form-control" type="text" name="create_group"  placeholder=""/>
+	      </div>
+	      <button type="submit" class="btn btn-default">Create</button>
+	    </div>
+	  </div>
+	</form>
+      </div>
+    </div>          
+  </div>
+
+  <div class="col-md-6">
+        
   </div>
 </div>
   
