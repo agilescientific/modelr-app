@@ -1,0 +1,39 @@
+{% extends "base_template.html" %}
+
+{% block title %}Modelr &middot; Manage Group{% endblock %}
+{% block content %}
+
+<div class="container">
+  
+  <h3>{{ group.name.capitalize()}}</h3>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-body">
+	{% for group_user in users %}
+	{% if user.user_id != group_user.user_id %}
+	<form class="form-horizontal" name="input" action="/manage_group" method="post">
+	  <input type="hidden" name="group" value="{{group.name}}" />
+	  <input type="hidden" name="user" value="{{group_user.user_id}}" />
+	  <div class="row">
+	    <div class="col-md-6">
+	      {{group_user.email}}
+	    </div>
+	    <div class="col-md-2">
+	      <input class="btn btn-danger btn-xs" type="submit" value="remove"/>
+	    </div>
+	  </div>
+	</form>
+	{% endif %}
+	{% endfor %}
+
+	<div class="col-md-2">
+	  <form class="form-horizontal" name="input" name="kill" action="/manage_group" method="post">
+	    <input type="hidden" name="group" value="{{group.name}}">
+	    <input class="btn btn-danger btn-xs" type="submit" name="abolish" value="abolish"/>
+	  </form>
+	</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

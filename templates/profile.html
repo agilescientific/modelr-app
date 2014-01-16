@@ -14,13 +14,17 @@
       <div class="panel-body">
 	{% for group in groups %}
 	<form class="form-horizontal" name="input" action="/profile" method="post">
-	  <input type="hidden" name="leave_group" value="{{group}}" />
+	  <input type="hidden" name="selected_group" value="{{group.name}}" />
 	  <div class="row">
 	    <div class="col-md-2">
-	      {{group}}
+	      {{group.name}}
 	    </div>
 	    <div class="col-md-2">
-	      <input class="btn btn-danger btn-xs" type="submit" value="leave"/>
+	      {% if group.admin == user.user_id %}
+	      <input class="btn btn-success btn-xs" type="submit" value="manage" formaction="/manage_group" formmethod="get" />
+	      {% else %}
+	      <input class="btn btn-danger btn-xs" type="submit" value="leave" />
+	      {% endif %}
 	    </div>
 	  </div>
 	</form>

@@ -89,7 +89,7 @@ def signup(email, password, group='public', parent=None):
                 salt=salt, user_id=make_userid(),
                 group=[group], parent=parent)
 
-    g = Group.all().filter("name =", group).fetch(1)
+    g = Group.all().ancestor(parent).filter("name =", group).fetch(1)
     if not g:
         g = Group(name=group, admin=user.user_id,
                   parent=parent)

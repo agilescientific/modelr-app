@@ -31,19 +31,30 @@ env = Environment(loader=FileSystemLoader(join(dirname(__file__),
 #=====================================================================
 # Define Global Variables
 #=====================================================================
+
 # Put in the default rock database
 admin_id = 0
 admin_user = User(email='modelr.app.agile@gmail.com',
                   user_id=admin_id)
 admin_user.put()
 
-# Ancestor dB for all of modelr
+# Ancestor dB for all of modelr. Allows for strongly consistent
+# database queries
 ModelrRoot = ModelrParent.all().get()
 if not ModelrRoot:
     ModelrRoot = ModelrParent()
     ModelrRoot.put()
+    
+public = Group.all().ancestor(ModelrRoot).filter("name =", 'public')
+public = public.fetch(1)
+if not public:
+    public = Group(name='public', admin=admin_user.user_id,
+                   parent=ModelrRoot)
+    public.put()
 
 
+
+# Populate the default rock database.
 for i in default_rocks:
 
     rocks = Rock.all()
@@ -74,15 +85,16 @@ for i in default_rocks:
 #====================================================================
         
 class ModelrPageRequest(webapp2.RequestHandler):
-    '''
-    Base class for modelr app pages.
-    '''
+    """
+    Base class for modelr app pages. Allows commonly used functions
+    to be inherited to other pages.
+    """
     
     # For the plot server
     # Ideally this should be settable by an admin_user console.
     HOSTNAME = "http://server.modelr.org:8081"
     
-    def get_base_params(self, user=None, **kwargs):
+    def get_base_params(self, **kwargs):
         '''
         get the default parameters used in base_template.html
         '''
@@ -92,8 +104,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
                             description='description',
                             name='name', group='public')
         
-        params = dict(email=user.email if user is not None else '',
-                    logout=users.create_logout_url(self.request.uri),
+        params = dict(logout=users.create_logout_url(self.request.uri),
                       HOSTNAME=self.HOSTNAME,
                       current_rock = default_rock)
         
@@ -102,6 +113,10 @@ class ModelrPageRequest(webapp2.RequestHandler):
         return params
 
     def verify(self):
+        """
+        Verify that the current user is a legimate user. Returns the
+        user object from the database if true, otherwise returns None.
+        """
 
         cookie = self.request.cookies.get('user')
         if cookie is None:
@@ -121,6 +136,7 @@ class MainHandler(ModelrPageRequest):
     '''
     def get(self):
 
+        # Redirect to the dashboard if the user is logged in
         user = self.verify()
         if user:
             self.redirect('/dashboard')
@@ -332,9 +348,8 @@ class ScenarioHandler(ModelrPageRequest):
         default_rocks.filter("user =", admin_id)
         rocks = Rock.all().ancestor(user)
         template_params = \
-          self.get_base_params(user,rocks=rocks.fetch(100),
-                               default_rocks =
-                                default_rocks.fetch(100))
+          self.get_base_params(user=user,rocks=rocks.fetch(100),
+                               default_rocks=default_rocks.fetch(100))
         
         template = env.get_template('scenario.html')
 
@@ -355,7 +370,7 @@ class DashboardHandler(ModelrPageRequest):
             self.redirect('/signup')
             return
 
-        template_params = self.get_base_params(user)
+        template_params = self.get_base_params(user=user)
         
         self.response.headers['Content-Type'] = 'text/html'
 
@@ -406,7 +421,7 @@ class AboutHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
-        template_params = self.get_base_params(user)
+        template_params = self.get_base_params(user=user)
         template = env.get_template('about.html')
         html = template.render(template_params)
         self.response.out.write(html)          
@@ -415,7 +430,7 @@ class PricingHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
-        template_params = self.get_base_params(user)
+        template_params = self.get_base_params(user=user)
         template = env.get_template('pricing.html')
         html = template.render(template_params)
         self.response.out.write(html)          
@@ -428,8 +443,16 @@ class ProfileHandler(ModelrPageRequest):
             self.redirect('/signup')
             return
 
-        template_params = self.get_base_params(user,
-                                               groups=user.group)
+        groups=[]
+        for group in user.group:
+            g = Group.all().ancestor(ModelrRoot).filter("name =",
+                                                        group)
+            g = g.fetch(1)
+            if g:
+                groups.append(g[0])
+        
+        template_params = self.get_base_params(user=user,
+                                               groups=groups)
         
         if self.request.get("createfailed"):
             create_error = "Group name exists"
@@ -492,7 +515,7 @@ class ProfileHandler(ModelrPageRequest):
                 err_string.append("joinfailed=1")
                
         # Leave a group
-        group = self.request.get("leave_group")
+        group = self.request.get("selected_group")
         if group in user.group:
             user.group.remove(group)
             user.put()
@@ -546,7 +569,7 @@ class SettingsHandler(ModelrPageRequest):
             self.redirect('/signup')
             return
         
-        template_params = self.get_base_params(user)
+        template_params = self.get_base_params(user=user)
         template = env.get_template('settings.html')
         html = template.render(template_params)
         self.response.out.write(html)
@@ -629,8 +652,82 @@ class Logout(ModelrPageRequest):
         self.response.headers.add_header('Set-Cookie',
                                          'user=""; Path=/')
         self.redirect('/')
+
+class ManageGroup(ModelrPageRequest):
+
+    def get(self):
         
-    
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        group_name = self.request.get("selected_group")
+
+        group = Group.all().ancestor(ModelrRoot)
+        group = group.filter("name =", group_name).fetch(1)
+        if (not group):
+            self.redirect('/profile')
+            return
+
+        group = group[0]
+        if group.admin != user.user_id:
+            self.redirect('/profile')
+            return
+        
+        users = []
+        for user_id in group.allowed_users:
+            u = User.all().ancestor(ModelrRoot).filter("user_id =",
+                                                       user_id)
+            u = u.fetch(1)
+            if u:
+                users.append(u[0])
+
+        params = self.get_base_params(user=user, users=users,
+                                      group=group)
+        template = env.get_template('manage_group.html')
+        html = template.render(params)
+        self.response.out.write(html)
+        
+    def post(self):
+
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        group_name = self.request.get("group")
+        group = Group.all().ancestor(ModelrRoot)
+        group = group.filter("name =", group_name).fetch(1)[0]
+        
+        # remove a user
+        rm_user = self.request.get("user")
+        
+        if rm_user:
+            u = User.all().ancestor(ModelrRoot)
+            u = u.filter("user_id =", int(rm_user)).fetch(1)
+
+            if u and group_name in u[0].group:
+                u[0].group.remove(group_name)
+                u[0].put()
+                group.allowed_users.remove(int(rm_user))
+                group.put()
+            self.redirect('/manage_group?selected_group=%s' % group.name)
+            return
+        
+        # abolish a group
+        if (self.request.get("abolish") == "abolish"):
+            for uid in group.allowed_users:
+                u = User.all().ancestor(ModelrRoot)
+                u = u.filter("user_id =", uid).fetch(1)
+                if u and group.name in u[0].group:
+                    u[0].group.remove(group.name)
+                    u[0].put()
+            group.delete()
+            self.redirect('/profile')
+            return
+        
+        
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
                                ('/add_rock', AddRockHandler),
@@ -649,7 +746,8 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/about', AboutHandler),
                                ('/signup', SignUp),
                                ('/signin', SignIn),
-                               ('/logout', Logout)
+                               ('/logout', Logout),
+                               ('/manage_group', ManageGroup)
                                ],
                               debug=True)
 
