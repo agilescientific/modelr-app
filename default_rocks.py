@@ -22,7 +22,7 @@ default_rocks = [ {'name':'Shale(brine)',
                      'description': 'Sand with brine',
                      'vp': 3250, 'vs': 1780, 'rho': 2440,
                      'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
-                    {'name':'Sand(gas)',
+                    {'name':'Sand2(gas)',
                      'description': 'Sand with gas',
                      'vp': 2540, 'vs': 1620, 'rho': 2090,
                      'vp_std': 50, 'vs_std': 50, 'rho_std':50 }]
