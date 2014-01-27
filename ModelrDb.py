@@ -23,7 +23,15 @@ class User(db.Model):
     password = db.StringProperty()
     salt = db.StringProperty()
     group = db.StringListProperty()
-    
+
+class VerifyUser(User):
+    """
+    Temporary user objects to store user information while we wait
+    for a confirmation
+    """
+    pass
+
+
 class Item(db.Model):
     """
     Base class for items in the modelr database

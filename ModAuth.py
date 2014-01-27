@@ -2,7 +2,8 @@
 Functions related user logins, signups, password authentications,
 logouts, etc ...
 """
-from ModelrDb import User, UserID, Group
+from ModelrDb import User, UserID, Group, VerifyUser
+from google.appengine.api import mail
 import hashlib
 import random
 import re
@@ -101,7 +102,23 @@ def signup(email, password, group='public', parent=None):
     user.put()
     g.put()
 
+def verified_signup(user_id, password, parent):
     
+       u = VerifyUser.all().ancestor(parent).filter("user_id =",
+                                                    user_id)
+       verified_user = user.fetch(1)
+
+       if not user:
+           raise AuthExcept("Verification Failed")
+
+       verified_user= user[0]
+       user = User(verified_user.user_id, verified_user.email,
+                   verified_user.password, verified_user.salt,
+                   verified_user.group)
+       user.put()
+       verfied_user.delete()
+
+       
 def signin(email, password):
     """
     Checks if a email and password are valid. Will throw a AuthExcept

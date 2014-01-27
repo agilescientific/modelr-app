@@ -9,6 +9,7 @@ from google.appengine.ext import webapp as webapp2
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 
+
 import cgi
 from jinja2 import Environment, FileSystemLoader
 
@@ -68,6 +69,7 @@ for i in default_rocks:
         rock = Rock()
         rock.user = admin_id
         rock.name = i['name']
+        rock.group = 'public'
             
     rock.vp = float(i['vp'])
     rock.vs = float(i['vs'])
@@ -77,6 +79,8 @@ for i in default_rocks:
     rock.vs_std = float(i['vs_std'])
     rock.rho_std = float(i['rho_std'])
 
+
+    
     rock.put()
 
 
@@ -401,8 +405,7 @@ class DashboardHandler(ModelrPageRequest):
         
         template_params.update(rocks=rocks.fetch(100),
                                scenarios=scenarios.fetch(100),
-                               default_rocks =
-                                 default_rocks.fetch(100),
+                               default_rocks=default_rocks.fetch(100),
                                rock_groups=rock_groups)
 
         # Check if a rock is being edited
@@ -653,6 +656,13 @@ class Logout(ModelrPageRequest):
                                          'user=""; Path=/')
         self.redirect('/')
 
+class EmailAuthentication(ModelrPageRequest):
+
+    def get(self):
+
+        user_id = 
+
+        
 class ManageGroup(ModelrPageRequest):
 
     def get(self):
