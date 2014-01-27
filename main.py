@@ -21,7 +21,8 @@ import time
 
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
-     verify
+     verify, verified_signup
+     
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest
 
@@ -614,7 +615,13 @@ class SignUp(webapp2.RequestHandler):
     def get(self):
 
         template = env.get_template('signup.html')
-        html = template.render()
+        error = self.request.get("error")
+        if error == 'auth_failed':
+            error_msg = "failed to authorize user"
+            html = template.render(error=error_msg)
+        else:
+            html = template.render()
+        
         self.response.out.write(html)
         
     def post(self):
@@ -660,8 +667,16 @@ class EmailAuthentication(ModelrPageRequest):
 
     def get(self):
 
-        user_id = 
+        user_id = self.request.get("user_id")
+        
+        try:
+            verified_signup(user_id, ModelrRoot)
+        except AuthExcept as e:
+            self.redirect('/signup?error=auth_failed')
+            return
 
+        self.redirect('/signin')
+        
         
 class ManageGroup(ModelrPageRequest):
 
@@ -756,6 +771,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/about', AboutHandler),
                                ('/signup', SignUp),
                                ('/signin', SignIn),
+                               ('/email_verify', EmailAuthentication),
                                ('/logout', Logout),
                                ('/manage_group', ManageGroup)
                                ],
