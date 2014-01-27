@@ -86,9 +86,9 @@ def signup(email, password, group='public', parent=None):
     salt = make_salt()
     encrypted_password = encrypt_password(password, salt)
     
-    user = User(email=email, password=encrypted_password,
-                salt=salt, user_id=make_userid(),
-                group=[group], parent=parent)
+    user = VerifyUser(email=email, password=encrypted_password,
+                      salt=salt, user_id=make_userid(),
+                      group=[group], parent=parent)
 
     g = Group.all().ancestor(parent).filter("name =", group).fetch(1)
     if not g:
@@ -102,16 +102,27 @@ def signup(email, password, group='public', parent=None):
     user.put()
     g.put()
 
-def verified_signup(user_id, password, parent):
+    mail.send_mail(sender="Hello <ben.bougher@gmail.com>",
+              to="<%s>" % user.email,
+              subject="Your account has been approved",
+              body="""
+Welcome to Modelr:
+
+    Your modelr account needs to verified. Click the link below
+    to validate your account.
+    modelr.io/email_verify?%s
+""" % str(user.user_id))
+
+def verified_signup(user_id, parent):
     
        u = VerifyUser.all().ancestor(parent).filter("user_id =",
                                                     user_id)
-       verified_user = user.fetch(1)
+       verified_user = u.fetch(1)
 
-       if not user:
+       if not verified_user:
            raise AuthExcept("Verification Failed")
 
-       verified_user= user[0]
+       verified_user= verified_user[0]
        user = User(verified_user.user_id, verified_user.email,
                    verified_user.password, verified_user.salt,
                    verified_user.group)
