@@ -9,7 +9,7 @@
     <meta name="author" content="">
 
     <!-- Le styles -->
-    <link href="static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/css/bootstrap.css" rel="stylesheet">
     <link href="static/css/docs.css" rel="stylesheet">
     <style type="text/css">
       body {
@@ -26,6 +26,9 @@
       $('.dropdown-toggle').dropdown();
       });
     </script>
+    
+    <link href="carousel.css" rel="stylesheet">
+
 </head>
 
 <body>
@@ -33,37 +36,27 @@
     <!-- Nav
     ================================================== -->
     
+<div class="navbar-wrapper">
 <div class="container">
-
-<nav class="navbar navbar-default" role="navigation">
+<div class="navbar navbar-static-top" role="navigation">
+<div class="container">
   <!-- Brand and toggle get grouped for better mobile display -->
   <div class="navbar-header">
-    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
       <span class="sr-only">Toggle navigation</span>
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
     </button>
-    <strong><a class="navbar-brand" style="font-size:150%" href="/">modelr</a></strong>
+    <strong><a class="navbar-brand" href="/" >modelr</a></strong>
   </div>
 
   <!-- Collect the nav links, forms, and other content for toggling -->
-  <div class="collapse navbar-collapse" id="navbar-collapse-1">
+  <div class="navbar-collapse collapse">
     <ul class="nav navbar-nav">
       <li><a href="/dashboard">Dashboard</a></li>
       <li><a href="/about">About</a></li>
       <li><a href="/pricing">Pricing</a></li>
-<!--    <li class="dropdown">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
-        <ul class="dropdown-menu">
-          <li><a href="#">Action</a></li>
-          <li><a href="#">Another action</a></li>
-          <li><a href="#">Something else here</a></li>
-          <li class="divider"></li>
-          <li><a href="#">Separated link</a></li>
-        </ul>
-      </li>
--->
     </ul>
      
     {% if user %}
@@ -90,17 +83,16 @@
     </ul>
     {% endif %}
   </div><!-- /.navbar-collapse -->
-</nav>
-
+</div>
+</div>
 </div>
 
+</div>
 
     <!-- Main
     ================================================== -->
     
-    <div class="container" id="content">
       {% block content %} CONTENT GOES HERE {% endblock %}
-    </div>
 
 
     <!-- Footer
@@ -113,7 +105,7 @@
             <img src="https://developers.google.com/appengine/images/appengine-silver-120x30.gif" 
 alt="Powered by Google App Engine" />
           </div>
-          <p style="color:lightgray" ><a style="color:lightgray" href="http://www.agilegeoscience.com/"><img src="/static/img/agile_logo.png" width="60px" />&nbsp;&nbsp;&nbsp; Agile Geoscience 2014</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/terms">Terms and privacy</a></p>
+          <p style="color:lightgray" ><a href="http://www.agilegeoscience.com/"><img src="/static/img/agile_logo.png" width="60px" /></a>&nbsp;&nbsp;&nbsp;<a style="color:lightgray" href="http://www.agilegeoscience.com/">Agile Geoscience 2014</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/terms">Terms and privacy</a></p>
         </footer>
       {% endblock %}
     </div>
