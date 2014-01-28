@@ -372,7 +372,7 @@ class DashboardHandler(ModelrPageRequest):
 
         user = self.verify()
         if user is None:
-            self.redirect('/signup')
+            self.redirect('/signin')
             return
 
         template_params = self.get_base_params(user=user)
@@ -427,6 +427,24 @@ class AboutHandler(ModelrPageRequest):
         user = self.verify()
         template_params = self.get_base_params(user=user)
         template = env.get_template('about.html')
+        html = template.render(template_params)
+        self.response.out.write(html)          
+                                    
+class HelpHandler(ModelrPageRequest):
+    def get(self):
+
+        user = self.verify()
+        template_params = self.get_base_params(user=user)
+        template = env.get_template('help.html')
+        html = template.render(template_params)
+        self.response.out.write(html)          
+                                    
+class TermsHandler(ModelrPageRequest):
+    def get(self):
+
+        user = self.verify()
+        template_params = self.get_base_params(user=user)
+        template = env.get_template('terms.html')
         html = template.render(template_params)
         self.response.out.write(html)          
                                     
@@ -769,6 +787,8 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/profile', ProfileHandler),
                                ('/settings', SettingsHandler),
                                ('/about', AboutHandler),
+                               ('/help', HelpHandler),
+                               ('/terms', TermsHandler),
                                ('/signup', SignUp),
                                ('/signin', SignIn),
                                ('/email_verify', EmailAuthentication),

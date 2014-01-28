@@ -44,15 +44,15 @@
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
     </button>
-    <a class="navbar-brand" href="/">modelr</a>
+    <strong><a class="navbar-brand" style="font-size:150%" href="/">modelr</a></strong>
   </div>
 
   <!-- Collect the nav links, forms, and other content for toggling -->
   <div class="collapse navbar-collapse" id="navbar-collapse-1">
     <ul class="nav navbar-nav">
-      <li><a href="/dashboard">dashboard</a></li>
-      <li><a href="/about">about</a></li>
-      <li><a href="/pricing">pricing</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="/pricing">Pricing</a></li>
 <!--    <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
         <ul class="dropdown-menu">
@@ -68,6 +68,7 @@
      
     {% if user %}
     <ul class="nav navbar-nav navbar-right">
+      <li><a href="/help">Help</a>
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Hello {{ user.email if user else "" }}<b class="caret"></b></a>
         <ul class="dropdown-menu">
@@ -76,6 +77,15 @@
           <li class="divider"></li>
           <li><a href="/logout">Sign out</a></li>
         </ul>
+      </li>
+    </ul>
+    {% else %}
+    <ul class="nav navbar-nav navbar-right">
+      <li>
+        <a href="/help">Help</a>
+      </li>
+      <li>
+          <a href="/signin"><strong>Sign in</strong></a>
       </li>
     </ul>
     {% endif %}
@@ -98,30 +108,12 @@
 
     <footer class="bs-footer" role="content-info">
     <div class="container">
-
-<div class="bs-social">
-  <ul class="bs-social-buttons">
-    <li>
-      <iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=agile-geoscience&amp;repo=modelr&amp;type=watch&amp;count=true" width="100" height="20" title="Star on GitHub"></iframe>
-    </li>
-    <li>
-      <iframe class="github-btn" src="http://ghbtns.com/github-btn.html?user=agile-geoscience&amp;repo=modelr&amp;type=fork&amp;count=true" width="102" height="20" title="Fork on GitHub"></iframe>
-    </li>
-    <li class="follow-btn">
-      <a href="https://twitter.com/agilegeo" class="twitter-follow-button" data-link-color="#0069D6" data-show-count="true">Follow @agilegeo</a>
-    </li>
-    <li class="tweet-btn">
-      <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://agilegeoscience.com/" data-count="horizontal" data-via="agilegeo">Tweet</a>
-    </li>
-  </ul>
-</div>
-
       {% block footer %}
           <div style="float:right">
             <img src="https://developers.google.com/appengine/images/appengine-silver-120x30.gif" 
 alt="Powered by Google App Engine" />
           </div>
-          <p><a href="http://www.agilegeoscience.com/">Agile Geoscience 2013</a></p>
+          <p style="color:lightgray" ><a style="color:lightgray" href="http://www.agilegeoscience.com/"><img src="/static/img/agile_logo.png" width="60px" />&nbsp;&nbsp;&nbsp; Agile Geoscience 2014</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/terms">Terms and privacy</a></p>
         </footer>
       {% endblock %}
     </div>

@@ -1,27 +1,44 @@
 {% extends "base_template.html" %}
 
-{% block title %}Modelr &middot; Sign Up{% endblock %}
+{% block title %}Modelr &middot; Sign up{% endblock %}
 {% block content %}
 
 <div class="col-md-6">
+
 <div> {{error}}</div>
-  <form action="signup" method="post">
-    <label for="name" class="col-sm-4 control-label">Email</label>
-    <div class="col-sm-8">
+
+<h3>Create your <strong>modelr</strong> account.</h3>
+<p>&nbsp;</p>
+
+  <form class="form-horizontal" action="signup" method="post">
+  
+  <div class="form-group">
+    <label for="name" class="col-sm-3 control-label">Email</label>
+    <div class="col-sm-9">
       <input class="form-control" type="text" name="email"  value={{email}}>
     </div>
-    <label for="name" class="col-sm-4 control-label">Password</label>
-    <div class="col-sm-8">
+    </div>
+    
+  <div class="form-group">    
+    <label for="name" class="col-sm-3 control-label">Password</label>
+    <div class="col-sm-9">
       <input class="form-control" type="password" name="password" >
     </div>
-    <label for="name" class="col-sm-4 control-label">Verify</label>
-    <div class="col-sm-8">
+    </div>
+
+  <div class="form-group">
+    <label for="name" class="col-sm-3 control-label">Verify password</label>
+    <div class="col-sm-9">
       <input class="form-control" type="password" name="verify">
     </div>
-    <div>
-      <input class="btn btn-primary btn-lg" type="submit" value="Register">
-    </div>
-</form>
+  </div>
+  
+  <div class="col-sm-offset-3 col-sm-9">
+    <input class="btn btn-primary btn-lg" type="submit" value="Sign me up!">
+  </div>
+    
+  </form>
+
 </div>
 
 {% endblock %}
