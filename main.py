@@ -40,9 +40,13 @@ admin_user = User(email='modelr.app.agile@gmail.com',
                   user_id=admin_id)
 admin_user.put()
 
+
 # Ancestor dB for all of modelr. Allows for strongly consistent
 # database queries
 ModelrRoot = ModelrParent.all().get()
+ben = User.all().ancestor(ModelrRoot).filter("email =", "ben.bougher@gmail.com").fetch(1)
+
+for i in ben: i.delete()
 if not ModelrRoot:
     ModelrRoot = ModelrParent()
     ModelrRoot.put()
@@ -592,7 +596,7 @@ class SignIn(webapp2.RequestHandler):
         password = self.request.get('password')
 
         try:
-            signin(email, password)
+            signin(email, password, ModelrRoot)
             cookie = get_cookie_string(email)
             self.response.headers.add_header('Set-Cookie', cookie)
             self.redirect('/dashboard')
@@ -670,7 +674,7 @@ class EmailAuthentication(ModelrPageRequest):
         user_id = self.request.get("user_id")
         
         try:
-            verified_signup(user_id, ModelrRoot)
+            verified_signup(int(user_id), ModelrRoot)
         except AuthExcept as e:
             self.redirect('/signup?error=auth_failed')
             return

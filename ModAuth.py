@@ -73,7 +73,7 @@ def signup(email, password, group='public', parent=None):
     Checks for valid inputs then adds a user to the User database.
     """
 
-    exists = User.all().filter("email =", email)
+    exists = User.all().ancestor(parent).filter("email =", email)
     if (exists.fetch(1)):
         raise AuthExcept("Account Exists")
 
@@ -110,7 +110,7 @@ Welcome to Modelr:
 
     Your modelr account needs to verified. Click the link below
     to validate your account.
-    modelr.io/email_verify?%s
+    modelr.io/email_verify?user_id=%s
 """ % str(user.user_id))
 
 def verified_signup(user_id, parent):
@@ -123,20 +123,24 @@ def verified_signup(user_id, parent):
            raise AuthExcept("Verification Failed")
 
        verified_user= verified_user[0]
-       user = User(verified_user.user_id, verified_user.email,
-                   verified_user.password, verified_user.salt,
-                   verified_user.group)
+       user = User(parent=parent)
+       user.user_id = verified_user.user_id
+       user.email = verified_user.email
+       user.password = verified_user.password
+       user.salt = verified_user.salt
+       user.group = verified_user.group
+       
        user.put()
-       verfied_user.delete()
+       verified_user.delete()
 
        
-def signin(email, password):
+def signin(email, password, parent):
     """
     Checks if a email and password are valid. Will throw a AuthExcept
     if they are not.
     """
 
-    user = User.all().filter("email =", email).fetch(1)
+    user = User.all().ancestor(parent).filter("email =", email).fetch(1)
     if not user:
         raise AuthExcept('invalid email')
     
