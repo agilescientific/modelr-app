@@ -583,6 +583,19 @@ class ProfileHandler(ModelrPageRequest):
         err_string = '&'.join(err_string) if err_string else ''
         self.redirect('/profile?' + err_string)
                                     
+class SubscribeHandler(ModelrPageRequest):
+    
+    def get(self):
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+        
+        template_params = self.get_base_params(user=user)
+        template = env.get_template('subscribe.html')
+        html = template.render(template_params)
+        self.response.out.write(html)
+
 class SettingsHandler(ModelrPageRequest):
     
     def get(self):
@@ -785,6 +798,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                   RemoveScenarioHandler),
                                ('/pricing', PricingHandler),
                                ('/profile', ProfileHandler),
+                               ('/subscribe', SubscribeHandler),
                                ('/settings', SettingsHandler),
                                ('/about', AboutHandler),
                                ('/help', HelpHandler),
