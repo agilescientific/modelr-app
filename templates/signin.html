@@ -1,23 +1,50 @@
 {% extends "base_template.html" %}
 
-{% block title %}Modelr &middot; Sign In{% endblock %}
+{% block title %}Modelr &middot; Sign in{% endblock %}
 {% block content %}
 
+<div class="container">
+
 <div class="col-md-6">
+
   <div> {{error}}</div>
-  <form action="signin" method="post">
-    <label for="name" class="col-sm-4 control-label">Email</label>
-    <div class="col-sm-8">
-      <input class="form-control" type="text" name="email" value={{email}}>
+
+<h3>Sign in to your <strong>modelr</strong> account.</h3>
+<p>&nbsp;</p>
+  
+  <form class="form-horizontal" action="signin" method="post">
+  
+    <div class="form-group">
+      <label for="name" class="col-sm-3 control-label">Email</label>
+      <div class="col-sm-9">
+        <input class="form-control" type="text" name="email" value={{email}}>
+      </div>
     </div>
-    <label for="name" class="col-sm-4 control-label">Password</label>
-    <div class="col-sm-8">
-      <input class="form-control" type="password" name="password" >
+    
+    <div class="form-group">
+      <label for="name" class="col-sm-3 control-label">Password</label>
+      <div class="col-sm-9">
+        <input class="form-control" type="password" name="password" >
+      </div>
     </div>
-    <div>
-      <input class="btn btn-primary btn-lg" type="submit" value="Login">
+    
+    <div class="form-group">
+    <div class="col-sm-offset-3 col-sm-9">
+      <div class="checkbox">
+        <label>
+          <input type="checkbox"> Remember me
+        </label>
+      </div>
     </div>
-</form>
+    </div>
+    
+    <div class="col-sm-offset-3 col-sm-9">
+      <input class="btn btn-primary btn-lg" type="submit" value="Sign in">
+    </div>
+    
+  </form>
+
+</div>
 </div>
 
 {% endblock %}

@@ -3,10 +3,100 @@
 {% block title %}Modelr &middot; Pricing{% endblock %}
 {% block content %}
 
+    <head>
+        <style type='text/css'>
+
+.price {
+  font-size: 4em;
+}
+ 
+.price-cents {
+  vertical-align: super;
+  font-size: 50%;
+}
+ 
+.price-month {
+  font-size: 35%;
+  font-style: italic;
+}
+.panel {
+-webkit-transition-property : scale; 
+-webkit-transition-duration : 0.2s; 
+-webkit-transition-timing-function : ease-in-out; 
+-moz-transition : all 0.2s ease-in-out;  
+}
+ 
+.panel:hover {
+box-shadow: 0 0 10px rgba(0,0,0,.5);
+-moz-box-shadow: 0 0 10px rgba(0,0,0,.5);
+-webkit-box-shadow: 0 0 10px rgba(0,0,0,.5);
+-webkit-transform: scale(1.05);
+-moz-transform: scale(1.05);
+}
+
+</style>
+</head>
+
+
 <div class="container">
               
-  <h3>Subscribe to modelr</h3>
-  <p>Sorry, modelr is still in private beta. Please check back later.</p>
+  <h3>Pricing</h3>
+  
+  <p>
+  We believe in simplicity. So there are only two plans. There may be more plans in the future, but only if we add something truly awesome.
+  </p>
+  
+  <p>
+  And we believe in fairness. So you won't find someone paying less than you. We have no sales person. There are no deals. 
+  </p>
+  
+      <div class="container">
+    <div class="row">
+        <div class="col-sm-offset-3 col-sm-3">
+          <div class="panel panel-default text-center">
+            <div class="panel-heading">
+              <h3>Basic</h3>
+            </div>
+            <div class="panel-body">
+              <h3 class="panel-title price">free</h3>
+              <p>now and always</p>
+            </div>
+            <ul class="list-group">
+              <li class="list-group-item">Public results</li>
+              <li class="list-group-item">Unlimited scenarios</li>
+              <li class="list-group-item">Unlimited rocks</li>
+              {% if user %}
+                <li class="list-group-item">Current plan</li>
+              {% else %}
+                <li class="list-group-item"><a class="btn btn-default" href="/signup">Sign up now!</a></li>
+              {% endif %}
+            </ul>
+          </div>          
+        </div>
+        <div class="col-sm-3">
+          <div class="panel panel-info text-center">
+            <div class="panel-heading">
+              <h3>Plus</h3>
+            </div>
+            <div class="panel-body">
+              <h3 class="panel-title price">$9<span class="price-month">/month</span></h3>
+              <p>or $99/year</p>
+            </div>
+            <ul class="list-group">
+              <li class="list-group-item">Private results</li>
+              <li class="list-group-item">Unlimited scenarios</li>
+              <li class="list-group-item">Unlimited rocks</li>
+              {% if user %}
+                <li class="list-group-item"><a class="btn btn-default" href="/subscribe">Subscribe now!</a></li>
+              {% else %}
+                <li class="list-group-item"><a class="btn btn-default" href="/signup">Sign up now!</a></li>
+              {% endif %}
+            </ul>
+          </div>          
+        </div>
+ 
+      </div>
+    </div> 
                 
 </div>
 

@@ -2,13 +2,12 @@
 # -*- coding: utf-8 -*-
 # modelr web app
 # Agile Geoscience
-# 2012-2013
+# 2012-2014
 #
 from google.appengine.api import users
 from google.appengine.ext import webapp as webapp2
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
-
 
 import cgi
 from jinja2 import Environment, FileSystemLoader
@@ -18,6 +17,7 @@ import hashlib
 import logging
 import urllib
 import time
+import stripe
 
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
@@ -376,7 +376,7 @@ class DashboardHandler(ModelrPageRequest):
 
         user = self.verify()
         if user is None:
-            self.redirect('/signup')
+            self.redirect('/signin')
             return
 
         template_params = self.get_base_params(user=user)
@@ -431,6 +431,24 @@ class AboutHandler(ModelrPageRequest):
         user = self.verify()
         template_params = self.get_base_params(user=user)
         template = env.get_template('about.html')
+        html = template.render(template_params)
+        self.response.out.write(html)          
+                                    
+class HelpHandler(ModelrPageRequest):
+    def get(self):
+
+        user = self.verify()
+        template_params = self.get_base_params(user=user)
+        template = env.get_template('help.html')
+        html = template.render(template_params)
+        self.response.out.write(html)          
+                                    
+class TermsHandler(ModelrPageRequest):
+    def get(self):
+
+        user = self.verify()
+        template_params = self.get_base_params(user=user)
+        template = env.get_template('terms.html')
         html = template.render(template_params)
         self.response.out.write(html)          
                                     
@@ -569,6 +587,51 @@ class ProfileHandler(ModelrPageRequest):
         err_string = '&'.join(err_string) if err_string else ''
         self.redirect('/profile?' + err_string)
                                     
+class SubscribeHandler(ModelrPageRequest):
+    
+    def get(self):
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+        
+        template_params = self.get_base_params(user=user)
+        template = env.get_template('subscribe.html')
+        html = template.render(template_params)
+        self.response.out.write(html)
+
+class PaymentHandler(ModelrPageRequest):
+    
+    def post(self):
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+        
+        # Secret API key from Stripe dashboard
+        stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
+
+        # Get the credit card details submitted by the form
+        token = self.request.get('stripeToken')
+
+        # CLEAN AND PROCESS USER INPUT
+        # MORE TO DO HERE
+        amount = 900 # or 9900 for yearly
+
+        # Create the charge on Stripe's servers - this will charge the user's card
+        try:
+          charge = stripe.Charge.create(
+              amount=amount, # amount in cents, again
+              currency="usd",
+              card=token,
+              description="payinguser@example.com"
+          )
+        except:
+          # The card has been declined
+          pass
+          
+        # UPGRADE USER IN DATABASE
+        
 class SettingsHandler(ModelrPageRequest):
     
     def get(self):
@@ -771,8 +834,12 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                   RemoveScenarioHandler),
                                ('/pricing', PricingHandler),
                                ('/profile', ProfileHandler),
+                               ('/subscribe', SubscribeHandler),
+                               ('/submitpayment', PaymentHandler),
                                ('/settings', SettingsHandler),
                                ('/about', AboutHandler),
+                               ('/help', HelpHandler),
+                               ('/terms', TermsHandler),
                                ('/signup', SignUp),
                                ('/signin', SignIn),
                                ('/email_verify', EmailAuthentication),
