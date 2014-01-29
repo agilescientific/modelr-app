@@ -104,7 +104,7 @@ def signup(email, password, group='public', parent=None):
 
     mail.send_mail(sender="Hello <ben.bougher@gmail.com>",
               to="<%s>" % user.email,
-              subject="Your account has been approved",
+              subject="Modelr Verification",
               body="""
 Welcome to Modelr:
 

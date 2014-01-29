@@ -44,6 +44,10 @@ admin_user.put()
 # Ancestor dB for all of modelr. Allows for strongly consistent
 # database queries
 ModelrRoot = ModelrParent.all().get()
+if not ModelrRoot:
+    ModelrRoot = ModelrParent()
+    ModelrRoot.put()
+
     
 public = Group.all().ancestor(ModelrRoot).filter("name =", 'public')
 public = public.fetch(1)
