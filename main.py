@@ -44,12 +44,6 @@ admin_user.put()
 # Ancestor dB for all of modelr. Allows for strongly consistent
 # database queries
 ModelrRoot = ModelrParent.all().get()
-ben = User.all().ancestor(ModelrRoot).filter("email =", "ben.bougher@gmail.com").fetch(1)
-
-for i in ben: i.delete()
-if not ModelrRoot:
-    ModelrRoot = ModelrParent()
-    ModelrRoot.put()
     
 public = Group.all().ancestor(ModelrRoot).filter("name =", 'public')
 public = public.fetch(1)
