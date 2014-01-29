@@ -596,6 +596,37 @@ class SubscribeHandler(ModelrPageRequest):
         html = template.render(template_params)
         self.response.out.write(html)
 
+class PaymentHandler(ModelrPageRequest):
+    
+    def post(self):
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+        
+        # Secret API key from Stripe dashboard
+        stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
+
+        # Get the credit card details submitted by the form
+        token = self.request.get('stripeToken')
+
+        # CLEAN AND PROCESS USER INPUT
+        # MORE TO DO HERE
+        amount = 900 # or 9900 for yearly
+
+        # Create the charge on Stripe's servers - this will charge the user's card
+        try:
+          charge = stripe.Charge.create(
+              amount=amount, # amount in cents, again
+              currency="usd",
+              card=token,
+              description="payinguser@example.com"
+          )
+        except:
+          # The card has been declined
+          
+        # UPGRADE USER IN DATABASE
+        
 class SettingsHandler(ModelrPageRequest):
     
     def get(self):
@@ -799,6 +830,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/pricing', PricingHandler),
                                ('/profile', ProfileHandler),
                                ('/subscribe', SubscribeHandler),
+                               ('/submitpayment', PaymentHandler),
                                ('/settings', SettingsHandler),
                                ('/about', AboutHandler),
                                ('/help', HelpHandler),

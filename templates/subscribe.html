@@ -10,8 +10,136 @@
   <div class="alert alert-warning">
       <strong>Sorry</strong> You can't subscribe to modelr yet. Sign up below to stay informed of our launch...
   </div>
-                
+       
+   <form action="/submitpayment" method="POST" id="payment-form" novalidate autocomplete="on" class="form-horizontal">
+  <p><span class="text-error" style="text-align:center;"><span class="payment-errors"></span></span></p>
+
+  <div class="control-group">
+	<label class="control-label">
+		<span>Card number</span>
+	</label>
+	<div class="controls">
+		<input type="text" class="input-large cc-number" pattern="\d*" x-autocompletetype="cc-number" maxlength="20" data-stripe="number" required/>
+	</div>
+  </div>
+
+  <div class="control-group">
+	<label class="control-label">
+		<span>CVC</span>
+	</label>
+	<div class="controls">
+		<input type="text" class="input-mini cc-cvc" pattern="\d*" x-autocompletetype="cc-csc" autocomplete="off" maxlength="4" data-stripe="cvc" required/>
+	</div>
+  </div>
+
+  <div class="control-group">
+	<label class="control-label">
+		<span>Expires (MM/YYYY)</span>
+	</label>
+	<div class="controls">
+		<input type="text" class="input-mini cc-exp-month" data-numeric maxlength="2" data-stripe="exp-month" required/><span> / </span><input type="text" class="input-small cc-exp-year" data-numeric maxlength="4" data-stripe="exp-year" required/>
+	</div>
+  </div>
+
+  <div class="control-group">
+	<label class="control-label">
+		<span>Your name</span>
+	</label>
+	<div class="controls">
+		<input type="text" class="input-large" id="contributorname" name="contributorname" maxlength="50" required />
+	</div>
+  </div>
+
+  <div class="control-group">
+	<label class="control-label">
+		<span></span>
+	</label>
+	<div class="controls">
+		<button type="submit" class="btn btn-success">Submit payment</button>
+	</div>
+  </div>
+
+</form>
+          
 </div>
+
+<script type="text/javascript" src="https://js.stripe.com/v2/"></script>
+<script>
+	Stripe.setPublishableKey('pk_test_prdjLqGi2IsaxLrFHQM9F7X4');
+
+	var stripeResponseHandler = function(status, response) {
+	  var $form = $('#payment-form');
+	  if (response.error) {
+		// Show the errors on the form
+		$form.find('.payment-errors').text(response.error.message);
+		$form.find('button').prop('disabled', false);
+	  } else {
+		// token contains id, last4, and card type
+		var token = response.id;
+		// Insert the token into the form so it gets submitted to the server
+		$form.append($('').val(token));
+		// and re-submit
+		$form.get(0).submit();
+	  }
+	};
+</script>
+			jQuery(function($) {
+			  $('#payment-form').submit(function(event) {
+			  	$("#cardverificationerror").hide();
+				var $form = $(this);
+				var isValidInput = false;
+				if ($.payment.validateCardNumber($('.cc-number').val())) {
+					var cardType = $.payment.cardType($('.cc-number').val());
+					if ($.payment.validateCardCVC($('.cc-cvc').val(), cardType)) {
+						if ($.payment.validateCardExpiry($('.cc-exp-month').val(), $('.cc-exp-year').val())) {
+							if ($("#contributionamount").val() > 0) {
+								if ($("#contributorname").val().length > 0) {
+									isValidInput = true;
+								} else {
+									$("#cardverificationerror").show();
+									$("#cardverificationerrorheader").text('Please provide your name');
+									$("#cardverificationerrortext").text("We don't save your name or card information on the servers, it's just metadata that will tag along with your generous contribution.");
+								}
+							} else {
+								$("#cardverificationerror").show();
+								$("#cardverificationerrorheader").text('Is that a valid contribution amount?');
+								$("#cardverificationerrortext").text("Please just use whole numbers, integers, dollars, no decimals, no cents, straight up dollar bills, you get the idea.");
+							}
+						} else {
+							$("#cardverificationerror").show();
+							$("#cardverificationerrorheader").text('Is the expiration date correct?');
+							$("#cardverificationerrortext").text("It doesn't seem to be a valid expiration date to us so that means we can't use it. Please check the month and year and try again.");
+						}
+					} else {
+						$("#cardverificationerror").show();
+						$("#cardverificationerrorheader").text('Is that CVC correct?');
+						$("#cardverificationerrortext").text("It doesn't seem to match up to that type of card to us so that means we can't use it. Please check that CVC number and try again.");
+					}
+				} else {
+					$("#cardverificationerror").show();
+					$("#cardverificationerrorheader").text('Is that card number correct?');
+					$("#cardverificationerrortext").text("It looks invalid to us so that means we can't use it. Please verify the number or consider using a different card if you have one.");
+				}
+				if (isValidInput) {
+					$("#submitprogressbar").show();
+					// Disable the submit button to prevent repeated clicks
+					$form.find('button').prop('disabled', true);
+					Stripe.createToken($form, stripeResponseHandler);
+				}
+				// Prevent the form from submitting with the default action
+				return false;
+			  });
+			});
+		</script>
+		<script src="/static/js/jquery.payment.js"></script>
+		<script>
+	$(document).ready(function(){
+		$('[data-numeric]').payment('restrictNumeric');
+		$('.cc-number').payment('formatCardNumber');
+		$('.cc-cvc').payment('formatCardCVC');
+	});
+        </script>
+
 
 {% endblock %}
 
