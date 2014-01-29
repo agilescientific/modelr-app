@@ -2,13 +2,12 @@
 # -*- coding: utf-8 -*-
 # modelr web app
 # Agile Geoscience
-# 2012-2013
+# 2012-2014
 #
 from google.appengine.api import users
 from google.appengine.ext import webapp as webapp2
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
-
 
 import cgi
 from jinja2 import Environment, FileSystemLoader
@@ -18,6 +17,7 @@ import hashlib
 import logging
 import urllib
 import time
+import stripe
 
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
@@ -624,6 +624,7 @@ class PaymentHandler(ModelrPageRequest):
           )
         except:
           # The card has been declined
+          pass
           
         # UPGRADE USER IN DATABASE
         
