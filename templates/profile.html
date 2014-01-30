@@ -16,10 +16,10 @@
 	<form class="form-horizontal" name="input" action="/profile" method="post">
 	  <input type="hidden" name="selected_group" value="{{group.name}}" />
 	  <div class="row">
-	    <div class="col-md-2">
+	    <div class="col-md-4">
 	      {{group.name}}
 	    </div>
-	    <div class="col-md-2">
+	    <div class="col-md-4">
 	      {% if group.admin == user.user_id %}
 	      <input class="btn btn-success btn-xs" type="submit" value="manage" formaction="/manage_group" formmethod="get" />
 	      {% else %}
