@@ -234,7 +234,12 @@
 	    <div class="form-group">
 	      <label for="description" class="col-sm-2 control-label">Share</label>
 	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="group" value={{current_rock.group}} />
+		<select name="group">
+		  <option value="private">Private</option>
+		  {% for group in user.group %}
+		  <option value={{group}} {% if group==current_rock.group %} selected {% endif %}>{{group.capitalize()}}</option>
+		  {% endfor %}
+		</select>
 	      </div>
 	    </div>
 	    

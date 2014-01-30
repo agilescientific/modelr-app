@@ -68,7 +68,7 @@ def make_userid():
     return current_id
 
         
-def signup(email, password, group='public', parent=None):
+def signup(email, password, parent=None):
     """
     Checks for valid inputs then adds a user to the User database.
     """
@@ -85,22 +85,22 @@ def signup(email, password, group='public', parent=None):
 
     salt = make_salt()
     encrypted_password = encrypt_password(password, salt)
+    temp_id = hashlib.sha256(make_salt()).hexdigest()
+    
+    # Set up groups. See if the email domain exists
+    groups = ['public']
+    domain = email.split('@')[1]
+    g = Group.all().ancestor(parent).filter("name =",domain).fetch(1)
+
+    if g:
+        groups.append(domain)
     
     user = VerifyUser(email=email, password=encrypted_password,
-                      salt=salt, user_id=make_userid(),
-                      group=[group], parent=parent)
-
-    g = Group.all().ancestor(parent).filter("name =", group).fetch(1)
-    if not g:
-        g = Group(name=group, admin=user.user_id,
-                  parent=parent)
-    else:
-        g = g[0]
-        
-    g.allowed_users.append(user.user_id)
+                      salt=salt, temp_id=temp_id,
+                      group=groups, parent=parent)
     
     user.put()
-    g.put()
+    
 
     mail.send_mail(sender="Hello <ben.bougher@gmail.com>",
               to="<%s>" % user.email,
@@ -111,11 +111,11 @@ Welcome to Modelr:
     Your modelr account needs to verified. Click the link below
     to validate your account.
     modelr.io/email_verify?user_id=%s
-""" % str(user.user_id))
+""" % str(user.temp_id))
 
 def verified_signup(user_id, parent):
     
-       u = VerifyUser.all().ancestor(parent).filter("user_id =",
+       u = VerifyUser.all().ancestor(parent).filter("temp_id =",
                                                     user_id)
        verified_user = u.fetch(1)
 
@@ -124,12 +124,18 @@ def verified_signup(user_id, parent):
 
        verified_user= verified_user[0]
        user = User(parent=parent)
-       user.user_id = verified_user.user_id
+       user.user_id = make_userid()
        user.email = verified_user.email
        user.password = verified_user.password
        user.salt = verified_user.salt
        user.group = verified_user.group
-       
+
+       for group in user.group:
+           g = Group.all().ancestor(parent).filter("name =",
+                                                group).fetch(1)
+           g[0].allowed_users.append(user.user_id)
+           g[0].put()
+            
        user.put()
        verified_user.delete()
 

@@ -24,7 +24,7 @@ from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      verify, verified_signup
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest
+     GroupRequest, ActivityLog
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
@@ -33,31 +33,31 @@ env = Environment(loader=FileSystemLoader(join(dirname(__file__),
 #=====================================================================
 # Define Global Variables
 #=====================================================================
-
-# Put in the default rock database
-admin_id = 0
-admin_user = User(email='modelr.app.agile@gmail.com',
-                  user_id=admin_id)
-admin_user.put()
-
-
 # Ancestor dB for all of modelr. Allows for strongly consistent
 # database queries
 ModelrRoot = ModelrParent.all().get()
 if not ModelrRoot:
     ModelrRoot = ModelrParent()
     ModelrRoot.put()
-
     
+# Put in the default rock database
+admin_id = 0
+admin_user = User.all().filter("user_id =", admin_id).get()
+if not admin_user:
+    admin_user = User(user_id=admin_user,
+                      parent=ModelrRoot)
+    admin_user.put()
+    
+   
 public = Group.all().ancestor(ModelrRoot).filter("name =", 'public')
 public = public.fetch(1)
+
 if not public:
     public = Group(name='public', admin=admin_user.user_id,
                    parent=ModelrRoot)
     public.put()
 
-
-
+    
 # Populate the default rock database.
 for i in default_rocks:
 
@@ -82,8 +82,6 @@ for i in default_rocks:
     rock.vs_std = float(i['vs_std'])
     rock.rho_std = float(i['rho_std'])
 
-
-    
     rock.put()
 
 
@@ -135,7 +133,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
             return
         
         return verify(user, password, ModelrRoot)
-    
+        
 
 class MainHandler(ModelrPageRequest):
     '''
@@ -178,7 +176,12 @@ class RemoveScenarioHandler(ModelrPageRequest):
         
         for scenario in scenarios:
             scenario.delete()
-            
+
+        activity = "removed_scenario"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
+        
         self.redirect('/dashboard')
 
     
@@ -209,7 +212,11 @@ class ModifyScenarioHandler(ModelrPageRequest):
             self.response.out.write(scenario.data)
         else:
             self.response.out.write('null')
-            
+
+        activity = "fetched_scenario"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
         return 
         
     def post(self):
@@ -245,6 +252,11 @@ class ModifyScenarioHandler(ModelrPageRequest):
             
         scenario.data = data.encode()
         scenario.put()
+
+        activity = "modified_scenario"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
 
 class AddRockHandler(ModelrPageRequest):
     '''
@@ -283,6 +295,10 @@ class AddRockHandler(ModelrPageRequest):
         rock.group = self.request.get('group')
         rock.put()
 
+        activity = "added_rock"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
         self.redirect('/dashboard')
     
 
@@ -299,6 +315,10 @@ class RemoveRockHandler(ModelrPageRequest):
         selected_rock.filter("user =", user.user_id)
         selected_rock.filter("name =", self.request.get('name'))
 
+        activity = "removed_rock"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
         try:
             rock = selected_rock.fetch(1)[0]
             rock.delete()
@@ -325,6 +345,10 @@ class ModifyRockHandler(ModelrPageRequest):
       
         current_rock = selected_rock.fetch(1)
 
+        activity = "modified_rock"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
         try:
             rock = current_rock[0]
             key = rock.key()
@@ -363,6 +387,11 @@ class ScenarioHandler(ModelrPageRequest):
 
         html = template.render(template_params)
 
+        activity = "viewed_scenario"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
+        
         self.response.out.write(html)
         
 class DashboardHandler(ModelrPageRequest):
@@ -421,6 +450,10 @@ class DashboardHandler(ModelrPageRequest):
         template = env.get_template('dashboard.html')
         html = template.render(template_params)
 
+        activity = "dashboard"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
         self.response.out.write(html)
 
 class AboutHandler(ModelrPageRequest):
@@ -439,12 +472,20 @@ class HelpHandler(ModelrPageRequest):
         template_params = self.get_base_params(user=user)
         template = env.get_template('help.html')
         html = template.render(template_params)
+        activity = "help"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
         self.response.out.write(html)          
                                     
 class TermsHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
+        activity = "terms"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
         template_params = self.get_base_params(user=user)
         template = env.get_template('terms.html')
         html = template.render(template_params)
@@ -454,6 +495,10 @@ class PricingHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
+        activity = "pricing"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
         template_params = self.get_base_params(user=user)
         template = env.get_template('pricing.html')
         html = template.render(template_params)
@@ -510,6 +555,11 @@ class ProfileHandler(ModelrPageRequest):
         template_params.update(admin_req=req)
         template = env.get_template('profile.html')
         html = template.render(template_params)
+
+        activity = "profile_view"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
         self.response.out.write(html)
 
     def post(self):
@@ -522,7 +572,10 @@ class ProfileHandler(ModelrPageRequest):
         # Join a group
         join_group = self.request.get("join_group")
         if join_group:
-            
+            activity = "joined_group"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
             try:
                 group = Group.all().ancestor(ModelrRoot)
                 group = group.filter("name =", join_group).fetch(1)[0]
@@ -534,13 +587,18 @@ class ProfileHandler(ModelrPageRequest):
                     GroupRequest(user=user.user_id,
                                  group=group.name,
                                  parent=ModelrRoot).put()
-
+            
             except IndexError:
                 err_string.append("joinfailed=1")
-               
+
+            
         # Leave a group
         group = self.request.get("selected_group")
         if group in user.group:
+            activity = "left_group"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
             user.group.remove(group)
             user.put()
 
@@ -555,6 +613,10 @@ class ProfileHandler(ModelrPageRequest):
                       parent=ModelrRoot).put()
                 user.group.append(group)
                 user.put()
+                activity = "created_group"
+                ActivityLog(user_id=user.user_id,
+                            activity=activity,
+                            parent=ModelrRoot).put()
             else:
                 err_string.append("createfailed=1")
 
@@ -574,7 +636,10 @@ class ProfileHandler(ModelrPageRequest):
                     g.allowed_users.append(u[0].user_id)
                     u[0].put()
                     g.put()
-                
+            activity = "request_response"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
                     
             g_req = GroupRequest.all().ancestor(ModelrRoot)
             g_req = g_req.filter("user =", user_id)
@@ -592,7 +657,11 @@ class SubscribeHandler(ModelrPageRequest):
         if user is None:
             self.redirect('/signup')
             return
-        
+
+        activity = "subscribe"
+        ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
         template_params = self.get_base_params(user=user)
         template = env.get_template('subscribe.html')
         html = template.render(template_params)
@@ -605,7 +674,11 @@ class PaymentHandler(ModelrPageRequest):
         if user is None:
             self.redirect('/signup')
             return
-        
+
+        activity = "payment"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
         # Secret API key from Stripe dashboard
         stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
 
@@ -660,6 +733,7 @@ class SignIn(webapp2.RequestHandler):
             signin(email, password, ModelrRoot)
             cookie = get_cookie_string(email)
             self.response.headers.add_header('Set-Cookie', cookie)
+    
             self.redirect('/dashboard')
 
         except AuthExcept as e:
@@ -724,6 +798,10 @@ class Logout(ModelrPageRequest):
             self.redirect('/signup')
             return
 
+        activity = "logout"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
         self.response.headers.add_header('Set-Cookie',
                                          'user=""; Path=/')
         self.redirect('/')
@@ -735,7 +813,7 @@ class EmailAuthentication(ModelrPageRequest):
         user_id = self.request.get("user_id")
         
         try:
-            verified_signup(int(user_id), ModelrRoot)
+            verified_signup(user_id, ModelrRoot)
         except AuthExcept as e:
             self.redirect('/signup?error=auth_failed')
             return
@@ -777,6 +855,11 @@ class ManageGroup(ModelrPageRequest):
                                       group=group)
         template = env.get_template('manage_group.html')
         html = template.render(params)
+
+        activity = "manage_group"
+        ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
         self.response.out.write(html)
         
     def post(self):
@@ -802,7 +885,13 @@ class ManageGroup(ModelrPageRequest):
                 u[0].put()
                 group.allowed_users.remove(int(rm_user))
                 group.put()
-            self.redirect('/manage_group?selected_group=%s' % group.name)
+            self.redirect('/manage_group?selected_group=%s'
+                          % group.name)
+
+            activity = "removed_user"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
             return
         
         # abolish a group
@@ -814,6 +903,10 @@ class ManageGroup(ModelrPageRequest):
                     u[0].group.remove(group.name)
                     u[0].put()
             group.delete()
+            activity = "abolished_group"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
             self.redirect('/profile')
             return
         
@@ -850,6 +943,8 @@ app = webapp2.WSGIApplication([('/', MainHandler),
 
 
 def main():
+
+    logging.getLogger().setLevel(logging.DEBUG)
     run_wsgi_app(app)
 
 if __name__ == "__main__":

@@ -24,13 +24,19 @@ class User(db.Model):
     salt = db.StringProperty()
     group = db.StringListProperty()
 
+class ActivityLog(db.Model):
+
+    user_id = db.IntegerProperty()
+    activity = db.StringProperty()
+    date = db.DateTimeProperty(auto_now_add=True)
+    
 class VerifyUser(User):
     """
     Temporary user objects to store user information while we wait
     for a confirmation
     """
-    pass
-
+    temp_id = db.StringProperty()
+    
 
 class Item(db.Model):
     """
