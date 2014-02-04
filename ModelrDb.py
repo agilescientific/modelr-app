@@ -1,5 +1,5 @@
 from google.appengine.ext import db
-
+from google.appengine.ext import blobstore
 """
 Authentication and permissions will be structured similar to linux
 wuth groups and users. Group permissions can be added to an item to
@@ -45,6 +45,8 @@ class Item(db.Model):
     user = db.IntegerProperty()
     group = db.StringProperty()
 
+
+    
 class Group(db.Model):
 
     name = db.StringProperty()
@@ -55,7 +57,11 @@ class GroupRequest(db.Model):
 
     user = db.IntegerProperty()
     group = db.StringProperty()
+
+class ImageModel(Item):
     
+    image = blobstore.BlobReferenceProperty()
+
 class Scenario(Item):
     '''
     Database of Scenarios 

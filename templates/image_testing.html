@@ -1,0 +1,120 @@
+{% extends "base_template.html" %} 
+{% block title %}Modelr &middot; Scenario{% endblock %} 
+
+
+{% block content %}
+
+
+    
+
+<head>
+  <style>
+ .foo {   
+     float: left;
+     width: 20px;
+     height: 20px;
+     margin: 5px 5px 5px 5px;
+     border-width: 1px;
+     border-style: solid;
+     border-color: rgba(0,0,0,.2);
+   }
+  </style>
+</head>
+
+<script>
+  $(document).ready(function() {
+   TestJs({{colors}}, 0, {{colors.__len__()}});
+  });
+</script>
+
+<script>
+
+
+ function TestJs(colors, increment, length)
+ {
+
+   var parent = document.getElementById("test");
+   var foo;
+   var i, j;
+   var div,row, dropdown, option, text;
+   var rocks = get_rocks('datalist#list_of_rocks');
+   var index = $('#myCarousel .active').index('#myCarousel .item') + increment;
+
+   index = index % length;
+
+   while (parent.firstChild) {
+     parent.removeChild(parent.firstChild);
+   }
+
+   for (i in colors[index])
+   {
+     c=colors[index];
+     row = document.createElement("div");
+     row.className = "row";
+     foo = document.createElement("div");
+   
+     foo.className = "foo";
+     foo.style.backgroundColor = c[i];  
+     row.appendChild(foo);
+
+     dropdown = document.createElement("select");
+     option = document.createElement("option");
+     text = document.createTextNode("Rocks");
+     option.appendChild(text);
+     dropdown.appendChild(option);
+     option = document.createElement("option");
+     text = document.createTextNode("=============");
+     option.appendChild(text);
+     dropdown.appendChild(option);
+
+     for (j in rocks) {
+       option = document.createElement("option");
+       text = document.createTextNode(j);
+       option.appendChild(text);
+       dropdown.appendChild(option);
+     }
+     row.appendChild(dropdown);
+     parent.appendChild(row);
+   }  
+ }
+</script>
+
+<datalist id="list_of_rocks">
+	{% for rock in rocks %}
+	<option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},{{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+		data-name="{{rock.name}}">{{rock.name}}</option>
+	{% endfor %}
+        {% for rock in default_rocks %}
+	<option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},{{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+		data-name="{{rock.name}}">{{rock.name}}</option>
+	{% endfor %}
+	
+</datalist>
+
+<div class="row">
+  <div class="col-md-2">
+    <div id="myCarousel" class="carousel slide" data-interval="false">
+      <!-- Carousel slides -->
+      <div class="carousel-inner">
+	{% for i in range((images.__len__())) %}
+	<div {% if i==0 %} class="active item" {% else %} class="item" {% endif %}>
+	  <div class="thumbnail">
+	    <img src={{images[i]}} alt="" >
+          </div>
+	</div>	
+	{% endfor %}
+      </div>
+
+      <!-- Carousel nav -->
+      <a class="carousel-control left" href="#myCarousel" data-slide="prev" onclick="TestJs({{colors}}, -1, {{images.__len__()}})">‹</a>
+      <a class="carousel-control right" href="#myCarousel" data-slide="next" onclick="TestJs({{colors}},1,{{images.__len__()}})">›</a>
+    </div>
+  </div>
+
+  <div class="col-md-4" id="test"></div>
+  
+</div> <!-- End row -->
+
+{% endblock %}
+
+

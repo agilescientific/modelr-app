@@ -8,7 +8,11 @@ from google.appengine.api import users
 from google.appengine.ext import webapp as webapp2
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
+from google.appengine.ext.webapp import blobstore_handlers
+from google.appengine.ext import blobstore
+from google.appengine.api import images
 
+from PIL import Image
 import cgi
 from jinja2 import Environment, FileSystemLoader
 
@@ -24,7 +28,9 @@ from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      verify, verified_signup
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest, ActivityLog
+     GroupRequest, ActivityLog, ImageModel
+
+import os
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
@@ -85,6 +91,11 @@ for i in default_rocks:
     rock.put()
 
 
+def RGBToString(rgb_tuple):
+    """ convert an (R, G, B) tuple to #RRGGBB """
+    color = 'rgb(%s,%s,%s)' % rgb_tuple
+    # that's it! '%02x' means zero-padded, 2-digit hex values
+    return color
 #====================================================================
 # 
 #====================================================================
@@ -910,7 +921,77 @@ class ManageGroup(ModelrPageRequest):
             self.redirect('/profile')
             return
         
+class CarouselTest(ModelrPageRequest):
+
+    def get(self):
+  
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        models = \
+          ImageModel.all().filter("user =",user.user_id).fetch(100)
+
+        imgs = [images.get_serving_url(i.image, size=1000,
+                                       crop=True)
+                for i in models]
+     
         
+
+        readers = [blobstore.BlobReader(i.image.key())
+                   for i in models]
+
+        colors = [[RGBToString(j[1])
+                   for j in Image.open(i).getcolors()]
+                  for i in readers]
+        
+        rocks = Rock.all()
+        rocks.ancestor(user)
+        rocks.filter("user =", user.user_id)
+        rocks.order("-date")
+
+        default_rocks = Rock.all()
+        default_rocks.filter("user =", admin_id)
+        params = self.get_base_params(user=user,
+                                      images=imgs,
+                                      colors=colors,
+                                      rocks=rocks.fetch(100),
+                            default_rocks=default_rocks.fetch(100))
+        template = env.get_template('image_testing.html')
+        html = template.render(params)
+        self.response.out.write(html)
+
+class UploadImage(ModelrPageRequest):
+    def get(self):
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+        upload_url = blobstore.create_upload_url('/upload')
+        self.response.out.write('<html><body>')
+        self.response.out.write('<form action="%s" method="POST" enctype="multipart/form-data">' % upload_url)
+        self.response.out.write("""Upload File: <input type="file" name="file"><br> <input type="submit"
+        name="submit" value="Submit"> </form></body></html>""")
+
+    
+class Upload(blobstore_handlers.BlobstoreUploadHandler,
+             ModelrPageRequest):
+
+    def post(self):
+        user = ModelrPageRequest.verify(self)
+        if user is None:
+            self.redirect('/signup')
+            return
+        
+        upload_files = self.get_uploads('file')  # 'file' is file upload field in the form
+        blob_info = upload_files[0]
+
+        ImageModel(user=user.user_id,image=blob_info).put()
+        self.redirect('/carousel_test')
+
+        
+
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
                                ('/add_rock', AddRockHandler),
@@ -935,7 +1016,10 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/signin', SignIn),
                                ('/email_verify', EmailAuthentication),
                                ('/logout', Logout),
-                               ('/manage_group', ManageGroup)
+                               ('/manage_group', ManageGroup),
+                               ('/carousel_test', CarouselTest),
+                               ('/upload', Upload),
+                               ('/upload_image', UploadImage)
                                ],
                               debug=True)
 
