@@ -6,7 +6,11 @@
 <div class="container">
 <div class="col-md-6">
 
-<div> {{error}}</div>
+  {% if error %}
+  <div class="alert alert-danger">
+      <strong>Something's wrong...</strong> {{error}}
+  </div>
+  {% endif %}
 
   <div class="alert alert-warning">
       <strong>Sorry!</strong> You cannot sign up yet. We should be up in February some time.<br />

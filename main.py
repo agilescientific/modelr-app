@@ -473,35 +473,44 @@ class HelpHandler(ModelrPageRequest):
         template = env.get_template('help.html')
         html = template.render(template_params)
         activity = "help"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
+        
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
+                        
         self.response.out.write(html)          
                                     
 class TermsHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
-        activity = "terms"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
         template_params = self.get_base_params(user=user)
         template = env.get_template('terms.html')
         html = template.render(template_params)
+        activity = "terms"
+        
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
+        
         self.response.out.write(html)          
                                     
 class PricingHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
-        activity = "pricing"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
         template_params = self.get_base_params(user=user)
         template = env.get_template('pricing.html')
         html = template.render(template_params)
+        activity = "pricing"
+        
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
+
         self.response.out.write(html)          
           
 class ProfileHandler(ModelrPageRequest):
@@ -714,36 +723,7 @@ class SettingsHandler(ModelrPageRequest):
         template_params = self.get_base_params(user=user)
         template = env.get_template('settings.html')
         html = template.render(template_params)
-        self.response.out.write(html)
-
-class SignIn(webapp2.RequestHandler):
-
-    def get(self):
-
-        template = env.get_template('signin.html')
-        html = template.render()
-        self.response.out.write(html)
-
-    def post(self):
-
-        email = self.request.get('email')
-        password = self.request.get('password')
-
-        try:
-            signin(email, password, ModelrRoot)
-            cookie = get_cookie_string(email)
-            self.response.headers.add_header('Set-Cookie', cookie)
-    
-            self.redirect('/dashboard')
-
-        except AuthExcept as e:
-            template = env.get_template('signin.html')
-            msg = e.msg
-            html = template.render(email=email,
-                                   error=msg)
-            self.response.out.write(html)
-
-        
+        self.response.out.write(html)        
             
         
 class SignUp(webapp2.RequestHandler):
@@ -788,23 +768,6 @@ class SignUp(webapp2.RequestHandler):
                                        error=msg)
                 self.response.out.write(html)
                 
-            
-class Logout(ModelrPageRequest):
-
-    def get(self):
-        
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-
-        activity = "logout"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
-        self.response.headers.add_header('Set-Cookie',
-                                         'user=""; Path=/')
-        self.redirect('/')
 
 class EmailAuthentication(ModelrPageRequest):
 
@@ -820,6 +783,52 @@ class EmailAuthentication(ModelrPageRequest):
 
         self.redirect('/signin')
         
+        
+class SignIn(webapp2.RequestHandler):
+
+    def get(self):
+
+        template = env.get_template('signin.html')
+        html = template.render()
+        self.response.out.write(html)
+
+    def post(self):
+
+        email = self.request.get('email')
+        password = self.request.get('password')
+
+        try:
+            signin(email, password, ModelrRoot)
+            cookie = get_cookie_string(email)
+            self.response.headers.add_header('Set-Cookie', cookie)
+    
+            self.redirect('/dashboard')
+
+        except AuthExcept as e:
+            template = env.get_template('signin.html')
+            msg = e.msg
+            html = template.render(email=email,
+                                   error=msg)
+            self.response.out.write(html)
+
+                               
+class SignOut(ModelrPageRequest):
+
+    def get(self):
+        
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        activity = "signout"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
+        self.response.headers.add_header('Set-Cookie',
+                                         'user=""; Path=/')
+        self.redirect('/')
+
         
 class ManageGroup(ModelrPageRequest):
 
@@ -932,9 +941,9 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/help', HelpHandler),
                                ('/terms', TermsHandler),
                                ('/signup', SignUp),
-                               ('/signin', SignIn),
                                ('/email_verify', EmailAuthentication),
-                               ('/logout', Logout),
+                               ('/signin', SignIn),
+                               ('/signout', SignOut),
                                ('/manage_group', ManageGroup)
                                ],
                               debug=True)

@@ -38,7 +38,7 @@
     
 <div class="navbar-wrapper">
 <div class="container">
-<div class="navbar navbar-static-top" role="navigation">
+<div class="navbar navbar-default" role="navigation">
 <div class="container">
   <!-- Brand and toggle get grouped for better mobile display -->
   <div class="navbar-header">
@@ -54,7 +54,9 @@
   <!-- Collect the nav links, forms, and other content for toggling -->
   <div class="navbar-collapse collapse">
     <ul class="nav navbar-nav">
+      {% if user %}
       <li><a href="/dashboard">Dashboard</a></li>
+      {% endif %}
       <li><a href="/about">About</a></li>
       <li><a href="/pricing">Pricing</a></li>
     </ul>
@@ -68,7 +70,7 @@
           <li><a href="/profile">My profile</a></li>
           <li><a href="/settings">Settings</a></li>
           <li class="divider"></li>
-          <li><a href="/logout">Sign out</a></li>
+          <li><a href="/signout">Sign out</a></li>
         </ul>
       </li>
     </ul>
@@ -88,6 +90,7 @@
 </div>
 
 </div>
+
 
     <!-- Main
     ================================================== -->
