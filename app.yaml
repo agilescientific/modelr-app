@@ -11,25 +11,11 @@ handlers:
 
 - url: /static
   static_dir: static
-
-- url: /signup
-  script: main.app
   secure: always
-  
-- url: /signin
-  script: main.app
-  secure: always
-  
-- url: /profile
-  script: main.app
-  secure: always
-  
-- url: /signout
-  script: main.app
-  secure: never
 
 - url: .*
   script: main.app
+  secure: always
 
 libraries:
 - name: webapp2

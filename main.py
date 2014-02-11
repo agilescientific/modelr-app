@@ -663,14 +663,15 @@ class SubscribeHandler(ModelrPageRequest):
     
     def get(self):
         user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
+#        if user is None:
+#            self.redirect('/signup')
+#            return
+#
+#        activity = "subscribe"
+#        ActivityLog(user_id=user.user_id,
+#                        activity=activity,
+#                        parent=ModelrRoot).put()
 
-        activity = "subscribe"
-        ActivityLog(user_id=user.user_id,
-                        activity=activity,
-                        parent=ModelrRoot).put()
         template_params = self.get_base_params(user=user)
         template = env.get_template('subscribe.html')
         html = template.render(template_params)
@@ -707,10 +708,17 @@ class PaymentHandler(ModelrPageRequest):
               description="payinguser@example.com"
           )
         except:
-          # The card has been declined
-          pass
-          
+            # The card has been declined
+            # Let the user know and DON'T UPGRADE USER
+            self.response.out.write("Payment failed")
+            return
+            
+        # If successful, tell the user
+        # Make sure they can get a receipt
         # UPGRADE USER IN DATABASE
+        self.response.out.write("Payment succeeded")
+        return
+
         
 class SettingsHandler(ModelrPageRequest):
     
@@ -947,8 +955,6 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/manage_group', ManageGroup)
                                ],
                               debug=True)
-
-
 
 
 def main():
