@@ -1,0 +1,172 @@
+{% extends "base_template.html" %} 
+{% block title %}Modelr &middot; Model Builder{% endblock %} 
+
+{% block content %}
+
+
+<div class="container">
+  <!-- JAVASCRIPT and DATA
+  =================================================================-->
+
+  <script>
+
+   var host = '{{HOSTNAME}}';
+
+  </script>
+
+
+  <script>
+
+   $(document).ready(function() {
+     
+     server = new PlotServer(host);
+     modelbuilder = new ModelBuilder(name, null, {});
+
+     modelbuilder.display = display_form
+
+     modelbuilder.set_current_script = function(value, argumentss){
+       modelbuilder.script = value;
+       console.log('server.current_script');
+
+       server.get_json('/script_help.json?script=' + value + 
+		       '&path=body_scripts',
+		       function(data){
+	   
+	   modelbuilder.info = data;
+	   modelbuilder.default_args(argumentss);
+	   console.log('div#builder_place');
+	   
+	   modelbuilder.display('div#builder_place');
+	   modelbuilder.on_change();
+	 }  
+		       )
+
+       // Select the script in the 'select' element of this page.  
+       $("select#select_script option").filter(function() {
+         //may want to use $.trim in here
+         return $(this).val() == value; 
+       }).attr('selected', true);
+
+     }
+     
+
+     
+     modelbuilder.on_change = function update_link(){
+       
+       var qs = modelbuilder.qs();
+       var url = server.hostname +'/plot.jpeg' + qs;
+       
+       var p = $('p#image_link');
+       p.text(url);
+       p.attr('href', url)      
+     }
+
+
+     modelbuilder.set_current_script('slab_builder.py',
+				     modelbuilder.arguments);
+
+     // This is specific to this display.
+     server.update_img = function(modelbuilder){
+       
+       var qs = modelbuilder.qs();
+       var url = server.hostname +'/plot.jpeg' + qs;
+       var img = $('img#plot_image');
+       img.attr('src', url);
+       
+     }
+     
+   });
+
+  </script>
+  <script>
+    window.onload = function(){
+    server.update_img(modelbuilder);
+    }
+  </script>
+
+
+
+  <!-- MODEL PANEL
+  =================================================================-->
+  <div class="row">
+
+    <div class="col-md-6">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">Model Builder</h3>
+	</div>
+	
+	<div class="panel-body">
+	  <img class="img-thumbnail" id="example_image"
+	       src="/static/img/example.png">
+
+          <!-- Div to place the form into see builder.display and 
+	  display_form functions-->
+          <div class="container" id="builder_place">
+          </div>
+	  
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-6">
+	      <button class="btn btn-default" id='create_image' 
+		      onclick="server.update_img(modelbuilder)">
+                Create image
+	      </button>
+            </div>
+          </div>
+
+          </form>
+
+	</div>  <!-- end of panel-body -->
+      </div>
+    </div>
+    
+    <!-- RESULT PANEL
+    ===============================================================-->
+
+    <div class="col-md-6">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">Result</h3>
+	</div>
+	<div class="panel-body">
+
+          <img class="img-thumbnail" id="plot_image" href=URL 
+	       alt="Plot image">
+          <!-- Updated by the  create_image button above-->
+          </img>
+
+	</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <button class="btn btn-default" 
+	      type="submit">
+        Save
+      </button>
+    </div>
+
+  </div>
+
+  <!-- URL PANEL
+  ================================================================ -->
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">URL</h3>
+	</div>
+	<div class="panel-body">
+          <!-- Create and display the image / see the user defined 
+	  server.update_img -->
+          <p id="image_link" style="font-size: 10px;">URL</p>
+	</div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  {% endblock %}

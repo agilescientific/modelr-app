@@ -11,7 +11,7 @@ from google.appengine.ext import db
 from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext import blobstore
 from google.appengine.api import images
-
+from google.appengine.api import urlfetch
 from PIL import Image
 import cgi
 from jinja2 import Environment, FileSystemLoader
@@ -29,12 +29,29 @@ from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, ImageModel
-
 import os
 
+import cloudstorage as gcs 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
                                                'templates')))
+
+
+# Retry can help overcome transient urlfetch or GCS issues, such as timeouts.
+my_default_retry_params = gcs.RetryParams(initial_delay=0.2,
+                                          max_delay=5.0,
+                                          backoff_factor=2,
+                                          max_retry_period=15)
+# All requests to GCS using the GCS client within current GAE request and
+# current thread will use this retry params as default. If a default is not
+# set via this mechanism, the library's built-in default will be used.
+# Any GCS client function can also be given a more specific retry params
+# that overrides the default.
+# Note: the built-in default is good enough for most cases. We override
+# retry_params here only for demo purposes.
+gcs.set_default_retry_params(my_default_retry_params)
+
+
 
 #=====================================================================
 # Define Global Variables
@@ -91,10 +108,8 @@ for i in default_rocks:
     rock.put()
 
 
-def RGBToString(rgb_tuple):
-    """ convert an (R, G, B) tuple to #RRGGBB """
+def RGBToString(rgb_tuple): 
     color = 'rgb(%s,%s,%s)' % rgb_tuple
-    # that's it! '%02x' means zero-padded, 2-digit hex values
     return color
 #====================================================================
 # 
@@ -108,7 +123,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
     
     # For the plot server
     # Ideally this should be settable by an admin_user console.
-    HOSTNAME = "http://server.modelr.org:8081"
+    HOSTNAME = "http://localhost:8081"
     
     def get_base_params(self, **kwargs):
         '''
@@ -385,7 +400,6 @@ class ScenarioHandler(ModelrPageRequest):
           'X-Request, X-Requested-With'
         
         
-    
         default_rocks = Rock.all()
         default_rocks.filter("user =", admin_id)
         rocks = Rock.all().ancestor(user)
@@ -984,14 +998,43 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             self.redirect('/signup')
             return
         
-        upload_files = self.get_uploads('file')  # 'file' is file upload field in the form
+        upload_files = self.get_uploads('file')
+        # 'file' is file upload field in the form
+        
         blob_info = upload_files[0]
 
         ImageModel(user=user.user_id,image=blob_info).put()
         self.redirect('/carousel_test')
 
+class ModelBuilder(ModelrPageRequest):
+
+    def get(self):
+        
+        user = ModelrPageRequest.verify(self)
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        upload_url = blobstore.create_upload_url('/upload')
+        params = self.get_base_params(user=user,
+                                      upload_url=upload_url)
+        template = env.get_template('model_builder.html')
+        html = template.render(params)
+        self.response.out.write(html)
         
 
+class TestGCS(ModelrPageRequest):
+
+    def get(self):
+        pic = urlfetch.fetch('http://localhost:8081/plot.jpeg?script=slab_builder.py&path=body_scripts&layers=3&right=40%2C-20&interface_depth=100&margin=15&x_samples=300&left=40%2C40')
+
+        bucket = '/modelr_bucket/'
+        gcsfile = gcs.open(bucket +'test_picture.jpeg', 'w')
+        gcsfile.write(pic.content)
+
+        gcsfile.close()
+
+    
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
                                ('/add_rock', AddRockHandler),
@@ -1019,9 +1062,12 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/manage_group', ManageGroup),
                                ('/carousel_test', CarouselTest),
                                ('/upload', Upload),
-                               ('/upload_image', UploadImage)
+                               ('/upload_image', UploadImage),
+                               ('/model_builder', ModelBuilder),
+                               ('/test_gcs', TestGCS)
                                ],
                               debug=True)
+
 
 
 
