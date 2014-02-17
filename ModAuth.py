@@ -102,15 +102,18 @@ def signup(email, password, parent=None):
     user.put()
     
 
-    mail.send_mail(sender="Hello <ben.bougher@gmail.com>",
+    mail.send_mail(sender="Hello <admin@modelr.io>",
               to="<%s>" % user.email,
-              subject="Modelr Verification",
+              subject="Modelr email verification",
               body="""
-Welcome to Modelr:
+Welcome to Modelr!
 
-    Your modelr account needs to verified. Click the link below
-    to validate your account.
-    modelr.io/email_verify?user_id=%s
+We need to verify your email address. Click the link below to validate your account and continue to billing. 
+
+  http://modelr.io/verify_email?user_id=%s
+
+Cheers,
+Matt, Evan, and Ben
 """ % str(user.temp_id))
 
 def verified_signup(user_id, parent):
@@ -138,7 +141,8 @@ def verified_signup(user_id, parent):
             
        user.put()
        verified_user.delete()
-
+       
+       return user
        
 def signin(email, password, parent):
     """

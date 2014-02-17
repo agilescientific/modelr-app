@@ -258,6 +258,7 @@ class ModifyScenarioHandler(ModelrPageRequest):
                     activity=activity,
                     parent=ModelrRoot).put()
 
+
 class AddRockHandler(ModelrPageRequest):
     '''
     add a rock 
@@ -327,7 +328,8 @@ class RemoveRockHandler(ModelrPageRequest):
             self.redirect('/dashboard')
         else:
             self.redirect('/dashboard')
-           
+ 
+                     
 class ModifyRockHandler(ModelrPageRequest):
     '''
      modify a rock it by name.
@@ -393,7 +395,8 @@ class ScenarioHandler(ModelrPageRequest):
                     parent=ModelrRoot).put()
         
         self.response.out.write(html)
-        
+ 
+              
 class DashboardHandler(ModelrPageRequest):
     '''
     Display the dashboard page (uses dashboard.html template)
@@ -456,6 +459,7 @@ class DashboardHandler(ModelrPageRequest):
                     parent=ModelrRoot).put()
         self.response.out.write(html)
 
+
 class AboutHandler(ModelrPageRequest):
     def get(self):
 
@@ -464,7 +468,25 @@ class AboutHandler(ModelrPageRequest):
         template = env.get_template('about.html')
         html = template.render(template_params)
         self.response.out.write(html)          
-                                    
+
+                                                                        
+class PricingHandler(ModelrPageRequest):
+    def get(self):
+
+        user = self.verify()
+        template_params = self.get_base_params(user=user)
+        template = env.get_template('pricing.html')
+        html = template.render(template_params)
+        activity = "pricing"
+        
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
+                        
+        self.response.out.write(html)          
+   
+   
 class HelpHandler(ModelrPageRequest):
     def get(self):
 
@@ -480,7 +502,8 @@ class HelpHandler(ModelrPageRequest):
                         parent=ModelrRoot).put()
                         
         self.response.out.write(html)          
-                                    
+   
+                                                                     
 class TermsHandler(ModelrPageRequest):
     def get(self):
 
@@ -497,66 +520,6 @@ class TermsHandler(ModelrPageRequest):
         
         self.response.out.write(html)          
                                     
-class PricingHandler(ModelrPageRequest):
-    def get(self):
-
-        user = self.verify()
-        template_params = self.get_base_params(user=user)
-        template = env.get_template('pricing.html')
-        html = template.render(template_params)
-        activity = "pricing"
-        
-        if user:
-            ActivityLog(user_id=user.user_id,
-                        activity=activity,
-                        parent=ModelrRoot).put()
-
-        self.response.out.write(html)
-        
-    def post(self):
-        
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-
-        activity = "payment"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
-                    
-        # Secret API key from Stripe dashboard
-        stripe.api_key = "pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
-
-        # Get the credit card details submitted by the form
-        token = self.request.get('stripeToken')
-
-        # CLEAN AND PROCESS USER INPUT
-        # MORE TO DO HERE
-        amount = 900
-        
-        # Create the charge on Stripe's servers - this will charge the user's card
-        try:
-          charge = stripe.Charge.create(
-              amount=amount,
-              currency="usd",
-              card=token,
-              plan="monthly",
-              description="payinguser@example.com"
-          )
-        except:
-            # The card has been declined
-            # Let the user know and DON'T UPGRADE USER
-            self.response.out.write("Payment failed")
-            return
-           
-        # If successful, tell the user
-        # Make sure they can get a receipt
-        # UPGRADE USER IN DATABASE
-  
-        self.response.out.write("Payment succeeded")
-        return
-
           
 class ProfileHandler(ModelrPageRequest):
     
@@ -704,29 +667,6 @@ class ProfileHandler(ModelrPageRequest):
         err_string = '&'.join(err_string) if err_string else ''
         self.redirect('/profile?' + err_string)
                                     
-class SubscribeHandler(ModelrPageRequest):
-    
-    def get(self):
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-
-        activity = "subscribe"
-        ActivityLog(user_id=user.user_id,
-                        activity=activity,
-                        parent=ModelrRoot).put()
-
-        template_params = self.get_base_params(user=user)
-        template = env.get_template('subscribe.html')
-        html = template.render(template_params)
-        self.response.out.write(html)
-
-
-class PaymentHandler(ModelrPageRequest):
-    
-    def post(self):
-        pass
         
 class SettingsHandler(ModelrPageRequest):
     
@@ -775,7 +715,12 @@ class SignUp(webapp2.RequestHandler):
         else:
             try:
                 signup(email, password, parent=ModelrRoot)
-                self.redirect('signin')
+                
+                # Show the message page with "Success!"
+                template = env.get_template('message.html')
+                msg = "Please check your inbox and spam folder for our message. Then click on the link in the email."
+                html = template.render(success=msg)
+                self.response.out.write(html)
                 
             except AuthExcept as e:
                 template = env.get_template('signup.html')
@@ -792,20 +737,64 @@ class EmailAuthentication(ModelrPageRequest):
         user_id = self.request.get("user_id")
         
         try:
-            verified_signup(user_id, ModelrRoot)
+            # Change this to check the user can be validated and get temp_user
+            user = verified_signup(user_id, ModelrRoot)
+            
         except AuthExcept as e:
             self.redirect('/signup?error=auth_failed')
             return
 
-        self.redirect('/signin')
+        params = self.get_base_params(user=user)
+        template = env.get_template('checkout.html')
+        html = template.render(params)
+        self.response.out.write(html)
+
+    def post(self):
         
+        # Need user object
+                            
+        # Secret API key from Stripe dashboard
+        stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
+
+        # Get the credit card details submitted by the form
+        token = self.request.get('stripeToken')
+
+        # CLEAN AND PROCESS USER INPUT
+        # MORE TO DO HERE
+        amount = 900
+        
+        # Create the charge on Stripe's servers - this will charge the user's card
+        try:
+          customer = stripe.Customer.create(
+              card=token,
+              plan="Monthly",
+              description="New Modelr subscription"
+          )
+        except:
+            # The card has been declined
+            # Let the user know and DON'T UPGRADE USER
+            self.response.out.write("Payment failed")
+            return
+           
+        # If successful, tell the user
+        # Make sure they can get a receipt
+        
+        # ADD USER TO MAIN DATABASE
+        # use customer.email to cross-reference
+  
+        self.redirect('/signin?success=true')
+                        
         
 class SignIn(webapp2.RequestHandler):
 
-    def get(self):
+    def get(self):       
+
+        status = self.request.get("success")
+        if status == "true":
+            success="you account has been created and your card has been charged. Welcome to Modelr!"
 
         template = env.get_template('signin.html')
-        html = template.render()
+        html = template.render(success=success)
         self.response.out.write(html)
 
     def post(self):
@@ -844,7 +833,17 @@ class SignOut(ModelrPageRequest):
         self.response.headers.add_header('Set-Cookie',
                                          'user=""; Path=/')
         self.redirect('/')
+        
+        
+class StripeHandler(ModelrPageRequest):
+    '''
+    Handle webhook POSTs from Stripe
 
+    '''
+
+    def post(self):
+        pass
+        
         
 class ManageGroup(ModelrPageRequest):
 
@@ -950,16 +949,15 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                   RemoveScenarioHandler),
                                ('/pricing', PricingHandler),
                                ('/profile', ProfileHandler),
-                               ('/subscribe', SubscribeHandler),
-                               ('/submitpayment', PaymentHandler),
                                ('/settings', SettingsHandler),
                                ('/about', AboutHandler),
                                ('/help', HelpHandler),
                                ('/terms', TermsHandler),
                                ('/signup', SignUp),
-                               ('/email_verify', EmailAuthentication),
+                               ('/verify_email', EmailAuthentication),
                                ('/signin', SignIn),
                                ('/signout', SignOut),
+                               ('/stripe', StripeHandler),
                                ('/manage_group', ManageGroup)
                                ],
                               debug=True)
