@@ -89,7 +89,20 @@ box-shadow: 0 0 10px rgba(0,0,0,.5);
               <li class="list-group-item">Unlimited scenarios</li>
               <li class="list-group-item">Unlimited rocks</li>
               {% if user %}
-                <li class="list-group-item"><a class="btn btn-default" href="/subscribe">Subscribe now!</a></li>
+              
+<li class="list-group-item">
+<form action="/pricing" method="POST">
+  <script
+    src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+    data-key="pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
+    data-amount="900"
+    data-name="Modelr"
+    data-description="Monthly subscription, $9/mo"
+    data-image="/static/img/modelr_logo_white_128px.png">
+  </script>
+</form>
+</li>
+
               {% else %}
                 <li class="list-group-item"><a class="btn btn-default" href="/signup">Sign up now!</a></li>
               {% endif %}
