@@ -1,0 +1,28 @@
+{% extends "base_template.html" %}
+
+{% block title %}Modelr{% endblock %}
+{% block content %}
+
+<div class="container">
+
+  {% if error %}
+  <div class="alert alert-danger">
+      <strong>Something's wrong...</strong> {{ error }}
+  </div>
+  {% endif %}
+
+  {% if warning %}
+  <div class="alert alert-warning">
+      <strong>Sorry...</strong> {{ warning }} 
+  </div>
+  {% endif %}
+
+  {% if success %}
+  <div class="alert alert-success">
+      <strong>Success!</strong> {{ success }} 
+  </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}
