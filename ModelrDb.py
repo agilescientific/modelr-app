@@ -23,6 +23,7 @@ class User(db.Model):
     password = db.StringProperty()
     salt = db.StringProperty()
     group = db.StringListProperty()
+    stripe_id = db.StringProperty()
 
 class ActivityLog(db.Model):
 

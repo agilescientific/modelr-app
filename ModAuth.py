@@ -116,33 +116,82 @@ Cheers,
 Matt, Evan, and Ben
 """ % str(user.temp_id))
 
-def verified_signup(user_id, parent):
-    
-       u = VerifyUser.all().ancestor(parent).filter("temp_id =",
-                                                    user_id)
-       verified_user = u.fetch(1)
+def verify_signup(user_id, parent):
+    """
+    Checks that a user id is in the queue to be added. The temporary
+    user id is sent through email verification. Raises a AuthExcept if
+    the id is invalid, otherwise returns the temporary user object
+    from the database.
 
-       if not verified_user:
-           raise AuthExcept("Verification Failed")
+    :param user_id: User id from email verification
+    :param parent: Ancestor database of the temporary user
 
-       verified_user= verified_user[0]
-       user = User(parent=parent)
-       user.user_id = make_userid()
-       user.email = verified_user.email
-       user.password = verified_user.password
-       user.salt = verified_user.salt
-       user.group = verified_user.group
+    :returns the temporary user object.
+    """
 
-       for group in user.group:
-           g = Group.all().ancestor(parent).filter("name =",
-                                                group).fetch(1)
-           g[0].allowed_users.append(user.user_id)
-           g[0].put()
-            
-       user.put()
-       verified_user.delete()
+    u = VerifyUser.all().ancestor(parent).filter("temp_id =", user_id)
+    verified_user = u.fetch(1)
+
+    # Check for success
+    if not verified_user:
+        raise AuthExcept("Verification Failed")
        
-       return user
+    return verified_user[0]
+
+
+def initialize_user(email, stripe_id, parent):
+    """
+    Takes a verified user email from the authentication queue and adds
+    it to the permanent database with a stripe id.
+
+    :param verified_email: email of the verified user to add.
+    :param stripe_id: The stripe customer id of the user.
+    :param parent: The ancestor database key to use for the database.
+    """
+
+    verified_filter = \
+      VerifyUser.all().ancestor(parent).filter("email =", email)
+    verified_user = verified_filter.fetch(1)
+
+    if not verified_user:
+        raise AuthExcept("verification failed")
+
+    verified_user = verified_user[0]
+    
+    # Make new user and populate
+    user = User(parent=parent)
+    user.user_id = make_userid()
+    user.email = verified_user.email
+    user.password = verified_user.password
+    user.salt = verified_user.salt
+    user.group = verified_user.group
+    user.stripe_id = stripe_id
+
+    for group in user.group:
+        g = Group.all().ancestor(parent).filter("name =",
+                                                group).fetch(1)
+        g[0].allowed_users.append(user.user_id)
+        g[0].put()
+            
+    user.put()
+
+    # remove the temporary user from the queue
+    verified_user.delete()
+
+    # send a payment confirmation email
+    mail.send_mail(sender="Hello <admin@modelr.io>",
+              to="<%s>" % user.email,
+              subject="Modelr subscribe confirmation",
+              body="""
+Welcome to Modelr!
+
+    You are now subscribed to Modelr! To unsubscribe .....
+
+
+Cheers,
+Matt, Evan, and Ben
+"""
+        )
        
 def signin(email, password, parent):
     """

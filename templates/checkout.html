@@ -58,7 +58,8 @@ box-shadow: 0 0 10px rgba(0,0,0,.5);
         data-name="Modelr"
         data-description="Monthly subscription, $9/mo"
         data-image="/static/img/modelr_logo_white_128px.png"
-        data-email="{{ user.email }}">
+        data-email="{{ user.email }}"
+	stripeEmail="{{ user.email }}">
       </script>
     </form>
 

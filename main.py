@@ -21,10 +21,10 @@ import stripe
 
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
-     verify, verified_signup
+     verify, verify_signup, initialize_user
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest, ActivityLog
+     GroupRequest, ActivityLog, VerifyUser
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
@@ -737,8 +737,9 @@ class EmailAuthentication(ModelrPageRequest):
         user_id = self.request.get("user_id")
         
         try:
-            # Change this to check the user can be validated and get temp_user
-            user = verified_signup(user_id, ModelrRoot)
+            # Change this to check the user can be validated and
+            # get temp_user
+            user = verify_signup(user_id, ModelrRoot)
             
         except AuthExcept as e:
             self.redirect('/signup?error=auth_failed')
@@ -750,9 +751,10 @@ class EmailAuthentication(ModelrPageRequest):
         self.response.out.write(html)
 
     def post(self):
+        """
+        Adds the user to the stripe customer list
+        """
         
-        # Need user object
-                            
         # Secret API key from Stripe dashboard
         stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
 
@@ -765,23 +767,27 @@ class EmailAuthentication(ModelrPageRequest):
         
         # Create the charge on Stripe's servers - this will charge the user's card
         try:
-          customer = stripe.Customer.create(
-              card=token,
-              plan="Monthly",
-              description="New Modelr subscription"
+            customer = stripe.Customer.create(
+            card=token,
+            plan="Monthly",
+            description="New Modelr subscription"
           )
         except:
             # The card has been declined
             # Let the user know and DON'T UPGRADE USER
             self.response.out.write("Payment failed")
             return
-           
-        # If successful, tell the user
-        # Make sure they can get a receipt
+
+        # get the temp user from the database
+        email = self.request.get('stripeEmail')
         
-        # ADD USER TO MAIN DATABASE
-        # use customer.email to cross-reference
-  
+        try:
+            initialize_user(email, customer.id, ModelrRoot)
+        except:
+            # This should never happen. We billed a user then lost
+            # them.....
+            raise
+        
         self.redirect('/signin?success=true')
                         
         
