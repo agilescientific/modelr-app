@@ -861,6 +861,8 @@ class SignIn(webapp2.RequestHandler):
         status = self.request.get("success")
         if status == "true":
             success="you account has been created and your card has been charged. Welcome to Modelr!"
+        else:
+            success = None
 
         template = env.get_template('signin.html')
         html = template.render(success=success)
