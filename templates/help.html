@@ -5,22 +5,39 @@
 
 <div class="container">
 
-  <div class="alert alert-warning">
-      <strong>Warning!</strong> This web app is in early development. There are bugs. Everything will change. Thank you for exploring!
+  {% if error %}
+  <div class="alert alert-danger">
+      <strong>Something's wrong...</strong> {{ error }}
   </div>
-      
+  {% endif %}
+
+  {% if warning %}
+  <div class="alert alert-warning">
+      <strong>Sorry...</strong> {{ warning }} 
+  </div>
+  {% endif %}
+
+  {% if success %}
+  <div class="alert alert-success">
+      <strong>Success!</strong> {{ success }} 
+  </div>
+  {% endif %}
+  
+<h4>Building a seismic forward model in Modelr consists of four steps:</h4>
+<div style="margin:2em;"></div>
+
 <div class="panel-group" id="accordion">
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
         <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-          Collapsible Group Item #1
+          1. Define the geometry of the layers.
         </a>
       </h4>
     </div>
     <div id="collapseOne" class="panel-collapse collapse in">
       <div class="panel-body">
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+        Choose channel or wedge (for a 3 layer model), or Stochastic AVO for 2-layer half-space reflectivity explorer.
       </div>
     </div>
   </div>
@@ -28,13 +45,13 @@
     <div class="panel-heading">
       <h4 class="panel-title">
         <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-          Collapsible Group Item #2
+          2. Select the rock for each layer.
         </a>
       </h4>
     </div>
     <div id="collapseTwo" class="panel-collapse collapse">
       <div class="panel-body">
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+         Select rocks for each layer from your list of available rock types.
       </div>
     </div>
   </div>
@@ -42,13 +59,33 @@
     <div class="panel-heading">
       <h4 class="panel-title">
         <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
-          Collapsible Group Item #3
+          3. Define the seismic experiment.
         </a>
       </h4>
     </div>
     <div id="collapseThree" class="panel-collapse collapse">
       <div class="panel-body">
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+         Choose acquisition domain: a cross-section (spatial), an angle gather, or bandwidth at a user specified trace location in the cross section). Future releases will allow accessing the 4 dimensional seismic model (x, t, angle, and bandwidth) in horizontal dimensions (i.e. a time slice through angle, bandwidth space on the x and y axis)
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
+          4. Choose the display parameters.
+        </a>
+      </h4>
+    </div>
+    <div id="collapseFour" class="panel-collapse collapse">
+      <div class="panel-body">
+        <ul>
+        <li>You can choose to display the synthetics seismic model, along with the layers or reflectivity values of the interfaces in the physical model. These can be used as underlays for directly comparing the positioning and resolution of seismic events.</li>
+        <li>The base layer for each panel is opaque, whereas the opacity of the overlay layer can be controlled.</li>
+        <li>Want to change the number of traces in the synthetic, the colormap, the number of wiggle traces to skip or the percentage of overlap? All of these parameters can be set in the scripting layer.</li>
+        <li>Give a name to your scenario, if you are happy with the results. This will save to your user profile, and you can come back to it later.</li>
+        <li>Along with returning an image of your model result, modelr also builds an equivalent URL that can be copy and pasted into any browser window, or attached to an email and shared with a colleague.</li>
+        </ul>
       </div>
     </div>
   </div>

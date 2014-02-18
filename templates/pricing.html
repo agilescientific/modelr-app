@@ -57,20 +57,19 @@ box-shadow: 0 0 10px rgba(0,0,0,.5);
         <div class="col-sm-offset-3 col-sm-3">
           <div class="panel panel-default text-center">
             <div class="panel-heading">
-              <h3>Basic</h3>
+              <h3>Demo</h3>
             </div>
             <div class="panel-body">
               <h3 class="panel-title price">free</h3>
-              <p>now and always</p>
             </div>
             <ul class="list-group">
               <li class="list-group-item">Public results</li>
-              <li class="list-group-item">Unlimited scenarios</li>
-              <li class="list-group-item">Unlimited rocks</li>
+              <li class="list-group-item">Single scenarios</li>
+              <li class="list-group-item">Custom rocks</li>
               {% if user %}
                 <li class="list-group-item">Current plan</li>
               {% else %}
-                <li class="list-group-item"><a class="btn btn-default" href="/signup">Sign up now!</a></li>
+                <li class="list-group-item"><a class="btn btn-default" href="/demo">Try it out</a></li>
               {% endif %}
             </ul>
           </div>          
@@ -78,30 +77,29 @@ box-shadow: 0 0 10px rgba(0,0,0,.5);
         <div class="col-sm-3">
           <div class="panel panel-info text-center">
             <div class="panel-heading">
-              <h3>Plus</h3>
+              <h3>Basic</h3>
             </div>
             <div class="panel-body">
               <h3 class="panel-title price">$9<span class="price-month">/month</span></h3>
-              <p>or $99/year</p>
             </div>
             <ul class="list-group">
               <li class="list-group-item">Private results</li>
-              <li class="list-group-item">Unlimited scenarios</li>
-              <li class="list-group-item">Unlimited rocks</li>
+              <li class="list-group-item">Save scenarios</li>
+              <li class="list-group-item">Save rocks</li>
               {% if user %}
               
-<li class="list-group-item">
-<form action="/pricing" method="POST">
-  <script
-    src="https://checkout.stripe.com/checkout.js" class="stripe-button"
-    data-key="pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
-    data-amount="900"
-    data-name="Modelr"
-    data-description="Monthly subscription, $9/mo"
-    data-image="/static/img/modelr_logo_white_128px.png">
-  </script>
-</form>
-</li>
+                <li class="list-group-item">
+                <form action="/pricing" method="POST">
+                  <script
+                    src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+                    data-key="pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
+                    data-amount="900"
+                    data-name="Modelr"
+                    data-description="Monthly subscription, $9/mo"
+                    data-image="/static/img/modelr_logo_white_128px.png">
+                  </script>
+                </form>
+                </li>
 
               {% else %}
                 <li class="list-group-item"><a class="btn btn-default" href="/signup">Sign up now!</a></li>
