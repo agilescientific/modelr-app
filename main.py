@@ -851,21 +851,21 @@ class EmailAuthentication(ModelrPageRequest):
             # them.....
             raise
         
-        self.redirect('/signin?success=true')
+        self.redirect('/signin?verified=true')
                         
         
 class SignIn(webapp2.RequestHandler):
 
     def get(self):       
 
-        status = self.request.get("success")
+        status = self.request.get("verified")
         if status == "true":
-            success="you account has been created and your card has been charged. Welcome to Modelr!"
+            msg="Your account has been created and your card has been charged. Welcome to Modelr!"
         else:
-            success = None
+            msg = None
 
         template = env.get_template('signin.html')
-        html = template.render(success=success)
+        html = template.render(success=msg)
         self.response.out.write(html)
 
     def post(self):
