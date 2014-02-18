@@ -10,7 +10,8 @@
 
     <!-- Le styles -->
     <link href="static/css/bootstrap.css" rel="stylesheet">
-    <link href="static/css/docs.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/modelr.css" type="text/css" media="screen">
+    <link rel="stylesheet" href="/static/css/mobile.css" type="text/css" media="screen and (max-width: 768px)">
     <style type="text/css">
       body {
         padding-top: 60px;
@@ -27,8 +28,6 @@
       });
     </script>
     
-    <link href="carousel.css" rel="stylesheet">
-
 </head>
 
 <body>
@@ -101,14 +100,14 @@
     <!-- Footer
     ================================================== -->
 
-    <footer class="bs-footer" role="content-info">
+    <footer class="footer" role="content-info">
     <div class="container">
       {% block footer %}
           <div style="float:right">
             <img src="https://developers.google.com/appengine/images/appengine-silver-120x30.gif" 
 alt="Powered by Google App Engine" />
           </div>
-          <p style="color:lightgray" ><a href="http://www.agilegeoscience.com/"><img src="/static/img/agile_logo.png" width="60px" /></a>&nbsp;&nbsp;&nbsp;<a style="color:lightgray" href="http://www.agilegeoscience.com/">Agile Geoscience 2014</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/terms">Terms and privacy</a></p>
+          <p style="color:lightgray" ><a href="http://www.agilegeoscience.com/"><img src="/static/img/agile_logo.png" width="60px" /></a>&nbsp;&nbsp;&nbsp;<a style="color:lightgray" href="http://www.agilegeoscience.com/">Agile Geoscience 2014</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/terms">Terms</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/privacy">Privacy</a></p>
         </footer>
       {% endblock %}
     </div>
