@@ -366,10 +366,7 @@ class ScenarioHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-        
+
         self.response.headers['Content-Type'] = 'text/html'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Access-Control-Allow-Headers'] = \
@@ -379,9 +376,14 @@ class ScenarioHandler(ModelrPageRequest):
     
         default_rocks = Rock.all()
         default_rocks.filter("user =", admin_id)
-        rocks = Rock.all().ancestor(user)
+
+        if user:
+            rocks = Rock.all().ancestor(user).fetch(100)
+        else:
+            rocks = []
+            
         template_params = \
-          self.get_base_params(user=user,rocks=rocks.fetch(100),
+          self.get_base_params(user=user,rocks=rocks,
                                default_rocks=default_rocks.fetch(100))
         
         template = env.get_template('scenario.html')
@@ -389,10 +391,11 @@ class ScenarioHandler(ModelrPageRequest):
 
         html = template.render(template_params)
 
-        activity = "viewed_scenario"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
+        if user:
+            activity = "viewed_scenario"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
         
         self.response.out.write(html)
  
@@ -860,7 +863,8 @@ class SignIn(webapp2.RequestHandler):
 
         status = self.request.get("success")
         if status == "true":
-            success="you account has been created and your card has been charged. Welcome to Modelr!"
+            success=("you account has been created and your card " +
+                     "has been charged. Welcome to Modelr!")
         else:
             success = None
 
