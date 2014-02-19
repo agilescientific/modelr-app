@@ -462,51 +462,7 @@ class DashboardHandler(ModelrPageRequest):
                     parent=ModelrRoot).put()
         self.response.out.write(html)
 
-class DemoHandler(ModelrPageRequest):
-    '''
-    Display the dashboard page (uses dashboard.html template)
-    '''
 
-    def get(self):
-
-        self.response.headers['Content-Type'] = 'text/html'
-
-        rocks = Rock.all()
-
-        default_rocks = Rock.all()
-        default_rocks.filter("user =", admin_id)
-
-        rock_groups = []
-            
-        scenarios = Scenario.all()
-        scenarios.ancestor(user)
-        scenarios.filter("user =", user.user_id)
-        scenarios.order("-date")
-        
-        for s in scenarios.fetch(100):
-            logging.info((s.name, s))
-            
-        
-        template_params.update(rocks=rocks.fetch(100),
-                               scenarios=scenarios.fetch(100),
-                               default_rocks=default_rocks.fetch(100),
-                               rock_groups=rock_groups)
-
-        # Check if a rock is being edited
-        if self.request.get("selected_rock"):
-            rock_id = self.request.get("selected_rock")
-            current_rock = Rock.get_by_id(int(rock_id),
-                                          parent=user)
-            template_params['current_rock'] = current_rock
-        
-        template = env.get_template('dashboard.html')
-        html = template.render(template_params)
-
-        activity = "dashboard"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
-        self.response.out.write(html)
 
 
 class AboutHandler(ModelrPageRequest):
@@ -854,22 +810,23 @@ class EmailAuthentication(ModelrPageRequest):
             # them.....
             raise
         
-        self.redirect('/signin?success=true')
+        self.redirect('/signin?verified=true')
                         
         
 class SignIn(webapp2.RequestHandler):
 
     def get(self):       
 
-        status = self.request.get("success")
+        status = self.request.get("verified")
         if status == "true":
-            success=("you account has been created and your card " +
-                     "has been charged. Welcome to Modelr!")
+            msg = ("Your account has been created and your card has "
+                   "been charged. Welcome to Modelr!" )
+      
         else:
-            success = None
+            msg = None
 
         template = env.get_template('signin.html')
-        html = template.render(success=success)
+        html = template.render(success=msg)
         self.response.out.write(html)
 
     def post(self):
@@ -1012,7 +969,7 @@ class ManageGroup(ModelrPageRequest):
         
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
-                               ('/demo', DemoHandler),
+                               ('/demo', ScenarioHandler),
                                ('/add_rock', AddRockHandler),
                                ('/edit_rock', ModifyRockHandler),
                                ('/remove_rock', RemoveRockHandler),

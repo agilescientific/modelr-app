@@ -55,12 +55,12 @@ box-shadow: 0 0 10px rgba(0,0,0,.5);
         src="https://checkout.stripe.com/checkout.js" 
 	class="stripe-button"
         data-key="pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
-        data-amount="900"
         data-name="Modelr"
         data-description="Monthly subscription, $9/mo"
-        data-image="/static/img/modelr_logo_white_128px.png"
-        data-email="{{ user.email }}"
-	stripeEmail="{{ user.email }}">
+        data-panel-label="Subscribe"
+        data-label="Pay with any card"
+        data-image="/static/img/modelr_logo_white_tight.png"
+        data-email="{{ user.email }}">
       </script>
     </form>
 

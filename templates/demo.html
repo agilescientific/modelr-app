@@ -1,260 +1,180 @@
-{% extends "base_template.html" %}
+{% extends "base_template.html" %} 
+{% block title %}Modelr &middot; Scenario{% endblock %} 
 
-{% block title %}Modelr &middot; Dashboard{% endblock %}
 {% block content %}
-
 <div class="container">
-<div class="row">
-  <div class="col-md-4">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Welcome</h3>
-      </div>
-      <div class="panel-body">
-        <p><strong>Welcome to Modelr!</strong> To get started, make some rocks using the form on the right. Then make a scenario in the box below.</p>
-        <p>Have fun!</p>
-      </div>
-    </div>
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Scenarios</h3>
-      </div>
-      <div class="panel-body">
-	<table class="table table-condensed table-hover">
-          <tbody>
-            {% for scenario in scenarios %}
+<!-- JAVASCRIPT and DATA
+====================================================================================== -->
+
+<script type="text/javascript">
+  var host = '{{HOSTNAME}}';
+</script>
+
+<script type="text/javascript">
+
+    $(document).ready(function() {
+        
+        server = new PlotServer(host, get_rocks('datalist#list_of_rocks'));
+        scenario = new Scenario(name, null, {}, server.rocks);
+        
+        // This is specific to this page. will create a form.
+        scenario.display = display_form;
+        
+        // This is specific to this page.
+        // Used by the script select element + the get method of Scenario.
+        scenario.set_current_script = function(value, argumentss){
+
+            scenario.script = value;
             
-            <tr>
-	      <form class="form-horizontal" name="input" action="remove_scenario" method="post">
-		<input type="hidden" name="name" value="{{scenario.name}}" />
-		<td><stong><a href='/scenario#{{scenario.name}}'>{{scenario.name}}</a></strong></td>
-                <td>{{scenario.script}}</td>
-                <td> <button class="btn btn-success btn-xs" type="submit" formaction="/scenario#{{scenario.name}}" > edit&nbsp;</button> &nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" value="remove" /></td>
-                  
-              </form>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        <a href="scenario#">Make a new scenario</a>
+            console.log('server.current_script');
+            
+            server.get_script_info(value, function(data){
+                scenario.info = data;
+                scenario.default_args(argumentss);
+                
+                console.log('div#scenario_place');
+                
+                // This will Create a form see above
+                scenario.display('div#scenario_place');
+                
+                scenario.on_change();
+            })
+            
+            // Select the script in the 'select' element of this page.  
+            $("select#select_script option").filter(function() {
+                //may want to use $.trim in here
+                return $(this).val() == value; 
+            }).attr('selected', true);
+
+        }
+        
+        // This is specific to this display.
+	    server.update_img = function(scenario){
+	    
+            var qs = scenario.qs();
+	        var url = server.hostname +'/plot.jpeg' + qs;
+            var img = $('img#plot_image');
+            img.attr('src', url);
+            
+	    }
+        
+        scenario.on_change = function update_link(){
+            
+            var qs = scenario.qs();
+	        var url = server.hostname +'/plot.jpeg' + qs;
+	        
+            var p = $('p#image_link');
+            p.text(url);
+        }
+	    
+        /* This populates the scripts dropdown with a list of scripts
+        from the plot server.
+        */
+        populate_scripts(server, 'select#select_script');
+
+        /*
+        This grabs the data after the '#' in the url and updates the current
+        scenario.
+        */
+        var hash = window.location.hash.substring(1);
+        
+        if (hash != ''){
+            scenario.name = hash;
+            
+            // Get the scenario from google app engine.
+            scenario.get();
+            $('input#scenario_name').val(hash);
+        } 
+    });
+</script>
+
+<!-- This will expand the list of rocks before google app engine sends this page to the user -->
+<!-- This list is used by javascript and not directly seen by the user -->
+<datalist id="list_of_rocks">
+    {% for rock in default_rocks %}
+	<option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},{{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+		data-name="{{rock.name}}">{{rock.name}}</option>
+	{% endfor %}
+	
+</datalist>
+
+<!-- SCENARIO PANEL
+====================================================================================== -->
+<div class="row">
+
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Scenario</h3>
+      </div>
+      
+      <div class="panel-body">
+      
+        <form class="form-horizontal" role="form">
+        
+          <div class="form-group">
+            <label for="select_script" class="col-sm-2 control-label">Script</label>
+            <div class="col-sm-6">
+              <select class="form-control" id="select_script" onchange="scenario.set_current_script($(this).val(), scenario.arguments)">
+              <option>Please wait... </option>
+              </select>
+            </div>
+          </div>
+  
+          <!-- Div to place the form into see Scenario.display and display_form functions-->
+          <div class="container" id="scenario_place">
+          </div>
+  
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-6">
+              <button class="btn btn-info" id='create_image' onclick="server.update_img(scenario)">
+                Create image
+              </button>
+            </div>
+          </div>
+
+        </form>
+
+      </div>  <!-- end of panel-body -->
+    </div>
+  </div>
+  
+<!-- RESULT PANEL
+====================================================================================== -->
+
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Result</h3>
+      </div>
+      <div class="panel-body">
+
+        <img class="img-thumbnail" id="plot_image" href=URL alt="Plot image">
+          <!-- Updated by the  create_image button above-->
+        </img>
+
       </div>
     </div>
   </div>
 
-
-
-  <div class="col-md-8">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">My Rocks</h3>
-      </div>
-      <div class="panel-body">
-	<table class="table table-condensed table-hover">
-          <thead>
-            <tr>
-              <th></th>
-              <th>V<sub>P</sub></th>
-              <th>V<sub>S</sub></th>
-              <th>Rho</th>
-	      <th>V<sub>P</sub> std</th>
-              <th>V<sub>S</sub> std</th>
-              <th>Rho std</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for rock in rocks %}
-            <tr>
-              <form class="form-horizontal" name="input" action="edit_rock" method="post">
-		<input type="hidden" name="name" value="{{rock.name}}" />
-		<td><stong>{{rock.name}}</strong></td>
-                <td>{{rock.vp}}</td>
-                <td>{{rock.vs}}</td>
-                <td>{{rock.rho}}</td>
-                <td>{{rock.vp_std}}</td>
-                <td>{{rock.vs_std}}</td>
-                <td>{{rock.rho_std}}</td>
-                <td><input class="btn btn-success btn-xs" type="submit" name="action" value="edit">&nbsp;&nbsp;&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" formaction="/remove_rock" method="post" value="remove" /></td>
-              </form>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-
-    {% for rock_group in rock_groups %}
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">{{rock_group['name']}} Rocks</h3>
-      </div>
-      <div class="panel-body">
-        <table class="table table-condensed table-hover">
-          <thead>
-            <tr>
-              <th></th>
-              <th>V<sub>P</sub></th>
-              <th>V<sub>S</sub></th>
-              <th>Rho</th>
-	      <th>V<sub>P</sub> std</th>
-              <th>V<sub>S</sub> std</th>
-              <th>Rho std</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for rock in rock_group['rocks'] %}
-            <tr>
-              <input type="hidden" name="name" value="{{rock.name}}" />
-              <td><stong>{{rock.name}}</strong></td>
-              <td>{{rock.vp}}</td>
-              <td>{{rock.vs}}</td>
-              <td>{{rock.rho}}</td>
-	      <td>{{rock.vp_std}}</td>
-              <td>{{rock.vs_std}}</td>
-              <td>{{rock.rho_std}}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    {% endfor %}
-
-
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Default Rocks</h3>
-      </div>
-      <div class="panel-body">
-	<table class="table table-condensed table-hover">
-          <thead>
-            <tr>
-              <th></th>
-              <th>V<sub>P</sub></th>
-              <th>V<sub>S</sub></th>
-              <th>Rho</th>
-	      <th>V<sub>P</sub> std</th>
-              <th>V<sub>S</sub> std</th>
-              <th>Rho std</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for rock in default_rocks %}
-            <tr>
-              <input type="hidden" name="name" value="{{rock.name}}" />
-              <td><stong>{{rock.name}}</strong></td>
-              <td>{{rock.vp}}</td>
-              <td>{{rock.vs}}</td>
-              <td>{{rock.rho}}</td>
-	      <td>{{rock.vp_std}}</td>
-              <td>{{rock.vs_std}}</td>
-              <td>{{rock.rho_std}}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
 </div>
 
-
+<!-- URL PANEL
+====================================================================================== -->
 
 <div class="row">
-  <div class="col-md-4">
-  </div>
-  <div class="col-md-8">
+  <div class="col-md-12">
     <div class="panel panel-default">
       <div class="panel-heading">
-	<h3 class="panel-title">Add rock</h3>
+        <h3 class="panel-title">URL</h3>
       </div>
       <div class="panel-body">
-	<form name="input" action="add_rock" method="post">
-	  <form class="form-horizontal" role="form">
-
-	    <div class="form-group">
-	      <label for="name" class="col-sm-2 control-label">Name</label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="name" value={{current_rock.name}} placeholder=""/>
-	      </div>
-	    </div>
-	    
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">Description</label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="description" value={{current_rock.description}} />
-	      </div>
-	    </div>
-
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">Rho</label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="rho" value={{current_rock.rho}} />
-	      </div>
-	    </div>
-
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">V<sub>P</sub></label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="vp" value={{current_rock.vp}} />
-	      </div>
-	    </div>
-
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">V<sub>S</sub></label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="vs" value={{current_rock.vs}}  />
-	      </div>
-	    </div>
-
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">Rho std</label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="rho_std" value={{current_rock.rho_std}} />
-	      </div>
-	    </div>
-
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">V<sub>P</sub> std</label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="vp_std" value={{current_rock.vp_std}} />
-	      </div>
-	    </div>
-
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">V<sub>S</sub> std</label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="vs_std" value={{current_rock.vs_std}} />
-	      </div>
-	    </div>
-
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">Share</label>
-	      <div class="col-sm-10">
-		<select name="group">
-		  <option value="private">Private</option>
-		  {% for group in user.group %}
-		  <option value={{group}} {% if group==current_rock.group %} selected {% endif %}>{{group.capitalize()}}</option>
-		  {% endfor %}
-		</select>
-	      </div>
-	    </div>
-	    
-	    <div class="form-group">
-	      <div class="col-sm-offset-2 col-sm-10">
-		<button type="submit" class="btn btn-default">Add this rock</button>
-	      </div>
-	    </div>
-	    
-	  </form>
-	</form>
+        <!-- Create and display the image / see the user defined server.update_img -->
+        <p id="image_link" style="font-size: 10px;">URL</p>
       </div>
     </div>
   </div>
 </div>
 
-  {% endblock %}
-
+</div>
+{% endblock %}

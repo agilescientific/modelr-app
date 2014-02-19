@@ -3,12 +3,8 @@
 {% block title %}Modelr{% endblock %}
 {% block content %}
 
-
 <!-- Carousel
 ================================================== -->
-<head>
-    <link href="carousel.css" rel="stylesheet">
-</head>
 
 <div id="modelrCarousel" class="carousel slide" data-ride="carousel">
 
@@ -31,7 +27,7 @@
         <h4>&nbsp;</h4>
           <p>
             <a class="btn btn-primary btn-lg" role="button" 
-	       href="/scenario#">Test drive 
+	       href="/about">Learn more about 
 	      <strong>modelr</strong></a>
             <a class="btn btn-info btn-lg" role="button" 
 	       href="/signup">Sign up</a>
@@ -47,7 +43,7 @@
 	  <br />you can use it anywhere, on any sized screen.</h4>
           <p>
             <a class="btn btn-primary btn-lg" role="button"
-	       href="/scenario#">Test drive 
+	       href="/about">Learn more about 
 	      <strong>modelr</strong></a>
             <a class="btn btn-info btn-lg" role="button" 
 	       href="/signup">Sign up</a>
@@ -63,7 +59,7 @@
 	  <br />No need to install any software.</h4>
           <p>
             <a class="btn btn-primary btn-lg" role="button"
-	       href="/scenario#">Test drive
+	       href="/about">Learn more about 
 	      <strong>modelr</strong></a>
             <a class="btn btn-info btn-lg" role="button" 
 	       href="/signup">Sign up</a>
@@ -90,15 +86,16 @@
   </div>
 
   <!-- Controls -->
-  <a class="left carousel-control" 
-     href="#carousel-example-generic" data-slide="prev">
+  <a class="left carousel-control" href="#modelrCarousel" data-slide="prev">
     <span class="glyphicon glyphicon-chevron-left"></span>
   </a>
-  <a class="right carousel-control" 
-     href="#carousel-example-generic" data-slide="next">
+  <a class="right carousel-control" href="#modelrCarousel" data-slide="next">
     <span class="glyphicon glyphicon-chevron-right"></span>
   </a>
 </div><!-- /.carousel -->
+
+<script src="/static/js/carousel.js"></script>
+<script src="/static/js/transition.js"></script>
 
 
 {% endblock %}
