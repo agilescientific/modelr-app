@@ -9,9 +9,18 @@
     <meta name="author" content="">
 
     <!-- Le styles -->
-    <link href="static/css/bootstrap.css" rel="stylesheet">
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="/static/css/bootstrap.min.css">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="/static/js/bootstrap.min.js"></script>
+
     <link rel="stylesheet" href="/static/css/modelr.css" type="text/css" media="screen">
     <link rel="stylesheet" href="/static/css/mobile.css" type="text/css" media="screen and (max-width: 768px)">
+
     <style type="text/css">
       body {
         padding-top: 60px;
@@ -20,7 +29,6 @@
     </style>
         
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.js"></script>
-    <script src="static/js/bootstrap.js"></script>
 
     <script>  
       $(document).ready(function() {
@@ -58,10 +66,13 @@
       {% endif %}
       <li><a href="/about">About</a></li>
       <li><a href="/pricing">Pricing</a></li>
+      {% if not user %}
+      <li><a href="/demo">Demo</a></li>
+      {% endif %}
     </ul>
      
-    {% if user %}
     <ul class="nav navbar-nav navbar-right">
+    {% if user %}
       <li><a href="/help">Help</a>
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Hello {{ user.email if user else "" }}<b class="caret"></b></a>
@@ -72,17 +83,15 @@
           <li><a href="/signout">Sign out</a></li>
         </ul>
       </li>
-    </ul>
     {% else %}
-    <ul class="nav navbar-nav navbar-right">
       <li>
         <a href="/help">Help</a>
       </li>
       <li>
           <a href="/signin"><strong>Sign in</strong></a>
       </li>
-    </ul>
     {% endif %}
+    </ul>
   </div><!-- /.navbar-collapse -->
 </div>
 </div>
@@ -104,9 +113,12 @@
     <div class="container">
       {% block footer %}
           <div style="float:right">
-            <img src="https://developers.google.com/appengine/images/appengine-silver-120x30.gif" 
-alt="Powered by Google App Engine" />
-          </div>
+<!-- Begin DigiCert site seal HTML and JavaScript -->
+<div id="DigiCertClickID_ROpNO0rb" data-language="en_US"></div>
+<script type="text/javascript">
+var __dcid = __dcid || [];__dcid.push(["DigiCertClickID_ROpNO0rb", "10", "s", "black", "ROpNO0rb"]);(function(){var cid=document.createElement("script");cid.async=true;cid.src="//seal.digicert.com/seals/cascade/seal.min.js";var s = document.getElementsByTagName("script");var ls = s[(s.length - 1)];ls.parentNode.insertBefore(cid, ls.nextSibling);}());
+</script>
+<!-- End DigiCert site seal HTML and JavaScript -->          </div>
           <p style="color:lightgray" ><a href="http://www.agilegeoscience.com/"><img src="/static/img/agile_logo.png" width="60px" /></a>&nbsp;&nbsp;&nbsp;<a style="color:lightgray" href="http://www.agilegeoscience.com/">Agile Geoscience 2014</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/terms">Terms</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/privacy">Privacy</a></p>
         </footer>
       {% endblock %}

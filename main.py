@@ -468,41 +468,12 @@ class DemoHandler(ModelrPageRequest):
 
         self.response.headers['Content-Type'] = 'text/html'
 
-        rocks = Rock.all()
-
         default_rocks = Rock.all()
         default_rocks.filter("user =", admin_id)
-
-        rock_groups = []
-            
-        scenarios = Scenario.all()
-        scenarios.ancestor(user)
-        scenarios.filter("user =", user.user_id)
-        scenarios.order("-date")
         
-        for s in scenarios.fetch(100):
-            logging.info((s.name, s))
-            
         
-        template_params.update(rocks=rocks.fetch(100),
-                               scenarios=scenarios.fetch(100),
-                               default_rocks=default_rocks.fetch(100),
-                               rock_groups=rock_groups)
-
-        # Check if a rock is being edited
-        if self.request.get("selected_rock"):
-            rock_id = self.request.get("selected_rock")
-            current_rock = Rock.get_by_id(int(rock_id),
-                                          parent=user)
-            template_params['current_rock'] = current_rock
-        
-        template = env.get_template('dashboard.html')
-        html = template.render(template_params)
-
-        activity = "dashboard"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
+        template = env.get_template('demo.html')
+        html = template.render()
         self.response.out.write(html)
 
 
