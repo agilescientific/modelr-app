@@ -126,8 +126,8 @@
 	    {% if user %}
           <div class="form-group">
             <div class="form-inline">
-              <label for="scenario_name" class="col-sm-2 control-label">Scenario</label>
-              <div class="col-sm-8">
+              <label for="scenario_name" class="col-sm-3 control-label">Load scenario</label>
+              <div class="col-sm-7">
 		        <input class="form-control" id='scenario_name' onchange="scenario.name = this.value;" placeholder="scenario name"></input>
 		      </div>
 			  <div class="col-md-offset-10">
@@ -146,8 +146,8 @@
 
         <div class="form-group">
           <div class="form-inline">
-            <label for="select_script" class="col-sm-2 control-label">Script</label>
-            <div class="col-sm-8">
+            <label for="select_script" class="col-sm-3 control-label">Select script</label>
+            <div class="col-sm-7">
 		      <select class="form-control" id="select_script" onchange="scenario.set_current_script($(this).val(), scenario.arguments)">
 		        <option>Please wait... </option>
 		      </select>
@@ -166,21 +166,29 @@
         
         <hr/>
         
-        {% if user %}
-	    <div class="form-group">
-          <div class="col-sm-offset-2 col-sm-4">
-		    <button class="btn btn-default" onclick="scenario.put()">Save scenario</button>
-		  </div>
-		</div>
-        {% endif %}
-
         <div class="form-group">
-          <div class="col-sm-offset-2 col-sm-4">
+          <div class="col-sm-offset-3 col-sm-4">
 		    <button class="btn btn-primary" id='create_image' onclick="server.update_img(scenario)">
               Create image
 		    </button>
           </div>
         </div>
+
+        {% if user %}
+        <div class="form-group">
+
+            <div class="form-inline">
+              <label for="scenario_name" class="col-sm-3 control-label">Save scenario</label>
+              <div class="col-sm-7">
+		        <input class="form-control" id='scenario_name' onchange="scenario.name = this.value;" placeholder="scenario name"></input>
+		      </div>
+          <div class="col-md-offset-10">
+		    <button class="btn btn-default" onclick="scenario.put()">save</button>
+		  </div>
+
+            </div>
+		</div>
+        {% endif %}
 
       </form>
 
