@@ -121,73 +121,72 @@
 	
 	<div class="panel-body">
 	  
-          <form class="form-horizontal" role="form">
+      <form class="form-horizontal" role="form">
             
 	    {% if user %}
-            <div class="form-group">
-              <label for="scenario_name" 
-		     class="col-sm-2 control-label">Scenario</label>
-              <div class="col-sm-6">
-		
-		
-		<input class="form-control" id='scenario_name' 
-		       onchange="scenario.name = this.value;"></input>
-		<button class="btn btn-default" 
-			onclick="scenario.put()">
-                  Save
-		</button>
-		<button class="btn btn-default" 
-			onclick="scenario.get()">
-                  Load
-		</button>
-              </div>
+          <div class="form-group">
+            <div class="form-inline">
+              <label for="scenario_name" class="col-sm-2 control-label">Scenario</label>
+              <div class="col-sm-8">
+		        <input class="form-control" id='scenario_name' onchange="scenario.name = this.value;" placeholder="scenario name"></input>
+		      </div>
+			  <div class="col-md-offset-10">
+				<button class="btn btn-default" onclick="scenario.get()">load</button>
+			  </div>
             </div>
+          </div>
 	    {% else %}
-	    <div class="col-sm-12">
+	      <div class="col-sm-12">
 	      <p><strong>
-		<a href="/signup"> Sign up</a> 
-		to save scenarios and create rocks!
-	      </p></strong>
-	    </div>
+		    <a href="/signup">Sign up</a> to create rocks and save scenarios!
+	      </strong></p>
+	      </div>
+	      <hr />
 	    {% endif %}
 
-            <div class="form-group">
-              <label for="select_script" 
-		     class="col-sm-2 control-label">Script</label>
-              <div class="col-sm-6">
-		<select class="form-control" id="select_script" 
-			onchange="scenario.set_current_script($(this).val(), scenario.arguments)">
-		  <option>Please wait... </option>
-		</select>
-		<div class="col-sm-4">
-                  <button class="btn btn-default" type="button" 
-			  onclick="populate_scripts(server, 'select#select_script')">
-                    refresh
-                  </button>
+        <div class="form-group">
+          <div class="form-inline">
+            <label for="select_script" class="col-sm-2 control-label">Script</label>
+            <div class="col-sm-8">
+		      <select class="form-control" id="select_script" onchange="scenario.set_current_script($(this).val(), scenario.arguments)">
+		        <option>Please wait... </option>
+		      </select>
+		    </div>
+		    <div class="col-sm-offset-10">
+		      <button class="btn btn-default" type="button" onclick="populate_scripts(server, 'select#select_script')">
+                refresh
+              </button>
+            </div>
+          </div>
+        </div>
+	    
+        <!-- Div to place the form into see Scenario.display and display_form functions-->
+        <div class="container" id="scenario_place">
+        </div>
+        
+        <hr/>
+        
+        {% if user %}
+	    <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-4">
+		    <button class="btn btn-default" onclick="scenario.put()">Save scenario</button>
+		  </div>
 		</div>
-              </div>
-            </div>
-	    
-            <!-- Div to place the form into see Scenario.display 
-	    and display_form functions-->
-            <div class="container" id="scenario_place">
-            </div>
-	    
-            <div class="form-group">
-              <div class="col-sm-offset-2 col-sm-6">
-		<button class="btn btn-default" 
-			id='create_image' 
-			onclick="server.update_img(scenario)">
-                  Create image
-		</button>
-              </div>
-            </div>
+        {% endif %}
 
-          </form>
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-4">
+		    <button class="btn btn-primary" id='create_image' onclick="server.update_img(scenario)">
+              Create image
+		    </button>
+          </div>
+        </div>
+
+      </form>
 
 	</div>  <!-- end of panel-body -->
-      </div>
-    </div>
+  </div>
+</div>
     
     <!-- RESULT PANEL
     ================================================================= -->

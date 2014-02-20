@@ -36,7 +36,7 @@
             {% endfor %}
           </tbody>
         </table>
-        <a href="scenario#">Make a new scenario</a>
+        <a class="btn btn-primary" href="/scenario#" role="button">Make a new scenario</a>
       </div>
     </div>
   </div>
@@ -46,7 +46,7 @@
   <div class="col-md-8">
     <div class="panel panel-default">
       <div class="panel-heading">
-        <h3 class="panel-title">My Rocks</h3>
+        <h3 class="panel-title">My rocks</h3>
       </div>
       <div class="panel-body">
 	<table class="table table-condensed table-hover">
@@ -87,7 +87,7 @@
     {% for rock_group in rock_groups %}
     <div class="panel panel-default">
       <div class="panel-heading">
-        <h3 class="panel-title">{{rock_group['name']}} Rocks</h3>
+        <h3 class="panel-title">{{rock_group['name']}} rocks</h3>
       </div>
       <div class="panel-body">
         <table class="table table-condensed table-hover">
@@ -123,11 +123,13 @@
     {% endfor %}
 
 
-    <div class="panel panel-default">
+    <div class="panel panel-default" id="accordion">
       <div class="panel-heading">
-        <h3 class="panel-title">Default Rocks</h3>
+        <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapseDefault" data-toggle="collapse">
+          <span class="indicator glyphicon glyphicon-chevron-up pull-right" style="color:gray;"></span> Default rocks</a>
+        </h3>
       </div>
-      <div class="panel-body">
+      <div class="panel-body panel-collapse collapse" id="collapseDefault">
 	<table class="table table-condensed table-hover">
           <thead>
             <tr>
@@ -160,6 +162,23 @@
     </div>
   </div>
 </div>
+
+<script>
+        $(document).ready(function() {
+            $('.accordion-toggle').on('click', function(e) {
+                e.preventDefault();
+                if (!$('.panel-collapse').hasClass('.collapsed')) {
+                    console.log('toggle collapsed class')
+                    $('.indicator').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+                }
+                else
+                {
+                    console.log('toggle collapsed class')
+                    $('.indicator').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+                }
+            });
+        });
+</script>
 
 
 
