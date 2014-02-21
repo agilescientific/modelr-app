@@ -96,15 +96,8 @@
        loader = $("#scenario_loader")
 
        // Check for duplicates
-       var exists = false;
-       load.option.each(function(){
-	 if (this.value == scenario.name) {
-           exists = true;
-           return false;
-	 }
-       });
-
-       if (!exists) {
+       new_scenario = $("#scenario_loader option[value="+scenario.name+"]").length == 0;
+       if (new_scenario) {
 	 loader.append("<option value=" + scenario.name + 
 		       "id=" + scenario.name + ">"+
 		       scenario.name + "</option>")
