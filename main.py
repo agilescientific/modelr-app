@@ -371,20 +371,39 @@ class ScenarioHandler(ModelrPageRequest):
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Access-Control-Allow-Headers'] = \
           'X-Request, X-Requested-With'
-        
-        
-    
+
+        # Get the default rocks
         default_rocks = Rock.all()
         default_rocks.filter("user =", admin_id)
-
+        default_rocks = default_rocks.fetch(100)
+        
+        # Get the user rocks
         if user:
             rocks = Rock.all().ancestor(user).fetch(100)
         else:
             rocks = []
+
+        # Get the group rocks
+        group_rocks = []
+        for group in user.group:
             
+            g_rocks = \
+                Rock.all().ancestor(ModelrRoot).filter("group =",
+                                                       group)
+            group_rocks.append({"name": group.capitalize(),
+                                "rocks": g_rocks.fetch(100)})
+
+        # Get the users scenarios
+        scenarios = \
+          Scenario.all().ancestor(user).filter("user =",
+                                            user.user_id).fetch(100)
+
+        print(scenarios[0].name)
         template_params = \
           self.get_base_params(user=user,rocks=rocks,
-                               default_rocks=default_rocks.fetch(100))
+                               default_rocks=default_rocks,
+                               group_rocks=group_rocks,
+                               scenarios=scenarios)
         
         template = env.get_template('scenario.html')
 

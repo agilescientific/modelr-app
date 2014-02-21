@@ -19,19 +19,22 @@ function PlotServer(hostname, rocks) {
     this.rocks = rocks
 
     /*
-     * Asynchronously fetch the list of scripts from the plotting server @param
-     * callback(data): do something on finish.
+     * Asynchronously fetch the list of scripts from the 
+     * plotting server 
+     * @param callback(data): do something on finish.
      */
     this.get_scripts = function get_scripts(callback) {
         $.getJSON(host + '/available_scripts.json', callback);
     }
 
     /*
-     * Asynchronously fetch the information from a single scripts from the
-     * plotting server @param callback(data): do something on finish.
+     * Asynchronously fetch the information from a single scripts 
+     * from the plotting server. 
+     * @param callback(data): do something on finish.
      */
-    this.get_script_info = function get_script_info(script, callback) {
-        $.getJSON(this.hostname + '/script_help.json?script=' + script, callback);
+    this.get_script_info = function get_script_info(script, callback){
+        $.getJSON(this.hostname + '/script_help.json?script=' + 
+		  script, callback);
     }
 
 }
@@ -70,8 +73,8 @@ Scenario.prototype.put = function put() {
 }
 
 /*
- * Get the Scenario from the plotting server. keyed on the 'name' attr of this
- * Scenario.
+ * Get the Scenario from the plotting server. keyed on the 'name' 
+ * attr of this Scenario.
  */
 Scenario.prototype.get = function get() {
 
@@ -90,6 +93,7 @@ Scenario.prototype.get = function get() {
         'name' : this.name
     }, success, 'json')
 }
+
 
 /*
  * Update an argument.
@@ -174,7 +178,9 @@ function populate_scripts(server, selection) {
             var script_doc = data[i];
             var script = script_doc[0];
             var doc = script_doc[1];
-            select_script.append('<option value=' + script + '>' + script + ' --- ' + doc.slice(0, 20) + '</option>');
+            select_script.append('<option value=' + script + '>' + 
+				 script + ' --- ' + doc.slice(0, 20)+ 
+				 '</option>');
         }
 
     });
