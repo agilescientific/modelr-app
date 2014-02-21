@@ -39,6 +39,12 @@ box-shadow: 0 0 10px rgba(0,0,0,.5);
 
 
 <div class="container">
+
+  {% if success %}
+  <div class="alert alert-success">
+      <strong>Success!</strong> {{ success }} 
+  </div>
+  {% endif %}
               
   <h3><strong>Step 2 of 2.</strong> Provide your payment details.</h3>
   

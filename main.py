@@ -750,7 +750,7 @@ class SignUp(webapp2.RequestHandler):
 
         if password != verify:
             template = env.get_template('signup.html')
-            msg = "Password Mismatch"
+            msg = "Password mismatch"
             html = template.render(email=email,
                                    error=msg)
             self.response.out.write(html)
@@ -790,9 +790,10 @@ class EmailAuthentication(ModelrPageRequest):
             self.redirect('/signup?error=auth_failed')
             return
 
+        msg = "Thank you for verifying your email address."
         params = self.get_base_params(user=user)
         template = env.get_template('checkout.html')
-        html = template.render(params)
+        html = template.render(params, success=msg)
         self.response.out.write(html)
 
     def post(self):
