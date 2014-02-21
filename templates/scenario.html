@@ -90,14 +90,21 @@
        $('input#scenario_name').val(hash);
      }
      
-    // Updates the scenario loader and then puts the scenario in the
-   // database
-   save_scenario = function save_scenario(){
-     loader = $("#scenario_loader")
-     loader.append("<option value=" + scenario.name + ">"+
-		   scenario.name + "</option>")
-     scenario.put()
-   }
+     // Updates the scenario loader and then puts the scenario in the
+     // database
+     save_scenario = function save_scenario(){
+       loader = $("#scenario_loader")
+
+       // Check for duplicates
+       new_scenario = $("#scenario_loader option[value="+scenario.name+"]").length == 0;
+       if (new_scenario) {
+	 loader.append("<option value=" + scenario.name + 
+		       "id=" + scenario.name + ">"+
+		       scenario.name + "</option>")
+       }
+
+       scenario.put()
+     }
    });
   </script>
 
