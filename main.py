@@ -380,30 +380,33 @@ class ScenarioHandler(ModelrPageRequest):
         # Get the user rocks
         if user:
             rocks = Rock.all().ancestor(user).fetch(100)
+
+            # Get the group rocks
+            group_rocks = []
+            for group in user.group:
+            
+                g_rocks = \
+                  Rock.all().ancestor(ModelrRoot).filter("group =",
+                                                         group)
+                group_rocks.append({"name": group.capitalize(),
+                                    "rocks": g_rocks.fetch(100)})
+                
+            # Get the users scenarios
+            scenarios = \
+                Scenario.all().ancestor(user).filter("user =",
+                                            user.user_id).fetch(100)
         else:
             rocks = []
+            group_rocks = []
+            scenarios = []
 
-        # Get the group rocks
-        group_rocks = []
-        for group in user.group:
-            
-            g_rocks = \
-                Rock.all().ancestor(ModelrRoot).filter("group =",
-                                                       group)
-            group_rocks.append({"name": group.capitalize(),
-                                "rocks": g_rocks.fetch(100)})
-
-        # Get the users scenarios
-        scenarios = \
-          Scenario.all().ancestor(user).filter("user =",
-                                            user.user_id).fetch(100)
-
-        print(scenarios[0].name)
+  
         template_params = \
           self.get_base_params(user=user,rocks=rocks,
                                default_rocks=default_rocks,
                                group_rocks=group_rocks,
                                scenarios=scenarios)
+                
         
         template = env.get_template('scenario.html')
 
@@ -417,7 +420,6 @@ class ScenarioHandler(ModelrPageRequest):
                         parent=ModelrRoot).put()
         
         self.response.out.write(html)
- 
               
 class DashboardHandler(ModelrPageRequest):
     '''

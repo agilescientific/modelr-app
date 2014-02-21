@@ -169,7 +169,7 @@
 		  </select>
 		</div>
 		<div class="col-md-offset-10">
-		  <button class="btn btn-default" 
+		  <button type="button" class="btn btn-default" 
 			  onclick="scenario.get()">load
 		  </button>
 		</div>
@@ -217,7 +217,8 @@
               <div class="col-sm-offset-3 col-sm-4">
 		<button class="btn btn-primary" 
 			id='create_image' 
-			onclick="server.update_img(scenario)">
+			onclick="server.update_img(scenario)"
+			type="button">
 		  Create image
 		</button>
               </div>
@@ -240,7 +241,9 @@
 		</div>
 		<div class="col-md-offset-10">
 		  <button class="btn btn-default" 
-			  onclick="save_scenario()">save
+			  onclick="save_scenario()"
+			  type="button">
+		    save
 		  </button>
 		</div>
 
