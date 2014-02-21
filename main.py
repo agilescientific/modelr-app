@@ -144,7 +144,7 @@ class MainHandler(ModelrPageRequest):
         # Redirect to the dashboard if the user is logged in
         user = self.verify()
         if user:
-            self.redirect('/dashboard')
+            self.redirect('/scenario')
         
         template_params = self.get_base_params()
         template = env.get_template('index.html')
@@ -863,7 +863,7 @@ class SignIn(webapp2.RequestHandler):
             cookie = get_cookie_string(email)
             self.response.headers.add_header('Set-Cookie', cookie)
     
-            self.redirect('/dashboard')
+            self.redirect('/')
 
         except AuthExcept as e:
             template = env.get_template('signin.html')

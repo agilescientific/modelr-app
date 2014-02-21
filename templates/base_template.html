@@ -64,18 +64,17 @@
       {% if user %}
       <li><a href="/dashboard">Dashboard</a></li>
       {% endif %}
-      <li><a href="/about">About</a></li>
-      <li><a href="/pricing">Pricing</a></li>
       {% if not user %}
+      <li><a href="/pricing">Pricing</a></li>
       <li><a href="/scenario">Demo</a></li>
       {% endif %}
     </ul>
      
     <ul class="nav navbar-nav navbar-right">
-    {% if user %}
       <li><a href="/help">Help</a>
+    {% if user %}
       <li class="dropdown">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Hello {{ user.email if user else "" }}<b class="caret"></b></a>
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ user.email if user else "" }}<b class="caret"></b></a>
         <ul class="dropdown-menu">
           <li><a href="/profile">My profile</a></li>
           <li><a href="/settings">Settings</a></li>
@@ -84,9 +83,6 @@
         </ul>
       </li>
     {% else %}
-      <li>
-        <a href="/help">Help</a>
-      </li>
       <li>
           <a href="/signin"><strong>Sign in</strong></a>
       </li>
@@ -119,7 +115,7 @@
 var __dcid = __dcid || [];__dcid.push(["DigiCertClickID_ROpNO0rb", "10", "s", "black", "ROpNO0rb"]);(function(){var cid=document.createElement("script");cid.async=true;cid.src="//seal.digicert.com/seals/cascade/seal.min.js";var s = document.getElementsByTagName("script");var ls = s[(s.length - 1)];ls.parentNode.insertBefore(cid, ls.nextSibling);}());
 </script>
 <!-- End DigiCert site seal HTML and JavaScript -->          </div>
-          <p style="color:lightgray" ><a href="http://www.agilegeoscience.com/"><img src="/static/img/agile_logo.png" width="60px" /></a>&nbsp;&nbsp;&nbsp;<a style="color:lightgray" href="http://www.agilegeoscience.com/">Agile Geoscience 2014</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/terms">Terms</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/privacy">Privacy</a></p>
+          <p style="color:lightgray" ><a href="http://www.agilegeoscience.com/"><img src="/static/img/agile_logo.png" width="60px" /></a>&nbsp;&nbsp;&nbsp;<a style="color:lightgray" href="http://www.agilegeoscience.com/">Agile Geoscience 2014</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/about">About</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/terms">Terms</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/privacy">Privacy</a></p>
         </footer>
       {% endblock %}
     </div>
