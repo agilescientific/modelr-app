@@ -495,6 +495,15 @@ class AboutHandler(ModelrPageRequest):
         html = template.render(template_params)
         self.response.out.write(html)          
 
+class FeaturesHandler(ModelrPageRequest):
+    def get(self):
+
+        user = self.verify()
+        template_params = self.get_base_params(user=user)
+        template = env.get_template('features.html')
+        html = template.render(template_params)
+        self.response.out.write(html)          
+
                                                                         
 class PricingHandler(ModelrPageRequest):
     def get(self):
@@ -1008,6 +1017,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/profile', ProfileHandler),
                                ('/settings', SettingsHandler),
                                ('/about', AboutHandler),
+                               ('/features', FeaturesHandler),
                                ('/help', HelpHandler),
                                ('/terms', TermsHandler),
                                ('/privacy', PrivacyHandler),
