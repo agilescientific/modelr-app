@@ -740,7 +740,9 @@ class SignUp(webapp2.RequestHandler):
                 
                 # Show the message page with "Success!"
                 template = env.get_template('message.html')
-                msg = "Please check your inbox and spam folder for our message. Then click on the link in the email."
+                msg = ("Please check your inbox and spam folder " +
+                       "for our message. Then click on the link " +
+                       "in the email.")
                 html = template.render(success=msg)
                 self.response.out.write(html)
                 
@@ -787,7 +789,8 @@ class EmailAuthentication(ModelrPageRequest):
         # MORE TO DO HERE
         amount = 900
         
-        # Create the charge on Stripe's servers - this will charge the user's card
+        # Create the charge on Stripe's servers -
+        # this will charge the user's card
         try:
             customer = stripe.Customer.create(
             card=token,
@@ -969,7 +972,6 @@ class ManageGroup(ModelrPageRequest):
         
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
-                               ('/demo', ScenarioHandler),
                                ('/add_rock', AddRockHandler),
                                ('/edit_rock', ModifyRockHandler),
                                ('/remove_rock', RemoveRockHandler),
