@@ -3,6 +3,154 @@
 
 {% block content %}
 <div class="container">
+
+  <!-- SCENARIO PANEL
+  ================================================================ -->
+  <div class="row">
+
+    <div class="col-md-6">
+      <div class="panel panel-primary">
+	<div class="panel-heading">
+          <h3 class="panel-title">Scenario</h3>
+	</div>
+	
+	<div class="panel-body">
+	  
+	  <form class="form-horizontal" role="form">
+            
+	    {% if user %}
+            <div class="form-group">
+              <div class="form-inline">
+		<label for="scenario_loader" 
+		       class="col-sm-3 control-label">Load scenario
+		</label>
+		<div class="col-sm-7">
+		  <select class="form-control" 
+			  id='scenario_loader' 
+			  onchange="scenario.name=this.value;" 
+			  placeholder="scenario name">
+		    <option value="">
+		      Scenarios
+		    </option>
+		    <option value="">
+		      ===========
+		    </option>
+		    {% for scenario in scenarios %}
+		    <option value="{{scenario.name}}"> 
+		      {{scenario.name}}
+		    </option>
+		    {% endfor %}
+		  </select>
+		</div>
+		<div class="col-md-offset-10">
+		  <button type="button" class="btn btn-default" 
+			  onclick="scenario.get()">load
+		  </button>
+		</div>
+              </div>
+            </div>
+	    {% else %}
+	    
+	      <div class="alert alert-warning" style="margin-bottom: 35px" >
+      <strong>Demo mode.</strong> <a href="/signup">
+		  Sign up
+		</a> 
+		to create rocks and save scenarios!
+  </div>
+	    {% endif %}
+
+            <div class="form-group">
+              <div class="form-inline">
+		<label for="select_script" 
+		       class="col-sm-3 control-label">
+		  Select script
+		</label>
+		<div class="col-sm-7">
+		  <select class="form-control" 
+			  id="select_script" 
+			  onchange="scenario.set_current_script(
+			  $(this).val(), scenario.arguments)">
+		    <option>Please wait... </option>
+		  </select>
+		</div>
+		<div class="col-sm-offset-10">
+		</div>
+              </div>
+            </div>
+	    
+            <!-- Div to place the form into see Scenario.display 
+	    and display_form functions-->
+            <div class="container" id="scenario_place">
+            </div>
+            
+            <hr/>
+            
+            <div class="form-group">
+              <div class="col-sm-offset-3 col-sm-4">
+		<button class="btn btn-primary" 
+			id='create_image' 
+			onclick="server.update_img(scenario)"
+			type="button">
+		  Create image
+		</button>
+              </div>
+            </div>
+
+            {% if user %}
+            <div class="form-group">
+
+              <div class="form-inline">
+		<label for="scenario_name" 
+		       class="col-sm-3 control-label">
+		  Save scenario
+		</label>
+		<div class="col-sm-7">
+		  <input class="form-control" 
+			 id='scenario_name' 
+			 onchange="scenario.name = this.value;" 
+			 placeholder="scenario name">
+		  </input>
+		</div>
+		<div class="col-md-offset-10">
+		  <button class="btn btn-default" 
+			  onclick="save_scenario()"
+			  type="button">
+		    save
+		  </button>
+		</div>
+
+              </div>
+	    </div>
+            {% endif %}
+
+	  </form>
+
+	</div>  <!-- end of panel-body -->
+      </div>
+    </div>
+    
+    <!-- RESULT PANEL============================================ -->
+
+    <div class="col-md-6">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">Result</h3>
+	</div>
+	<div class="panel-body">
+
+          <img class="img-rounded" id="plot_image" href=URL 
+	       alt="">
+          <!-- Updated by the  create_image button above-->
+          </img>
+
+	</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
   <!-- JAVASCRIPT and DATA
   ================================================================ -->
 
@@ -137,152 +285,5 @@
     
   </datalist>
 
-  <!-- SCENARIO PANEL
-  ================================================================ -->
-  <div class="row">
 
-    <div class="col-md-6">
-      <div class="panel panel-primary">
-	<div class="panel-heading">
-          <h3 class="panel-title">Scenario</h3>
-	</div>
-	
-	<div class="panel-body">
-	  
-	  <form class="form-horizontal" role="form">
-            
-	    {% if user %}
-            <div class="form-group">
-              <div class="form-inline">
-		<label for="scenario_loader" 
-		       class="col-sm-3 control-label">Load scenario
-		</label>
-		<div class="col-sm-7">
-		  <select class="form-control" 
-			  id='scenario_loader' 
-			  onchange="scenario.name=this.value;" 
-			  placeholder="scenario name">
-		    <option value="">
-		      Scenarios
-		    </option>
-		    <option value="">
-		      ===========
-		    </option>
-		    {% for scenario in scenarios %}
-		    <option value="{{scenario.name}}"> 
-		      {{scenario.name}}
-		    </option>
-		    {% endfor %}
-		  </select>
-		</div>
-		<div class="col-md-offset-10">
-		  <button type="button" class="btn btn-default" 
-			  onclick="scenario.get()">load
-		  </button>
-		</div>
-              </div>
-            </div>
-	    {% else %}
-	    <div class="col-sm-12">
-	      <p><strong>
-		<a href="/signup">
-		  Sign up
-		</a> 
-		to create rocks and save scenarios!
-	      </strong></p>
-	    </div>
-	    <hr />
-	    {% endif %}
-
-            <div class="form-group">
-              <div class="form-inline">
-		<label for="select_script" 
-		       class="col-sm-3 control-label">
-		  Select script
-		</label>
-		<div class="col-sm-7">
-		  <select class="form-control" 
-			  id="select_script" 
-			  onchange="scenario.set_current_script(
-			  $(this).val(), scenario.arguments)">
-		    <option>Please wait... </option>
-		  </select>
-		</div>
-		<div class="col-sm-offset-10">
-		</div>
-              </div>
-            </div>
-	    
-            <!-- Div to place the form into see Scenario.display 
-	    and display_form functions-->
-            <div class="container" id="scenario_place">
-            </div>
-            
-            <hr/>
-            
-            <div class="form-group">
-              <div class="col-sm-offset-3 col-sm-4">
-		<button class="btn btn-primary" 
-			id='create_image' 
-			onclick="server.update_img(scenario)"
-			type="button">
-		  Create image
-		</button>
-              </div>
-            </div>
-
-            {% if user %}
-            <div class="form-group">
-
-              <div class="form-inline">
-		<label for="scenario_name" 
-		       class="col-sm-3 control-label">
-		  Save scenario
-		</label>
-		<div class="col-sm-7">
-		  <input class="form-control" 
-			 id='scenario_name' 
-			 onchange="scenario.name = this.value;" 
-			 placeholder="scenario name">
-		  </input>
-		</div>
-		<div class="col-md-offset-10">
-		  <button class="btn btn-default" 
-			  onclick="save_scenario()"
-			  type="button">
-		    save
-		  </button>
-		</div>
-
-              </div>
-	    </div>
-            {% endif %}
-
-	  </form>
-
-	</div>  <!-- end of panel-body -->
-      </div>
-    </div>
-    
-    <!-- RESULT PANEL============================================ -->
-
-    <div class="col-md-6">
-      <div class="panel panel-default">
-	<div class="panel-heading">
-          <h3 class="panel-title">Result</h3>
-	</div>
-	<div class="panel-body">
-
-          <img class="img-thumbnail" id="plot_image" href=URL 
-	       alt="Plot image">
-          <!-- Updated by the  create_image button above-->
-          </img>
-
-	</div>
-      </div>
-    </div>
-
-  </div>
-
-</div>
 {% endblock %}

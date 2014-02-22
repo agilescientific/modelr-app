@@ -21,7 +21,7 @@ import stripe
 
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
-     verify, verify_signup, initialize_user
+     verify, verify_signup, initialize_user, reset_password
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser
@@ -734,6 +734,47 @@ class SettingsHandler(ModelrPageRequest):
         self.response.out.write(html)        
             
         
+class ForgotHandler(webapp2.RequestHandler):
+    """
+    Class for forgotten passwords
+    """
+
+    def get(self):
+        template = env.get_template('forgot.html')
+        html = template.render()
+        self.response.out.write(html)
+        
+    def post(self):
+
+        email = self.request.get('email')
+        try:
+            forgot_password(email, parent=ModelrRoot)
+            template = env.get_template('message.html')
+            msg = ("Please check your inbox and spam folder " +
+                   "for our message. Then click on the link " +
+                   "in the email.")
+            html = template.render(success=msg)
+            self.response.out.write(html)
+        except:
+            pass
+
+class ResetHandler(webapp2.RequestHandler):
+    """
+    Class for forgotten passwords
+    """
+
+    def post(self):
+
+        email = self.request.get('email')
+        try:
+            reset_password(email, parent=ModelrRoot)
+            template = env.get_template('settings.html')
+            msg = ("You reset your password.")
+            html = template.render(success=msg)
+            self.response.out.write(html)
+        except:
+            pass
+
 class SignUp(webapp2.RequestHandler):
     """
     Class for registering users
@@ -852,6 +893,8 @@ class SignIn(webapp2.RequestHandler):
     def get(self):       
 
         status = self.request.get("verified")
+        redirect = self.request.get('redirect')
+
         if status == "true":
             msg = ("Your account has been created and your card has "
                    "been charged. Welcome to Modelr!" )
@@ -860,20 +903,24 @@ class SignIn(webapp2.RequestHandler):
             msg = None
 
         template = env.get_template('signin.html')
-        html = template.render(success=msg)
+        html = template.render(success=msg, redirect=redirect)
         self.response.out.write(html)
 
     def post(self):
 
         email = self.request.get('email')
         password = self.request.get('password')
+        redirect = self.request.get('redirect').encode('utf-8')
 
         try:
             signin(email, password, ModelrRoot)
             cookie = get_cookie_string(email)
             self.response.headers.add_header('Set-Cookie', cookie)
     
-            self.redirect('/')
+            if redirect:
+                self.redirect(redirect)
+            else:
+                self.redirect('/')
 
         except AuthExcept as e:
             template = env.get_template('signin.html')
@@ -1000,6 +1047,14 @@ class ManageGroup(ModelrPageRequest):
             self.redirect('/profile')
             return
         
+class NotFoundPageHandler(ModelrPageRequest):
+    def get(self):
+        self.error(404)        
+        template = env.get_template('404.html')
+        html = template.render()
+        self.response.out.write(html)
+
+
         
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
@@ -1024,9 +1079,12 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/signup', SignUp),
                                ('/verify_email', EmailAuthentication),
                                ('/signin', SignIn),
+                               ('/forgot', ForgotHandler),
+                               ('/reset', ResetHandler),
                                ('/signout', SignOut),
                                ('/stripe', StripeHandler),
-                               ('/manage_group', ManageGroup)
+                               ('/manage_group', ManageGroup),
+                               ('/.*', NotFoundPageHandler)
                                ],
                               debug=True)
 

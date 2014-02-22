@@ -185,8 +185,7 @@ def initialize_user(email, stripe_id, parent):
               body="""
 Welcome to Modelr!
 
-    You are now subscribed to Modelr! To unsubscribe .....
-
+You are now subscribed to Modelr! To unsubscribe, please reply to this email or log in to Modelr and check your user settings.
 
 Cheers,
 Matt, Evan, and Ben
@@ -225,7 +224,51 @@ def verify(userid, password, ancestor):
     except IndexError:
         verified = False
 
-    
+def forgot_password(userid, parent):
+    """
+    Sets a new password after the user forgot it.
+    """
 
+    user = User.all().ancestor(parent).filter("email =", email).fetch(1)
+    if not user:
+        raise AuthExcept('invalid email')
     
+    user = user[0]
 
+    def generate_password(size=8, chars=string.ascii_uppercase + string.digits):
+        return ''.join(random.choice(chars) for x in range(size))
+        
+    new = generate_password()
+
+    # send a new password email
+    mail.send_mail(sender="Hello <admin@modelr.io>",
+              to="<%s>" % user.email,
+              subject="Modelr password reset",
+              body="""
+Here's your new password!
+
+    {0}
+    
+Please sign in with this new password, and then change it in your profile page.
+
+  http://modelr.io/signin?redirect=profile
+
+Cheers,
+Matt, Evan, and Ben
+""".format(new))
+
+# Ben... not sure what to do here to set the new password in the DB
+# so they can log in next time. Help!
+
+
+def reset_password(userid, parent):
+    """
+    Resets the password at the user's request.
+    """
+
+    # Called by ResetHandler, from /reset
+    # Check the provided password is OK
+    # Set the current user
+    # Check the new password is OK
+    # Set it in the DB
+    # Send the user to /settings with param success="You changed your password"

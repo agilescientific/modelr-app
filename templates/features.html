@@ -5,12 +5,12 @@
 
 <div class="container">
 
-<div class="panel panel-default">
-  <div class="panel-primary">
-    <h3 class="panel-title">Built for geoscientists</h3>
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">Built for geoscientists by geoscientists. And a physicist.</h3>
   </div>
   <div class="panel-body">
-    Robust, clean, and flexible interface that lets you focus on building meaningful synthetic seismic experiments.
+     <p>Modelr has a robust, clean, and flexible interface that lets you focus on building meaningful synthetic seismic experiments.</p>
   </div>
 </div>                
                                                                       
@@ -19,45 +19,28 @@
     <h3 class="panel-title">For seismic interpreters</h3>
   </div>
   <div class="panel-body">
-    Wedges
-    <img src="/static/img/F_wedges_with_text.png" class="img-responsive" alt="Responsive image">
-    Model reservoir geometries
-    <img src="/static/img/F_slant_25_35.png" class="img-responsive" alt="Responsive image">
-    Channels
-    <img src="/static/img/F_channel.png" class="img-responsive" alt="Responsive image">
-    Define your own wavelets
-    <img src="/static/img/F_ormsby.png" class="img-responsive" alt="Responsive image">
-    <img src="/static/img/F_slant_wedge.png" class="img-responsive" alt="Responsive image">
+    <p>Model simple geometries like wedges and channels quickly. See variable density plots, wiggle displays, and the model itself.</p>
+    <img src="/static/img/Modelr_features_channel.png" class="img-responsive" alt="Modelr seismic model example" />
   </div>
 </div>
   
 <div class="panel panel-default">
   <div class="panel-heading">
-    <h3 class="panel-title">For seismic acquisition and survey planning</h3>
+    <h3 class="panel-title">For quantitative interpretation</h3>
   </div>
   <div class="panel-body">
-    Analyse signal and bandwidth requirements for survey design
-    <img src="/static/img/F_wavelet_bank.png" class="img-responsive" alt="Responsive image">
+     <p>Deterministic AVO modeling. Can your pre-stack seismic actually show you what you want to see?</p>
+    <img src="/static/img/Modelr_features_stochastic_avo.png" class="img-responsive" alt="Modelr seismic model example" />
   </div>
 </div>
 
 <div class="panel panel-default">
   <div class="panel-heading">
-    <h3 class="panel-title">For seismic processors</h3>
+    <h3 class="panel-title">Explore the frequency domain</h3>
   </div>
   <div class="panel-body">
-    Avoid processing pitfalls such as picking pre-stack tuning contrasts as VTI anisotropy.
-    <img src="/static/img/F_AVO_gather_NMO_vs_VTI.png" class="img-responsive" alt="Responsive image">
-  </div>
-</div>
-
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <h3 class="panel-title">Deterministic AVO modeling</h3>
-  </div>
-  <div class="panel-body">
-    Can your seismic actually show you what you want to see?
-    <img src="/static/img/F_stochastic_avo.png" class="img-responsive" alt="Responsive image">
+     <p>Inspect frequency 'gathers' for tuning effects. Analyse signal and bandwidth requirements for survey design.</p>
+    <img src="/static/img/Modelr_features_wavelet_bank.png" class="img-responsive" alt="Modelr seismic model example" />
   </div>
 </div>
 
@@ -66,21 +49,32 @@
     <h3 class="panel-title">Stochastic AVO modeling</h3>
   </div>
   <div class="panel-body">
-    Don't sweep uncertainty under the rug. Make it work to your advantage!
-    <img src="/static/img/F_properties_pdf.png" class="img-responsive" alt="Responsive image">
-    <img src="/static/img/F_AVO_and_int_grad.png" class="img-responsive" alt="Responsive image">
+     <p>Don't sweep uncertainty under the rug. Make it work to your advantage!</p>
+     <img style="width:60%; float:left;" src="/static/img/Modelr_features_AVO_and_int_grad.png" class="img-responsive" alt="Modelr seismic model example" />
+     <img style="width:30%;" src="/static/img/Modelr_features_properties_pdf.png" class="img-responsive" alt="Modelr seismic model example" />
   </div>
 </div>
 
 <div class="panel panel-default">
   <div class="panel-heading">
-    <h3 class="panel-title">Coming soon</h3>
+    <h3 class="panel-title">Some of the things we're working on</h3>
   </div>
   <div class="panel-body">
-    Full elastic, finite difference waveform simulation, SEGY data importing / exporting, plus, turn any image you can draw into a subsurface earth model with physical rock properties.
+     <ul>
+     <li>Full elastic, finite difference waveform simulation.</li>
+     <li>Import and export logs and seismic.</li>
+     <li>Arbitrary earth models.</li>
+     <li>Fluids, anisotropy, and lots more earth properties.</li>
+     </ul>
   </div>
 </div>
         
+          <p>
+            <a class="btn btn-primary btn-lg" role="button"
+	       href="/demo">Try <strong>modelr</strong> now</a>
+            <a class="btn btn-info btn-lg" role="button" 
+	       href="/signup">Sign up</a>
+          </p>
 </div>
 
 {% endblock %}
