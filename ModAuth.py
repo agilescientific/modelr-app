@@ -197,7 +197,8 @@ def signin(email, password, parent):
     if they are not.
     """
 
-    user = User.all().ancestor(parent).filter("email =", email).fetch(1)
+    user = User.all().ancestor(parent).filter("email =",
+                                              email).fetch(1)
     if not user:
         raise AuthExcept('invalid email')
     
@@ -228,15 +229,11 @@ def send_message(email, message, parent):
     """
     Sends us a message from a user or non-user.
     """
-
-    user = User.all().ancestor(parent).filter("email =", email).fetch(1)[0]
-    if not user:
-        user = userid
     
     # send the message
-    mail.send_mail(sender=user,
+    mail.send_mail(sender=email + " <admin@modelr.io>",
               to="admin@modelr.io",
-              subject="USer message",
+              subject="User message",
               body=message)
 
 
@@ -245,13 +242,16 @@ def forgot_password(email, parent):
     Sets a new password after the user forgot it.
     """
 
-    user = User.all().ancestor(parent).filter("email =", email).fetch(1)
+    user = User.all().ancestor(parent).filter("email =",
+                                              email).fetch(1)
     if not user:
         raise AuthExcept('invalid email')
     
     user = user[0]
 
-    def generate_password(size=8, chars=string.ascii_uppercase + string.digits):
+    def generate_password(size=8,
+                          chars=(string.ascii_uppercase +
+                                 string.digits)):
         return ''.join(random.choice(chars) for x in range(size))
         
     new = generate_password()
@@ -263,28 +263,44 @@ def forgot_password(email, parent):
               body="""
 Here's your new password!
 
-    {0}
+    %s
     
 Please sign in with this new password, and then change it in your profile page.
 
-  http://modelr.io/signin?redirect=profile
+  http://modelr.io/signin?redirect=settings
 
 Cheers,
 Matt, Evan, and Ben
-""".format(new))
+""" % new
+        )
 
-# Ben... not sure what to do here to set the new password in the DB
-# so they can log in next time. Help!
+    # Change it in the database
+    user.password = encrypt_password(new, user.salt)
+    user.put()
 
-
-def reset_password(userid, parent):
+def reset_password(user, current_pword, new_password,
+                   verify):
     """
     Resets the password at the user's request.
+    
+    :param user: The user database object requesting the password
+                 change.
+    :param current_pword: The user's current password to verify.
+    :param new_password: The user's new password.
+    :param verify: The new password verification.
     """
 
-    # Called by ResetHandler, from /reset
-    # Check the provided password is OK
-    # Set the current user
-    # Check the new password is OK
-    # Set it in the DB
-    # Send the user to /settings with param success="You changed your password"
+    # This check should be done in the javascript on the page
+    if new_password != verify:
+        raise AuthExcept("New password verification failed")
+
+    # Check if the original password matches the database
+    if encrypt_password(current_pword, user.salt) != user.password:
+        raise AuthExcept("Incorrect password")
+
+    # Update the password in the database
+    user.password = encrypt_password(new_password, user.salt)
+
+    # Save it in the database
+    user.put()
+    

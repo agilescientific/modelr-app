@@ -3,7 +3,7 @@
  */
 
 /*
- * === === === === === === === === === === === === === === === === Classes ===
+ * === === === === === === === Classes ===
  * === === === === === === === === === === === === === === ===
  */
 
@@ -280,7 +280,8 @@ function display_form(sel) {
 }
 
 /*
- * Get the rocks from a datalist element. inner option elements must contain the
+ * Get the rocks from a datalist element. inner option elements must 
+ * contain the
  * elements data-name and data-value eg: <option data-name='NAME'
  * data-value='VALUE' />
  */

@@ -21,7 +21,8 @@ import stripe
 
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
-     verify, verify_signup, initialize_user, reset_password
+     verify, verify_signup, initialize_user, reset_password, \
+     forgot_password, send_message
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser
@@ -542,19 +543,21 @@ class HelpHandler(ModelrPageRequest):
 
         email = self.request.get('email')
         message = self.request.get('message')
+
+        user = self.verify()
         
         try:
             send_message(email, message, parent=ModelrRoot)
             template = env.get_template('message.html')
             msg = ("Thank you for your message. " + 
                    "We'll be in touch shortly.")
-            html = template.render(success=msg)
+            html = template.render(success=msg, user=user)
             self.response.out.write(html)
             
         except:
             template = env.get_template('message.html')
             msg = ('Your message was not sent.&nbsp;&nbsp;<button class="btn btn-default" onclick="goBack()">Go back and retry</button>')
-            html = template.render(warning=msg)
+            html = template.render(warning=msg, user=user)
             self.response.out.write(html)
    
                                                                      
@@ -766,33 +769,50 @@ class ForgotHandler(webapp2.RequestHandler):
     def post(self):
 
         email = self.request.get('email')
+        template = env.get_template('message.html')
+        
         try:
             forgot_password(email, parent=ModelrRoot)
-            template = env.get_template('message.html')
+            
             msg = ("Please check your inbox and spam folder " +
                    "for our message. Then click on the link " +
                    "in the email.")
             html = template.render(success=msg)
             self.response.out.write(html)
-        except:
-            pass
+        except AuthExcept as e:
+            html = template.render(error=e.msg)
+            self.response.out.write(html)
 
-class ResetHandler(webapp2.RequestHandler):
+class ResetHandler(ModelrPageRequest):
     """
-    Class for forgotten passwords
+    Class for resetting passwords
     """
 
     def post(self):
 
-        email = self.request.get('email')
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        current_pword = self.request.get("current_pword")
+        new_password = self.request.get("password")
+        verify = self.request.get("verify")
+
+        template = env.get_template('settings.html')
+
+        
         try:
-            reset_password(email, parent=ModelrRoot)
+            reset_password(user,current_pword,new_password,
+                           verify)
             template = env.get_template('settings.html')
             msg = ("You reset your password.")
-            html = template.render(success=msg)
+            html = template.render(user=user,success=msg)
             self.response.out.write(html)
-        except:
-            pass
+        except AuthExcept as e:
+            html = template.render(user=user, error=e.msg)
+        
+            
 
 class SignUp(webapp2.RequestHandler):
     """
