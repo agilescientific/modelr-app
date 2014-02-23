@@ -18,14 +18,24 @@
 	  
 	  <form class="form-horizontal" role="form">
             
-	    {% if user %}
+	    {% if not user %}
+	    
+	      <div class="alert alert-warning" style="margin-bottom: 35px" >
+      <strong>Demo mode.</strong> <a href="/signup">
+		  Sign up
+		</a> 
+		to create rocks and save scenarios!
+  </div>
+	    {% endif %}
+
+        {% if not user %}<fieldset disabled>{% endif %}
             <div class="form-group">
               <div class="form-inline">
 		<label for="scenario_loader" 
-		       class="col-sm-3 control-label">Load scenario
+		       class="col-sm-3 control-label"{% if not user %} style="color:gray;"{% endif %}>Load scenario
 		</label>
 		<div class="col-sm-7">
-		  <select class="form-control" 
+		  <select  {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
 			  id='scenario_loader' 
 			  onchange="scenario.name=this.value;" 
 			  placeholder="scenario name">
@@ -49,15 +59,8 @@
 		</div>
               </div>
             </div>
-	    {% else %}
-	    
-	      <div class="alert alert-warning" style="margin-bottom: 35px" >
-      <strong>Demo mode.</strong> <a href="/signup">
-		  Sign up
-		</a> 
-		to create rocks and save scenarios!
-  </div>
-	    {% endif %}
+            
+        {% if not user %}</fieldset>{% endif %}
 
             <div class="form-group">
               <div class="form-inline">
@@ -96,16 +99,16 @@
               </div>
             </div>
 
-            {% if user %}
+            {% if not user %}<fieldset disabled>{% endif %}
             <div class="form-group">
 
               <div class="form-inline">
 		<label for="scenario_name" 
-		       class="col-sm-3 control-label">
+		       class="col-sm-3 control-label"{% if not user %} style="color:gray;"{% endif %}>
 		  Save scenario
 		</label>
 		<div class="col-sm-7">
-		  <input class="form-control" 
+		  <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
 			 id='scenario_name' 
 			 onchange="scenario.name = this.value;" 
 			 placeholder="scenario name">
@@ -114,14 +117,14 @@
 		<div class="col-md-offset-10">
 		  <button class="btn btn-default" 
 			  onclick="save_scenario()"
-			  type="button">
+			  type="button" id="savebutton">
 		    save
 		  </button>
 		</div>
 
               </div>
 	    </div>
-            {% endif %}
+            {% if not user %}</fieldset>{% endif %}
 
 	  </form>
 
@@ -251,9 +254,19 @@
 		       scenario.name + "</option>")
        }
 
-       scenario.put()
+       scenario.put();
+       
+       // Changes the button text and colour to signal success (reset by function below)
+       $("#savebutton").html("saved").removeClass("btn-default").addClass("btn-success");
+       
      }
    });
+   
+   // Watch for changes in the form, to reset the 'save' button styling (see above)
+   $("form").change(function() {
+     $("#savebutton").html("save").removeClass("btn-success").addClass("btn-default");
+   });
+   
   </script>
 
   <!-- This will expand the list of rocks before google app engine 

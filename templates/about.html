@@ -4,35 +4,61 @@
 {% block content %}
 
 <div class="container">
-      
-  <div class="alert alert-warning">
-      <strong>Warning!</strong> This web app is in early development. There are bugs. Everything will change. Thank you for exploring!
-  </div>
+<div class="jumbotron">
         
-  <h3>What is modelr?</h3>
-  <p><strong>What?</strong> This web application builds simple forward models of reflection seismic responses.</p>
-  <p><strong>How?</strong> Sign in and use the forms to create models. It's very easy. Still stuck? Read the <a href="/help">help page</a>.</p>
-  <p><strong>Why?</strong> We think forward models are the most important thing that nobody does, because the tools are esoteric and expensive.</p>
+  <p><img class="rounded" src="/static/img/Modelr_equation.png" alt="Geology + Modelr = Seismic" /></p>
+  <p><strong>Modelr</strong> builds simple forward models of reflection seismic responses. In other words, you give it some geology, and it tries to predict what seismic reflection data would look like.</p>
+  <p><strong>Why?</strong> We think forward models are the most important thing that nobody does, because the tools are esoteric and expensive. Well, they were.</p>
       
-  <div class="accordion" id="accordion" style="font-size:9pt">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-      <strong>Credits</strong>
-      </a>
+</div> <!-- end of jumbotron -->
+
+  <h3>Who we are</h3>
+  
+  <div class="row">
+  <div class="col-md-4">
+    <div class="thumbnail">
+      <img class="rounded" src="/static/img/Evan_in_Calgary_2013.jpg" alt="Evan Bianco at Unsolved Problems Unsession" />
+      <div class="caption">
+        <h3>Evan Bianco</h3>
+        <p>Evan is from Calgary, Canada, and studied geophysics at the Universities of Alberta and British Columbia. Since graduating with a master's in 2006, Evan has accumulated 5 years’ experience in Halifax. Evan joined Matt in <a href="http://agilegeoscience.com/">Agile Geoscience</a> right at the start, and looks after geophysics.</p>
+      </div>
     </div>
-      
-    <div id="collapseOne" class="accordion-body collapse">
-      <div class="accordion-inner">
-        <p>Built with love by Matt Hall, Evan Bianco, and Ben Bougher in the winter of 2013–14.</p>
-        <p>The first version of the app was built by Matt and Sean Ross-Ross in the spring of 2012.</p>
-        <p>This web app is built in Python on the open source goodness of NumPy, SciPy, agilegeo, and lots of other libraries.</p>
-        <p>It runs on the amazing <a href="https://developers.google.com/appengine/">Google App Engine</a> and <a href="http://aws.amazon.com/ec2/">Amazon EC2</a>.</p>
-      </div> 
-    </div>
-     
   </div>
-    
-</div>
+  <div class="col-md-4">
+    <div class="thumbnail">
+      <img class="rounded" src="/static/img/Ben_in_Houston_2013.jpg" alt="Ben Bougher at Geophysics Hackathon" />
+      <div class="caption">
+        <h3>Ben Bougher</h3>
+        <p>Ben is originally from Ontario, Canada. He graduated from Dalhousie University with a degree in physics, and worked for several years in marine acoustics, researching and developing Python software libraries for sonar acquisition and processing, among other things. </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="thumbnail">
+      <img class="rounded" src="/static/img/Matt_at_HUB_2013.jpg" alt="Matt Hall at HUB South Shore" />
+      <div class="caption">
+        <h3>Matt Hall</h3>
+        <p>Matt has a PhD in sedimentology from the University of Manchester, UK, and about 17 years’ experience in the hydrocarbon industry. He's worked for Landmark, Statoil, and ConocoPhillips. Matt founded <a href="http://agilegeoscience.com/">Agile Geoscience</a> in 2010, and co-founded <a href="http://thehubsouthshore.ca">The HUB South Shore</a> in 2013. </p>
+      </div>
+    </div>
+  </div>
+</div> <!-- end of bios row -->
+
+<div style="margin-top:36px;"></div>  <!-- vertical space -->
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">The geeky details</h3>
+  </div>
+  <div class="panel-body">
+    <p>This web app is built in Python on the open source goodness of NumPy, SciPy, and lots of other libraries, including our own <a href="https://github.com/agile-geoscience/agilegeo">agilegeo</a>  geophysical utility library.</p>
+    <p>The front end is built on Python, with a bit of JavaScript, using the amazing Twitter Bootstrap front-end framework. The app server is built in Python with the Jinja templating framework, and runs on <a href="https://developers.google.com/appengine/">Google App Engine</a>.</p>
+    <p>The back end Modelr app, where all the science lives, is a custom-built WebApp2 server and runs on <a href="http://aws.amazon.com/ec2/">Amazon EC2</a>. The back end is entirely open source and <a href="https://github.com/agile-geoscience/modelr">can be found on GitHub</a>.</p>
+    <p>The first version of the app was built by Matt and Sean Ross-Ross in the spring of 2012.</p>
+  </div>
+</div> <!-- end of panel -->
+
+</div> <!-- end of container -->
 
 {% endblock %}
 

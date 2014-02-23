@@ -189,8 +189,7 @@ You are now subscribed to Modelr! To unsubscribe, please reply to this email or 
 
 Cheers,
 Matt, Evan, and Ben
-"""
-        )
+""")
        
 def signin(email, password, parent):
     """
@@ -224,7 +223,24 @@ def verify(userid, password, ancestor):
     except IndexError:
         verified = False
 
-def forgot_password(userid, parent):
+
+def send_message(email, message, parent):
+    """
+    Sends us a message from a user or non-user.
+    """
+
+    user = User.all().ancestor(parent).filter("email =", email).fetch(1)[0]
+    if not user:
+        user = userid
+    
+    # send the message
+    mail.send_mail(sender=user,
+              to="admin@modelr.io",
+              subject="USer message",
+              body=message)
+
+
+def forgot_password(email, parent):
     """
     Sets a new password after the user forgot it.
     """

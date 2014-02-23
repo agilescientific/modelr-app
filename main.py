@@ -536,7 +536,26 @@ class HelpHandler(ModelrPageRequest):
                         activity=activity,
                         parent=ModelrRoot).put()
                         
-        self.response.out.write(html)          
+        self.response.out.write(html)   
+               
+    def post(self):
+
+        email = self.request.get('email')
+        message = self.request.get('message')
+        
+        try:
+            send_message(email, message, parent=ModelrRoot)
+            template = env.get_template('message.html')
+            msg = ("Thank you for your message. " + 
+                   "We'll be in touch shortly.")
+            html = template.render(success=msg)
+            self.response.out.write(html)
+            
+        except:
+            template = env.get_template('message.html')
+            msg = ('Your message was not sent.&nbsp;&nbsp;<button class="btn btn-default" onclick="goBack()">Go back and retry</button>')
+            html = template.render(warning=msg)
+            self.response.out.write(html)
    
                                                                      
 class TermsHandler(ModelrPageRequest):
