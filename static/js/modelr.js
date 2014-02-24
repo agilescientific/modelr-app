@@ -63,7 +63,7 @@ Scenario.prototype.put = function put() {
     console.log(data);
 
     function success(data, textStatus, jqXHR) {
-        console.log('post', textStatus);
+        console.log('post', textStatus)
     }
 
     $.post('/save_scenario', {
@@ -86,7 +86,7 @@ Scenario.prototype.get = function get() {
 
         scenario.script = data.script;
         scenario.set_current_script(data.script, data.arguments);
-
+	
     }
 
     $.get('/save_scenario', {
