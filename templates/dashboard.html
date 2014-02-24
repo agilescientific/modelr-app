@@ -5,6 +5,9 @@
 
 <div class="container">
   <div class="row">
+  
+<!-- Start of left-hand column -->
+
     <div class="col-md-4">
     
       <div class="panel panel-default">
@@ -43,7 +46,7 @@
       </div>
     </div>
 
-
+<!-- Start of right-hand column -->
 
     <div class="col-md-8">
       <div class="panel panel-default">
@@ -125,7 +128,7 @@
       {% endfor %}
 
 
-      <div class="panel panel-default" id="accordion">
+  <div class="panel panel-default" id="accordion">
 	<div class="panel-heading">
           <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapseDefault" data-toggle="collapse">
             <i class="indicator glyphicon glyphicon-chevron-down pull-right" style="color:gray;"></i> Default rocks</a>
@@ -160,31 +163,10 @@
               {% endfor %}
             </tbody>
           </table>
-	</div>
-      </div>
-    </div>
-  </div>
+	</div> <!-- end of panel body -->
+  </div> <!-- end of panel -->
 
-  <script>
-   $(document).ready(function() {
-     function toggleChevron(e) {
-       $(e.target)
-          .prev('.panel-heading')
-          .find('i.indicator')
-          .toggleClass('glyphicon-chevron-down glyphicon-chevron-up');
-     }
-     $('#accordion').on('hidden.bs.collapse', toggleChevron);
-     $('#accordion').on('shown.bs.collapse', toggleChevron);
-   });
-  </script>
-
-
-
-  <div class="row">
-    <div class="col-md-4">
-    </div>
-    <div class="col-md-8">
-      <div class="panel panel-default">
+  <div class="panel panel-default">
 	<div class="panel-heading">
 	  <h3 class="panel-title">Add rock</h3>
 	</div>
@@ -258,20 +240,35 @@
 		    {% endfor %}
 		  </select>
 		</div>
-	      </div>
+	  </div>
 	      
-	      <div class="form-group">
+	  <div class="form-group">
 		<div class="col-sm-offset-2 col-sm-10">
 		  <button type="submit" class="btn btn-default">Add this rock</button>
 		</div>
-	      </div>
+	  </div>
 	      
-	    </form>
-	  </form>
-	</div>
-      </div>
-    </div>
+	</form>
+	</form>
+	</div> <!-- end of panel body -->
+      </div> <!-- end of panel  -->
   </div>
+  </div>
+
+  <script>
+   $(document).ready(function() {
+     function toggleChevron(e) {
+       $(e.target)
+          .prev('.panel-heading')
+          .find('i.indicator')
+          .toggleClass('glyphicon-chevron-down glyphicon-chevron-up');
+     }
+     $('#accordion').on('hidden.bs.collapse', toggleChevron);
+     $('#accordion').on('shown.bs.collapse', toggleChevron);
+   });
+  </script>
+
+
 
   {% endblock %}
 

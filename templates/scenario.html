@@ -2,6 +2,16 @@
 {% block title %}Modelr &middot; Scenario{% endblock %} 
 
 {% block content %}
+<style>
+img.img-thumbnail {
+    border-style:hidden;
+    -webkit-box-shadow: none;
+            box-shadow: none;
+}
+
+}
+</style>
+
 <div class="container">
 
   <!-- SCENARIO PANEL
@@ -141,7 +151,7 @@
 	</div>
 	<div class="panel-body">
 
-          <img class="img-rounded" id="plot_image" href=URL 
+          <img class="img-thumbnail" id="plot_image" href=URL 
 	       alt="">
           <!-- Updated by the  create_image button above-->
           </img>
