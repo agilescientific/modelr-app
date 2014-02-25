@@ -118,7 +118,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
     
     # For the plot server
     # Ideally this should be settable by an admin_user console.
-    HOSTNAME = "http://server.modelr.org:8081"
+    HOSTNAME = "https://www.modelr.org:8081"
     
     def get_base_params(self, **kwargs):
         '''
@@ -930,7 +930,8 @@ class EmailAuthentication(ModelrPageRequest):
             
             # Get postal code for canada post request
             postal_code = \
-              self.request.get('stripeBillingAddressZip').replace(" ","")
+              self.request.get('stripeBillingAddressZip').replace(" ",
+                                                                  "")
               
             # Hook up to the web api
             cp_url = "https://soa-gw.canadapost.ca/rs/postoffice?d2po=True&postalCode="+postal_code+"&maximum=1"
