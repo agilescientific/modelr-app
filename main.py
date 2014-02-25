@@ -8,6 +8,7 @@ from google.appengine.api import users
 from google.appengine.ext import webapp as webapp2
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
+from google.appengine.api import urlfetch
 
 import cgi
 from jinja2 import Environment, FileSystemLoader
@@ -16,8 +17,13 @@ from os.path import join, dirname
 import hashlib
 import logging
 import urllib
+import urllib2
+import base64
 import time
 import stripe
+from xml.etree import ElementTree
+import cgi
+
 
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
@@ -86,10 +92,24 @@ for i in default_rocks:
     rock.put()
 
 
-#====================================================================
-# 
-#====================================================================
-        
+# Secret API key from Stripe dashboard
+stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
+tax_dict = {"AB":0.05,
+            "BC":0.05,
+            "MB":0.05,
+            "NB":0.13,
+            "NL":0.13,
+            "NT":0.05,
+            "NS":0.15,
+            "NU":0.05,
+            "ON":0.13,
+            "PE":0.14,
+            "QC":0.05,
+            "SK":0.05,
+            "YT":0.05}
+
+
+
 class ModelrPageRequest(webapp2.RequestHandler):
     """
     Base class for modelr app pages. Allows commonly used functions
@@ -889,25 +909,61 @@ class EmailAuthentication(ModelrPageRequest):
         """
         Adds the user to the stripe customer list
         """
-        
-        # Secret API key from Stripe dashboard
-        stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
+
+        price = 900 # cents
+
+        # Secret API key for Canada Post postal lookup
+        cp_prod = "3a04462597330c85:46c19862981c734ff8f7b2"
+        cp_dev = "09b48e3a40e710ed:bb6f209fdecff9af3ec10d"
+        cp_key = base64.b64encode(cp_prod)
 
         # Get the credit card details submitted by the form
         token = self.request.get('stripeToken')
 
-        # CLEAN AND PROCESS USER INPUT
-        # MORE TO DO HERE
-        amount = 900
+        # Create the customer account
+        customer = stripe.Customer.create(card=token,
+                                    description="New Modelr customer")
+
+        # Check the country to see if we need to charge tax
+        country = self.request.get('stripeBillingAddressCountry')
+        if country == "Canada":
+            
+            # Get postal code for canada post request
+            postal_code = \
+              self.request.get('stripeBillingAddressZip').replace(" ","")
+              
+            # Hook up to the web api
+            cp_url = "https://soa-gw.canadapost.ca/rs/postoffice?d2po=True&postalCode="+postal_code+"&maximum=1"
+            print cp_url
+
+            headers = {"Accept": "application/vnd.cpc.postoffice+xml",
+                       "Authorization": "Basic M2EwNDQ2MjU5NzMzMGM4NTo0NmMxOTg2Mjk4MWM3MzRmZjhmN2Iy"}
+            req = urllib2.Request(cp_url, headers=headers)
+            result = urllib2.urlopen(req).read()
+            xml_root = ElementTree.fromstring(result)
+
+            # This is super hacky, but the only way I could get the
+            # XML out
+            province = []
+            for i in xml_root.iter('{http://www.canadapost.ca/ws/postoffice}province'):
+                province.append(i.text)
+            tax_code = province[0]
         
+            tax = tax_dict.get(tax_code)
+            # Add the tax to the invoice
+            stripe.InvoiceItem.create(customer=customer.id,
+                                      amount = int(price * tax),
+                                      currency="usd",
+                                      description="Canadian Taxes")
+         
+                                          
+        else:
+            tax_code = country
+            
         # Create the charge on Stripe's servers -
         # this will charge the user's card
         try:
-            customer = stripe.Customer.create(
-            card=token,
-            plan="Monthly",
-            description="New Modelr subscription"
-          )
+            customer.subscriptions.create(plan="Monthly")
         except:
             # The card has been declined
             # Let the user know and DON'T UPGRADE USER
@@ -918,7 +974,8 @@ class EmailAuthentication(ModelrPageRequest):
         email = self.request.get('stripeEmail')
         
         try:
-            initialize_user(email, customer.id, ModelrRoot)
+            initialize_user(email, customer.id, ModelrRoot,
+                            tax_code)
         except:
             # This should never happen. We billed a user then lost
             # them.....
@@ -992,11 +1049,38 @@ class StripeHandler(ModelrPageRequest):
     Handle webhook POSTs from Stripe
 
     '''
-
     def post(self):
-        pass
-        
-        
+
+        event_json = json.loads(self.request.body)
+
+        # Get the event id and retrieve it from Stripe
+        # anybody can post, doing it this way is more secure
+        event_id = event_json.id
+
+        event = stripe.Event.retrieve(event_id)
+
+        if event.type == "invoice.payment_succeeded":
+
+            stripe_id = event.data.customer
+
+            user = User.all().ancestor(ModelrRoot)
+            user = user.filter("stripe_id =", stripe_id).fetch(1)
+
+            # Serious issue here, we need to deal with this in a
+            # a clever way
+            if not user:
+                raise
+            
+            tax = tax_dict.get(user.tax_code, 'None')
+            if not tax:
+                return
+
+            # Tax them up
+            stripe.InvoiceItem.create(customer=stripe_id,
+                                      amount = price * tax,
+                                      currency="usd",
+                                      description="Canadian Taxes")
+
 class ManageGroup(ModelrPageRequest):
 
     def get(self):

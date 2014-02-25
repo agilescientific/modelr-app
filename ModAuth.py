@@ -139,7 +139,7 @@ def verify_signup(user_id, parent):
     return verified_user[0]
 
 
-def initialize_user(email, stripe_id, parent):
+def initialize_user(email, stripe_id, parent, tax_code):
     """
     Takes a verified user email from the authentication queue and adds
     it to the permanent database with a stripe id.
@@ -147,6 +147,8 @@ def initialize_user(email, stripe_id, parent):
     :param verified_email: email of the verified user to add.
     :param stripe_id: The stripe customer id of the user.
     :param parent: The ancestor database key to use for the database.
+    :param tax_code: The tax code for the user
+                     (province abbrieviation)
     """
 
     verified_filter = \
@@ -166,6 +168,7 @@ def initialize_user(email, stripe_id, parent):
     user.salt = verified_user.salt
     user.group = verified_user.group
     user.stripe_id = stripe_id
+    user.tax_code = tax_code
 
     for group in user.group:
         g = Group.all().ancestor(parent).filter("name =",

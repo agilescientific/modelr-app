@@ -24,6 +24,7 @@ class User(db.Model):
     salt = db.StringProperty()
     group = db.StringListProperty()
     stripe_id = db.StringProperty()
+    tax_code = db.StringProperty()
 
 class ActivityLog(db.Model):
 
