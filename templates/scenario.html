@@ -50,11 +50,8 @@ img.img-thumbnail {
 			     id='scenario_loader' 
 			     onchange="scenario.name=this.value;" 
 			     placeholder="scenario name">
-		      <option value="">
+		      <option value="" selected hidden disabled >
 			Scenarios
-		      </option>
-		      <option value="">
-			===========
 		      </option>
 		      {% for scenario in scenarios %}
 		      <option value="{{scenario.name}}"> 
@@ -65,7 +62,8 @@ img.img-thumbnail {
 		  </div>
 		  <div class="col-md-offset-10">
 		    <button type="button" class="btn btn-default" 
-			    onclick="scenario.get()">load
+			    onclick="scenario.get()" id="load_button">
+			    load
 		    </button>
 		  </div>
 		</div>
@@ -292,6 +290,18 @@ img.img-thumbnail {
  $("form").change(function() {
    $("#savebutton").html("save").removeClass("btn-success").addClass("btn-default");
  });
+ 
+ // Watch for changes in the scenario dropdown, to reset the 'load' button styling
+ $("#scenario_loader").change(function() {
+   $("#load_button").removeClass("btn-default").addClass("btn-success");
+ });
+ 
+ // Reverts the button colour to after loading
+ $("#load_button").click(function() {
+   $("#load_button").removeClass("btn-success").addClass("btn-default");
+ });
+     
+
  
 </script>
 

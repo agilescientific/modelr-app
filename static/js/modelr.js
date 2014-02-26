@@ -171,8 +171,7 @@ function populate_scripts(server, selection) {
         select_script = $(selection);
         select_script.find('option').remove();
 
-        select_script.append('<option value="" >Scripts </option>');
-        select_script.append('<option value="" disabled="true" >========</option>');
+        select_script.append('<option value="" selected disabled hidden>Scripts </option>');
 
         for ( var i = 0; i < data.length; i++) {
             var script_doc = data[i];
