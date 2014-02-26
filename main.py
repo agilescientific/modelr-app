@@ -10,7 +10,6 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 from google.appengine.api import urlfetch
 
-import cgi
 from jinja2 import Environment, FileSystemLoader
 
 from os.path import join, dirname
@@ -21,8 +20,11 @@ import urllib2
 import base64
 import time
 import stripe
+
+import json
+
 from xml.etree import ElementTree
-import cgi
+
 
 
 from default_rocks import default_rocks
@@ -935,11 +937,14 @@ class EmailAuthentication(ModelrPageRequest):
                                                                   "")
               
             # Hook up to the web api
-            cp_url = "https://soa-gw.canadapost.ca/rs/postoffice?d2po=True&postalCode="+postal_code+"&maximum=1"
-            print cp_url
-
+            params = urllib.urlencode({"d2po": "True",
+                                       "postalCode": postal_code,
+                                       "maximum": 1})
+            cp_url = ("https://soa-gw.canadapost.ca/rs/postoffice?%s"
+                      % params)
+    
             headers = {"Accept": "application/vnd.cpc.postoffice+xml",
-                       "Authorization": "Basic M2EwNDQ2MjU5NzMzMGM4NTo0NmMxOTg2Mjk4MWM3MzRmZjhmN2Iy"}
+                       "Authorization": "Basic " + cp_key}
             req = urllib2.Request(cp_url, headers=headers)
             result = urllib2.urlopen(req).read()
             xml_root = ElementTree.fromstring(result)
@@ -952,6 +957,7 @@ class EmailAuthentication(ModelrPageRequest):
             tax_code = province[0]
         
             tax = tax_dict.get(tax_code)
+
             # Add the tax to the invoice
             stripe.InvoiceItem.create(customer=customer.id,
                                       amount = int(price * tax),
@@ -1053,37 +1059,46 @@ class StripeHandler(ModelrPageRequest):
     '''
     def post(self):
         
-        event_json = json.loads(self.request.body)
+        event = json.loads(self.request.body)
 
         # Get the event id and retrieve it from Stripe
         # anybody can post, doing it this way is more secure
-        event_id = event_json.id
+        # event_id = event_json["id"]
 
-        event = stripe.Event.retrieve(event_id)
+        #event = stripe.Event.retrieve(event_id)
 
-        if event.type == "invoice.payment_succeeded":
+        if event["type"] == "invoice.payment_succeeded":
 
-            stripe_id = event.data.customer
-
+            # For testing, change it to a known user in stripe
+            # and use the webhooks testings
+            #event["data"]["object"]["customer"] = "cus_3ZL6yHJqE8DfTx"
+            #event["data"]["object"]["total"] = price
+            
+            stripe_id = event["data"]["object"]["customer"]
+            amount = event["data"]["object"]["total"]
+            
             user = User.all().ancestor(ModelrRoot)
             user = user.filter("stripe_id =", stripe_id).fetch(1)
 
             # Serious issue here, we need to deal with this in a
             # a clever way
             if not user:
-                raise
+                #raise
+                self.response.write("ALL OK")
+                return
             
-            tax = tax_dict.get(user.tax_code, 'None')
+            tax = tax_dict.get(user[0].tax_code, 'None')
             if not tax:
+                self.response.write("ALL OK")
                 return
 
             # Tax them up
             stripe.InvoiceItem.create(customer=stripe_id,
-                                      amount = price * tax,
+                                      amount = int(amount * tax),
                                       currency="usd",
                                       description="Canadian Taxes")
 
-            self.response.write()
+            self.response.write("ALL OK")
 
 class ManageGroup(ModelrPageRequest):
 
@@ -1110,7 +1125,7 @@ class ManageGroup(ModelrPageRequest):
         users = []
         for user_id in group.allowed_users:
             u = User.all().ancestor(ModelrRoot).filter("user_id =",
-                                                       user_id)
+                                                        user_id)
             u = u.fetch(1)
             if u:
                 users.append(u[0])
@@ -1124,7 +1139,7 @@ class ManageGroup(ModelrPageRequest):
         ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrRoot).put()
-        self.response.out.write(html)
+        self.response.out.write("ALL OK")
         
     def post(self):
 
