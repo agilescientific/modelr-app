@@ -163,7 +163,7 @@ function populate_scripts(server, selection) {
 
     select_script = $(selection);
 
-    // Rmove options
+    // Remove options
     select_script.find('option').remove();
 
     server.get_scripts(function(data) {
