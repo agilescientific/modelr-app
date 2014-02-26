@@ -3,7 +3,7 @@
  */
 
 /*
- * === === === === === === === === === === === === === === === === Classes ===
+ * === === === === === === === === Classes ===
  * === === === === === === === === === === === === === === ===
  */
 
@@ -26,6 +26,84 @@ function PlotServer(hostname) {
     }
 }
 
+
+
+/*
+ * Class for building an earth model, mapping an image to rocks
+ */
+function EarthModel(){
+    this.image = image; /* url to png*/
+    this.mapping = mapping; /*dict*/
+}
+
+EarthModel.prototype.update = function(image, mapping){
+    this.image = image;
+    this.mapping = mapping;
+}
+
+
+function SeismicModel(server){
+    this.server = server;
+    this.params = {};
+}
+
+SeismicModel.prototype.get_slice_options = function(script, callback){
+
+    url = self.server.hostname + 
+	'/cross_section.json?script=' + script;
+	
+    update = function(data){
+	for (var arg in data) {
+	    this.params[arg] = data[arg]['default'];
+	}
+	callback(data);
+    }
+    $.getJSON(url, update);
+}
+
+SeismicModel.prototype.get_seismic_options = function(script, slice,
+						      callback){
+    
+    url = self.server.hostname + 
+	'/seismic_info.json?script=' + script + '&slice=' + slice;
+
+    update = function(data){
+
+	for (var arg in data){
+	    this.params[arg] = data[arg]['default'];
+	}
+	callback(data);
+    }
+    $.getJSON(url, update);
+}
+
+
+SeismicModel.prototype.update = function(attr, value){
+    this.params[attr] = value;
+}
+
+function PlotModel(server){
+    this.server = server;
+    this.params = {};
+}
+
+PlotModel.prototype.get_plot_options = function(script, callback){
+
+    url = self.server.hostname + 
+	'/plot_info.json?script=' + script;
+
+    update = function(data){
+
+	for (var arg in data){
+	    this.params[arg] = data[arg]['default'];
+	}
+	callback(data);
+    }
+    $.getJSON(url, update);
+}
+
+
+
 /*
  * Class for building geometry model images
  */
@@ -40,7 +118,7 @@ function ModelBuilder(name, script, arguments) {
 ModelBuilder.prototype.qs = function() {
     var args = this.arguments;
 
-    query_str = '?script=' + this.script + '&path=body_scripts';
+    query_str = '?script=' + this.script;
 
     for (argname in args) {
 	var value = args[argname];
@@ -76,6 +154,28 @@ ModelBuilder.prototype.update = function update(attr, value) {
     this.arguments[attr] = value;
     this.on_change();
 }
+
+/*
+ * Store the current arguments of this scenario on the server.
+ */
+ModelBuilder.prototype.put = function() {
+
+    var url = this.qs();
+
+    console.log(url);
+
+
+    function success(url, textStatus, jqXHR) {
+        console.log('post', textStatus);
+    }
+
+    $.post('/model_builder', {
+        'URL' : url    
+    }, success);
+    $.document.window.href="/dashboard";
+}
+
+
 /*
  * Scenario 'class'
  */
@@ -87,6 +187,7 @@ function Scenario(name, script, arguments, rocks) {
     this.info = null;
 
 }
+
 
 /*
  * Store the current arguments of this scenario on the server.
@@ -255,7 +356,7 @@ function display_form(sel) {
             deflt = '';
         }
 
-        form_text += '<td>' + arg + ':</td>';
+        /* form_text += '<td>' + arg + ':</td>';*/
         form_text += '<td>' + args[arg]['help'] + ':</td>';
 
         if (args[arg]['type'] == 'rock_properties_type') {

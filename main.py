@@ -15,14 +15,15 @@ from google.appengine.api import urlfetch
 from PIL import Image
 import cgi
 from jinja2 import Environment, FileSystemLoader
-
+import time
 from os.path import join, dirname
 import hashlib
 import logging
 import urllib
 import time
 import stripe
-
+import json
+import base64
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      verify, verified_signup
@@ -109,7 +110,7 @@ for i in default_rocks:
 
 
 def RGBToString(rgb_tuple): 
-    color = 'rgb(%s,%s,%s)' % rgb_tuple
+    color = 'rgb(%s,%s,%s)'% rgb_tuple
     return color
 #====================================================================
 # 
@@ -431,7 +432,15 @@ class DashboardHandler(ModelrPageRequest):
             self.redirect('/signin')
             return
 
-        template_params = self.get_base_params(user=user)
+        models = \
+          ImageModel.all().ancestor(ModelrRoot).filter("user =",
+                                            user.user_id).fetch(100)
+
+        imgs = [images.get_serving_url(i.image, size=1000,crop=True)
+                for i in models]
+        
+        template_params = self.get_base_params(user=user,
+                                               images=imgs)
         
         self.response.headers['Content-Type'] = 'text/html'
 
@@ -945,7 +954,8 @@ class CarouselTest(ModelrPageRequest):
             return
 
         models = \
-          ImageModel.all().filter("user =",user.user_id).fetch(100)
+          ImageModel.all().ancestor(ModelrRoot).filter("user =",
+                                            user.user_id).fetch(100)
 
         imgs = [images.get_serving_url(i.image, size=1000,
                                        crop=True)
@@ -957,7 +967,7 @@ class CarouselTest(ModelrPageRequest):
                    for i in models]
 
         colors = [[RGBToString(j[1])
-                   for j in Image.open(i).getcolors()]
+                   for j in Image.open(i).convert('RGB').getcolors()]
                   for i in readers]
         
         rocks = Rock.all()
@@ -1003,8 +1013,9 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
         
         blob_info = upload_files[0]
 
-        ImageModel(user=user.user_id,image=blob_info).put()
-        self.redirect('/carousel_test')
+        ImageModel(parent=ModelrRoot,
+                   user=user.user_id,image=blob_info).put()
+        self.redirect('/dashboard')
 
 class ModelBuilder(ModelrPageRequest):
 
@@ -1014,27 +1025,87 @@ class ModelBuilder(ModelrPageRequest):
         if user is None:
             self.redirect('/signup')
             return
-
-        upload_url = blobstore.create_upload_url('/upload')
-        params = self.get_base_params(user=user,
-                                      upload_url=upload_url)
+    
+        params = self.get_base_params(user=user)
         template = env.get_template('model_builder.html')
         html = template.render(params)
         self.response.out.write(html)
         
 
-class TestGCS(ModelrPageRequest):
+    def post(self):
 
-    def get(self):
-        pic = urlfetch.fetch('http://localhost:8081/plot.jpeg?script=slab_builder.py&path=body_scripts&layers=3&right=40%2C-20&interface_depth=100&margin=15&x_samples=300&left=40%2C40')
-
+        user = ModelrPageRequest.verify(self)
+        if user is None:
+            self.redirect('/signup')
+            return
+        
         bucket = '/modelr_bucket/'
-        gcsfile = gcs.open(bucket +'test_picture.jpeg', 'w')
-        gcsfile.write(pic.content)
+        filename = bucket + str(user.user_id) +'/' + str(time.time())
+
+        print('+++++++++++++',self.request.get('URL'))
+        json_url = urllib.urlopen(self.request.get('URL'))
+
+        data = json.loads(json_url.read())
+        pic = base64.b64decode(data['data'])
+        
+        gcsfile = gcs.open(filename, 'w')
+        gcsfile.write(pic)
 
         gcsfile.close()
 
-    
+        bs_file = '/gs' + filename
+
+        blob_key = blobstore.create_gs_key(bs_file)
+
+        ImageModel(parent=ModelrRoot,
+                   user=user.user_id, image=blob_key).put()
+
+        self.redirect('/dashboard')
+
+class NewScenario(ModelrPageRequest):
+
+    def get(self):
+        user = ModelrPageRequest.verify(self)
+        if user is None:
+            self.redirect('/signup')
+            return
+        
+        models = \
+          ImageModel.all().ancestor(ModelrRoot).filter("user =",
+                                            user.user_id).fetch(100)
+
+        imgs = [images.get_serving_url(i.image, size=1000,
+                                       crop=True)
+                for i in models]
+     
+        
+
+        readers = [blobstore.BlobReader(i.image.key())
+                   for i in models]
+
+        colors = [[RGBToString(j[1])
+                   for j in Image.open(i).convert('RGB').getcolors()]
+                  for i in readers]
+        
+        rocks = Rock.all()
+        rocks.ancestor(user)
+        rocks.filter("user =", user.user_id)
+        rocks.order("-date")
+
+        default_rocks = Rock.all()
+        default_rocks.filter("user =", admin_id)
+        params = self.get_base_params(user=user,
+                                      images=imgs,
+                                      colors=colors,
+                                      rocks=rocks.fetch(100),
+                            default_rocks=default_rocks.fetch(100))
+
+        template = env.get_template('new_scenario.html')
+        html = template.render(params)
+        self.response.out.write(html)
+
+        
+        
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
                                ('/add_rock', AddRockHandler),
@@ -1064,7 +1135,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/upload', Upload),
                                ('/upload_image', UploadImage),
                                ('/model_builder', ModelBuilder),
-                               ('/test_gcs', TestGCS)
+                               ('/new_scenario', NewScenario)
                                ],
                               debug=True)
 

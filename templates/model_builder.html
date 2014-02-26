@@ -25,11 +25,10 @@
      modelbuilder.display = display_form
 
      modelbuilder.set_current_script = function(value, argumentss){
-       modelbuilder.script = value;
+       modelbuilder.script = 'slab_builder.py';
        console.log('server.current_script');
 
-       server.get_json('/script_help.json?script=' + value + 
-		       '&path=body_scripts',
+       server.get_json('/script_help.json?script=' + value,
 		       function(data){
 	   
 	   modelbuilder.info = data;
@@ -54,34 +53,31 @@
      modelbuilder.on_change = function update_link(){
        
        var qs = modelbuilder.qs();
-       var url = server.hostname +'/plot.jpeg' + qs;
+       var url = server.hostname +'/plot.json' + qs;
        
        var p = $('p#image_link');
        p.text(url);
-       p.attr('href', url)      
+       p.attr('href', url)  
      }
-
-
+  
      modelbuilder.set_current_script('slab_builder.py',
 				     modelbuilder.arguments);
 
      // This is specific to this display.
-     server.update_img = function(modelbuilder){
-       
+     server.update_image = function(modelbuilder){
        var qs = modelbuilder.qs();
-       var url = server.hostname +'/plot.jpeg' + qs;
-       var img = $('img#plot_image');
-       img.attr('src', url);
+       var url = server.hostname +'/plot.json' + qs;
+       $.get(url, function(data){
+	 $('img#plot_image').attr('src', 
+				  "data:image/png;base64, " + 
+				  data.data); });
+       $('#URL').attr('value', url);
        
      }
      
+
    });
 
-  </script>
-  <script>
-    window.onload = function(){
-    server.update_img(modelbuilder);
-    }
   </script>
 
 
@@ -108,7 +104,7 @@
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-6">
 	      <button class="btn btn-default" id='create_image' 
-		      onclick="server.update_img(modelbuilder)">
+		      onclick="server.update_image(modelbuilder)">
                 Create image
 	      </button>
             </div>
@@ -130,7 +126,7 @@
 	</div>
 	<div class="panel-body">
 
-          <img class="img-thumbnail" id="plot_image" href=URL 
+          <img class="img-thumbnail" id="plot_image" 
 	       alt="Plot image">
           <!-- Updated by the  create_image button above-->
           </img>
@@ -140,10 +136,12 @@
     </div>
 
     <div class="form-group">
-      <button class="btn btn-default" 
-	      type="submit">
-        Save
-      </button>
+      <form action="/model_builder" method="post">
+	<input type="hidden" id="URL" name="URL">
+	<button class="btn btn-default" type="submit">
+          Save
+	</button>
+      </form>
     </div>
 
   </div>

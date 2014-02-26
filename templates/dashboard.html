@@ -1,260 +1,299 @@
 {% extends "base_template.html" %}
 
 {% block title %}Modelr &middot; Dashboard{% endblock %}
+
 {% block content %}
 
 <div class="container">
-<div class="row">
-  <div class="col-md-4">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Welcome</h3>
+  <div class="row">
+    <div class="col-md-4">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">Welcome</h3>
+	</div>
+	<div class="panel-body">
+          <p><strong>Welcome to Modelr!</strong> To get started, make some rocks using the form on the right. Then make a scenario in the box below.</p>
+          <p>Have fun!</p>
+	</div>
       </div>
-      <div class="panel-body">
-        <p><strong>Welcome to Modelr!</strong> To get started, make some rocks using the form on the right. Then make a scenario in the box below.</p>
-        <p>Have fun!</p>
+
+      <div class="panel panel-default">
+	<div class="panel-heading">
+	  <h3 class="panel-title">Models</h3> 
+	</div>
+	<div class="panel-body">
+	  <div id="myCarousel" class="carousel slide" 
+	       data-interval="false">
+	    <!-- Carousel slides -->
+	    <div class="carousel-inner">
+	      {% for i in range((images.__len__())) %}
+	      <div {% if i==0 %} class="active item" {% else %} 
+		class="item" {% endif %}>
+		<div class="thumbnail">
+		  <img src={{images[i]}} alt="" >
+		</div>
+	      </div>	
+	      {% endfor %}
+	    </div>
+
+	    <!-- Carousel nav -->
+	    <a class="carousel-control left" 
+	       href="#myCarousel" data-slide="prev" >‹</a>
+	    <a class="carousel-control right" 
+	       href="#myCarousel" data-slide="next" >›</a>
+	  </div>
+	  <form>
+	    <input type="button" class="btn btn-primary" 
+		   onclick="window.location.href='/upload_image'"
+		   value="Upload Image">
+	    <input type="button" class="btn btn-primary" 
+		   onclick="window.location.href='/model_builder'" 
+		   value="Build Model">
+	  </form>
+	  
+	</div>
+      </div>
+
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">Scenarios</h3>
+	</div>
+	<div class="panel-body">
+	  <table class="table table-condensed table-hover">
+	    <tbody>
+	      {% for scenario in scenarios %}
+	      
+	      <tr>
+		<form class="form-horizontal" name="input" action="remove_scenario" method="post">
+		  <input type="hidden" name="name" value="{{scenario.name}}" />
+		  <td><stong><a href='/scenario#{{scenario.name}}'>{{scenario.name}}</a></strong></td>
+		    <td>{{scenario.script}}</td>
+		    <td> <button class="btn btn-success btn-xs" type="submit" formaction="/scenario#{{scenario.name}}" > edit&nbsp;</button> &nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" value="remove" /></td>
+		    
+		</form>
+	      </tr>
+	      {% endfor %}
+	    </tbody>
+          </table>
+          <a href="scenario#">Make a new scenario</a>
+	</div>
       </div>
     </div>
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Scenarios</h3>
-      </div>
-      <div class="panel-body">
-	<table class="table table-condensed table-hover">
-          <tbody>
-            {% for scenario in scenarios %}
-            
-            <tr>
-	      <form class="form-horizontal" name="input" action="remove_scenario" method="post">
-		<input type="hidden" name="name" value="{{scenario.name}}" />
-		<td><stong><a href='/scenario#{{scenario.name}}'>{{scenario.name}}</a></strong></td>
-                <td>{{scenario.script}}</td>
-                <td> <button class="btn btn-success btn-xs" type="submit" formaction="/scenario#{{scenario.name}}" > edit&nbsp;</button> &nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" value="remove" /></td>
-                  
-              </form>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        <a href="scenario#">Make a new scenario</a>
-      </div>
-    </div>
-  </div>
 
 
 
-  <div class="col-md-8">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">My Rocks</h3>
+    <div class="col-md-8">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">My Rocks</h3>
+	</div>
+	<div class="panel-body">
+	  <table class="table table-condensed table-hover">
+	    <thead>
+	      <tr>
+		<th></th>
+		<th>V<sub>P</sub></th>
+		<th>V<sub>S</sub></th>
+		<th>Rho</th>
+		<th>V<sub>P</sub> std</th>
+		<th>V<sub>S</sub> std</th>
+		<th>Rho std</th>
+		<th></th>
+	      </tr>
+	    </thead>
+	    <tbody>
+	      {% for rock in rocks %}
+	      <tr>
+		<form class="form-horizontal" name="input" action="edit_rock" method="post">
+		  <input type="hidden" name="name" value="{{rock.name}}" />
+		  <td><stong>{{rock.name}}</strong></td>
+		    <td>{{rock.vp}}</td>
+		    <td>{{rock.vs}}</td>
+		    <td>{{rock.rho}}</td>
+		    <td>{{rock.vp_std}}</td>
+		    <td>{{rock.vs_std}}</td>
+		    <td>{{rock.rho_std}}</td>
+		    <td><input class="btn btn-success btn-xs" type="submit" name="action" value="edit">&nbsp;&nbsp;&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" formaction="/remove_rock" method="post" value="remove" /></td>
+		</form>
+	      </tr>
+	      {% endfor %}
+	    </tbody>
+          </table>
+	</div>
       </div>
-      <div class="panel-body">
-	<table class="table table-condensed table-hover">
-          <thead>
-            <tr>
-              <th></th>
-              <th>V<sub>P</sub></th>
-              <th>V<sub>S</sub></th>
-              <th>Rho</th>
-	      <th>V<sub>P</sub> std</th>
-              <th>V<sub>S</sub> std</th>
-              <th>Rho std</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for rock in rocks %}
-            <tr>
-              <form class="form-horizontal" name="input" action="edit_rock" method="post">
+
+
+      {% for rock_group in rock_groups %}
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">{{rock_group['name']}} Rocks</h3>
+	</div>
+	<div class="panel-body">
+          <table class="table table-condensed table-hover">
+	    <thead>
+	      <tr>
+		<th></th>
+		<th>V<sub>P</sub></th>
+		<th>V<sub>S</sub></th>
+		<th>Rho</th>
+		<th>V<sub>P</sub> std</th>
+		<th>V<sub>S</sub> std</th>
+		<th>Rho std</th>
+		<th></th>
+	      </tr>
+	    </thead>
+	    <tbody>
+	      {% for rock in rock_group['rocks'] %}
+	      <tr>
 		<input type="hidden" name="name" value="{{rock.name}}" />
 		<td><stong>{{rock.name}}</strong></td>
-                <td>{{rock.vp}}</td>
-                <td>{{rock.vs}}</td>
-                <td>{{rock.rho}}</td>
-                <td>{{rock.vp_std}}</td>
-                <td>{{rock.vs_std}}</td>
-                <td>{{rock.rho_std}}</td>
-                <td><input class="btn btn-success btn-xs" type="submit" name="action" value="edit">&nbsp;&nbsp;&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" formaction="/remove_rock" method="post" value="remove" /></td>
-              </form>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+		  <td>{{rock.vp}}</td>
+		  <td>{{rock.vs}}</td>
+		  <td>{{rock.rho}}</td>
+		  <td>{{rock.vp_std}}</td>
+		  <td>{{rock.vs_std}}</td>
+		  <td>{{rock.rho_std}}</td>
+	      </tr>
+	      {% endfor %}
+	    </tbody>
+          </table>
+	</div>
       </div>
-    </div>
+      {% endfor %}
 
 
-    {% for rock_group in rock_groups %}
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">{{rock_group['name']}} Rocks</h3>
-      </div>
-      <div class="panel-body">
-        <table class="table table-condensed table-hover">
-          <thead>
-            <tr>
-              <th></th>
-              <th>V<sub>P</sub></th>
-              <th>V<sub>S</sub></th>
-              <th>Rho</th>
-	      <th>V<sub>P</sub> std</th>
-              <th>V<sub>S</sub> std</th>
-              <th>Rho std</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for rock in rock_group['rocks'] %}
-            <tr>
-              <input type="hidden" name="name" value="{{rock.name}}" />
-              <td><stong>{{rock.name}}</strong></td>
-              <td>{{rock.vp}}</td>
-              <td>{{rock.vs}}</td>
-              <td>{{rock.rho}}</td>
-	      <td>{{rock.vp_std}}</td>
-              <td>{{rock.vs_std}}</td>
-              <td>{{rock.rho_std}}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    {% endfor %}
-
-
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Default Rocks</h3>
-      </div>
-      <div class="panel-body">
-	<table class="table table-condensed table-hover">
-          <thead>
-            <tr>
-              <th></th>
-              <th>V<sub>P</sub></th>
-              <th>V<sub>S</sub></th>
-              <th>Rho</th>
-	      <th>V<sub>P</sub> std</th>
-              <th>V<sub>S</sub> std</th>
-              <th>Rho std</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for rock in default_rocks %}
-            <tr>
-              <input type="hidden" name="name" value="{{rock.name}}" />
-              <td><stong>{{rock.name}}</strong></td>
-              <td>{{rock.vp}}</td>
-              <td>{{rock.vs}}</td>
-              <td>{{rock.rho}}</td>
-	      <td>{{rock.vp_std}}</td>
-              <td>{{rock.vs_std}}</td>
-              <td>{{rock.rho_std}}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">Default Rocks</h3>
+	</div>
+	<div class="panel-body">
+	  <table class="table table-condensed table-hover">
+	    <thead>
+	      <tr>
+		<th></th>
+		<th>V<sub>P</sub></th>
+		<th>V<sub>S</sub></th>
+		<th>Rho</th>
+		<th>V<sub>P</sub> std</th>
+		<th>V<sub>S</sub> std</th>
+		<th>Rho std</th>
+		<th></th>
+	      </tr>
+	    </thead>
+	    <tbody>
+	      {% for rock in default_rocks %}
+	      <tr>
+		<input type="hidden" name="name" value="{{rock.name}}" />
+		<td><stong>{{rock.name}}</strong></td>
+		  <td>{{rock.vp}}</td>
+		  <td>{{rock.vs}}</td>
+		  <td>{{rock.rho}}</td>
+		  <td>{{rock.vp_std}}</td>
+		  <td>{{rock.vs_std}}</td>
+		  <td>{{rock.rho_std}}</td>
+	      </tr>
+	      {% endfor %}
+	    </tbody>
+          </table>
+	</div>
       </div>
     </div>
   </div>
-</div>
 
 
 
-<div class="row">
-  <div class="col-md-4">
-  </div>
-  <div class="col-md-8">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-	<h3 class="panel-title">Add rock</h3>
-      </div>
-      <div class="panel-body">
-	<form name="input" action="add_rock" method="post">
-	  <form class="form-horizontal" role="form">
+  <div class="row">
+    <div class="col-md-4">
+    </div>
+    <div class="col-md-8">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+	  <h3 class="panel-title">Add rock</h3>
+	</div>
+	<div class="panel-body">
+	  <form name="input" action="add_rock" method="post">
+	    <form class="form-horizontal" role="form">
 
-	    <div class="form-group">
-	      <label for="name" class="col-sm-2 control-label">Name</label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="name" value={{current_rock.name}} placeholder=""/>
+	      <div class="form-group">
+		<label for="name" class="col-sm-2 control-label">Name</label>
+		<div class="col-sm-10">
+		  <input class="form-control" type="text" name="name" value={{current_rock.name}} placeholder=""/>
+		</div>
 	      </div>
-	    </div>
-	    
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">Description</label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="description" value={{current_rock.description}} />
+	      
+	      <div class="form-group">
+		<label for="description" class="col-sm-2 control-label">Description</label>
+		<div class="col-sm-10">
+		  <input class="form-control" type="text" name="description" value={{current_rock.description}} />
+		</div>
 	      </div>
-	    </div>
 
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">Rho</label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="rho" value={{current_rock.rho}} />
+	      <div class="form-group">
+		<label for="description" class="col-sm-2 control-label">Rho</label>
+		<div class="col-sm-10">
+		  <input class="form-control" type="text" name="rho" value={{current_rock.rho}} />
+		</div>
 	      </div>
-	    </div>
 
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">V<sub>P</sub></label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="vp" value={{current_rock.vp}} />
+	      <div class="form-group">
+		<label for="description" class="col-sm-2 control-label">V<sub>P</sub></label>
+		<div class="col-sm-10">
+		  <input class="form-control" type="text" name="vp" value={{current_rock.vp}} />
+		</div>
 	      </div>
-	    </div>
 
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">V<sub>S</sub></label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="vs" value={{current_rock.vs}}  />
+	      <div class="form-group">
+		<label for="description" class="col-sm-2 control-label">V<sub>S</sub></label>
+		<div class="col-sm-10">
+		  <input class="form-control" type="text" name="vs" value={{current_rock.vs}}  />
+		</div>
 	      </div>
-	    </div>
 
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">Rho std</label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="rho_std" value={{current_rock.rho_std}} />
+	      <div class="form-group">
+		<label for="description" class="col-sm-2 control-label">Rho std</label>
+		<div class="col-sm-10">
+		  <input class="form-control" type="text" name="rho_std" value={{current_rock.rho_std}} />
+		</div>
 	      </div>
-	    </div>
 
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">V<sub>P</sub> std</label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="vp_std" value={{current_rock.vp_std}} />
+	      <div class="form-group">
+		<label for="description" class="col-sm-2 control-label">V<sub>P</sub> std</label>
+		<div class="col-sm-10">
+		  <input class="form-control" type="text" name="vp_std" value={{current_rock.vp_std}} />
+		</div>
 	      </div>
-	    </div>
 
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">V<sub>S</sub> std</label>
-	      <div class="col-sm-10">
-		<input class="form-control" type="text" name="vs_std" value={{current_rock.vs_std}} />
+	      <div class="form-group">
+		<label for="description" class="col-sm-2 control-label">V<sub>S</sub> std</label>
+		<div class="col-sm-10">
+		  <input class="form-control" type="text" name="vs_std" value={{current_rock.vs_std}} />
+		</div>
 	      </div>
-	    </div>
 
-	    <div class="form-group">
-	      <label for="description" class="col-sm-2 control-label">Share</label>
-	      <div class="col-sm-10">
-		<select name="group">
-		  <option value="private">Private</option>
-		  {% for group in user.group %}
-		  <option value={{group}} {% if group==current_rock.group %} selected {% endif %}>{{group.capitalize()}}</option>
-		  {% endfor %}
-		</select>
+	      <div class="form-group">
+		<label for="description" class="col-sm-2 control-label">Share</label>
+		<div class="col-sm-10">
+		  <select name="group">
+		    <option value="private">Private</option>
+		    {% for group in user.group %}
+		    <option value={{group}} {% if group==current_rock.group %} selected {% endif %}>{{group.capitalize()}}</option>
+		    {% endfor %}
+		  </select>
+		</div>
 	      </div>
-	    </div>
-	    
-	    <div class="form-group">
-	      <div class="col-sm-offset-2 col-sm-10">
-		<button type="submit" class="btn btn-default">Add this rock</button>
+	      
+	      <div class="form-group">
+		<div class="col-sm-offset-2 col-sm-10">
+		  <button type="submit" class="btn btn-default">Add this rock</button>
+		</div>
 	      </div>
-	    </div>
-	    
+	      
+	    </form>
 	  </form>
-	</form>
+	</div>
       </div>
     </div>
   </div>
-</div>
 
-{% endblock %}
+  {% endblock %}
 
