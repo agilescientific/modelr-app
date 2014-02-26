@@ -1,0 +1,48 @@
+{% extends "base_template.html" %}
+
+{% block title %}Modelr &middot; Sign up{% endblock %}
+{% block content %}
+
+<head>
+<style type="text/css">
+#passstrength {
+    margin:8px 0 0 0 ;
+}
+.danger {
+    margin:8px 0 0 0 ;
+    background-color:#d9534f;
+}
+.warning {
+    margin:8px 0 0 0 ;
+    background-color:#f0ad4e;
+}
+.success {
+    margin:8px 0 0 0 ;
+    background-color:#5cb85c;
+}
+</style>
+</head>
+
+<div class="container">
+
+  {% if error %}
+  <div class="alert alert-danger">
+      <strong>Something's wrong...</strong> {{ error }}
+  </div>
+  {% endif %}
+
+  {% if warning %}
+  <div class="alert alert-warning">
+      <strong>Sorry...</strong> {{ warning }} 
+  </div>
+  {% endif %}
+
+  {% if success %}
+  <div class="alert alert-success">
+      <strong>Success!</strong> {{ success }} 
+  </div>
+  {% endif %}
+
+  <h3><strong>We should be online soon...</strong> 
+    <p>Meanwhile, explore the <a href="/scenario">demo</a> and check out the <a href="/features">features</a></h3></p>
+{% endblock %}
