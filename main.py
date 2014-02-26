@@ -94,6 +94,7 @@ for i in default_rocks:
 
 # Secret API key from Stripe dashboard
 stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
+price = 900
 tax_dict = {"AB":0.05,
             "BC":0.05,
             "MB":0.05,
@@ -1051,7 +1052,7 @@ class StripeHandler(ModelrPageRequest):
 
     '''
     def post(self):
-
+        
         event_json = json.loads(self.request.body)
 
         # Get the event id and retrieve it from Stripe
@@ -1081,6 +1082,8 @@ class StripeHandler(ModelrPageRequest):
                                       amount = price * tax,
                                       currency="usd",
                                       description="Canadian Taxes")
+
+            self.response.write()
 
 class ManageGroup(ModelrPageRequest):
 
