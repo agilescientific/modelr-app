@@ -235,9 +235,9 @@ def send_message(email, message, parent):
     
     # send the message
     mail.send_mail(sender=email + " <admin@modelr.io>",
-              to="admin@modelr.io",
-              subject="User message",
-              body=message)
+                   to="admin@modelr.io",
+                   subject="User message",
+                   body=message)
 
 
 def forgot_password(email, parent):

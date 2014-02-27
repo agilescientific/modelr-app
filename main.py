@@ -985,8 +985,12 @@ class EmailAuthentication(ModelrPageRequest):
             initialize_user(email, customer.id, ModelrRoot,
                             tax_code)
         except:
-            # This should never happen. We billed a user then lost
-            # them.....
+
+            send_message(sender="<admin@modelr.io>",
+                         to="admin@modelr.io",
+                         subject="Registration Failed",
+                         body="Failed to register user %s to Modelr but was billed by Stripe. Customer ID: %s" %(email, customer.id))
+            self.response.write("Registration failed. Charges will be cancelled")
             raise
         
         self.redirect('/signin?verified=true')
@@ -1076,14 +1080,19 @@ class StripeHandler(ModelrPageRequest):
             
             stripe_id = event["data"]["object"]["customer"]
             amount = event["data"]["object"]["total"]
-            
+            event_id = event["data"]["object"]["id"]
             user = User.all().ancestor(ModelrRoot)
             user = user.filter("stripe_id =", stripe_id).fetch(1)
 
             # Serious issue here, we need to deal with this in a
             # a clever way
             if not user:
-                #raise
+                message = "Failed to find modelr user for stripe user %s, but was invoiced by stripe event %s" % (stripe_id,event_id)
+                send_message(sender="admin@modelr.io",
+                             to="admin@modelr.io",
+                             subject="Non-existent user invoiced",
+                             body=message)
+                
                 self.response.write("ALL OK")
                 return
             
@@ -1099,6 +1108,18 @@ class StripeHandler(ModelrPageRequest):
                                       description="Canadian Taxes")
 
             self.response.write("ALL OK")
+
+        # Send an email otherwise. We can trim this down to ones we
+        # actually care about.
+        else:
+            message = str(event)
+            send_message(sender="admin@modelr.io",
+                             to="admin@modelr.io",
+                             subject=event["type"],
+                             body=message)
+            self.response.write("ALL OK")
+
+        
 
 class ManageGroup(ModelrPageRequest):
 
