@@ -163,7 +163,7 @@ function populate_scripts(server, selection) {
 
     select_script = $(selection);
 
-    // Rmove options
+    // Remove options
     select_script.find('option').remove();
 
     server.get_scripts(function(data) {
@@ -222,7 +222,7 @@ function display_form(sel) {
         if (args[arg]['type'] == 'rock_properties_type') {
             form_text += '<td><select name="'
                     + arg
-                    + '" class="script_form rock_selector"><option>Rocks</option><option>==========</option></select></td>';
+                    + '" class="script_form rock_selector"><option selected hidden disabled value=""></option></select></td>';
         } else if (args[arg]['choices'] != null) {
 
             form_text += '<td><select name="' + arg + '" class="script_form choices_selector">'
