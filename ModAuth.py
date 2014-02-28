@@ -139,7 +139,7 @@ def verify_signup(user_id, parent):
     return verified_user[0]
 
 
-def initialize_user(email, stripe_id, parent, tax_code):
+def initialize_user(email, stripe_id, parent, tax_code, price, tax):
     """
     Takes a verified user email from the authentication queue and adds
     it to the permanent database with a stripe id.
@@ -182,17 +182,39 @@ def initialize_user(email, stripe_id, parent, tax_code):
     verified_user.delete()
 
     # send a payment confirmation email
-    mail.send_mail(sender="Hello <admin@modelr.io>",
+    mail.send_mail(sender="Hello <hello@modelr.io>",
               to="<%s>" % user.email,
-              subject="Modelr subscribe confirmation",
+              subject="Modelr subscription confirmation",
               body="""
 Welcome to Modelr!
 
-You are now subscribed to Modelr! To unsubscribe, please reply to this email or log in to Modelr and check your user settings.
+You are now subscribed to Modelr! Your receipt is below.
+
+To unsubscribe, please reply to this email or log in to Modelr and check your user settings.
 
 Cheers,
 Matt, Evan, and Ben
-""")
+
+
+=======================
+       modelr.io
+=======================
+       
+  Monthly fee USD{0:.2f}
+  
+  Sales tax   USD{1:.2f}
+  
+  Total       USD{2:.2f}
+  
+========================
+ Modelr is a product of
+  Agile Geoscience Ltd
+  Nova Scotia - Canada
+  
+ Canada Revenue Agency
+ reg # 840217913RT0001
+========================
+""".format(price/100., tax/100., (price+tax)/100.))
        
 def signin(email, password, parent):
     """
