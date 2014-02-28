@@ -570,7 +570,7 @@ class HelpHandler(ModelrPageRequest):
         user = self.verify()
         
         try:
-            send_message(email, message, parent=ModelrRoot)
+            send_message("User message %s" % email, message)
             template = env.get_template('message.html')
             msg = ("Thank you for your message. " + 
                    "We'll be in touch shortly.")
@@ -987,10 +987,8 @@ class EmailAuthentication(ModelrPageRequest):
                             tax_code, price, tax)
         except:
 
-            send_message(sender="<admin@modelr.io>",
-                         to="admin@modelr.io",
-                         subject="Registration Failed",
-                         body="Failed to register user %s to Modelr but was billed by Stripe. Customer ID: %s" %(email, customer.id))
+            send_message(subject="Registration Failed",
+                         message="Failed to register user %s to Modelr but was billed by Stripe. Customer ID: %s" %(email, customer.id))
             self.response.write("Registration failed. Charges will be cancelled")
             raise
         
@@ -1089,10 +1087,8 @@ class StripeHandler(ModelrPageRequest):
             # a clever way
             if not user:
                 message = "Failed to find modelr user for stripe user %s, but was invoiced by stripe event %s" % (stripe_id,event_id)
-                send_message(sender="admin@modelr.io",
-                             to="admin@modelr.io",
-                             subject="Non-existent user invoiced",
-                             body=message)
+                send_message(subject="Non-existent user invoiced",
+                             message=message)
                 
                 self.response.write("ALL OK")
                 return
@@ -1114,10 +1110,8 @@ class StripeHandler(ModelrPageRequest):
         # actually care about.
         else:
             message = str(event)
-            send_message(sender="admin@modelr.io",
-                             to="admin@modelr.io",
-                             subject=event["type"],
-                             body=message)
+            send_message(subject=event["type"],
+                         message=message)
             self.response.write("ALL OK")
 
         

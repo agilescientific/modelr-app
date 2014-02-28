@@ -228,15 +228,15 @@ def verify(userid, password, ancestor):
         verified = False
 
 
-def send_message(email, message, parent):
+def send_message(subject, message):
     """
     Sends us a message from a user or non-user.
     """
     
     # send the message
-    mail.send_mail(sender=email + " <hello@modelr.io>",
+    mail.send_mail(sender="Hello <hello@modelr.io>",
                    to="hello@modelr.io",
-                   subject="User message",
+                   subject=subject,
                    body=message)
 
 
