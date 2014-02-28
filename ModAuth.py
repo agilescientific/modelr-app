@@ -102,7 +102,7 @@ def signup(email, password, parent=None):
     user.put()
     
 
-    mail.send_mail(sender="Hello <admin@modelr.io>",
+    mail.send_mail(sender="Hello <hello@modelr.io>",
               to="<%s>" % user.email,
               subject="Modelr email verification",
               body="""
