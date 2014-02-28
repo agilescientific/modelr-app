@@ -139,7 +139,7 @@ def verify_signup(user_id, parent):
     return verified_user[0]
 
 
-def initialize_user(email, stripe_id, parent, tax_code):
+def initialize_user(email, stripe_id, parent, tax_code, price):
     """
     Takes a verified user email from the authentication queue and adds
     it to the permanent database with a stripe id.

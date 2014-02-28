@@ -957,7 +957,7 @@ class EmailAuthentication(ModelrPageRequest):
             tax_code = province[0]
         
             tax = tax_dict.get(tax_code)
-
+        
             # Add the tax to the invoice
             stripe.InvoiceItem.create(customer=customer.id,
                                       amount = int(price * tax),
@@ -967,6 +967,7 @@ class EmailAuthentication(ModelrPageRequest):
                                           
         else:
             tax_code = country
+            tax = 0
             
         # Create the charge on Stripe's servers -
         # this will charge the user's card
@@ -982,8 +983,9 @@ class EmailAuthentication(ModelrPageRequest):
         email = self.request.get('stripeEmail')
         
         try:
+            total = int(price + tax)
             initialize_user(email, customer.id, ModelrRoot,
-                            tax_code)
+                            tax_code, total)
         except:
 
             send_message(sender="<admin@modelr.io>",
