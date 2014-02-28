@@ -983,9 +983,8 @@ class EmailAuthentication(ModelrPageRequest):
         email = self.request.get('stripeEmail')
         
         try:
-            total = int(price + tax)
             initialize_user(email, customer.id, ModelrRoot,
-                            tax_code, total)
+                            tax_code, price, tax)
         except:
 
             send_message(sender="<admin@modelr.io>",
