@@ -956,11 +956,11 @@ class EmailAuthentication(ModelrPageRequest):
                 province.append(i.text)
             tax_code = province[0]
         
-            tax = tax_dict.get(tax_code)
+            tax = tax_dict.get(tax_code) * price
         
             # Add the tax to the invoice
             stripe.InvoiceItem.create(customer=customer.id,
-                                      amount = int(price * tax),
+                                      amount = int(price + tax),
                                       currency="usd",
                                       description="Canadian Taxes")
          
