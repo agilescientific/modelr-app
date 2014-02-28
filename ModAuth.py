@@ -182,7 +182,7 @@ def initialize_user(email, stripe_id, parent, tax_code):
     verified_user.delete()
 
     # send a payment confirmation email
-    mail.send_mail(sender="Hello <admin@modelr.io>",
+    mail.send_mail(sender="Hello <hello@modelr.io>",
               to="<%s>" % user.email,
               subject="Modelr subscribe confirmation",
               body="""
@@ -234,8 +234,8 @@ def send_message(email, message, parent):
     """
     
     # send the message
-    mail.send_mail(sender=email + " <admin@modelr.io>",
-                   to="admin@modelr.io",
+    mail.send_mail(sender=email + " <hello@modelr.io>",
+                   to="hello@modelr.io",
                    subject="User message",
                    body=message)
 
@@ -260,7 +260,7 @@ def forgot_password(email, parent):
     new = generate_password()
 
     # send a new password email
-    mail.send_mail(sender="Hello <admin@modelr.io>",
+    mail.send_mail(sender="Hello <hello@modelr.io>",
               to="<%s>" % user.email,
               subject="Modelr password reset",
               body="""
