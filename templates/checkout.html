@@ -55,12 +55,15 @@ box-shadow: 0 0 10px rgba(0,0,0,.5);
   <p>&nbsp;</p>
   
   {% if user %}
-              
+  
+  <!-- This is the test key for Stripe -->
+  <!-- pk_test_prdjLqGi2IsaxLrFHQM9F7X4 -->
+  
     <form action="" method="POST">
       <script
         src="https://checkout.stripe.com/checkout.js" 
         class="stripe-button"
-        data-key="pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
+        data-key="pk_live_5CZcduRr07BZPG2A5OAhisW9"
         data-name="Modelr"
         data-description="Monthly subscription, $9/mo"
         data-panel-label="Subscribe"

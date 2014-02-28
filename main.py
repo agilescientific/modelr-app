@@ -95,7 +95,8 @@ for i in default_rocks:
 
 
 # Secret API key from Stripe dashboard
-stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
+#stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
+stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
 price = 900
 tax_dict = {"AB":0.05,
             "BC":0.05,
@@ -1244,7 +1245,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/manage_group', ManageGroup),
                                ('/.*', NotFoundPageHandler)
                                ],
-                              debug=True)
+                              debug=False)
 
 
 def main():
