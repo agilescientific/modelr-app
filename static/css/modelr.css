@@ -20,6 +20,49 @@
    z-index: 500;
    }
 
+.modelr-title {
+  padding-left: 48px;
+  background:transparent url('/static/img/modelr_icon_grey_32px.png') left center no-repeat;
+  background-position: 12px;
+}
+.modelr-title:hover {
+  background:transparent url('/static/img/modelr_icon_colour_32px.png') left center no-repeat;
+  background-position: 12px;
+}
+
+.navbar-default .navbar-brand:hover,
+.navbar-default .navbar-brand:focus {
+  color: #729fcf;
+}
+
+.navbar-default .navbar-collapse .navbar-nav a:hover,
+.navbar-default .navbar-collapse .navbar-nav a:focus {
+  color: #729fcf;
+}
+
+.navbar-btn {
+  background:lightgray;
+}
+
+.navbar-header {
+  font-family: 'Montserrat', sans-serif;
+}
+.navbar:hover {
+  font-color: blue;
+}
+
+.panel-title {
+  font-family: 'Montserrat', sans-serif;
+}
+
+.container h1,
+.container h2,
+.container h3,
+.container h4 {
+  font-family: 'Montserrat', sans-serif;
+}
+
+
 body {
   position: relative; /* For scrollyspy */
   padding-top: 40px; /* Account for fixed navbar */

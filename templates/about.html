@@ -57,7 +57,17 @@
     <p>The first version of the app was built by Matt and Sean Ross-Ross in the spring of 2012.</p>
   </div>
 </div> <!-- end of panel -->
-<div style="margin-top:36px;"></div>  <!-- vertical space -->
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Service status</h3>
+  </div>
+  <div class="panel-body">
+    <p>Modelr.io 30-day uptime: <strong>{{ ur_ratio }}%</strong></p>
+    <p>Modelr.org 30-day uptime: <strong>{{ ur_server_ratio }}%</strong><br />
+       Modelr.org status now: <span class="label{% if ur_server_status == 'UP' %} label-success{% endif %}{% if ur_server_status == 'DOWN' %} label-danger{% endif %}{% if ur_server_status == 'SEEMS DOWN' %} label-warning{% endif %}{% if ur_server_status == 'PAUSED' or 'NOT CHECKED YET' %} label-default{% endif %}">{{ ur_server_status }}</span></p>
+  </div>
+</div> <!-- end of panel -->
 
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -71,6 +81,8 @@
     <p>+1–902–980–0130&nbsp;&nbsp;&bullet;&nbsp;&nbsp;<a mailto:hello@agilegeoscience.com>hello@agilegeoscience.com</a>&nbsp;&nbsp;&bullet;&nbsp;&nbsp;<a href="http://www.agilegeoscience.com/">agilegeoscience.com</a></p>
   </div>
 </div> <!-- end of panel -->
+
+
 
 </div> <!-- end of container -->
 
