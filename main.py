@@ -538,7 +538,7 @@ class AboutHandler(ModelrPageRequest):
 
         # Uptime Robot IDs
         ur_modelr_io = '775980219'
-        ur_modelr_org = '776083114'  # REL, usually
+        ur_modelr_org = '775980224'  # REL, usually
         # ur_modelr_org_8080 = '775980224'  # REL, usually
         # ur_modelr_org_8081 = '776083114'  # DEV, usually
 
