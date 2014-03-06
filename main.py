@@ -122,7 +122,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
     
     # For the plot server
     # Ideally this should be settable by an admin_user console.
-    HOSTNAME = "https://www.modelr.org:8081"
+    HOSTNAME = "https://www.modelr.org:8090"
     
     def get_base_params(self, **kwargs):
         '''
@@ -217,19 +217,25 @@ class ModifyScenarioHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
         
         self.response.headers['Content-Type'] = 'application/json'
         name = self.request.get('name')
+
+        if user:
+            scenarios = Scenario.all()
+            scenarios.ancestor(user)
+            scenarios.filter("user =", user.user_id)
+            scenarios.filter("name =", name)
+            scenarios = scenarios.fetch(1)
+        else:
+            scenarios=[]
+
+        # Get Evan's default scenarios (user id from modelr database)
+        evan = User.all().ancestor(ModelrRoot).filter("user_id =", 29)
+        evan = evan.fetch(1)[0]
+        ev_scen = Scenario.all().ancestor(evan).filter("name =",name).fetch(100)
         
-        scenarios = Scenario.all()
-        scenarios.ancestor(user)
-        scenarios.filter("user =", user.user_id)
-        scenarios.filter("name =", name)
-        scenarios = scenarios.fetch(1)
-        
+        scenarios += ev_scen
         logging.info(scenarios[0])
         logging.info(scenarios[0].data)
         if scenarios:
@@ -239,9 +245,10 @@ class ModifyScenarioHandler(ModelrPageRequest):
             self.response.out.write('null')
 
         activity = "fetched_scenario"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
         return 
         
     def post(self):
@@ -425,7 +432,14 @@ class ScenarioHandler(ModelrPageRequest):
             group_rocks = []
             scenarios = []
 
-  
+
+        # Get Evan's default scenarios (user id from modelr database)
+        evan = User.all().ancestor(ModelrRoot).filter("user_id =", 29)
+        evan = evan.fetch(1)[0]
+        ev_scen = Scenario.all().ancestor(evan).fetch(100)
+        print("+++++++++++++++++", ev_scen)
+        scenarios += ev_scen
+        
         template_params = \
           self.get_base_params(user=user,rocks=rocks,
                                default_rocks=default_rocks,

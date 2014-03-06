@@ -86,7 +86,6 @@ Scenario.prototype.get = function get() {
 
         scenario.script = data.script;
         scenario.set_current_script(data.script, data.arguments);
-	
     }
 
     $.get('/save_scenario', {
