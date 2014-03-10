@@ -33,7 +33,7 @@ from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      forgot_password, send_message
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest, ActivityLog, VerifyUser
+     GroupRequest, ActivityLog, VerifyUser, ModelServedCount
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
@@ -48,6 +48,11 @@ ModelrRoot = ModelrParent.all().get()
 if not ModelrRoot:
     ModelrRoot = ModelrParent()
     ModelrRoot.put()
+
+models_served = ModelServedCount.all().ancestor(ModelrRoot).get()
+if not models_served:
+    models_served = ModelServedCount(count=0, parent=ModelrRoot)
+    models_served.put()
     
 # Put in the default rock database
 admin_id = 0
@@ -437,7 +442,6 @@ class ScenarioHandler(ModelrPageRequest):
         evan = User.all().ancestor(ModelrRoot).filter("user_id =", 29)
         evan = evan.fetch(1)[0]
         ev_scen = Scenario.all().ancestor(evan).fetch(100)
-        print("+++++++++++++++++", ev_scen)
         scenarios += ev_scen
         
         template_params = \
@@ -561,14 +565,16 @@ class AboutHandler(ModelrPageRequest):
         full_url = '{0}?{1}'.format(ur_url, ur_query)
         f = urllib2.urlopen(full_url)
 
-        # QUESTION 2a: The web API is 'open', complete the line to read it:
+        # QUESTION 2a: The web API is 'open', complete the line to
+        # read it:
         r = f.read()
 
         # The result is a JSON string; a dict is more useful.
         j = json.loads(r)
 
         ur_ratio = j['monitors']['monitor'][0]['customuptimeratio']
-        ur_server_ratio = j['monitors']['monitor'][1]['customuptimeratio']
+        ur_server_ratio = \
+          j['monitors']['monitor'][1]['customuptimeratio']
         ur_server_status_code = j['monitors']['monitor'][1]['status']
 
         ur_status_dict = {'0': 'paused',
@@ -578,10 +584,18 @@ class AboutHandler(ModelrPageRequest):
                           '9': 'down'
                        }
 
-        ur_server_status = ur_status_dict[ur_server_status_code].upper()
+        ur_server_status = \
+          ur_status_dict[ur_server_status_code].upper()
 
         user = self.verify()
-        template_params = self.get_base_params(user=user, ur_ratio=ur_ratio, ur_server_ratio=ur_server_ratio, ur_server_status=ur_server_status)
+        models_served = ModelServedCount.all().get()
+        template_params = \
+          self.get_base_params(user=user,
+                               ur_ratio=ur_ratio,
+                               ur_server_ratio=ur_server_ratio,
+                               ur_server_status=ur_server_status,
+                               models_served=models_served.count)
+        
         template = env.get_template('about.html')
         html = template.render(template_params)
         self.response.out.write(html)          
@@ -646,7 +660,9 @@ class HelpHandler(ModelrPageRequest):
             
         except:
             template = env.get_template('message.html')
-            msg = ('Your message was not sent.&nbsp;&nbsp;<button class="btn btn-default" onclick="goBack()">Go back and retry</button>')
+            msg = ('Your message was not sent.&nbsp;&nbsp; ' +
+                   '<button class="btn btn-default" '+
+                   'onclick="goBack()">Go back and retry</button>')
             html = template.render(warning=msg, user=user)
             self.response.out.write(html)
    
@@ -1153,7 +1169,9 @@ class StripeHandler(ModelrPageRequest):
             # Serious issue here, we need to deal with this in a
             # a clever way
             if not user:
-                message = "Failed to find modelr user for stripe user %s, but was invoiced by stripe event %s" % (stripe_id,event_id)
+                message = ("Failed to find modelr user for stripe " +
+                           "user %s, but was invoiced by stripe " +
+                           "event %s" % (stripe_id,event_id))
                 send_message(subject="Non-existent user invoiced",
                              message=message)
                 
@@ -1280,6 +1298,14 @@ class NotFoundPageHandler(ModelrPageRequest):
         self.response.out.write(html)
 
 
+class ModelServed(ModelrPageRequest):
+
+    def post(self):
+
+        models_served.count += 1
+        models_served.put()
+
+        
         
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
@@ -1309,6 +1335,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/signout', SignOut),
                                ('/stripe', StripeHandler),
                                ('/manage_group', ManageGroup),
+                               ('/model_served', ModelServed),
                                ('/.*', NotFoundPageHandler)
                                ],
                               debug=False)

@@ -48,7 +48,7 @@ img.img-thumbnail {
 		  <div class="col-sm-7">
 		    <select  class="form-control" 
 			     id='scenario_loader' 
-			     onchange="scenario.name=this.value;" 
+			     onchange="load_scenario(this.value);" 
 			     placeholder="scenario name">
 		      <option value="" selected hidden disabled >
 			Scenarios
@@ -60,12 +60,7 @@ img.img-thumbnail {
 		      {% endfor %}
 		    </select>
 		  </div>
-		  <div class="col-md-offset-10">
-		    <button type="button" class="btn btn-default" 
-			    onclick="load_scenario()" id="load_button">
-			    load
-		    </button>
-		  </div>
+		  
 		</div>
               </div>
               
@@ -84,11 +79,6 @@ img.img-thumbnail {
 			    $(this).val(), scenario.arguments)">
 		      <option>Please wait... </option>
 		    </select>
-		  </div>
-		  <div class="col-sm-offset-10">
-		    <button class="btn btn-default" type="button" 
-			    onclick="populate_scripts(server, 'select#select_script')">refresh
-		    </button>
 		  </div>
 		</div>
               </div>
@@ -225,7 +215,10 @@ img.img-thumbnail {
      var qs = scenario.qs();
      var url = server.hostname +'/plot.jpeg' + qs;
      var img = $('img#plot_image');
+
+     
      img.attr('src', url);
+     $.post('/model_served');
      
    }
    
@@ -309,8 +302,10 @@ img.img-thumbnail {
 
 
  // Loads a scenario
- load_scenario = function load_scenario(){
-   
+ load_scenario = function load_scenario(scenario_name){
+   var img = $('img#plot_image');
+   img.attr('src',"/static/img/placeholder_model_image.png" );
+   scenario.name = scenario_name;
    scenario.get();
 }
  
