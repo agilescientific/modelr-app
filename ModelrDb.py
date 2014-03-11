@@ -16,6 +16,12 @@ class ModelrParent(db.Model):
 class UserID(db.Model):
     next_id = db.IntegerProperty()
 
+class ModelServedCount(db.Model):
+    """
+    Item to keep track of how many models have been served by modelr
+    """
+    count = db.IntegerProperty()
+    
 class User(db.Model):
 
     user_id = db.IntegerProperty()
