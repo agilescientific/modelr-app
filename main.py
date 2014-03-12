@@ -450,9 +450,7 @@ class ScenarioHandler(ModelrPageRequest):
                                group_rocks=group_rocks,
                                scenarios=scenarios)
                 
-        
         template = env.get_template('scenario.html')
-
 
         html = template.render(template_params)
 
