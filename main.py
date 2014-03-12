@@ -30,7 +30,7 @@ from xml.etree import ElementTree
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      verify, verify_signup, initialize_user, reset_password, \
-     forgot_password, send_message, make_admin
+     forgot_password, send_message, make_user
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount
@@ -61,8 +61,9 @@ if not admin_user:
     password = "Mod3lrAdm1n"
     email="admin@modelr.io"
     
-    admin_user = make_admin(admin_id, email, password,
-                            parent=ModelrRoot)
+    admin_user = make_user(user_id=admin_id, email=email,
+                           password=password,
+                           parent=ModelrRoot)
     
    
 public = Group.all().ancestor(ModelrRoot).filter("name =", 'public')
@@ -238,7 +239,8 @@ class ModifyScenarioHandler(ModelrPageRequest):
             scenarios=[]
 
         # Get Evan's default scenarios (user id from modelr database)
-        scen = Scenario.all().ancestor(ModelrRoot).filter("user_id =",admin_id)
+        scen = Scenario.all().ancestor(ModelrRoot).filter("user_id =",
+                                                          admin_id)
         scen = Scenario.all().filter("name =",name).fetch(100)
         if scen:
             scenarios += scen
@@ -1250,7 +1252,7 @@ class ManageGroup(ModelrPageRequest):
         ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrRoot).put()
-        self.response.out.write("ALL OK")
+        self.response.out.write(html)
         
     def post(self):
 
@@ -1315,7 +1317,62 @@ class ModelServed(ModelrPageRequest):
         models_served.count += 1
         models_served.put()
 
+class AdminHandler(ModelrPageRequest):
+
+    def get(self):
+        user = self.verify()
+
+        if not user:
+            self.redirect('/')
+            
+        if not "admin" in user.group:
+            self.redirect('/')
+
+        template = env.get_template('admin_site.html')
+        html = template.render(user=user)
+        self.response.out.write(html)
         
+
+        
+    def post(self):
+
+        user = self.verify()
+        
+        if not user:
+            self.redirect('/')
+
+        if not "admin" in user.group:
+            self.redirect('/')
+            
+        email = self.request.get('email')
+        password = self.request.get('password')
+        verify = self.request.get('verify')
+
+        if password != verify:
+            template = env.get_template('admin_site.html')
+            msg = "Password mismatch"
+            html = template.render(email=email,
+                                   error=msg)
+            self.response.out.write(html)
+            
+        else:
+            try:
+                new_user = make_user(email=email, password=password,
+                                 parent=ModelrRoot)
+                template = env.get_template('admin_site.html')
+                html = template.render(success="Added User",
+                                       email=email, user=user)
+                self.response.out.write(html)
+                
+            except AuthExcept as e:
+                template = env.get_template('admin_site.html')
+                html = template.render(error=e.msg, user=user,
+                                       email=email)
+                self.response.out.write(html)
+
+        
+
+    
         
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
@@ -1346,6 +1403,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/stripe', StripeHandler),
                                ('/manage_group', ManageGroup),
                                ('/model_served', ModelServed),
+                               ('/admin_site', AdminHandler),
                                ('/.*', NotFoundPageHandler)
                                ],
                               debug=False)

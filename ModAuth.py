@@ -67,8 +67,14 @@ def make_userid():
 
     return current_id
 
-def make_admin(user_id, email, password, parent=None):
+def make_user(email, password, parent=None, user_id=None):
 
+    if User.all().ancestor(parent).filter("email =", email).fetch(1):
+        raise AuthExcept("email exists")
+    
+    if not user_id:
+        user_id = make_userid()
+    
     salt = make_salt()
     encrypted_password = encrypt_password(password, salt)
     admin_user = User(user_id=user_id,
