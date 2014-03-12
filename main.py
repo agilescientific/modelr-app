@@ -129,7 +129,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
     
     # For the plot server
     # Ideally this should be settable by an admin_user console.
-    HOSTNAME = "https://www.modelr.org:443"
+    HOSTNAME = "https://www.modelr.org"
     
     def get_base_params(self, **kwargs):
         '''
@@ -452,9 +452,7 @@ class ScenarioHandler(ModelrPageRequest):
                                group_rocks=group_rocks,
                                scenarios=scenarios)
                 
-        
         template = env.get_template('scenario.html')
-
 
         html = template.render(template_params)
 
@@ -559,7 +557,8 @@ class AboutHandler(ModelrPageRequest):
           'monitors': ur_modelr_io + '-' + ur_modelr_org,
           'customuptimeratio': '30',
           'format': 'json',
-          'nojsoncallback':'1'
+          'nojsoncallback':'1',
+          'responseTimes':'1'
          }
 
         # A dict is easily converted to an HTTP-safe query string.
@@ -582,6 +581,8 @@ class AboutHandler(ModelrPageRequest):
         ur_server_ratio = \
           j['monitors']['monitor'][1]['customuptimeratio']
         ur_server_status_code = j['monitors']['monitor'][1]['status']
+        ur_last_response_time = j['monitors']['monitor'][0]['responsetime'][-1]['value']
+        ur_last_server_response_time = j['monitors']['monitor'][1]['responsetime'][-1]['value']
 
         ur_status_dict = {'0': 'paused',
                           '1': 'not checked yet',
@@ -598,9 +599,12 @@ class AboutHandler(ModelrPageRequest):
         template_params = \
           self.get_base_params(user=user,
                                ur_ratio=ur_ratio,
+                               ur_response_time=ur_last_response_time,
                                ur_server_ratio=ur_server_ratio,
                                ur_server_status=ur_server_status,
-                               models_served=models_served.count)
+                               ur_server_response_time=ur_last_server_response_time,
+                               models_served=models_served.count
+                               )
         
         template = env.get_template('about.html')
         html = template.render(template_params)
