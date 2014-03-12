@@ -19,7 +19,7 @@ class AuthExcept(Exception):
     def __init__(self, msg):
         self.msg = msg
 
-        
+
 def get_cookie_string(email):
     """
     Creates a cookie string to use for authenticating users.
@@ -67,7 +67,19 @@ def make_userid():
 
     return current_id
 
-        
+def make_admin(user_id, email, password, parent=None):
+
+    salt = make_salt()
+    encrypted_password = encrypt_password(password, salt)
+    admin_user = User(user_id=user_id,
+                      parent=parent,
+                      email=email,
+                      password=encrypted_password,
+                      salt=salt)
+    admin_user.put()
+
+    return admin_user
+    
 def signup(email, password, parent=None):
     """
     Checks for valid inputs then adds a user to the User database.
@@ -115,6 +127,7 @@ We need to verify your email address. Click the link below to validate your acco
 Cheers,
 Matt, Evan, and Ben
 """ % str(user.temp_id))
+    return temp_id
 
 def verify_signup(user_id, parent):
     """

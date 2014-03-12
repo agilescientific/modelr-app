@@ -30,7 +30,7 @@ from xml.etree import ElementTree
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      verify, verify_signup, initialize_user, reset_password, \
-     forgot_password, send_message
+     forgot_password, send_message, make_admin
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount
@@ -58,9 +58,11 @@ if not models_served:
 admin_id = 0
 admin_user = User.all().filter("user_id =", admin_id).get()
 if not admin_user:
-    admin_user = User(user_id=admin_user,
-                      parent=ModelrRoot)
-    admin_user.put()
+    password = "Mod3lrAdm1n"
+    email="admin@modelr.io"
+    
+    admin_user = make_admin(admin_id, email, password,
+                            parent=ModelrRoot)
     
    
 public = Group.all().ancestor(ModelrRoot).filter("name =", 'public')
@@ -236,11 +238,11 @@ class ModifyScenarioHandler(ModelrPageRequest):
             scenarios=[]
 
         # Get Evan's default scenarios (user id from modelr database)
-        evan = User.all().ancestor(ModelrRoot).filter("user_id =", 29)
-        evan = evan.fetch(1)[0]
-        ev_scen = Scenario.all().ancestor(evan).filter("name =",name).fetch(100)
-        
-        scenarios += ev_scen
+        scen = Scenario.all().ancestor(ModelrRoot).filter("user_id =",admin_id)
+        scen = Scenario.all().filter("name =",name).fetch(100)
+        if scen:
+            scenarios += scen
+            
         logging.info(scenarios[0])
         logging.info(scenarios[0].data)
         if scenarios:
@@ -439,10 +441,10 @@ class ScenarioHandler(ModelrPageRequest):
 
 
         # Get Evan's default scenarios (user id from modelr database)
-        evan = User.all().ancestor(ModelrRoot).filter("user_id =", 29)
-        evan = evan.fetch(1)[0]
-        ev_scen = Scenario.all().ancestor(evan).fetch(100)
-        scenarios += ev_scen
+        scen = Scenario.all().ancestor(ModelrRoot)
+        scen = scen.filter("user =", admin_id).fetch(100)
+        if scen: 
+            scenarios += scen
         
         template_params = \
           self.get_base_params(user=user,rocks=rocks,
@@ -497,7 +499,11 @@ class DashboardHandler(ModelrPageRequest):
             rock_groups.append(dic) 
             
         scenarios = Scenario.all()
-        scenarios.ancestor(user)
+        if not user.user_id == admin_id:
+            scenarios.ancestor(user)
+        else:
+            scenarios.ancestor(ModelrRoot)
+            
         scenarios.filter("user =", user.user_id)
         scenarios.order("-date")
         
