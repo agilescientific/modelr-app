@@ -483,17 +483,6 @@ class ScenarioHandler(ModelrPageRequest):
             group_rocks = []
             scenarios = []
 
-
-        # Get Evan's default scenarios (user id from modelr database)
-         evan = User.all().ancestor(ModelrRoot).filter("user_id =", 29)
-         evan = evan.fetch(1)[0]
-         ev_scen = Scenario.all().ancestor(evan).fetch(100)
-         scenarios += ev_scen
-                
-        scen = Scenario.all().ancestor(ModelrRoot)
-        scen = scen.filter("user =", admin_id).fetch(100)
-        if scen: 
-            scenarios += scen
         
         template_params = \
           self.get_base_params(user=user,rocks=rocks,
