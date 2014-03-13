@@ -28,7 +28,7 @@ from xml.etree import ElementTree
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      verify, verify_signup, initialize_user, reset_password, \
-     forgot_password, send_message
+     forgot_password, send_message, make_user
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount
@@ -56,9 +56,12 @@ if not models_served:
 admin_id = 0
 admin_user = User.all().filter("user_id =", admin_id).get()
 if not admin_user:
-    admin_user = User(user_id=admin_user,
-                      parent=ModelrRoot)
-    admin_user.put()
+    password = "Mod3lrAdm1n"
+    email="admin@modelr.io"
+    
+    admin_user = make_user(user_id=admin_id, email=email,
+                           password=password,
+                           parent=ModelrRoot)
     
    
 public = Group.all().ancestor(ModelrRoot).filter("name =", 'public')
@@ -240,11 +243,12 @@ class ModifyScenarioHandler(ModelrPageRequest):
             scenarios=[]
 
         # Get Evan's default scenarios (user id from modelr database)
-        evan = User.all().ancestor(ModelrRoot).filter("user_id =", 29)
-        evan = evan.fetch(1)[0]
-        ev_scen = Scenario.all().ancestor(evan).filter("name =",name).fetch(100)
-        
-        scenarios += ev_scen
+        scen = Scenario.all().ancestor(ModelrRoot).filter("user_id =",
+                                                          admin_id)
+        scen = Scenario.all().filter("name =",name).fetch(100)
+        if scen:
+            scenarios += scen
+            
         logging.info(scenarios[0])
         logging.info(scenarios[0].data)
         if scenarios:
@@ -481,11 +485,16 @@ class ScenarioHandler(ModelrPageRequest):
 
 
         # Get Evan's default scenarios (user id from modelr database)
-#         evan = User.all().ancestor(ModelrRoot).filter("user_id =", 29)
-#         evan = evan.fetch(1)[0]
-#         ev_scen = Scenario.all().ancestor(evan).fetch(100)
-#         scenarios += ev_scen
+         evan = User.all().ancestor(ModelrRoot).filter("user_id =", 29)
+         evan = evan.fetch(1)[0]
+         ev_scen = Scenario.all().ancestor(evan).fetch(100)
+         scenarios += ev_scen
                 
+        scen = Scenario.all().ancestor(ModelrRoot)
+        scen = scen.filter("user =", admin_id).fetch(100)
+        if scen: 
+            scenarios += scen
+        
         template_params = \
           self.get_base_params(user=user,rocks=rocks,
                                default_rocks=default_rocks,
@@ -539,7 +548,11 @@ class DashboardHandler(ModelrPageRequest):
             rock_groups.append(dic) 
             
         scenarios = Scenario.all()
-        scenarios.ancestor(user)
+        if not user.user_id == admin_id:
+            scenarios.ancestor(user)
+        else:
+            scenarios.ancestor(ModelrRoot)
+            
         scenarios.filter("user =", user.user_id)
         scenarios.order("-date")
         
@@ -1274,7 +1287,7 @@ class ManageGroup(ModelrPageRequest):
         ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrRoot).put()
-        self.response.out.write("ALL OK")
+        self.response.out.write(html)
         
     def post(self):
 
@@ -1339,7 +1352,62 @@ class ModelServed(ModelrPageRequest):
         models_served.count += 1
         models_served.put()
 
+class AdminHandler(ModelrPageRequest):
+
+    def get(self):
+        user = self.verify()
+
+        if not user:
+            self.redirect('/')
+            
+        if not "admin" in user.group:
+            self.redirect('/')
+
+        template = env.get_template('admin_site.html')
+        html = template.render(user=user)
+        self.response.out.write(html)
         
+
+        
+    def post(self):
+
+        user = self.verify()
+        
+        if not user:
+            self.redirect('/')
+
+        if not "admin" in user.group:
+            self.redirect('/')
+            
+        email = self.request.get('email')
+        password = self.request.get('password')
+        verify = self.request.get('verify')
+
+        if password != verify:
+            template = env.get_template('admin_site.html')
+            msg = "Password mismatch"
+            html = template.render(email=email,
+                                   error=msg)
+            self.response.out.write(html)
+            
+        else:
+            try:
+                new_user = make_user(email=email, password=password,
+                                 parent=ModelrRoot)
+                template = env.get_template('admin_site.html')
+                html = template.render(success="Added User",
+                                       email=email, user=user)
+                self.response.out.write(html)
+                
+            except AuthExcept as e:
+                template = env.get_template('admin_site.html')
+                html = template.render(error=e.msg, user=user,
+                                       email=email)
+                self.response.out.write(html)
+
+        
+
+    
         
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
@@ -1370,6 +1438,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/stripe', StripeHandler),
                                ('/manage_group', ManageGroup),
                                ('/model_served', ModelServed),
+                               ('/admin_site', AdminHandler),
                                ('/.*', NotFoundPageHandler)
                                ],
                               debug=False)
