@@ -485,7 +485,6 @@ class ScenarioHandler(ModelrPageRequest):
             group_rocks = []
             scenarios = []
 
-
         # Get Evan's default scenarios (user id from modelr database)
         scen = Scenario.all().ancestor(ModelrRoot)
         scen = scen.filter("user =", admin_id).fetch(100)

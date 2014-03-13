@@ -222,7 +222,7 @@ function display_form(sel) {
             deflt = '';
         };
 
-        form_text += '<td>' + arg + ':</td>';
+//        form_text += '<td>' + arg + ':</td>';
         form_text += '<td>' + args[arg]['help'] + ':</td>';
 
         if (args[arg]['type'] == 'rock_properties_type') {
