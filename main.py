@@ -25,8 +25,6 @@ import json
 
 from xml.etree import ElementTree
 
-
-
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      verify, verify_signup, initialize_user, reset_password, \
@@ -117,6 +115,12 @@ tax_dict = {"AB":0.05,
             "SK":0.05,
             "YT":0.05}
 
+UR_STATUS_DICT = {'0': 'paused',
+                  '1': 'not checked yet',
+                  '2': 'up',
+                  '8': 'seems down',
+                  '9': 'down'
+                 }
 
 
 class ModelrPageRequest(webapp2.RequestHandler):
@@ -402,6 +406,44 @@ class ScenarioHandler(ModelrPageRequest):
     '''
     def get(self):
 
+        # Uptime Robot API key for modelr.org REL
+        ur_api_key_modelr_org = 'm775980224-e2303a724f89ef0ab886558a'
+        
+        # Uptime Robot API key for modelr.org DEV
+        #ur_api_key_modelr_org = 'm776083114-e34c154f2239e7c273a04dd4'
+
+        # Uptime Robot URL
+        ur_url = 'http://api.uptimerobot.com/getMonitors'
+
+        params = {'apiKey': ur_api_key_modelr_org,
+          'format': 'json',
+          'nojsoncallback':'1',
+         }
+        # A dict is easily converted to an HTTP-safe query string.
+        ur_query = urllib.urlencode(params)
+
+        # Opened URLs are file-like.
+        full_url = '{0}?{1}'.format(ur_url, ur_query)
+        f = urllib2.urlopen(full_url)
+        r = f.read()
+
+        # The result is a JSON string; a dict is more useful.
+        j = json.loads(r)
+
+        ur_server_status_code = j['monitors']['monitor'][0]['status']
+        ur_server_status = \
+            UR_STATUS_DICT[ur_server_status_code].upper()
+            
+        if ur_server_status == 'DOWN':
+            error_msg = 'The model server is down. Please try again shortly.'
+        else:
+            error_msg = ''
+            
+        if ur_server_status == 'SEEMS DOWN':
+            warning_msg = 'The model server may be experiencing problems.'
+        else:
+            warning_msg = ''
+
         user = self.verify()
 
         self.response.headers['Content-Type'] = 'text/html'
@@ -439,16 +481,18 @@ class ScenarioHandler(ModelrPageRequest):
 
 
         # Get Evan's default scenarios (user id from modelr database)
-        evan = User.all().ancestor(ModelrRoot).filter("user_id =", 29)
-        evan = evan.fetch(1)[0]
-        ev_scen = Scenario.all().ancestor(evan).fetch(100)
-        scenarios += ev_scen
-        
+#         evan = User.all().ancestor(ModelrRoot).filter("user_id =", 29)
+#         evan = evan.fetch(1)[0]
+#         ev_scen = Scenario.all().ancestor(evan).fetch(100)
+#         scenarios += ev_scen
+                
         template_params = \
           self.get_base_params(user=user,rocks=rocks,
                                default_rocks=default_rocks,
                                group_rocks=group_rocks,
-                               scenarios=scenarios)
+                               scenarios=scenarios,
+                               error=error_msg,
+                               warning=warning_msg)
                 
         template = env.get_template('scenario.html')
 
@@ -502,7 +546,6 @@ class DashboardHandler(ModelrPageRequest):
         for s in scenarios.fetch(100):
             logging.info((s.name, s))
             
-        
         template_params.update(rocks=rocks.fetch(100),
                                scenarios=scenarios.fetch(100),
                                default_rocks=default_rocks.fetch(100),
@@ -525,16 +568,15 @@ class DashboardHandler(ModelrPageRequest):
         self.response.out.write(html)
 
 
-
-
 class AboutHandler(ModelrPageRequest):
     def get(self):
 
         # Uptime robot API key for modelr.io
         #ur_api_key_modelr_io = 'm775980219-706fc15f12e5b88e4e886992'
-
-        # Uptime Robot API key for modelr.org:8080
+        # Uptime Robot API key for modelr.org REL
         #ur_api_key_modelr_org = 'm775980224-e2303a724f89ef0ab886558a'
+        # Uptime Robot API key for modelr.org DEV
+        #ur_api_key_modelr_org = 'm776083114-e34c154f2239e7c273a04dd4'
 
         ur_api_key = 'u108622-bd0a3d1e36a1bf3698514173'
 
@@ -558,14 +600,9 @@ class AboutHandler(ModelrPageRequest):
         # A dict is easily converted to an HTTP-safe query string.
         ur_query = urllib.urlencode(params)
 
-        # Opened URLs are file-like. You can't use 'with... as'.
-        # We'll construct the URL+query string ourselves, rather
-        # than passing them separately, to force urllib2 to use GET.
+        # Opened URLs are file-like.
         full_url = '{0}?{1}'.format(ur_url, ur_query)
         f = urllib2.urlopen(full_url)
-
-        # QUESTION 2a: The web API is 'open', complete the line to
-        # read it:
         r = f.read()
 
         # The result is a JSON string; a dict is more useful.
@@ -578,15 +615,8 @@ class AboutHandler(ModelrPageRequest):
         ur_last_response_time = j['monitors']['monitor'][0]['responsetime'][-1]['value']
         ur_last_server_response_time = j['monitors']['monitor'][1]['responsetime'][-1]['value']
 
-        ur_status_dict = {'0': 'paused',
-                          '1': 'not checked yet',
-                          '2': 'up',
-                          '8': 'seems down',
-                          '9': 'down'
-                       }
-
         ur_server_status = \
-          ur_status_dict[ur_server_status_code].upper()
+          UR_STATUS_DICT[ur_server_status_code].upper()
 
         user = self.verify()
         models_served = ModelServedCount.all().get()
