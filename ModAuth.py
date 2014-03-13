@@ -72,7 +72,7 @@ def make_user(email, password, parent=None, user_id=None):
     if User.all().ancestor(parent).filter("email =", email).fetch(1):
         raise AuthExcept("email exists")
     
-    if not user_id:
+    if user_id is None:
         user_id = make_userid()
     
     salt = make_salt()
