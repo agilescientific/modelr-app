@@ -1,0 +1,85 @@
+{% extends "base_template.html" %}
+
+{% block title %}Modelr &middot; Pricing{% endblock %}
+{% block content %}
+
+    <head>
+        <style type='text/css'>
+
+.price {
+  font-size: 4em;
+}
+ 
+.price-cents {
+  vertical-align: super;
+  font-size: 50%;
+}
+ 
+.price-month {
+  font-size: 35%;
+  font-style: italic;
+}
+.panel {
+-webkit-transition-property : scale; 
+-webkit-transition-duration : 0.2s; 
+-webkit-transition-timing-function : ease-in-out; 
+-moz-transition : all 0.2s ease-in-out;  
+}
+ 
+.panel:hover {
+box-shadow: 0 0 10px rgba(0,0,0,.5);
+-moz-box-shadow: 0 0 10px rgba(0,0,0,.5);
+-webkit-box-shadow: 0 0 10px rgba(0,0,0,.5);
+-webkit-transform: scale(1.05);
+-moz-transform: scale(1.05);
+}
+
+</style>
+</head>
+
+
+<div class="container">
+
+  {% if success %}
+  <div class="alert alert-success">
+      <strong>Success!</strong> {{ success }} 
+  </div>
+  {% endif %}
+              
+  <h3><strong>Step 2 of 2.</strong> Provide your payment details.</h3>
+  
+  <p>
+  Your credit card will be billed $9 per month. You can cancel any time.
+  </p>
+  
+  <p>&nbsp;</p>
+  
+  {% if user %}
+  
+  <!-- This is the test key for Stripe -->
+  <!-- pk_test_prdjLqGi2IsaxLrFHQM9F7X4 -->
+  
+    <form action="" method="POST">
+      <script
+        src="https://checkout.stripe.com/checkout.js" 
+        class="stripe-button"
+        data-key="pk_live_5CZcduRr07BZPG2A5OAhisW9"
+        data-name="Modelr"
+        data-description="Monthly subscription, $9/mo"
+        data-panel-label="Subscribe"
+        data-label="Pay with any card"
+        data-image="/static/img/modelr_logo_white_tight.png"
+        data-email="{{ user.email }}"
+	data-billing-address="true"
+	>
+      </script>
+    </form>
+
+    {% else %}
+    <p><a href="/signup">Please sign up.</a></p>
+    {% endif %}
+                
+</div>
+
+{% endblock %}
+

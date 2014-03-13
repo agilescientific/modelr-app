@@ -34,41 +34,53 @@ box-shadow: 0 0 10px rgba(0,0,0,.5);
 -moz-transform: scale(1.05);
 }
 
+
 </style>
 </head>
 
+<!-- These prices might change...
+<div class=ribbon-banner>Introductory pricing!</div>
+
+<div class="wrapper">
+       <div class="ribbon-wrapper-green"><div class="ribbon-green">Alpha release</div></div>
+</div>
+-->
 
 <div class="container">
               
   <h3>Pricing</h3>
   
   <p>
-  We believe in simplicity. So there are only two plans. There may be more plans in the future, but only if we add something truly awesome.
+  Help us shape and develop Modelr — support us with your dollars and feedback, and we can build something remarkable for subsurface geoscientists. 
   </p>
   
   <p>
-  And we believe in fairness. So you won't find someone paying less than you. We have no sales person. There are no deals. 
+  We like to keep things simple. So for now there is only one plan. There may be more plans in the future, but only if we add something truly awesome.
   </p>
   
-      <div class="container">
+  <p>&nbsp;</p>
+  
+    <div class="container">
     <div class="row">
         <div class="col-sm-offset-3 col-sm-3">
           <div class="panel panel-default text-center">
             <div class="panel-heading">
-              <h3>Basic</h3>
+              <h3>Demo</h3>
             </div>
             <div class="panel-body">
               <h3 class="panel-title price">free</h3>
-              <p>now and always</p>
             </div>
             <ul class="list-group">
               <li class="list-group-item">Public results</li>
-              <li class="list-group-item">Unlimited scenarios</li>
-              <li class="list-group-item">Unlimited rocks</li>
+              <li class="list-group-item">Single scenarios</li>
+              <li class="list-group-item">Custom rocks</li>
               {% if user %}
                 <li class="list-group-item">Current plan</li>
               {% else %}
-                <li class="list-group-item"><a class="btn btn-default" href="/signup">Sign up now!</a></li>
+                <li class="list-group-item">
+		  <a class="btn btn-default" href="/scenario">
+		    Try it out</a>
+		</li>
               {% endif %}
             </ul>
           </div>          
@@ -76,20 +88,36 @@ box-shadow: 0 0 10px rgba(0,0,0,.5);
         <div class="col-sm-3">
           <div class="panel panel-info text-center">
             <div class="panel-heading">
-              <h3>Plus</h3>
+              <h3>Basic</h3>
             </div>
             <div class="panel-body">
               <h3 class="panel-title price">$9<span class="price-month">/month</span></h3>
-              <p>or $99/year</p>
             </div>
             <ul class="list-group">
               <li class="list-group-item">Private results</li>
-              <li class="list-group-item">Unlimited scenarios</li>
-              <li class="list-group-item">Unlimited rocks</li>
+              <li class="list-group-item">Save scenarios</li>
+              <li class="list-group-item">Save rocks</li>
               {% if user %}
-                <li class="list-group-item"><a class="btn btn-default" href="/subscribe">Subscribe now!</a></li>
+              
+                <li class="list-group-item">
+                <form action="/pricing" method="POST">
+                  <script
+                    src="https://checkout.stripe.com/checkout.js" 
+		    class="stripe-button"
+                    data-key="pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
+                    data-amount="900"
+                    data-name="Modelr"
+                    data-description="Monthly subscription, $9/mo"
+                    data-image="/static/img/modelr_logo_white_128px.png">
+                  </script>
+                </form>
+                </li>
+
               {% else %}
-                <li class="list-group-item"><a class="btn btn-default" href="/signup">Sign up now!</a></li>
+                <li class="list-group-item">
+		  <a class="btn btn-primary" 
+		     href="/signup">Create an account!</a>
+		</li>
               {% endif %}
             </ul>
           </div>          

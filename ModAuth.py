@@ -19,7 +19,7 @@ class AuthExcept(Exception):
     def __init__(self, msg):
         self.msg = msg
 
-        
+
 def get_cookie_string(email):
     """
     Creates a cookie string to use for authenticating users.
@@ -67,7 +67,25 @@ def make_userid():
 
     return current_id
 
-        
+def make_user(email, password, parent=None, user_id=None):
+
+    if User.all().ancestor(parent).filter("email =", email).fetch(1):
+        raise AuthExcept("email exists")
+    
+    if not user_id:
+        user_id = make_userid()
+    
+    salt = make_salt()
+    encrypted_password = encrypt_password(password, salt)
+    admin_user = User(user_id=user_id,
+                      parent=parent,
+                      email=email,
+                      password=encrypted_password,
+                      salt=salt)
+    admin_user.put()
+
+    return admin_user
+    
 def signup(email, password, parent=None):
     """
     Checks for valid inputs then adds a user to the User database.
@@ -101,44 +119,120 @@ def signup(email, password, parent=None):
     
     user.put()
     
-
-    mail.send_mail(sender="Hello <admin@modelr.io>",
+    mail.send_mail(sender="Hello <hello@modelr.io>",
               to="<%s>" % user.email,
-              subject="Modelr Verification",
+              subject="Modelr email verification",
               body="""
-Welcome to Modelr:
+Welcome to Modelr!
 
-    Your modelr account needs to verified. Click the link below
-    to validate your account.
-    modelr.io/email_verify?user_id=%s
+We need to verify your email address. Click the link below to validate your account and continue to billing. 
+
+  http://modelr.io/verify_email?user_id=%s
+
+Cheers,
+Matt, Evan, and Ben
 """ % str(user.temp_id))
+    return temp_id
 
-def verified_signup(user_id, parent):
+def verify_signup(user_id, parent):
+    """
+    Checks that a user id is in the queue to be added. The temporary
+    user id is sent through email verification. Raises a AuthExcept if
+    the id is invalid, otherwise returns the temporary user object
+    from the database.
+
+    :param user_id: User id from email verification
+    :param parent: Ancestor database of the temporary user
+
+    :returns the temporary user object.
+    """
+
+    u = VerifyUser.all().ancestor(parent).filter("temp_id =", user_id)
+    verified_user = u.fetch(1)
+
+    # Check for success
+    if not verified_user:
+        raise AuthExcept("Verification Failed")
+       
+    return verified_user[0]
+
+
+def initialize_user(email, stripe_id, parent, tax_code, price, tax):
+    """
+    Takes a verified user email from the authentication queue and adds
+    it to the permanent database with a stripe id.
+
+    :param verified_email: email of the verified user to add.
+    :param stripe_id: The stripe customer id of the user.
+    :param parent: The ancestor database key to use for the database.
+    :param tax_code: The tax code for the user
+                     (province abbrieviation)
+    """
+
+    verified_filter = \
+      VerifyUser.all().ancestor(parent).filter("email =", email)
+    verified_user = verified_filter.fetch(1)
+
+    if not verified_user:
+        raise AuthExcept("verification failed")
+
+    verified_user = verified_user[0]
     
-       u = VerifyUser.all().ancestor(parent).filter("temp_id =",
-                                                    user_id)
-       verified_user = u.fetch(1)
+    # Make new user and populate
+    user = User(parent=parent)
+    user.user_id = make_userid()
+    user.email = verified_user.email
+    user.password = verified_user.password
+    user.salt = verified_user.salt
+    user.group = verified_user.group
+    user.stripe_id = stripe_id
+    user.tax_code = tax_code
 
-       if not verified_user:
-           raise AuthExcept("Verification Failed")
-
-       verified_user= verified_user[0]
-       user = User(parent=parent)
-       user.user_id = make_userid()
-       user.email = verified_user.email
-       user.password = verified_user.password
-       user.salt = verified_user.salt
-       user.group = verified_user.group
-
-       for group in user.group:
-           g = Group.all().ancestor(parent).filter("name =",
+    for group in user.group:
+        g = Group.all().ancestor(parent).filter("name =",
                                                 group).fetch(1)
-           g[0].allowed_users.append(user.user_id)
-           g[0].put()
+        g[0].allowed_users.append(user.user_id)
+        g[0].put()
             
-       user.put()
-       verified_user.delete()
+    user.put()
 
+    # remove the temporary user from the queue
+    verified_user.delete()
+
+    # send a payment confirmation email
+    mail.send_mail(sender="Hello <hello@modelr.io>",
+              to="<%s>" % user.email,
+              subject="Modelr subscription confirmation",
+              body="""
+Welcome to Modelr!
+
+You are now subscribed to Modelr! Your receipt is below.
+
+To unsubscribe, please reply to this email or log in to Modelr and check your user settings.
+
+Cheers,
+Matt, Evan, and Ben
+
+
+=======================
+       modelr.io
+=======================
+       
+  Monthly fee USD{0:.2f}
+  
+  Sales tax   USD{1:.2f}
+  
+  Total       USD{2:.2f}
+  
+========================
+ Modelr is a product of
+  Agile Geoscience Ltd
+  Nova Scotia - Canada
+  
+ Canada Revenue Agency
+ reg # 840217913RT0001
+========================
+""".format(price/100., tax/100., (price+tax)/100.))
        
 def signin(email, password, parent):
     """
@@ -146,7 +240,8 @@ def signin(email, password, parent):
     if they are not.
     """
 
-    user = User.all().ancestor(parent).filter("email =", email).fetch(1)
+    user = User.all().ancestor(parent).filter("email =",
+                                              email).fetch(1)
     if not user:
         raise AuthExcept('invalid email')
     
@@ -172,7 +267,84 @@ def verify(userid, password, ancestor):
     except IndexError:
         verified = False
 
-    
 
+def send_message(subject, message):
+    """
+    Sends us a message from a user or non-user.
+    """
     
+    # send the message
+    mail.send_mail(sender="Hello <hello@modelr.io>",
+                   to="hello@modelr.io",
+                   subject=subject,
+                   body=message)
 
+
+def forgot_password(email, parent):
+    """
+    Sets a new password after the user forgot it.
+    """
+
+    user = User.all().ancestor(parent).filter("email =",
+                                              email).fetch(1)
+    if not user:
+        raise AuthExcept('invalid email')
+    
+    user = user[0]
+
+    def generate_password(size=8,
+                          chars=(string.ascii_uppercase +
+                                 string.digits)):
+        return ''.join(random.choice(chars) for x in range(size))
+        
+    new = generate_password()
+3
+    # send a new password email
+    mail.send_mail(sender="Hello <hello@modelr.io>",
+              to="<%s>" % user.email,
+              subject="Modelr password reset",
+              body="""
+Here's your new password!
+
+    %s
+    
+Please sign in with this new password, and then change it in your
+profile page.
+
+  http://modelr.io/signin?redirect=settings
+
+Cheers,
+Matt, Evan, and Ben
+""" % new
+        )
+
+    # Change it in the database
+    user.password = encrypt_password(new, user.salt)
+    user.put()
+
+def reset_password(user, current_pword, new_password,
+                   verify):
+    """
+    Resets the password at the user's request.
+    
+    :param user: The user database object requesting the password
+                 change.
+    :param current_pword: The user's current password to verify.
+    :param new_password: The user's new password.
+    :param verify: The new password verification.
+    """
+
+    # This check should be done in the javascript on the page
+    if new_password != verify:
+        raise AuthExcept("New password verification failed")
+
+    # Check if the original password matches the database
+    if encrypt_password(current_pword, user.salt) != user.password:
+        raise AuthExcept("Incorrect password")
+
+    # Update the password in the database
+    user.password = encrypt_password(new_password, user.salt)
+
+    # Save it in the database
+    user.put()
+    

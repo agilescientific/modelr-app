@@ -1,66 +1,69 @@
 {% extends "base_template.html" %}
 
-{% block title %}Modelr &middot; Pricing{% endblock %}
+{% block title %}Modelr &middot; Subscribe{% endblock %}
 {% block content %}
 
 <div class="container">
-              
+
   <h3>Subscribe</h3>
   
   <div class="alert alert-warning">
-      <strong>Sorry</strong> You can't subscribe to modelr yet. Sign up below to stay informed of our launch...
+      <strong>Sorry</strong> You can't subscribe to modelr yet. 
   </div>
-       
-   <form action="/submitpayment" method="POST" id="payment-form" novalidate autocomplete="on" class="form-horizontal">
-  <p><span class="text-error" style="text-align:center;"><span class="payment-errors"></span></span></p>
+  
+  <div class="col-md-6">
 
-  <div class="control-group">
-	<label class="control-label">
-		<span>Card number</span>
-	</label>
-	<div class="controls">
-		<input type="text" class="input-large cc-number" pattern="\d*" x-autocompletetype="cc-number" maxlength="20" data-stripe="number" required/>
-	</div>
-  </div>
+	  <form class="form-horizontal" action="/submitpayment"  method="POST" id="payment-form">
 
-  <div class="control-group">
-	<label class="control-label">
-		<span>CVC</span>
-	</label>
-	<div class="controls">
-		<input type="text" class="input-mini cc-cvc" pattern="\d*" x-autocompletetype="cc-csc" autocomplete="off" maxlength="4" data-stripe="cvc" required/>
-	</div>
-  </div>
+		  <!-- Errors -->
+		  <p><span class="text-error" style="text-align:center;"><span class="payment-errors"></span></span></p>
 
-  <div class="control-group">
-	<label class="control-label">
-		<span>Expires (MM/YYYY)</span>
-	</label>
-	<div class="controls">
-		<input type="text" class="input-mini cc-exp-month" data-numeric maxlength="2" data-stripe="exp-month" required/><span> / </span><input type="text" class="input-small cc-exp-year" data-numeric maxlength="4" data-stripe="exp-year" required/>
-	</div>
-  </div>
+		  <!-- Name -->
+		  <div class="form-group">
+			<label class="col-sm-3 control-label">Name on card</label>
+			<div class="col-sm-9 controls">
+			  <input required pattern="[-a-zA-ZñÑåÅøØæÆáéèöÖíóúüçÇ ]+" class="form-control" type="text" id="contributorname" name="contributorname" placeholder="" autocomplete="off">
+			</div>
+		  </div>
 
-  <div class="control-group">
-	<label class="control-label">
-		<span>Your name</span>
-	</label>
-	<div class="controls">
-		<input type="text" class="input-large" id="contributorname" name="contributorname" maxlength="50" required />
-	</div>
-  </div>
+		  <!-- Card Number -->
+		  <div class="form-group">
+			<label class="col-sm-3 control-label">Card number</label>
+			<div class="col-sm-9 controls">
+			  <input class="form-control cc-number" type="text" required data-stripe="number" placeholder="•••• •••• •••• ••••" autocomplete="off">
+			</div>
+		  </div>
 
-  <div class="control-group">
-	<label class="control-label">
-		<span></span>
-	</label>
-	<div class="controls">
-		<button type="submit" class="btn btn-success">Submit payment</button>
-	</div>
-  </div>
+		  <!-- Expiry-->
+		  <div class="form-group">
+			<label class="col-sm-3 control-label">Card expiry</label>
+			<div class="row">
+			<div class="col-sm-2 cc-exp-month">
+			  <input class="form-control cc-exp-month" type="text" required pattern="[01][0-9]" maxlength="2" data-stripe="exp-month" placeholder="MM" autocomplete="off">
+			</div>
+			<div class="col-sm-2 cc-exp-year">
+			  <input class="form-control cc-exp-year" type="text" required pattern="[12][0-9]" maxlength="2" data-stripe="exp-year" placeholder="YY" autocomplete="off">
+			</div>
+			</div>
+		  </div>
 
-</form>
-          
+		  <!-- CVV -->
+		  <div class="form-group">
+			<label class="col-sm-3 control-label" >Security code</label>
+			<div class="col-sm-4 controls">
+			  <input required pattern="\d*" maxlength="4" class="form-control cc-cvc" type="text" placeholder="CVC, CVV or CID" autocomplete="off" data-stripe="cvc">
+			</div>
+		  </div>
+
+		  <!-- Submit -->
+		  <div class="form-group">
+			<div class="col-sm-offset-3 col-sm-3">
+			  <button class="btn btn-success btn-lg" type="submit">Submit payment</button>
+			</div>
+		  </div>
+
+	  </form>
+  </div>		  
 </div>
 
 <script type="text/javascript" src="https://js.stripe.com/v2/"></script>
@@ -84,62 +87,50 @@
 	};
 </script>
 <script>
-			jQuery(function($) {
-			  $('#payment-form').submit(function(event) {
-			  	$("#cardverificationerror").hide();
-				var $form = $(this);
-				var isValidInput = false;
-				if ($.payment.validateCardNumber($('.cc-number').val())) {
-					var cardType = $.payment.cardType($('.cc-number').val());
-					if ($.payment.validateCardCVC($('.cc-cvc').val(), cardType)) {
-						if ($.payment.validateCardExpiry($('.cc-exp-month').val(), $('.cc-exp-year').val())) {
-							if ($("#contributionamount").val() > 0) {
-								if ($("#contributorname").val().length > 0) {
-									isValidInput = true;
-								} else {
-									$("#cardverificationerror").show();
-									$("#cardverificationerrorheader").text('Please provide your name');
-									$("#cardverificationerrortext").text("We don't save your name or card information on the servers, it's just metadata that will tag along with your generous contribution.");
-								}
-							} else {
-								$("#cardverificationerror").show();
-								$("#cardverificationerrorheader").text('Is that a valid contribution amount?');
-								$("#cardverificationerrortext").text("Please just use whole numbers, integers, dollars, no decimals, no cents, straight up dollar bills, you get the idea.");
-							}
-						} else {
-							$("#cardverificationerror").show();
-							$("#cardverificationerrorheader").text('Is the expiration date correct?');
-							$("#cardverificationerrortext").text("It doesn't seem to be a valid expiration date to us so that means we can't use it. Please check the month and year and try again.");
-						}
+	jQuery(function($) {
+	  $('#payment-form').submit(function(event) {
+		$("#cardverificationerror").hide();
+		var $form = $(this);
+		var isValidInput = false;
+		if ($.payment.validateCardNumber($('.cc-number').val())) {
+			var cardType = $.payment.cardType($('.cc-number').val());
+			if ($.payment.validateCardCVC($('.cc-cvc').val(), cardType)) {
+				if ($.payment.validateCardExpiry($('.cc-exp-month').val(), $('.cc-exp-year').val())) {
+							isValidInput = true;
 					} else {
-						$("#cardverificationerror").show();
-						$("#cardverificationerrorheader").text('Is that CVC correct?');
-						$("#cardverificationerrortext").text("It doesn't seem to match up to that type of card to us so that means we can't use it. Please check that CVC number and try again.");
-					}
-				} else {
 					$("#cardverificationerror").show();
-					$("#cardverificationerrorheader").text('Is that card number correct?');
-					$("#cardverificationerrortext").text("It looks invalid to us so that means we can't use it. Please verify the number or consider using a different card if you have one.");
+					$("#cardverificationerrorheader").text('Is the expiration date correct?');
+					$("#cardverificationerrortext").text("It doesn't seem to be a valid expiration date to us so that means we can't use it. Please check the month and year and try again.");
 				}
-				if (isValidInput) {
-					$("#submitprogressbar").show();
-					// Disable the submit button to prevent repeated clicks
-					$form.find('button').prop('disabled', true);
-					Stripe.createToken($form, stripeResponseHandler);
-				}
-				// Prevent the form from submitting with the default action
-				return false;
-			  });
-			});
-		</script>
-		<script src="/static/js/jquery.payment.js"></script>
-		<script>
-	$(document).ready(function(){
-		$('[data-numeric]').payment('restrictNumeric');
-		$('.cc-number').payment('formatCardNumber');
-		$('.cc-cvc').payment('formatCardCVC');
+			} else {
+				$("#cardverificationerror").show();
+				$("#cardverificationerrorheader").text('Is that CVC correct?');
+				$("#cardverificationerrortext").text("It doesn't seem to match up to that type of card to us so that means we can't use it. Please check that CVC number and try again.");
+			}
+		} else {
+			$("#cardverificationerror").show();
+			$("#cardverificationerrorheader").text('Is that card number correct?');
+			$("#cardverificationerrortext").text("It looks invalid to us so that means we can't use it. Please verify the number or consider using a different card if you have one.");
+		}
+		if (isValidInput) {
+			$("#submitprogressbar").show();
+			// Disable the submit button to prevent repeated clicks
+			$form.find('button').prop('disabled', true);
+			Stripe.createToken($form, stripeResponseHandler);
+		}
+		// Prevent the form from submitting with the default action
+		return false;
+	  });
 	});
-        </script>
+</script>
+<script src="/static/js/jquery.payment.js"></script>
+<script>
+	$(document).ready(function(){
+	    $('[data-numeric]').payment('restrictNumeric');
+	    $('.cc-number').payment('formatCardNumber');
+	    $('.cc-cvc').payment('formatCardCVC');
+	    });
+</script>
 
 
 {% endblock %}

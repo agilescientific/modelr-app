@@ -3,8 +3,7 @@
  */
 
 /*
- * === === === === === === === === Classes ===
- * === === === === === === === === === === === === === === ===
+ * === === === === === === === Classes ===========================
  */
 
 /*
@@ -143,6 +142,14 @@ ModelBuilder.prototype.default_args=function default_args(argumentss){
             this.arguments[arg] = argumentss[arg];
         }
 
+    /*
+     * Asynchronously fetch the information from a single scripts 
+     * from the plotting server. 
+     * @param callback(data): do something on finish.
+     */
+    this.get_script_info = function get_script_info(script, callback){
+        $.getJSON(this.hostname + '/script_help.json?script=' + 
+		  script, callback);
     }
 
 }
@@ -201,7 +208,7 @@ Scenario.prototype.put = function put() {
     console.log(data);
 
     function success(data, textStatus, jqXHR) {
-        console.log('post', textStatus);
+        console.log('post', textStatus)
     }
 
     $.post('/save_scenario', {
@@ -211,8 +218,8 @@ Scenario.prototype.put = function put() {
 }
 
 /*
- * Get the Scenario from the plotting server. keyed on the 'name' attr of this
- * Scenario.
+ * Get the Scenario from the plotting server. keyed on the 'name' 
+ * attr of this Scenario.
  */
 Scenario.prototype.get = function get() {
 
@@ -224,13 +231,13 @@ Scenario.prototype.get = function get() {
 
         scenario.script = data.script;
         scenario.set_current_script(data.script, data.arguments);
-
     }
 
     $.get('/save_scenario', {
         'name' : this.name
     }, success, 'json')
 }
+
 
 /*
  * Update an argument.
@@ -302,7 +309,7 @@ function populate_scripts(server, url, selection) {
 
     select_script = $(selection);
 
-    // Rmove options
+    // Remove options
     select_script.find('option').remove();
     console.log(url);
     server.get_json(url, function(data) {
@@ -310,13 +317,13 @@ function populate_scripts(server, url, selection) {
         select_script = $(selection);
         select_script.find('option').remove();
 
-        select_script.append('<option value="" >Scripts </option>');
-        select_script.append('<option value="" disabled="true" >========</option>');
+        select_script.append('<option value=""selected disabled hidden>Scripts </option>');
 
         for ( var i = 0; i < data.length; i++) {
             var script_doc = data[i];
             var script = script_doc[0];
             var doc = script_doc[1];
+
             select_script.append('<option value=' + 
 				 script + '>' + script + ' --- ' + 
 				 doc.slice(0, 20) + '</option>');
@@ -362,7 +369,7 @@ function display_form(sel) {
         if (args[arg]['type'] == 'rock_properties_type') {
             form_text += '<td><select name="'
                     + arg
-                    + '" class="script_form rock_selector"><option>Rocks</option><option>==========</option></select></td>';
+                    + '" class="script_form rock_selector"><option selected hidden disabled value=""></option></select></td>';
         } else if (args[arg]['choices'] != null) {
 
             form_text += '<td><select name="' + arg + '" class="script_form choices_selector">'
@@ -419,7 +426,8 @@ function display_form(sel) {
 }
 
 /*
- * Get the rocks from a datalist element. inner option elements must contain the
+ * Get the rocks from a datalist element. inner option elements must 
+ * contain the
  * elements data-name and data-value eg: <option data-name='NAME'
  * data-value='VALUE' />
  */

@@ -4,7 +4,7 @@
 # Agile Geoscience
 # 2012-2014
 #
-from google.appengine.api import users
+
 from google.appengine.ext import webapp as webapp2
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
@@ -12,44 +12,59 @@ from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext import blobstore
 from google.appengine.api import images
 from google.appengine.api import urlfetch
+from google.appengine.api import users
+
+# For image serving
+import cloudstorage as gcs
+
 from PIL import Image
-import cgi
+
 from jinja2 import Environment, FileSystemLoader
 import time
 from os.path import join, dirname
 import hashlib
 import logging
 import urllib
-import time
+import urllib2
+
 import stripe
+
 import json
 import base64
+
+from xml.etree import ElementTree
+
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
-     verify, verified_signup
+     verify, verify_signup, initialize_user, reset_password, \
+     forgot_password, send_message, make_user
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest, ActivityLog, ImageModel
-import os
+     GroupRequest, ActivityLog, VerifyUser, ModelServedCount
 
-import cloudstorage as gcs 
+
+
+
+
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
                                                'templates')))
 
 
-# Retry can help overcome transient urlfetch or GCS issues, such as timeouts.
+# Retry can help overcome transient urlfetch or GCS issues,
+# such as timeouts.
 my_default_retry_params = gcs.RetryParams(initial_delay=0.2,
                                           max_delay=5.0,
                                           backoff_factor=2,
                                           max_retry_period=15)
-# All requests to GCS using the GCS client within current GAE request and
-# current thread will use this retry params as default. If a default is not
-# set via this mechanism, the library's built-in default will be used.
-# Any GCS client function can also be given a more specific retry params
-# that overrides the default.
-# Note: the built-in default is good enough for most cases. We override
-# retry_params here only for demo purposes.
+
+# All requests to GCS using the GCS client within current GAE request
+# and current thread will use this retry params as default. If a
+# default is not set via this mechanism, the library's built-in
+# default will be used. Any GCS client function can also be given a
+# more specific retry params that overrides the default.
+# Note: the built-in default is good enough for most cases. We
+# override retry_params here only for demo purposes.
 gcs.set_default_retry_params(my_default_retry_params)
 
 
@@ -63,14 +78,22 @@ ModelrRoot = ModelrParent.all().get()
 if not ModelrRoot:
     ModelrRoot = ModelrParent()
     ModelrRoot.put()
+
+models_served = ModelServedCount.all().ancestor(ModelrRoot).get()
+if not models_served:
+    models_served = ModelServedCount(count=0, parent=ModelrRoot)
+    models_served.put()
     
 # Put in the default rock database
 admin_id = 0
 admin_user = User.all().filter("user_id =", admin_id).get()
 if not admin_user:
-    admin_user = User(user_id=admin_user,
-                      parent=ModelrRoot)
-    admin_user.put()
+    password = "Mod3lrAdm1n"
+    email="admin@modelr.io"
+    
+    admin_user = make_user(user_id=admin_id, email=email,
+                           password=password,
+                           parent=ModelrRoot)
     
    
 public = Group.all().ancestor(ModelrRoot).filter("name =", 'public')
@@ -109,13 +132,37 @@ for i in default_rocks:
     rock.put()
 
 
-def RGBToString(rgb_tuple): 
-    color = 'rgb(%s,%s,%s)'% rgb_tuple
-    return color
 #====================================================================
 # 
 #====================================================================
-        
+# Secret API key from Stripe dashboard
+#stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
+stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
+price = 900
+tax_dict = {"AB":0.05,
+            "BC":0.05,
+            "MB":0.05,
+            "NB":0.13,
+            "NL":0.13,
+            "NT":0.05,
+            "NS":0.15,
+            "NU":0.05,
+            "ON":0.13,
+            "PE":0.14,
+            "QC":0.05,
+            "SK":0.05,
+            "YT":0.05}
+
+
+def RGBToString(rgb_tuple):
+    """
+    Convert a color to a css readable string
+    """
+    
+    color = 'rgb(%s,%s,%s)'% rgb_tuple
+    return color
+
+
 class ModelrPageRequest(webapp2.RequestHandler):
     """
     Base class for modelr app pages. Allows commonly used functions
@@ -124,7 +171,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
     
     # For the plot server
     # Ideally this should be settable by an admin_user console.
-    HOSTNAME = "http://localhost:8081"
+    HOSTNAME = "https://www.modelr.org"
     
     def get_base_params(self, **kwargs):
         '''
@@ -171,7 +218,7 @@ class MainHandler(ModelrPageRequest):
         # Redirect to the dashboard if the user is logged in
         user = self.verify()
         if user:
-            self.redirect('/dashboard')
+            self.redirect('/scenario')
         
         template_params = self.get_base_params()
         template = env.get_template('index.html')
@@ -219,19 +266,26 @@ class ModifyScenarioHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
         
         self.response.headers['Content-Type'] = 'application/json'
         name = self.request.get('name')
-        
-        scenarios = Scenario.all()
-        scenarios.ancestor(user)
-        scenarios.filter("user =", user.user_id)
-        scenarios.filter("name =", name)
-        scenarios = scenarios.fetch(1)
-        
+
+        if user:
+            scenarios = Scenario.all()
+            scenarios.ancestor(user)
+            scenarios.filter("user =", user.user_id)
+            scenarios.filter("name =", name)
+            scenarios = scenarios.fetch(1)
+        else:
+            scenarios=[]
+
+        # Get Evan's default scenarios (user id from modelr database)
+        scen = Scenario.all().ancestor(ModelrRoot).filter("user_id =",
+                                                          admin_id)
+        scen = Scenario.all().filter("name =",name).fetch(100)
+        if scen:
+            scenarios += scen
+            
         logging.info(scenarios[0])
         logging.info(scenarios[0].data)
         if scenarios:
@@ -241,9 +295,10 @@ class ModifyScenarioHandler(ModelrPageRequest):
             self.response.out.write('null')
 
         activity = "fetched_scenario"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
         return 
         
     def post(self):
@@ -284,6 +339,7 @@ class ModifyScenarioHandler(ModelrPageRequest):
         ActivityLog(user_id=user.user_id,
                     activity=activity,
                     parent=ModelrRoot).put()
+
 
 class AddRockHandler(ModelrPageRequest):
     '''
@@ -354,7 +410,8 @@ class RemoveRockHandler(ModelrPageRequest):
             self.redirect('/dashboard')
         else:
             self.redirect('/dashboard')
-           
+ 
+                     
 class ModifyRockHandler(ModelrPageRequest):
     '''
      modify a rock it by name.
@@ -391,35 +448,65 @@ class ScenarioHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-        
+
         self.response.headers['Content-Type'] = 'text/html'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
         self.response.headers['Access-Control-Allow-Headers'] = \
           'X-Request, X-Requested-With'
-        
-        
+
+        # Get the default rocks
         default_rocks = Rock.all()
         default_rocks.filter("user =", admin_id)
-        rocks = Rock.all().ancestor(user)
-        template_params = \
-          self.get_base_params(user=user,rocks=rocks.fetch(100),
-                               default_rocks=default_rocks.fetch(100))
+        default_rocks = default_rocks.fetch(100)
         
-        template = env.get_template('scenario.html')
+        # Get the user rocks
+        if user:
+            rocks = Rock.all().ancestor(user).fetch(100)
 
+            # Get the group rocks
+            group_rocks = []
+            for group in user.group:
+            
+                g_rocks = \
+                  Rock.all().ancestor(ModelrRoot).filter("group =",
+                                                         group)
+                group_rocks.append({"name": group.capitalize(),
+                                    "rocks": g_rocks.fetch(100)})
+                
+            # Get the users scenarios
+            scenarios = \
+                Scenario.all().ancestor(user).filter("user =",
+                                            user.user_id).fetch(100)
+        else:
+            rocks = []
+            group_rocks = []
+            scenarios = []
+
+
+        # Get Evan's default scenarios (user id from modelr database)
+        scen = Scenario.all().ancestor(ModelrRoot)
+        scen = scen.filter("user =", admin_id).fetch(100)
+        if scen: 
+            scenarios += scen
+        
+        template_params = \
+          self.get_base_params(user=user,rocks=rocks,
+                               default_rocks=default_rocks,
+                               group_rocks=group_rocks,
+                               scenarios=scenarios)
+                
+        template = env.get_template('scenario.html')
 
         html = template.render(template_params)
 
-        activity = "viewed_scenario"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
+        if user:
+            activity = "viewed_scenario"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
         
         self.response.out.write(html)
-        
+              
 class DashboardHandler(ModelrPageRequest):
     '''
     Display the dashboard page (uses dashboard.html template)
@@ -461,7 +548,11 @@ class DashboardHandler(ModelrPageRequest):
             rock_groups.append(dic) 
             
         scenarios = Scenario.all()
-        scenarios.ancestor(user)
+        if not user.user_id == admin_id:
+            scenarios.ancestor(user)
+        else:
+            scenarios.ancestor(ModelrRoot)
+            
         scenarios.filter("user =", user.user_id)
         scenarios.order("-date")
         
@@ -490,15 +581,116 @@ class DashboardHandler(ModelrPageRequest):
                     parent=ModelrRoot).put()
         self.response.out.write(html)
 
+
+
+
 class AboutHandler(ModelrPageRequest):
+    def get(self):
+
+        # Uptime robot API key for modelr.io
+        #ur_api_key_modelr_io = 'm775980219-706fc15f12e5b88e4e886992'
+
+        # Uptime Robot API key for modelr.org:8080
+        #ur_api_key_modelr_org = 'm775980224-e2303a724f89ef0ab886558a'
+
+        ur_api_key = 'u108622-bd0a3d1e36a1bf3698514173'
+
+        # Uptime Robot IDs
+        ur_modelr_io = '775980219'
+        ur_modelr_org = '775980224'  # REL, usually
+        # ur_modelr_org_8080 = '775980224'  # REL, usually
+        # ur_modelr_org_8081 = '776083114'  # DEV, usually
+
+        # Uptime Robot URL
+        ur_url = 'http://api.uptimerobot.com/getMonitors'
+
+        params = {'apiKey': ur_api_key,
+          'monitors': ur_modelr_io + '-' + ur_modelr_org,
+          'customuptimeratio': '30',
+          'format': 'json',
+          'nojsoncallback':'1',
+          'responseTimes':'1'
+         }
+
+        # A dict is easily converted to an HTTP-safe query string.
+        ur_query = urllib.urlencode(params)
+
+        # Opened URLs are file-like. You can't use 'with... as'.
+        # We'll construct the URL+query string ourselves, rather
+        # than passing them separately, to force urllib2 to use GET.
+        full_url = '{0}?{1}'.format(ur_url, ur_query)
+        f = urllib2.urlopen(full_url)
+
+        # QUESTION 2a: The web API is 'open', complete the line to
+        # read it:
+        r = f.read()
+
+        # The result is a JSON string; a dict is more useful.
+        j = json.loads(r)
+
+        ur_ratio = j['monitors']['monitor'][0]['customuptimeratio']
+        ur_server_ratio = \
+          j['monitors']['monitor'][1]['customuptimeratio']
+        ur_server_status_code = j['monitors']['monitor'][1]['status']
+        ur_last_response_time = \
+          j['monitors']['monitor'][0]['responsetime'][-1]['value']
+        ur_last_server_response_time = \
+          j['monitors']['monitor'][1]['responsetime'][-1]['value']
+
+        ur_status_dict = {'0': 'paused',
+                          '1': 'not checked yet',
+                          '2': 'up',
+                          '8': 'seems down',
+                          '9': 'down'
+                       }
+
+        ur_server_status = \
+          ur_status_dict[ur_server_status_code].upper()
+
+        user = self.verify()
+        models_served = ModelServedCount.all().get()
+        template_params = \
+          self.get_base_params(user=user,
+                               ur_ratio=ur_ratio,
+                               ur_response_time=ur_last_response_time,
+                               ur_server_ratio=ur_server_ratio,
+                               ur_server_status=ur_server_status,
+                               ur_server_response_time=\
+                                 ur_last_server_response_time,
+                               models_served=models_served.count
+                               )
+        
+        template = env.get_template('about.html')
+        html = template.render(template_params)
+        self.response.out.write(html)          
+
+class FeaturesHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
         template_params = self.get_base_params(user=user)
-        template = env.get_template('about.html')
+        template = env.get_template('features.html')
         html = template.render(template_params)
         self.response.out.write(html)          
-                                    
+
+    
+class PricingHandler(ModelrPageRequest):
+    def get(self):
+
+        user = self.verify()
+        template_params = self.get_base_params(user=user)
+        template = env.get_template('pricing.html')
+        html = template.render(template_params)
+        activity = "pricing"
+        
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
+                        
+        self.response.out.write(html)          
+   
+   
 class HelpHandler(ModelrPageRequest):
     def get(self):
 
@@ -507,36 +699,71 @@ class HelpHandler(ModelrPageRequest):
         template = env.get_template('help.html')
         html = template.render(template_params)
         activity = "help"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
-        self.response.out.write(html)          
-                                    
+        
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
+                        
+        self.response.out.write(html)   
+               
+    def post(self):
+
+        email = self.request.get('email')
+        message = self.request.get('message')
+
+        user = self.verify()
+        
+        try:
+            send_message("User message %s" % email, message)
+            template = env.get_template('message.html')
+            msg = ("Thank you for your message. " + 
+                   "We'll be in touch shortly.")
+            html = template.render(success=msg, user=user)
+            self.response.out.write(html)
+            
+        except:
+            template = env.get_template('message.html')
+            msg = ('Your message was not sent.&nbsp;&nbsp; ' +
+                   '<button class="btn btn-default" '+
+                   'onclick="goBack()">Go back and retry</button>')
+            html = template.render(warning=msg, user=user)
+            self.response.out.write(html)
+   
+                                                                     
 class TermsHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
-        activity = "terms"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
         template_params = self.get_base_params(user=user)
         template = env.get_template('terms.html')
         html = template.render(template_params)
+        activity = "terms"
+        
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
+        
         self.response.out.write(html)          
                                     
-class PricingHandler(ModelrPageRequest):
+          
+class PrivacyHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
-        activity = "pricing"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
         template_params = self.get_base_params(user=user)
-        template = env.get_template('pricing.html')
+        template = env.get_template('privacy.html')
         html = template.render(template_params)
+        activity = "privacy"
+        
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
+        
         self.response.out.write(html)          
+                                    
           
 class ProfileHandler(ModelrPageRequest):
     
@@ -684,58 +911,6 @@ class ProfileHandler(ModelrPageRequest):
         err_string = '&'.join(err_string) if err_string else ''
         self.redirect('/profile?' + err_string)
                                     
-class SubscribeHandler(ModelrPageRequest):
-    
-    def get(self):
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-
-        activity = "subscribe"
-        ActivityLog(user_id=user.user_id,
-                        activity=activity,
-                        parent=ModelrRoot).put()
-        template_params = self.get_base_params(user=user)
-        template = env.get_template('subscribe.html')
-        html = template.render(template_params)
-        self.response.out.write(html)
-
-class PaymentHandler(ModelrPageRequest):
-    
-    def post(self):
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-
-        activity = "payment"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
-        # Secret API key from Stripe dashboard
-        stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
-
-        # Get the credit card details submitted by the form
-        token = self.request.get('stripeToken')
-
-        # CLEAN AND PROCESS USER INPUT
-        # MORE TO DO HERE
-        amount = 900 # or 9900 for yearly
-
-        # Create the charge on Stripe's servers - this will charge the user's card
-        try:
-          charge = stripe.Charge.create(
-              amount=amount, # amount in cents, again
-              currency="usd",
-              card=token,
-              description="payinguser@example.com"
-          )
-        except:
-          # The card has been declined
-          pass
-          
-        # UPGRADE USER IN DATABASE
         
 class SettingsHandler(ModelrPageRequest):
     
@@ -748,38 +923,67 @@ class SettingsHandler(ModelrPageRequest):
         template_params = self.get_base_params(user=user)
         template = env.get_template('settings.html')
         html = template.render(template_params)
-        self.response.out.write(html)
-
-class SignIn(webapp2.RequestHandler):
+        self.response.out.write(html)        
+            
+        
+class ForgotHandler(webapp2.RequestHandler):
+    """
+    Class for forgotten passwords
+    """
 
     def get(self):
-
-        template = env.get_template('signin.html')
+        template = env.get_template('forgot.html')
         html = template.render()
         self.response.out.write(html)
-
+        
     def post(self):
 
         email = self.request.get('email')
-        password = self.request.get('password')
-
+        template = env.get_template('message.html')
+        
         try:
-            signin(email, password, ModelrRoot)
-            cookie = get_cookie_string(email)
-            self.response.headers.add_header('Set-Cookie', cookie)
-    
-            self.redirect('/dashboard')
-
+            forgot_password(email, parent=ModelrRoot)
+            
+            msg = ("Please check your inbox and spam folder " +
+                   "for our message. Then click on the link " +
+                   "in the email.")
+            html = template.render(success=msg)
+            self.response.out.write(html)
         except AuthExcept as e:
-            template = env.get_template('signin.html')
-            msg = e.msg
-            html = template.render(email=email,
-                                   error=msg)
+            html = template.render(error=e.msg)
             self.response.out.write(html)
 
+class ResetHandler(ModelrPageRequest):
+    """
+    Class for resetting passwords
+    """
+
+    def post(self):
+
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        current_pword = self.request.get("current_pword")
+        new_password = self.request.get("password")
+        verify = self.request.get("verify")
+
+        template = env.get_template('settings.html')
+
+        
+        try:
+            reset_password(user,current_pword,new_password,
+                           verify)
+            template = env.get_template('settings.html')
+            msg = ("You reset your password.")
+            html = template.render(user=user,success=msg)
+            self.response.out.write(html)
+        except AuthExcept as e:
+            html = template.render(user=user, error=e.msg)
         
             
-        
+
 class SignUp(webapp2.RequestHandler):
     """
     Class for registering users
@@ -805,7 +1009,7 @@ class SignUp(webapp2.RequestHandler):
 
         if password != verify:
             template = env.get_template('signup.html')
-            msg = "Password Mismatch"
+            msg = "Password mismatch"
             html = template.render(email=email,
                                    error=msg)
             self.response.out.write(html)
@@ -813,7 +1017,14 @@ class SignUp(webapp2.RequestHandler):
         else:
             try:
                 signup(email, password, parent=ModelrRoot)
-                self.redirect('signin')
+                
+                # Show the message page with "Success!"
+                template = env.get_template('message.html')
+                msg = ("Please check your inbox and spam folder " +
+                       "for our message. Then click on the link " +
+                       "in the email.")
+                html = template.render(success=msg)
+                self.response.out.write(html)
                 
             except AuthExcept as e:
                 template = env.get_template('signup.html')
@@ -822,23 +1033,6 @@ class SignUp(webapp2.RequestHandler):
                                        error=msg)
                 self.response.out.write(html)
                 
-            
-class Logout(ModelrPageRequest):
-
-    def get(self):
-        
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-
-        activity = "logout"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
-        self.response.headers.add_header('Set-Cookie',
-                                         'user=""; Path=/')
-        self.redirect('/')
 
 class EmailAuthentication(ModelrPageRequest):
 
@@ -847,14 +1041,235 @@ class EmailAuthentication(ModelrPageRequest):
         user_id = self.request.get("user_id")
         
         try:
-            verified_signup(user_id, ModelrRoot)
+            # Change this to check the user can be validated and
+            # get temp_user
+            user = verify_signup(user_id, ModelrRoot)
+            
         except AuthExcept as e:
             self.redirect('/signup?error=auth_failed')
             return
 
-        self.redirect('/signin')
+        msg = "Thank you for verifying your email address."
+        params = self.get_base_params(user=user)
+        template = env.get_template('checkout.html')
+        html = template.render(params, success=msg)
+        self.response.out.write(html)
+
+    def post(self):
+        """
+        Adds the user to the stripe customer list
+        """
+
+        price = 900 # cents
+
+        # Secret API key for Canada Post postal lookup
+        cp_prod = "3a04462597330c85:46c19862981c734ff8f7b2"
+        cp_dev = "09b48e3a40e710ed:bb6f209fdecff9af3ec10d"
+        cp_key = base64.b64encode(cp_prod)
+
+        # Get the credit card details submitted by the form
+        token = self.request.get('stripeToken')
+
+        # Create the customer account
+        customer = stripe.Customer.create(card=token,
+                                    description="New Modelr customer")
+
+        # Check the country to see if we need to charge tax
+        country = self.request.get('stripeBillingAddressCountry')
+        if country == "Canada":
+            
+            # Get postal code for canada post request
+            postal_code = \
+              self.request.get('stripeBillingAddressZip').replace(" ",
+                                                                  "")
+              
+            # Hook up to the web api
+            params = urllib.urlencode({"d2po": "True",
+                                       "postalCode": postal_code,
+                                       "maximum": 1})
+            cp_url = ("https://soa-gw.canadapost.ca/rs/postoffice?%s"
+                      % params)
+    
+            headers = {"Accept": "application/vnd.cpc.postoffice+xml",
+                       "Authorization": "Basic " + cp_key}
+            req = urllib2.Request(cp_url, headers=headers)
+            result = urllib2.urlopen(req).read()
+            xml_root = ElementTree.fromstring(result)
+
+            # This is super hacky, but the only way I could get the
+            # XML out
+            province = []
+            for i in xml_root.iter('{http://www.canadapost.ca/ws/'+
+                                   'postoffice}province'):
+                province.append(i.text)
+            tax_code = province[0]
+        
+            tax = tax_dict.get(tax_code) * price
+        
+            # Add the tax to the invoice
+            stripe.InvoiceItem.create(customer=customer.id,
+                                      amount = int(price + tax),
+                                      currency="usd",
+                                      description="Canadian Taxes")
+         
+                                          
+        else:
+            tax_code = country
+            tax = 0
+            
+        # Create the charge on Stripe's servers -
+        # this will charge the user's card
+        try:
+            customer.subscriptions.create(plan="Monthly")
+        except:
+            # The card has been declined
+            # Let the user know and DON'T UPGRADE USER
+            self.response.out.write("Payment failed")
+            return
+
+        # get the temp user from the database
+        email = self.request.get('stripeEmail')
+        
+        try:
+            initialize_user(email, customer.id, ModelrRoot,
+                            tax_code, price, tax)
+        except:
+
+            send_message(subject="Registration Failed",
+                         message=("Failed to register user %s to " +
+                        "Modelr but was billed by Stripe. " +
+                        "Customer ID: %s") %(email, customer.id))
+            self.response.write("Registration failed. Charges will "
+                                + "be cancelled")
+            raise
+        
+        self.redirect('/signin?verified=true')
+                        
+        
+class SignIn(webapp2.RequestHandler):
+
+    def get(self):       
+
+        status = self.request.get("verified")
+        redirect = self.request.get('redirect')
+
+        if status == "true":
+            msg = ("Your account has been created and your card has "
+                   "been charged. Welcome to Modelr!" )
+      
+        else:
+            msg = None
+
+        template = env.get_template('signin.html')
+        html = template.render(success=msg, redirect=redirect)
+        self.response.out.write(html)
+
+    def post(self):
+
+        email = self.request.get('email')
+        password = self.request.get('password')
+        redirect = self.request.get('redirect').encode('utf-8')
+
+        try:
+            signin(email, password, ModelrRoot)
+            cookie = get_cookie_string(email)
+            self.response.headers.add_header('Set-Cookie', cookie)
+    
+            if redirect:
+                self.redirect(redirect)
+            else:
+                self.redirect('/')
+
+        except AuthExcept as e:
+            template = env.get_template('signin.html')
+            msg = e.msg
+            html = template.render(email=email,
+                                   error=msg)
+            self.response.out.write(html)
+
+                               
+class SignOut(ModelrPageRequest):
+
+    def get(self):
+        
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        activity = "signout"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
+        self.response.headers.add_header('Set-Cookie',
+                                         'user=""; Path=/')
+        self.redirect('/')
         
         
+class StripeHandler(ModelrPageRequest):
+    '''
+    Handle webhook POSTs from Stripe
+
+    '''
+    def post(self):
+        
+        event = json.loads(self.request.body)
+
+        # Get the event id and retrieve it from Stripe
+        # anybody can post, doing it this way is more secure
+        # event_id = event_json["id"]
+
+        #event = stripe.Event.retrieve(event_id)
+
+        if event["type"] == "invoice.payment_succeeded":
+
+            # For testing, change it to a known user in stripe
+            # and use the webhooks testings
+            #event["data"]["object"]["customer"] = \
+            # "cus_3ZL6yHJqE8DfTx"
+            #event["data"]["object"]["total"] = price
+            
+            stripe_id = event["data"]["object"]["customer"]
+            amount = event["data"]["object"]["total"]
+            event_id = event["data"]["object"]["id"]
+            user = User.all().ancestor(ModelrRoot)
+            user = user.filter("stripe_id =", stripe_id).fetch(1)
+
+            # Serious issue here, we need to deal with this in a
+            # a clever way
+            if not user:
+                message = ("Failed to find modelr user for stripe " +
+                           "user %s, but was invoiced by stripe " +
+                           "event %s" % (stripe_id,event_id))
+                send_message(subject="Non-existent user invoiced",
+                             message=message)
+                
+                self.response.write("ALL OK")
+                return
+            
+            tax = tax_dict.get(user[0].tax_code, 'None')
+            if not tax:
+                self.response.write("ALL OK")
+                return
+
+            # Tax them up
+            stripe.InvoiceItem.create(customer=stripe_id,
+                                      amount = int(amount * tax),
+                                      currency="usd",
+                                      description="Canadian Taxes")
+
+            self.response.write("ALL OK")
+
+        # Send an email otherwise. We can trim this down to ones we
+        # actually care about.
+        else:
+            message = str(event)
+            send_message(subject=event["type"],
+                         message=message)
+            self.response.write("ALL OK")
+
+        
+
 class ManageGroup(ModelrPageRequest):
 
     def get(self):
@@ -880,7 +1295,7 @@ class ManageGroup(ModelrPageRequest):
         users = []
         for user_id in group.allowed_users:
             u = User.all().ancestor(ModelrRoot).filter("user_id =",
-                                                       user_id)
+                                                        user_id)
             u = u.fetch(1)
             if u:
                 users.append(u[0])
@@ -1105,6 +1520,75 @@ class NewScenario(ModelrPageRequest):
         self.response.out.write(html)
 
         
+class NotFoundPageHandler(ModelrPageRequest):
+    def get(self):
+        self.error(404)        
+        template = env.get_template('404.html')
+        html = template.render()
+        self.response.out.write(html)
+
+
+class ModelServed(ModelrPageRequest):
+
+    def post(self):
+
+        models_served.count += 1
+        models_served.put()
+
+class AdminHandler(ModelrPageRequest):
+
+    def get(self):
+        user = self.verify()
+
+        if not user:
+            self.redirect('/')
+            
+        if not "admin" in user.group:
+            self.redirect('/')
+
+        template = env.get_template('admin_site.html')
+        html = template.render(user=user)
+        self.response.out.write(html)
+        
+
+        
+    def post(self):
+
+        user = self.verify()
+        
+        if not user:
+            self.redirect('/')
+
+        if not "admin" in user.group:
+            self.redirect('/')
+            
+        email = self.request.get('email')
+        password = self.request.get('password')
+        verify = self.request.get('verify')
+
+        if password != verify:
+            template = env.get_template('admin_site.html')
+            msg = "Password mismatch"
+            html = template.render(email=email,
+                                   error=msg)
+            self.response.out.write(html)
+            
+        else:
+            try:
+                new_user = make_user(email=email, password=password,
+                                 parent=ModelrRoot)
+                template = env.get_template('admin_site.html')
+                html = template.render(success="Added User",
+                                       email=email, user=user)
+                self.response.out.write(html)
+                
+            except AuthExcept as e:
+                template = env.get_template('admin_site.html')
+                html = template.render(error=e.msg, user=user,
+                                       email=email)
+                self.response.out.write(html)
+
+
         
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
@@ -1120,26 +1604,32 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                   RemoveScenarioHandler),
                                ('/pricing', PricingHandler),
                                ('/profile', ProfileHandler),
-                               ('/subscribe', SubscribeHandler),
-                               ('/submitpayment', PaymentHandler),
                                ('/settings', SettingsHandler),
                                ('/about', AboutHandler),
+                               ('/features', FeaturesHandler),
                                ('/help', HelpHandler),
                                ('/terms', TermsHandler),
+                               ('/privacy', PrivacyHandler),
                                ('/signup', SignUp),
+                               ('/verify_email', EmailAuthentication),
                                ('/signin', SignIn),
-                               ('/email_verify', EmailAuthentication),
                                ('/logout', Logout),
                                ('/manage_group', ManageGroup),
                                ('/carousel_test', CarouselTest),
                                ('/upload', Upload),
                                ('/upload_image', UploadImage),
                                ('/model_builder', ModelBuilder),
-                               ('/new_scenario', NewScenario)
+                               ('/new_scenario', NewScenario),
+                               ('/forgot', ForgotHandler),
+                               ('/reset', ResetHandler),
+                               ('/signout', SignOut),
+                               ('/stripe', StripeHandler),
+                               ('/manage_group', ManageGroup),
+                               ('/model_served', ModelServed),
+                               ('/admin_site', AdminHandler),
+                               ('/.*', NotFoundPageHandler)
                                ],
-                              debug=True)
-
-
+                              debug=False)
 
 
 

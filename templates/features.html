@@ -1,0 +1,104 @@
+{% extends "base_template.html" %}
+
+{% block title %}Modelr &middot; Features{% endblock %}
+{% block content %}
+
+<div class="container">
+
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h3 class="panel-title">Built for geoscientists by geoscientists. And a physicist.</h3>
+  </div>
+  <div class="panel-body">
+     <p>Modelr has a robust, clean, and flexible interface that lets you focus on building meaningful synthetic seismic experiments.</p>
+<iframe width="560" height="315" src="//www.youtube.com/embed/38FxKHMB0vk" frameborder="0" allowfullscreen></iframe>
+  </div>
+</div>                
+                                                                      
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">For seismic interpreters</h3>
+  </div>
+  <div class="panel-body">
+    <p>Model simple geometries like wedges and channels quickly. See variable density plots, wiggle displays, and the model itself.</p>
+    <img src="/static/img/Modelr_features_channel.png" class="img-responsive" alt="Modelr seismic model example" />
+  </div>
+</div>
+  
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">For quantitative interpretation</h3>
+  </div>
+  <div class="panel-body">
+     <p>Deterministic AVO modeling. Can your pre-stack seismic actually show you what you want to see?</p>
+    <img src="/static/img/Modelr_features_stochastic_avo.png" class="img-responsive" alt="Modelr seismic model example" />
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Explore the frequency domain</h3>
+  </div>
+  <div class="panel-body">
+     <p>Inspect frequency 'gathers' for tuning effects. Analyse signal and bandwidth requirements for survey design.</p>
+    <img src="/static/img/Modelr_features_wavelet_bank.png" class="img-responsive" alt="Modelr seismic model example" />
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Stochastic AVO modeling</h3>
+  </div>
+  <div class="panel-body">
+     <p>Don't sweep uncertainty under the rug. Make it work to your advantage!</p>
+     <img style="width:60%; float:left;" src="/static/img/Modelr_features_AVO_and_int_grad.png" class="img-responsive" alt="Modelr seismic model example" />
+     <img style="width:30%;" src="/static/img/Modelr_features_properties_pdf.png" class="img-responsive" alt="Modelr seismic model example" />
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Some of the things we're working on</h3>
+  </div>
+  <div class="panel-body">
+  
+  <div class="col-sm-6">
+       <ul>
+     <li>Full elastic, finite difference waveform simulation.</li>
+     <li>Import and export logs and seismic.</li>
+     <li>Arbitrary earth models.</li>
+     <li>Fluids, anisotropy, and lots more earth properties.</li>
+     </ul>
+</div>
+  
+      <!-- Begin MailChimp Signup Form -->
+      <div class="form-group col-sm-offset-6">
+      <p>Subscribe to keep up with major new features.
+      <div class="form-inline">
+          <form action="http://agilegeoscience.us6.list-manage.com/subscribe/post?u=3e1e2cd71eeb0422366e88354&amp;id=3a00d839f5" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="form-horizontal" target="_blank" novalidate>
+            <div class="col-sm-9">
+              <input type="email" value="" name="EMAIL" class="form-control email" id="mce-EMAIL" placeholder="email address" required>
+              <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+              <div style="position: absolute; left: -5000px;"><input type="text" name="b_3e1e2cd71eeb0422366e88354_3a00d839f5" value=""></div>
+            </div>
+              <div class="col-sm-offset-3">
+              <input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="btn btn-default">
+            </div>
+
+         </form>
+         </div>
+   </div>
+   <!--End mc_embed_signup-->
+  </div>
+</div>
+        
+          <p>
+            <a class="btn btn-primary btn-lg" role="button"
+	       href="/scenario">Try <strong>modelr</strong> for free</a>
+            <a class="btn btn-info btn-lg" role="button" 
+	       href="/signup">Create an account</a>
+          </p>
+</div>
+
+{% endblock %}
+

@@ -16,6 +16,12 @@ class ModelrParent(db.Model):
 class UserID(db.Model):
     next_id = db.IntegerProperty()
 
+class ModelServedCount(db.Model):
+    """
+    Item to keep track of how many models have been served by modelr
+    """
+    count = db.IntegerProperty()
+    
 class User(db.Model):
 
     user_id = db.IntegerProperty()
@@ -23,6 +29,8 @@ class User(db.Model):
     password = db.StringProperty()
     salt = db.StringProperty()
     group = db.StringListProperty()
+    stripe_id = db.StringProperty()
+    tax_code = db.StringProperty()
 
 class ActivityLog(db.Model):
 

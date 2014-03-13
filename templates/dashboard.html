@@ -6,17 +6,21 @@
 
 <div class="container">
   <div class="row">
+    
+    <!-- Start of left-hand column -->
+
     <div class="col-md-4">
+      
       <div class="panel panel-default">
 	<div class="panel-heading">
           <h3 class="panel-title">Welcome</h3>
 	</div>
 	<div class="panel-body">
           <p><strong>Welcome to Modelr!</strong> To get started, make some rocks using the form on the right. Then make a scenario in the box below.</p>
-          <p>Have fun!</p>
+          <p><a href="/help">Need more help?</a></p>
 	</div>
       </div>
-
+      
       <div class="panel panel-default">
 	<div class="panel-heading">
 	  <h3 class="panel-title">Models</h3> 
@@ -54,43 +58,44 @@
 	</div>
       </div>
 
-      <div class="panel panel-default">
+      <div class="panel panel-primary">
 	<div class="panel-heading">
           <h3 class="panel-title">Scenarios</h3>
 	</div>
 	<div class="panel-body">
 	  <table class="table table-condensed table-hover">
-	    <tbody>
-	      {% for scenario in scenarios %}
-	      
-	      <tr>
+            <tbody>
+              {% for scenario in scenarios %}
+              
+              <tr>
 		<form class="form-horizontal" name="input" action="remove_scenario" method="post">
 		  <input type="hidden" name="name" value="{{scenario.name}}" />
 		  <td><stong><a href='/scenario#{{scenario.name}}'>{{scenario.name}}</a></strong></td>
-		    <td>{{scenario.script}}</td>
-		    <td> <button class="btn btn-success btn-xs" type="submit" formaction="/scenario#{{scenario.name}}" > edit&nbsp;</button> &nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" value="remove" /></td>
-		    
+                    <td>{{scenario.script}}</td>
+                    <td> <a class="btn btn-success btn-xs" href="/scenario#{{scenario.name}}" > edit&nbsp;</a> &nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" value="remove" /></td>
+                    
 		</form>
-	      </tr>
-	      {% endfor %}
-	    </tbody>
+              </tr>
+              {% endfor %}
+            </tbody>
           </table>
-          <a href="scenario#">Make a new scenario</a>
+          <a class="btn btn-primary" href="/scenario" role="button">Make a new scenario</a>
 	</div>
       </div>
     </div>
 
 
+    <!-- Start of right-hand column -->
 
     <div class="col-md-8">
       <div class="panel panel-default">
 	<div class="panel-heading">
-          <h3 class="panel-title">My Rocks</h3>
+          <h3 class="panel-title">My rocks</h3>
 	</div>
 	<div class="panel-body">
 	  <table class="table table-condensed table-hover">
-	    <thead>
-	      <tr>
+            <thead>
+              <tr>
 		<th></th>
 		<th>V<sub>P</sub></th>
 		<th>V<sub>S</sub></th>
@@ -99,25 +104,25 @@
 		<th>V<sub>S</sub> std</th>
 		<th>Rho std</th>
 		<th></th>
-	      </tr>
-	    </thead>
-	    <tbody>
-	      {% for rock in rocks %}
-	      <tr>
+              </tr>
+            </thead>
+            <tbody>
+              {% for rock in rocks %}
+              <tr>
 		<form class="form-horizontal" name="input" action="edit_rock" method="post">
 		  <input type="hidden" name="name" value="{{rock.name}}" />
 		  <td><stong>{{rock.name}}</strong></td>
-		    <td>{{rock.vp}}</td>
-		    <td>{{rock.vs}}</td>
-		    <td>{{rock.rho}}</td>
-		    <td>{{rock.vp_std}}</td>
-		    <td>{{rock.vs_std}}</td>
-		    <td>{{rock.rho_std}}</td>
-		    <td><input class="btn btn-success btn-xs" type="submit" name="action" value="edit">&nbsp;&nbsp;&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" formaction="/remove_rock" method="post" value="remove" /></td>
+                    <td>{{rock.vp}}</td>
+                    <td>{{rock.vs}}</td>
+                    <td>{{rock.rho}}</td>
+                    <td>{{rock.vp_std}}</td>
+                    <td>{{rock.vs_std}}</td>
+                    <td>{{rock.rho_std}}</td>
+                    <td><input class="btn btn-success btn-xs" type="submit" name="action" value="edit">&nbsp;&nbsp;&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" formaction="/remove_rock" method="post" value="remove" /></td>
 		</form>
-	      </tr>
-	      {% endfor %}
-	    </tbody>
+              </tr>
+              {% endfor %}
+            </tbody>
           </table>
 	</div>
       </div>
@@ -126,12 +131,12 @@
       {% for rock_group in rock_groups %}
       <div class="panel panel-default">
 	<div class="panel-heading">
-          <h3 class="panel-title">{{rock_group['name']}} Rocks</h3>
+          <h3 class="panel-title">{{rock_group['name']}} rocks</h3>
 	</div>
 	<div class="panel-body">
           <table class="table table-condensed table-hover">
-	    <thead>
-	      <tr>
+            <thead>
+              <tr>
 		<th></th>
 		<th>V<sub>P</sub></th>
 		<th>V<sub>S</sub></th>
@@ -140,11 +145,11 @@
 		<th>V<sub>S</sub> std</th>
 		<th>Rho std</th>
 		<th></th>
-	      </tr>
-	    </thead>
-	    <tbody>
-	      {% for rock in rock_group['rocks'] %}
-	      <tr>
+              </tr>
+            </thead>
+            <tbody>
+              {% for rock in rock_group['rocks'] %}
+              <tr>
 		<input type="hidden" name="name" value="{{rock.name}}" />
 		<td><stong>{{rock.name}}</strong></td>
 		  <td>{{rock.vp}}</td>
@@ -153,23 +158,26 @@
 		  <td>{{rock.vp_std}}</td>
 		  <td>{{rock.vs_std}}</td>
 		  <td>{{rock.rho_std}}</td>
-	      </tr>
-	      {% endfor %}
-	    </tbody>
+
+              </tr>
+              {% endfor %}
+            </tbody>
           </table>
 	</div>
       </div>
       {% endfor %}
 
 
-      <div class="panel panel-default">
+      <div class="panel panel-default" id="accordion">
 	<div class="panel-heading">
-          <h3 class="panel-title">Default Rocks</h3>
+          <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapseDefault" data-toggle="collapse">
+            <i class="indicator glyphicon glyphicon-chevron-down pull-right" style="color:gray;"></i> Default rocks</a>
+          </h3>
 	</div>
-	<div class="panel-body">
+	<div class="panel-body panel-collapse collapse" id="collapseDefault">
 	  <table class="table table-condensed table-hover">
-	    <thead>
-	      <tr>
+            <thead>
+              <tr>
 		<th></th>
 		<th>V<sub>P</sub></th>
 		<th>V<sub>S</sub></th>
@@ -178,11 +186,11 @@
 		<th>V<sub>S</sub> std</th>
 		<th>Rho std</th>
 		<th></th>
-	      </tr>
-	    </thead>
-	    <tbody>
-	      {% for rock in default_rocks %}
-	      <tr>
+              </tr>
+            </thead>
+            <tbody>
+              {% for rock in default_rocks %}
+              <tr>
 		<input type="hidden" name="name" value="{{rock.name}}" />
 		<td><stong>{{rock.name}}</strong></td>
 		  <td>{{rock.vp}}</td>
@@ -191,21 +199,13 @@
 		  <td>{{rock.vp_std}}</td>
 		  <td>{{rock.vs_std}}</td>
 		  <td>{{rock.rho_std}}</td>
-	      </tr>
-	      {% endfor %}
-	    </tbody>
+              </tr>
+              {% endfor %}
+            </tbody>
           </table>
-	</div>
-      </div>
-    </div>
-  </div>
+	</div> <!-- end of panel body -->
+      </div> <!-- end of panel -->
 
-
-
-  <div class="row">
-    <div class="col-md-4">
-    </div>
-    <div class="col-md-8">
       <div class="panel panel-default">
 	<div class="panel-heading">
 	  <h3 class="panel-title">Add rock</h3>
@@ -290,10 +290,25 @@
 	      
 	    </form>
 	  </form>
-	</div>
-      </div>
+	</div> <!-- end of panel body -->
+      </div> <!-- end of panel  -->
     </div>
   </div>
+</div>
+
+  <script>
+   $(document).ready(function() {
+     function toggleChevron(e) {
+       $(e.target)
+          .prev('.panel-heading')
+          .find('i.indicator')
+          .toggleClass('glyphicon-chevron-down glyphicon-chevron-up');
+     }
+     $('#accordion').on('hidden.bs.collapse', toggleChevron);
+     $('#accordion').on('shown.bs.collapse', toggleChevron);
+   });
+  </script>
+
 
   {% endblock %}
 
