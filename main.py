@@ -43,19 +43,19 @@ env = Environment(loader=FileSystemLoader(join(dirname(__file__),
 # Ancestor dB for all of modelr. Allows for strongly consistent
 # database queries
 ModelrRoot = ModelrParent.all().get()
-if not ModelrRoot:
+if ModelrRoot is None:
     ModelrRoot = ModelrParent()
     ModelrRoot.put()
 
 models_served = ModelServedCount.all().ancestor(ModelrRoot).get()
-if not models_served:
+if models_served is None:
     models_served = ModelServedCount(count=0, parent=ModelrRoot)
     models_served.put()
     
 # Put in the default rock database
 admin_id = 0
-admin_user = User.all().filter("user_id =", admin_id).get()
-if not admin_user:
+admin_user = User.all().ancestor(ModelrRoot).filter("user_id =", admin_id).get()
+if admin_user is None:
     password = "Mod3lrAdm1n"
     email="admin@modelr.io"
     
@@ -439,12 +439,14 @@ class ScenarioHandler(ModelrPageRequest):
             UR_STATUS_DICT[ur_server_status_code].upper()
             
         if ur_server_status == 'DOWN':
-            error_msg = 'The model server is down. Please try again shortly.'
+            error_msg = ('The model server is down. Please try again'+
+                         ' shortly.')
         else:
             error_msg = ''
             
         if ur_server_status == 'SEEMS DOWN':
-            warning_msg = 'The model server may be experiencing problems.'
+            warning_msg = ('The model server may be experiencing ' +
+            'problems.')
         else:
             warning_msg = ''
 
@@ -485,11 +487,6 @@ class ScenarioHandler(ModelrPageRequest):
 
 
         # Get Evan's default scenarios (user id from modelr database)
-         evan = User.all().ancestor(ModelrRoot).filter("user_id =", 29)
-         evan = evan.fetch(1)[0]
-         ev_scen = Scenario.all().ancestor(evan).fetch(100)
-         scenarios += ev_scen
-                
         scen = Scenario.all().ancestor(ModelrRoot)
         scen = scen.filter("user =", admin_id).fetch(100)
         if scen: 
@@ -1407,6 +1404,11 @@ class AdminHandler(ModelrPageRequest):
 
         
 
+class ServerError(ModelrPageRequest):
+
+    def post(self):
+
+        send_message("Server Down","Scripts did not populate")
     
         
 app = webapp2.WSGIApplication([('/', MainHandler),
@@ -1439,6 +1441,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/manage_group', ManageGroup),
                                ('/model_served', ModelServed),
                                ('/admin_site', AdminHandler),
+                               ('/server_error', ServerError),
                                ('/.*', NotFoundPageHandler)
                                ],
                               debug=False)
