@@ -10,9 +10,7 @@ img.img-thumbnail {
 }
 
 #loader{
-   height:400px;
-   width:400px;
-   position:center;
+   text-align:center;
    display:none;
 }
 </style>
@@ -170,7 +168,7 @@ img.img-thumbnail {
 
           <img class="img-thumbnail" id="plot_image" href=URL 
 	       alt="" src="/static/img/placeholder_model_image.png">
-	  <span id="loader"><img src="/static/img/ajax-loader.gif"></span>
+	  <div id="loader"><img src="/static/img/ajax-loader.gif"></div>
           <!-- Updated by the  create_image button above-->
           </img>
 
@@ -192,6 +190,8 @@ img.img-thumbnail {
 <script>
 
  $(document).ready(function() {
+
+   $.ajaxSetup({timeout:10000}); //in milliseconds
    
    server = new PlotServer(host, 
 			   get_rocks('datalist#list_of_rocks'));

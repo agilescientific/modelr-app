@@ -24,14 +24,15 @@ function PlotServer(hostname, rocks) {
      * @param callback(data): do something on finish.
      */
 
-    failure = function failure(){
+    function failure(){
 	$.post('/server_error');
 	alert("Modelr is experience technical difficulties. Please check back soon.");
 	
     };
 
     this.get_scripts = function get_scripts(callback) {
-        $.getJSON(host + '/available_scripts.json', callback).fail(failure);
+        $.ajax({url:host + '/available_scripts.json', success:callback,
+	       error:failure,type:"GET"});
     };
 
     /*
