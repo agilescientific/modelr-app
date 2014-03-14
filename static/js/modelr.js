@@ -16,16 +16,23 @@ function PlotServer(hostname, rocks) {
     this.hostname = hostname;
 
     // (rock name , rock property) pairs
-    this.rocks = rocks
+    this.rocks = rocks;
 
     /*
      * Asynchronously fetch the list of scripts from the 
      * plotting server 
      * @param callback(data): do something on finish.
      */
+
+    failure = function failure(){
+	$.post('/server_error');
+	alert("Modelr is experience technical difficulties. Please check back soon.");
+	
+    };
+
     this.get_scripts = function get_scripts(callback) {
-        $.getJSON(host + '/available_scripts.json', callback);
-    }
+        $.getJSON(host + '/available_scripts.json', callback).fail(failure);
+    };
 
     /*
      * Asynchronously fetch the information from a single scripts 
@@ -35,9 +42,9 @@ function PlotServer(hostname, rocks) {
     this.get_script_info = function get_script_info(script, callback){
         $.getJSON(this.hostname + '/script_help.json?script=' + 
 		  script, callback);
-    }
+    };
 
-}
+};
 
 /*
  * Scenario 'class'
@@ -49,7 +56,7 @@ function Scenario(name, script, arguments, rocks) {
     this.rocks = rocks;
     this.info = null;
 
-}
+};
 
 /*
  * Store the current arguments of this scenario on the server.
@@ -64,13 +71,13 @@ Scenario.prototype.put = function put() {
 
     function success(data, textStatus, jqXHR) {
         console.log('post', textStatus)
-    }
+    };
 
     $.post('/save_scenario', {
         'name' : this.name,
         'json' : data
-    }, success, 'json')
-}
+    }, success, 'json');
+};
 
 /*
  * Get the Scenario from the plotting server. keyed on the 'name' 
@@ -86,12 +93,12 @@ Scenario.prototype.get = function get() {
 
         scenario.script = data.script;
         scenario.set_current_script(data.script, data.arguments);
-    }
+    };
 
     $.get('/save_scenario', {
         'name' : this.name
-    }, success, 'json')
-}
+    }, success, 'json');
+};
 
 
 /*
@@ -100,7 +107,7 @@ Scenario.prototype.get = function get() {
 Scenario.prototype.update = function update(attr, value) {
     this.arguments[attr] = value;
     this.on_change();
-}
+};
 
 /*
  * Update the scenario with the default arguments provided by the plotting
@@ -116,11 +123,11 @@ Scenario.prototype.default_args = function default_args(argumentss) {
         this.arguments[arg] = args[arg]['default'];
         if (arg in argumentss) {
             this.arguments[arg] = argumentss[arg];
-        }
+        };
 
-    }
+    };
 
-}
+};
 
 /*
  * Create the query string for this Scenario. (to send to the plotting server)
@@ -138,13 +145,13 @@ Scenario.prototype.qs = function() {
         } else {
             var value = args[argname];
 
-        }
+        };
         query_str += '&' + argname + '=' + encodeURIComponent(value);
-    }
+    };
 
     return query_str;
 
-}
+};
 
 /*
  * === === === === === === === === === === === === === === === === Functions ===
@@ -179,7 +186,7 @@ function populate_scripts(server, selection) {
             select_script.append('<option value=' + script + '>' + 
 				 script + ' --- ' + doc.slice(0, 20)+ 
 				 '</option>');
-        }
+        };
 
     });
 
@@ -191,7 +198,7 @@ function populate_scripts(server, selection) {
  */
 function display_form(sel) {
 
-    var div = $(sel)
+    var div = $(sel);
     div.children().remove();
 
     div.append('<form id=script_form action=""></form>');
@@ -201,7 +208,7 @@ function display_form(sel) {
 
     form.append('<p>' + data.description + '</p>');
 
-    args = data.arguments
+    args = data.arguments;
 
     form_text = '<table>';
 
@@ -213,7 +220,7 @@ function display_form(sel) {
 
         if (deflt === null) {
             deflt = '';
-        }
+        };
 
 //        form_text += '<td>' + arg + ':</td>';
         form_text += '<td>' + args[arg]['help'] + ':</td>';
@@ -224,7 +231,7 @@ function display_form(sel) {
                     + '" class="script_form rock_selector"><option selected hidden disabled value=""></option></select></td>';
         } else if (args[arg]['choices'] != null) {
 
-            form_text += '<td><select name="' + arg + '" class="script_form choices_selector">'
+            form_text += '<td><select name="' + arg + '" class="script_form choices_selector">';
 
             for (idx in args[arg]['choices']) {
                 console.log('DEF', args[arg]['choices'][idx], deflt, args[arg]['choices'][idx] == deflt);
@@ -233,16 +240,16 @@ function display_form(sel) {
                 } else{
                     
                     form_text += '<option>' + args[arg]['choices'][idx] + '</option>';
-                }
+                };
                 
-            }
+            };
             form_text += '</select></td>';
 
         } else {
             form_text += '<td><input class="script_form" type="text" name="' + arg + '" value="' + deflt
                     + '"></input></td>';
-        }
-    }
+        };
+    };
 
     form_text += '</table>';
 
@@ -263,7 +270,7 @@ function display_form(sel) {
         rock_prop = server.rocks[rname];
 
         selectors.append('<option value="' + rname + '">' + rname + '</option>');
-    }
+    };
 
     var scenario = this;
     $("select.rock_selector option").filter(function() {
@@ -275,7 +282,7 @@ function display_form(sel) {
 
     // server.input_changed();
 
-}
+};
 
 /*
  * Get the rocks from a datalist element. inner option elements must 
@@ -295,8 +302,8 @@ function get_rocks(datalist) {
     });
 
     return rcks;
-}
+};
 
 function save_scenario(scenario) {
 
-}
+};
