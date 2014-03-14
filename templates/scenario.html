@@ -36,19 +36,19 @@ img.img-thumbnail {
   {% endif %}
   
 
-  <!-- SCENARIO PANEL
-  ================================================================ -->
-  <div class="row">
+    <div class="row">
 
+   <!-- SCENARIO PANEL
+    ================================================================ -->
     <div class="col-md-6 col-lg-5">
       <div class="panel panel-primary">
-	<div class="panel-heading">
+	    <div class="panel-heading">
           <h3 class="panel-title">Scenario</h3>
-	</div>
+	    </div>
 	
-	<div class="panel-body">
+	    <div class="panel-body">
 	  
-	  <form class="form-horizontal" role="form">
+	    <form class="form-horizontal" role="form">
             
 	    {% if not user %}
 	    
@@ -84,8 +84,7 @@ img.img-thumbnail {
 		  </div>
 		  
 		</div>
-              </div>
-              
+      </div>
               
 	      {% if not user %}<fieldset disabled>{% endif %}
               <div class="form-group">
@@ -118,7 +117,7 @@ img.img-thumbnail {
 			  id='create_image' 
 			  onclick="server.update_img(scenario)"
 			  type="button">
-		    Update Plot
+		    Update plot
 		  </button>
 		</div>
               </div>
@@ -154,31 +153,31 @@ img.img-thumbnail {
 	  </form>
 
 	</div>  <!-- end of panel-body -->
-      </div>
-    </div>
+  </div>  <!-- end of panel -->
+</div> <!-- end of column div -->
     
     <!-- RESULT PANEL============================================ -->
 
     <div class="col-md-6 col-lg-7">
       <div class="panel panel-default">
-	<div class="panel-heading">
+	    <div class="panel-heading">
           <h3 class="panel-title">Result</h3>
-	</div>
-	<div class="panel-body">
+	    </div>
+	    <div class="panel-body">
+          <div style="position:relative;">
+            <!-- Updated by the  create_image button above-->
+            <img class="img-thumbnail" id="plot_image" href=URL alt="" src="/static/img/placeholder_model_image.png" />
+	        <img style="position:absolute;top:0;left:0" id="loader" src="/static/img/ajax-loader.gif" />
+          </div>
+        </div> <!-- end of panel-body -->
+      
+      </div> <!-- end of panel -->
 
-          <img class="img-thumbnail" id="plot_image" href=URL 
-	       alt="" src="/static/img/placeholder_model_image.png">
-	  <div id="loader"><img src="/static/img/ajax-loader.gif"></div>
-          <!-- Updated by the  create_image button above-->
-          </img>
+    </div>  <!-- end of column div -->
 
-	</div>
-      </div>
-    </div>
+  </div>  <!-- end of row -->
 
-  </div>
-
-</div>
+</div>  <!-- end of container -->
 
 <!-- JAVASCRIPT and DATA
 ================================================================ -->
@@ -238,11 +237,11 @@ img.img-thumbnail {
    server.update_img = function(scenario){
      
      var img = $('img#plot_image');
-     var loader = $('#loader');
+     var loader = $('img#loader');
      var qs = scenario.qs();
      var url = server.hostname +'/plot.jpeg' + qs;
      
-     img.attr('src','');
+     //img.attr('src','');
      loader.show();
      img.attr('src', url).load(function(){
        loader.fadeOut();
