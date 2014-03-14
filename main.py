@@ -248,10 +248,11 @@ class ModifyScenarioHandler(ModelrPageRequest):
         scen = Scenario.all().filter("name =",name).fetch(100)
         if scen:
             scenarios += scen
-            
-        logging.info(scenarios[0])
-        logging.info(scenarios[0].data)
+
         if scenarios:
+            logging.info(scenarios[0])
+            logging.info(scenarios[0].data)
+        
             scenario = scenarios[0]
             self.response.out.write(scenario.data)
         else:
