@@ -9,6 +9,9 @@ img.img-thumbnail {
             box-shadow: none;
 }
 
+#loader{
+   text-align:center;
+   display:none;
 }
 </style>
 
@@ -115,7 +118,7 @@ img.img-thumbnail {
 			  id='create_image' 
 			  onclick="server.update_img(scenario)"
 			  type="button">
-		    Create image
+		    Update Plot
 		  </button>
 		</div>
               </div>
@@ -165,6 +168,7 @@ img.img-thumbnail {
 
           <img class="img-thumbnail" id="plot_image" href=URL 
 	       alt="" src="/static/img/placeholder_model_image.png">
+	  <div id="loader"><img src="/static/img/ajax-loader.gif"></div>
           <!-- Updated by the  create_image button above-->
           </img>
 
@@ -186,6 +190,8 @@ img.img-thumbnail {
 <script>
 
  $(document).ready(function() {
+
+   $.ajaxSetup({timeout:10000}); //in milliseconds
    
    server = new PlotServer(host, 
 			   get_rocks('datalist#list_of_rocks'));
@@ -231,12 +237,17 @@ img.img-thumbnail {
    // This is specific to this display.
    server.update_img = function(scenario){
      
+     var img = $('img#plot_image');
+     var loader = $('#loader');
      var qs = scenario.qs();
      var url = server.hostname +'/plot.jpeg' + qs;
-     var img = $('img#plot_image');
-
      
-     img.attr('src', url);
+     img.attr('src','');
+     loader.show();
+     img.attr('src', url).load(function(){
+       loader.fadeOut();
+     });
+
      $.post('/model_served');
      
    }
@@ -322,8 +333,7 @@ img.img-thumbnail {
 
  // Loads a scenario
  load_scenario = function load_scenario(scenario_name){
-   var img = $('img#plot_image');
-   img.attr('src',"/static/img/placeholder_model_image.png" );
+
    scenario.name = scenario_name;
    scenario.get();
 }
