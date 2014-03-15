@@ -235,6 +235,9 @@ img.img-thumbnail {
    
    // This is specific to this display.
    server.update_img = function(scenario){
+   
+     $("#create_image").removeClass("btn-primary").addClass("btn-default");
+
      
      var img = $('img#plot_image');
      var loader = $('img#loader');
@@ -316,6 +319,7 @@ img.img-thumbnail {
  // Watch for changes in the form, to reset the 'save' button styling (see above)
  $("form").change(function() {
    $("#savebutton").html("save").removeClass("btn-success").addClass("btn-default");
+   $("#create_image").removeClass("btn-default").addClass("btn-primary");
  });
  
  // Watch for changes in the scenario dropdown, to reset the 'load' button styling
