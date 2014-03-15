@@ -207,7 +207,7 @@ function display_form(sel) {
     form = div.find('form#script_form');
     var data = this.info;
 
-    form.append('<p>' + data.description + '</p>');
+    form.append('<div class="well well-sm"><strong>' + data.description + '</strong></div>');
 
     args = data.arguments;
 

@@ -107,13 +107,14 @@ img.img-thumbnail {
               <!-- Div to place the form into see Scenario.display 
 	      and display_form functions-->
               <div class="container" id="scenario_place">
+              <div class="alert alert-info">Please select a <strong>scenario</strong> or a <strong>script</strong> to begin.</div>
               </div>
               
               <hr/>
               
               <div class="form-group">
 		<div class="col-sm-offset-3 col-sm-4">
-		  <button class="btn btn-primary" 
+		  <button class="btn btn-default" 
 			  id='create_image' 
 			  onclick="server.update_img(scenario)"
 			  type="button">
@@ -237,7 +238,6 @@ img.img-thumbnail {
    server.update_img = function(scenario){
    
      $("#create_image").removeClass("btn-primary").addClass("btn-default");
-
      
      var img = $('img#plot_image');
      var loader = $('img#loader');
@@ -316,11 +316,22 @@ img.img-thumbnail {
    }
  });
  
+ var timer;
+ 
+ var resetPlotButton = function(){
+   $("#create_image").removeClass("btn-default").addClass("btn-primary");
+ };
+ 
  // Watch for changes in the form, to reset the 'save' button styling (see above)
  $("form").change(function() {
    $("#savebutton").html("save").removeClass("btn-success").addClass("btn-default");
-   $("#create_image").removeClass("btn-default").addClass("btn-primary");
+   resetPlotButton();
  });
+ 
+ $("form").keyup(function() {
+    clearTimeout(timer);
+      timer = setTimeout(resetPlotButton, 500);
+});
  
  // Watch for changes in the scenario dropdown, to reset the 'load' button styling
  $("#scenario_loader").change(function() {
