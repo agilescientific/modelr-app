@@ -22,6 +22,7 @@ import time
 import stripe
 
 import json
+import re
 
 from xml.etree import ElementTree
 
@@ -411,45 +412,6 @@ class ScenarioHandler(ModelrPageRequest):
     '''
     def get(self):
 
-        # Uptime Robot API key for modelr.org REL
-        ur_api_key_modelr_org = 'm775980224-e2303a724f89ef0ab886558a'
-        
-        # Uptime Robot API key for modelr.org DEV
-        #ur_api_key_modelr_org = 'm776083114-e34c154f2239e7c273a04dd4'
-
-        # Uptime Robot URL
-        ur_url = 'http://api.uptimerobot.com/getMonitors'
-
-        params = {'apiKey': ur_api_key_modelr_org,
-          'format': 'json',
-          'nojsoncallback':'1',
-         }
-        # A dict is easily converted to an HTTP-safe query string.
-        ur_query = urllib.urlencode(params)
-
-        # Opened URLs are file-like.
-        full_url = '{0}?{1}'.format(ur_url, ur_query)
-        f = urllib2.urlopen(full_url)
-        r = f.read()
-
-        # The result is a JSON string; a dict is more useful.
-        j = json.loads(r)
-
-        ur_server_status_code = j['monitors']['monitor'][0]['status']
-        ur_server_status = \
-            UR_STATUS_DICT[ur_server_status_code].upper()
-            
-        if ur_server_status == 'DOWN':
-            error_msg = ('The model server is down. Please try again'+
-                         ' shortly.')
-        else:
-            error_msg = ''
-            
-        if ur_server_status == 'SEEMS DOWN':
-            warning_msg = ('The model server may be experiencing ' +
-            'problems.')
-        else:
-            warning_msg = ''
 
         user = self.verify()
 
@@ -496,9 +458,7 @@ class ScenarioHandler(ModelrPageRequest):
           self.get_base_params(user=user,rocks=rocks,
                                default_rocks=default_rocks,
                                group_rocks=group_rocks,
-                               scenarios=scenarios,
-                               error=error_msg,
-                               warning=warning_msg)
+                               scenarios=scenarios)
                 
         template = env.get_template('scenario.html')
 
@@ -613,32 +573,34 @@ class AboutHandler(ModelrPageRequest):
         # Opened URLs are file-like.
         full_url = '{0}?{1}'.format(ur_url, ur_query)
         f = urllib2.urlopen(full_url)
-        r = f.read()
-
-        # The result is a JSON string; a dict is more useful.
-        j = json.loads(r)
-
-        ur_ratio = j['monitors']['monitor'][0]['customuptimeratio']
-        ur_server_ratio = \
-          j['monitors']['monitor'][1]['customuptimeratio']
-        ur_server_status_code = j['monitors']['monitor'][1]['status']
-        ur_last_response_time = j['monitors']['monitor'][0]['responsetime'][-1]['value']
-        ur_last_server_response_time = j['monitors']['monitor'][1]['responsetime'][-1]['value']
-
-        ur_server_status = \
-          UR_STATUS_DICT[ur_server_status_code].upper()
+        raw_json = f.read()
 
         user = self.verify()
         models_served = ModelServedCount.all().get()
-        template_params = \
-          self.get_base_params(user=user,
-                               ur_ratio=ur_ratio,
-                               ur_response_time=ur_last_response_time,
-                               ur_server_ratio=ur_server_ratio,
-                               ur_server_status=ur_server_status,
-                               ur_server_response_time=ur_last_server_response_time,
-                               models_served=models_served.count
-                               )
+
+        try:
+            j = json.loads(raw_json)
+            template_params = \
+            self.get_base_params(user=user,
+                                 ur_ratio=ur_ratio,
+                                 ur_response_time=ur_last_response_time,
+                                 ur_server_ratio=ur_server_ratio,
+                                 ur_server_status=ur_server_status,
+                                 ur_server_response_time=ur_last_server_response_time,
+                                 models_served=models_served.count
+                                 )
+        except:
+
+             template_params = \
+            self.get_base_params(user=user,
+                                 ur_ratio=None,
+                                 ur_response_time=None,
+                                 ur_server_ratio=None,
+                                 ur_server_status="Unknown",
+                                 ur_server_response_time=None,
+                                 models_served=models_served.count
+                                 )
+
         
         template = env.get_template('about.html')
         html = template.render(template_params)
