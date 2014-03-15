@@ -64,10 +64,7 @@ img.img-thumbnail {
             
               <div class="form-group">
 		<div class="form-inline">
-		  <label for="scenario_loader" 
-			 class="col-sm-3 control-label">Load scenario
-		  </label>
-		  <div class="col-sm-7">
+		  <div class="container">
 		    <select  class="form-control" 
 			     id='scenario_loader' 
 			     onchange="load_scenario(this.value);" 
@@ -89,11 +86,7 @@ img.img-thumbnail {
 	      {% if not user %}<fieldset disabled>{% endif %}
               <div class="form-group">
 		<div class="form-inline">
-		  <label for="select_script" 
-			 class="col-sm-3 control-label" {% if not user %} style="color:gray;"{% endif %}>
-		    Select script
-		  </label>
-		  <div class="col-sm-7">
+		  <div class="container">
 		    <select class="form-control" 
 			    id="select_script" {% if not user %}style="background-color:#bbb;" {% endif %}
 			    onchange="scenario.set_current_script(
@@ -110,13 +103,13 @@ img.img-thumbnail {
               <!-- Div to place the form into see Scenario.display 
 	      and display_form functions-->
               <div id="scenario_place">
-              <div class="alert alert-info">Please select a <strong>scenario</strong> or a <strong>script</strong> to begin.</div>
+              <div class="alert alert-info">Please select a <strong>scenario</strong>{% if user %} or a <strong>script</strong>{% endif %} to begin.</div>
               </div>
               
               <hr/>
               
               <div class="form-group">
-		<div class="col-sm-offset-3 col-sm-4">
+		<div class="container">
 		  <button class="btn btn-default" 
 			  id='create_image' 
 			  onclick="server.update_img(scenario)"
@@ -130,15 +123,11 @@ img.img-thumbnail {
 		<div class="form-group">
 
 		  <div class="form-inline">
-		    <label for="scenario_name" 
-			   class="col-sm-3 control-label"{% if not user %} style="color:gray;"{% endif %}>
-		      Save scenario
-		    </label>
-		    <div class="col-sm-7">
+		    <div class="col-sm-10">
 		      <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
 			     id='scenario_name' 
 			     onchange="scenario.name = this.value;" 
-			     placeholder="scenario name" 
+			     placeholder="Scenario name" 
 			     maxlength="20">
 		      </input>
 		    </div>
