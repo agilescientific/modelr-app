@@ -20,86 +20,62 @@ function PlotServer(hostname) {
      * @param url: Server url to fetch json from.
      * @param callback(data): do something on finish.
      */
-    this.get_json = function get_scripts(url, callback) {
-        $.getJSON(this.hostname + url, callback);
+    this.get_json = function get_json(url, data, callback) {
+        $.getJSON(this.hostname + url, data,callback);
     }
 }
 
+function EarthStructure(image, depth, length, units){
+    /*
+     * Object for dealing with Earth Structures. 
+     */
 
-
-/*
- * Class for building an earth model, mapping an image to rocks
- */
-function EarthModel(){
-    this.image = image; /* url to png*/
-    this.mapping = mapping; /*dict*/
-}
-
-EarthModel.prototype.update = function(image, mapping){
     this.image = image;
-    this.mapping = mapping;
-}
+    this.depth = depth;
+    this.length = length;
+    this.units = units;
+};
 
 
-function SeismicModel(server){
-    this.server = server;
-    this.params = {};
-}
+function SeismicModel(f_res, shot_spacing, sample_rate, start_f,
+		      end_f, wavelet_type, sample_rate, 
+		      reflectivity_model){
+  
+    this.f_res = f_res;
+    this.wavelet_type = wavelet_type;
+    this.sensor_spacing = sensor_spacing; 
+    this.dt = dt;
+    this.start_f = start_f; 
+    this.end_f = end_f;
+    this.reflectivity_model = reflectivity_model;
+};
 
-SeismicModel.prototype.get_slice_options = function(script, callback){
+function Plot(cross_section, trace, angle, center_frequency,
+		   twt, overlay){
 
-    url = self.server.hostname + 
-	'/cross_section.json?script=' + script;
-	
-    update = function(data){
-	for (var arg in data) {
-	    this.params[arg] = data[arg]['default'];
-	}
-	callback(data);
-    }
-    $.getJSON(url, update);
-}
+    this.cross_section = cross_section;
+    this.trace = trace;
+    this.angle = angle;
+    this.center_frequency = center_frequency;
+    this.twt = twt;
+    this.overlay = overlay;
 
-SeismicModel.prototype.get_seismic_options = function(script, slice,
-						      callback){
+};
+
+
+function ForwardModel(earth_struct, property_map, 
+		      seismic_model, plots) {
+
+    this.earth_struct = earth_struct;
+    this.property_map = property_map;
+    this.seismic_model = seismic_model;
+    this.plots = plots;
+};
+
+
     
-    url = self.server.hostname + 
-	'/seismic_info.json?script=' + script + '&slice=' + slice;
-
-    update = function(data){
-
-	for (var arg in data){
-	    this.params[arg] = data[arg]['default'];
-	}
-	callback(data);
-    }
-    $.getJSON(url, update);
-}
 
 
-SeismicModel.prototype.update = function(attr, value){
-    this.params[attr] = value;
-}
-
-function PlotModel(server){
-    this.server = server;
-    this.params = {};
-}
-
-PlotModel.prototype.get_plot_options = function(script, callback){
-
-    url = self.server.hostname + 
-	'/plot_info.json?script=' + script;
-
-    update = function(data){
-
-	for (var arg in data){
-	    this.params[arg] = data[arg]['default'];
-	}
-	callback(data);
-    }
-    $.getJSON(url, update);
-}
 
 
 
