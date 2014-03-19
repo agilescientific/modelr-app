@@ -53,7 +53,7 @@
   <div class="panel-body">
     <p>This web app is built in Python on the open source goodness of NumPy, SciPy, and lots of other libraries, including our own <a href="https://github.com/agile-geoscience/agilegeo">agilegeo</a>  geophysical utility library.</p>
     <p>The front end is built on Python, with a bit of JavaScript, using the amazing Twitter Bootstrap front-end framework. The app server is built in Python with the Jinja templating framework, and runs on <a href="https://developers.google.com/appengine/">Google App Engine</a>.</p>
-    <p>The back end Modelr app, where all the science lives, is a custom-built WebApp2 server and runs on <a href="http://aws.amazon.com/ec2/">Amazon EC2</a>. The back end is entirely open source and <a href="https://github.com/agile-geoscience/modelr">can be found on GitHub</a>.</p>
+    <p>The back end Modelr app, where all the science lives, is a custom-built Python web server and runs on <a href="http://aws.amazon.com/ec2/">Amazon EC2</a>. The back end is entirely open source and <a href="https://github.com/agile-geoscience/modelr">can be found on GitHub</a>.</p>
     <p>The first version of the app was built by Matt and Sean Ross-Ross in the spring of 2012.</p>
   </div>
 </div> <!-- end of panel -->
@@ -63,10 +63,11 @@
     <h3 class="panel-title">Service status</h3>
   </div>
   <div class="panel-body">
-    <p>Modelr.io 30-day uptime: <strong>{{ ur_ratio }}%</strong>
-       &nbsp;&nbsp;&nbsp;Response time: <strong>{{ ur_response_time }}&nbsp;ms</strong></p>
-    <p>Modelr server 30-day uptime: <strong>{{ ur_server_ratio }}%</strong>
-       &nbsp;&nbsp;&nbsp;Response time: <strong>{{ ur_server_response_time }}&nbsp;ms</strong></p>
+    
+    <p>Modelr.io 30-day uptime: {% if  ur_ratio %}<strong>{{ ur_ratio }}%</strong>{% endif %}
+       &nbsp;&nbsp;&nbsp;Response time: {% if ur_response_time %}<strong>{{ ur_response_time }}&nbsp;ms</strong></p>{% endif %}
+    <p>Modelr server 30-day uptime:{% if ur_server_ratio %} <strong>{{ ur_server_ratio }}%</strong>{% endif %}
+       &nbsp;&nbsp;&nbsp;Response time: {% if ur_server_response_time %} <strong>{{ ur_server_response_time }}&nbsp;ms</strong></p>{% endif %}
     <p>Server status now <span class="label{% if ur_server_status == 'UP' %} label-success{% endif %}{% if ur_server_status == 'DOWN' %} label-danger{% endif %}{% if ur_server_status == 'SEEMS DOWN' %} label-warning{% endif %}{% if ur_server_status == 'PAUSED' or 'NOT CHECKED YET' %} label-default{% endif %}">{{ ur_server_status }}</span>
        &nbsp;&nbsp;&nbsp;Total models served <span class="badge">{{models_served}}</span></p>
 </div>

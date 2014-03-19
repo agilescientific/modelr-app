@@ -9,24 +9,46 @@ img.img-thumbnail {
             box-shadow: none;
 }
 
+#loader{
+   text-align:center;
+   display:none;
 }
 </style>
 
 <div class="container">
 
-  <!-- SCENARIO PANEL
-  ================================================================ -->
-  <div class="row">
+  {% if error %}
+  <div class="alert alert-danger">
+      <strong>Something's wrong...</strong> {{ error }}
+  </div>
+  {% endif %}
 
-    <div class="col-md-6">
+  {% if warning %}
+  <div class="alert alert-warning">
+      <strong>Sorry...</strong> {{ warning }} 
+  </div>
+  {% endif %}
+
+  {% if success %}
+  <div class="alert alert-success">
+      <strong>Success!</strong> {{ success }} 
+  </div>
+  {% endif %}
+  
+
+    <div class="row">
+
+   <!-- SCENARIO PANEL
+    ================================================================ -->
+    <div class="col-md-6 col-lg-5">
       <div class="panel panel-primary">
-	<div class="panel-heading">
+	    <div class="panel-heading">
           <h3 class="panel-title">Scenario</h3>
-	</div>
+	    </div>
 	
-	<div class="panel-body">
+	    <div class="panel-body">
 	  
-	  <form class="form-horizontal" role="form">
+	    <form class="form-horizontal" role="form">
             
 	    {% if not user %}
 	    
@@ -42,10 +64,7 @@ img.img-thumbnail {
             
               <div class="form-group">
 		<div class="form-inline">
-		  <label for="scenario_loader" 
-			 class="col-sm-3 control-label">Load scenario
-		  </label>
-		  <div class="col-sm-7">
+		  <div class="container">
 		    <select  class="form-control" 
 			     id='scenario_loader' 
 			     onchange="load_scenario(this.value);" 
@@ -62,17 +81,12 @@ img.img-thumbnail {
 		  </div>
 		  
 		</div>
-              </div>
-              
+      </div>
               
 	      {% if not user %}<fieldset disabled>{% endif %}
               <div class="form-group">
 		<div class="form-inline">
-		  <label for="select_script" 
-			 class="col-sm-3 control-label" {% if not user %} style="color:gray;"{% endif %}>
-		    Select script
-		  </label>
-		  <div class="col-sm-7">
+		  <div class="container">
 		    <select class="form-control" 
 			    id="select_script" {% if not user %}style="background-color:#bbb;" {% endif %}
 			    onchange="scenario.set_current_script(
@@ -83,20 +97,24 @@ img.img-thumbnail {
 		</div>
               </div>
 	      {% if not user %}</fieldset>{% endif %}
+	      
+	                    <hr/>
+
               <!-- Div to place the form into see Scenario.display 
 	      and display_form functions-->
-              <div class="container" id="scenario_place">
+              <div id="scenario_place">
+              <div class="alert alert-info">Please select a <strong>scenario</strong>{% if user %} or a <strong>script</strong>{% endif %} to begin.</div>
               </div>
               
               <hr/>
               
               <div class="form-group">
-		<div class="col-sm-offset-3 col-sm-4">
-		  <button class="btn btn-primary" 
+		<div class="container">
+		  <button class="btn btn-default" 
 			  id='create_image' 
 			  onclick="server.update_img(scenario)"
 			  type="button">
-		    Create image
+		    Update plot
 		  </button>
 		</div>
               </div>
@@ -105,15 +123,11 @@ img.img-thumbnail {
 		<div class="form-group">
 
 		  <div class="form-inline">
-		    <label for="scenario_name" 
-			   class="col-sm-3 control-label"{% if not user %} style="color:gray;"{% endif %}>
-		      Save scenario
-		    </label>
-		    <div class="col-sm-7">
+		    <div class="col-sm-10">
 		      <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
 			     id='scenario_name' 
 			     onchange="scenario.name = this.value;" 
-			     placeholder="scenario name" 
+			     placeholder="Scenario name" 
 			     maxlength="20">
 		      </input>
 		    </div>
@@ -132,30 +146,31 @@ img.img-thumbnail {
 	  </form>
 
 	</div>  <!-- end of panel-body -->
-      </div>
-    </div>
+  </div>  <!-- end of panel -->
+</div> <!-- end of column div -->
     
     <!-- RESULT PANEL============================================ -->
 
-    <div class="col-md-6">
+    <div class="col-md-6 col-lg-7">
       <div class="panel panel-default">
-	<div class="panel-heading">
+	    <div class="panel-heading">
           <h3 class="panel-title">Result</h3>
-	</div>
-	<div class="panel-body">
+	    </div>
+	    <div class="panel-body">
+          <div style="position:relative;">
+            <!-- Updated by the  create_image button above-->
+            <img class="img-thumbnail" id="plot_image" href=URL alt="" src="/static/img/placeholder_model_image.png" />
+	        <img style="position:absolute;top:0;left:0" id="loader" src="/static/img/ajax-loader.gif" />
+          </div>
+        </div> <!-- end of panel-body -->
+      
+      </div> <!-- end of panel -->
 
-          <img class="img-thumbnail" id="plot_image" href=URL 
-	       alt="" src="/static/img/placeholder_model_image.png">
-          <!-- Updated by the  create_image button above-->
-          </img>
+    </div>  <!-- end of column div -->
 
-	</div>
-      </div>
-    </div>
+  </div>  <!-- end of row -->
 
-  </div>
-
-</div>
+</div>  <!-- end of container -->
 
 <!-- JAVASCRIPT and DATA
 ================================================================ -->
@@ -167,6 +182,8 @@ img.img-thumbnail {
 <script>
 
  $(document).ready(function() {
+
+   $.ajaxSetup({timeout:10000}); //in milliseconds
    
    server = new PlotServer(host, 
 			   get_rocks('datalist#list_of_rocks'));
@@ -211,13 +228,20 @@ img.img-thumbnail {
    
    // This is specific to this display.
    server.update_img = function(scenario){
+   
+     $("#create_image").removeClass("btn-primary").addClass("btn-default");
      
+     var img = $('img#plot_image');
+     var loader = $('img#loader');
      var qs = scenario.qs();
      var url = server.hostname +'/plot.jpeg' + qs;
-     var img = $('img#plot_image');
-
      
-     img.attr('src', url);
+     //img.attr('src','');
+     loader.show();
+     img.attr('src', url).load(function(){
+       loader.fadeOut();
+     });
+
      $.post('/model_served');
      
    }
@@ -284,10 +308,22 @@ img.img-thumbnail {
    }
  });
  
+ var timer;
+ 
+ var resetPlotButton = function(){
+   $("#create_image").removeClass("btn-default").addClass("btn-primary");
+ };
+ 
  // Watch for changes in the form, to reset the 'save' button styling (see above)
  $("form").change(function() {
    $("#savebutton").html("save").removeClass("btn-success").addClass("btn-default");
+   resetPlotButton();
  });
+ 
+ $("form").keyup(function() {
+    clearTimeout(timer);
+      timer = setTimeout(resetPlotButton, 500);
+});
  
  // Watch for changes in the scenario dropdown, to reset the 'load' button styling
  $("#scenario_loader").change(function() {
@@ -303,8 +339,7 @@ img.img-thumbnail {
 
  // Loads a scenario
  load_scenario = function load_scenario(scenario_name){
-   var img = $('img#plot_image');
-   img.attr('src',"/static/img/placeholder_model_image.png" );
+
    scenario.name = scenario_name;
    scenario.get();
 }

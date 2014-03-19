@@ -3,120 +3,29 @@
  */
 
 /*
- * === === === === === === === Classes ===========================
+ * === === === === === === === Classes ===
+ * === === === === === === === === === === === === === === ===
  */
 
 /*
  * Server class
  */
-function PlotServer(hostname) {
+function PlotServer(hostname, rocks) {
 
     // The host hosting plots.
     this.hostname = hostname;
 
+    // (rock name , rock property) pairs
+    this.rocks = rocks
+
     /*
-     * Asynchronously fetch json data from the plotting 
-     * server 
-     * @param url: Server url to fetch json from.
+     * Asynchronously fetch the list of scripts from the 
+     * plotting server 
      * @param callback(data): do something on finish.
      */
-    this.get_json = function get_json(url, data, callback) {
-        $.getJSON(this.hostname + url, data,callback);
+    this.get_scripts = function get_scripts(callback) {
+        $.getJSON(host + '/available_scripts.json', callback);
     }
-}
-
-function EarthStructure(image, depth, length, units){
-    /*
-     * Object for dealing with Earth Structures. 
-     */
-
-    this.image = image;
-    this.depth = depth;
-    this.length = length;
-    this.units = units;
-};
-
-
-function SeismicModel(f_res, shot_spacing, sample_rate, start_f,
-		      end_f, wavelet_type, sample_rate, 
-		      reflectivity_model){
-  
-    this.f_res = f_res;
-    this.wavelet_type = wavelet_type;
-    this.sensor_spacing = sensor_spacing; 
-    this.dt = dt;
-    this.start_f = start_f; 
-    this.end_f = end_f;
-    this.reflectivity_model = reflectivity_model;
-};
-
-function Plot(cross_section, trace, angle, center_frequency,
-		   twt, overlay){
-
-    this.cross_section = cross_section;
-    this.trace = trace;
-    this.angle = angle;
-    this.center_frequency = center_frequency;
-    this.twt = twt;
-    this.overlay = overlay;
-
-};
-
-
-function ForwardModel(earth_struct, property_map, 
-		      seismic_model, plots) {
-
-    this.earth_struct = earth_struct;
-    this.property_map = property_map;
-    this.seismic_model = seismic_model;
-    this.plots = plots;
-};
-
-
-    
-
-
-
-
-
-/*
- * Class for building geometry model images
- */
-function ModelBuilder(name, script, arguments) {
-    
-    this.name = name;
-    this.script = script;
-    this.arguments = arguments;
-}
-
-
-ModelBuilder.prototype.qs = function() {
-    var args = this.arguments;
-
-    query_str = '?script=' + this.script;
-
-    for (argname in args) {
-	var value = args[argname];
-	query_str += '&' + argname + '=' + encodeURIComponent(value);
-	}
-    return query_str;
-}
-
-/*
- * Update the scenario with the default arguments provided by the 
- * plotting server.
- */
-ModelBuilder.prototype.default_args=function default_args(argumentss){
-    console.log('default_args', argumentss);
-    var args = this.info.arguments;
-
-    this.arguments = {};
-
-    for ( var arg in args) {
-        this.arguments[arg] = args[arg]['default'];
-        if (arg in argumentss) {
-            this.arguments[arg] = argumentss[arg];
-        }
 
     /*
      * Asynchronously fetch the information from a single scripts 
@@ -131,38 +40,10 @@ ModelBuilder.prototype.default_args=function default_args(argumentss){
 }
 
 /*
- * Update an argument.
- */
-ModelBuilder.prototype.update = function update(attr, value) {
-    this.arguments[attr] = value;
-    this.on_change();
-}
-
-/*
- * Store the current arguments of this scenario on the server.
- */
-ModelBuilder.prototype.put = function() {
-
-    var url = this.qs();
-
-    console.log(url);
-
-
-    function success(url, textStatus, jqXHR) {
-        console.log('post', textStatus);
-    }
-
-    $.post('/model_builder', {
-        'URL' : url    
-    }, success);
-    $.document.window.href="/dashboard";
-}
-
-
-/*
  * Scenario 'class'
  */
-function Scenario(name, script, arguments, rocks) {
+function Scenario(name, script,
+		  arguments, rocks) {
     this.name = name;
     this.script = script;
     this.arguments = arguments;
@@ -170,7 +51,6 @@ function Scenario(name, script, arguments, rocks) {
     this.info = null;
 
 }
-
 
 /*
  * Store the current arguments of this scenario on the server.
@@ -224,8 +104,8 @@ Scenario.prototype.update = function update(attr, value) {
 }
 
 /*
- * Update the scenario with the default arguments provided by the 
- * plotting server.
+ * Update the scenario with the default arguments provided by the plotting
+ * server.
  */
 Scenario.prototype.default_args = function default_args(argumentss) {
     console.log('default_args', argumentss);
@@ -244,8 +124,7 @@ Scenario.prototype.default_args = function default_args(argumentss) {
 }
 
 /*
- * Create the query string for this Scenario. 
- * (to send to the plotting server)
+ * Create the query string for this Scenario. (to send to the plotting server)
  * 
  * eq result is ?script=foo.py&arg1=value1
  */
@@ -269,17 +148,16 @@ Scenario.prototype.qs = function() {
 }
 
 /*
- * === === === === === === === === === === === = Functions ===
+ * === === === === === === === === === === === === === === === === Functions ===
  * === === === === === === === === === === === === === === ===
  */
 
 /*
- * Re populate select script with other options. 
- * @param server: a server object.
+ * Re populate select script with other options. @param server: a server object.
  * @param selection: selection string or tag 'select' element.
  * 
  */
-function populate_scripts(server, url, selection) {
+function populate_scripts(server, selection) {
 
     console.log("populate_scripts!");
 
@@ -287,22 +165,21 @@ function populate_scripts(server, url, selection) {
 
     // Remove options
     select_script.find('option').remove();
-    console.log(url);
-    server.get_json(url, function(data) {
+
+    server.get_scripts(function(data) {
 
         select_script = $(selection);
         select_script.find('option').remove();
 
-        select_script.append('<option value=""selected disabled hidden>Scripts </option>');
+        select_script.append('<option value="" selected disabled hidden>Scripts </option>');
 
         for ( var i = 0; i < data.length; i++) {
             var script_doc = data[i];
             var script = script_doc[0];
             var doc = script_doc[1];
-
-            select_script.append('<option value=' + 
-				 script + '>' + script + ' --- ' + 
-				 doc.slice(0, 20) + '</option>');
+            select_script.append('<option value=' + script + '>' + 
+				 script + ' --- ' + doc.slice(0, 20)+ 
+				 '</option>');
         }
 
     });
@@ -339,7 +216,7 @@ function display_form(sel) {
             deflt = '';
         }
 
-        /* form_text += '<td>' + arg + ':</td>';*/
+        form_text += '<td>' + arg + ':</td>';
         form_text += '<td>' + args[arg]['help'] + ':</td>';
 
         if (args[arg]['type'] == 'rock_properties_type') {
