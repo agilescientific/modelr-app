@@ -1168,7 +1168,7 @@ class StripeHandler(ModelrPageRequest):
             #event["data"]["object"]["total"] = price
             
             stripe_id = event["data"]["object"]["customer"]
-            amount = event["data"]["object"]["total"]
+            amount = price #event["data"]["object"]["total"]
             event_id = event["data"]["object"]["id"]
             user = User.all().ancestor(ModelrRoot)
             user = user.filter("stripe_id =", stripe_id).fetch(1)
