@@ -580,6 +580,15 @@ class AboutHandler(ModelrPageRequest):
 
         try:
             j = json.loads(raw_json)
+            
+            ur_ratio = j['monitors']['monitor'][0]['customuptimeratio']
+            ur_server_ratio = j['monitors']['monitor'][1]['customuptimeratio']
+            ur_server_status_code = j['monitors']['monitor'][1]['status']
+            ur_last_response_time = j['monitors']['monitor'][0]['responsetime'][-1]['value']
+            ur_last_server_response_time = j['monitors']['monitor'][1]['responsetime'][-1]['value']
+            
+            ur_server_status = UR_STATUS_DICT[ur_server_status_code].upper()
+            
             template_params = \
             self.get_base_params(user=user,
                                  ur_ratio=ur_ratio,
@@ -591,7 +600,7 @@ class AboutHandler(ModelrPageRequest):
                                  )
         except:
 
-             template_params = \
+            template_params = \
             self.get_base_params(user=user,
                                  ur_ratio=None,
                                  ur_response_time=None,
