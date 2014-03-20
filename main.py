@@ -55,7 +55,8 @@ if models_served is None:
     
 # Put in the default rock database
 admin_id = 0
-admin_user = User.all().ancestor(ModelrRoot).filter("user_id =", admin_id).get()
+admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
+                                                    admin_id).get()
 if admin_user is None:
     password = "Mod3lrAdm1n"
     email="admin@modelr.io"
@@ -102,7 +103,7 @@ for i in default_rocks:
 
 
 # Secret API key from Stripe dashboard
-#stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
+#stripe.api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
 stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
 price = 900
 tax_dict = {"AB":0.05,
@@ -1058,7 +1059,7 @@ class EmailAuthentication(ModelrPageRequest):
         
             # Add the tax to the invoice
             stripe.InvoiceItem.create(customer=customer.id,
-                                      amount = int(price + tax),
+                                      amount = int(tax),
                                       currency="usd",
                                       description="Canadian Taxes")
          
@@ -1176,7 +1177,7 @@ class StripeHandler(ModelrPageRequest):
             #event["data"]["object"]["total"] = price
             
             stripe_id = event["data"]["object"]["customer"]
-            amount = event["data"]["object"]["total"]
+            amount = price #event["data"]["object"]["total"]
             event_id = event["data"]["object"]["id"]
             user = User.all().ancestor(ModelrRoot)
             user = user.filter("stripe_id =", stripe_id).fetch(1)
