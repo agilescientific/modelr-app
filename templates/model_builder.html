@@ -28,7 +28,7 @@
        modelbuilder.script = 'slab_builder.py';
        console.log('server.current_script');
 
-       server.get_json('/script_help.json?script=' + value,
+       server.get_script_info( value,
 		       function(data){
 	   
 	   modelbuilder.info = data;

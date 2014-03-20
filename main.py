@@ -40,7 +40,8 @@ from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      forgot_password, send_message, make_user
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest, ActivityLog, VerifyUser, ModelServedCount
+     GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
+     ImageModel
 
 
 
@@ -171,7 +172,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
     
     # For the plot server
     # Ideally this should be settable by an admin_user console.
-    HOSTNAME = "https://www.modelr.org"
+    HOSTNAME = "localhost:8081" #"https://www.modelr.org"
     
     def get_base_params(self, **kwargs):
         '''
@@ -519,6 +520,9 @@ class DashboardHandler(ModelrPageRequest):
             self.redirect('/signin')
             return
 
+        # Make the upload url
+        upload_url = blobstore.create_upload_url('/upload')
+        
         models = \
           ImageModel.all().ancestor(ModelrRoot).filter("user =",
                                             user.user_id).fetch(100)
@@ -571,6 +575,8 @@ class DashboardHandler(ModelrPageRequest):
             current_rock = Rock.get_by_id(int(rock_id),
                                           parent=user)
             template_params['current_rock'] = current_rock
+
+        template_params["upload_url"] = upload_url
         
         template = env.get_template('dashboard.html')
         html = template.render(template_params)
@@ -1407,7 +1413,7 @@ class UploadImage(ModelrPageRequest):
         if user is None:
             self.redirect('/signup')
             return
-        upload_url = blobstore.create_upload_url('/upload')
+        upload_url = "/upload"
         self.response.out.write('<html><body>')
         self.response.out.write('<form action="%s" method="POST" enctype="multipart/form-data">' % upload_url)
         self.response.out.write("""Upload File: <input type="file" name="file"><br> <input type="submit"
@@ -1423,9 +1429,10 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             self.redirect('/signup')
             return
         
-        upload_files = self.get_uploads('file')
+        upload_files = self.get_uploads()
         # 'file' is file upload field in the form
-        
+
+        print "test ++++++++++ ", upload_files
         blob_info = upload_files[0]
 
         ImageModel(parent=ModelrRoot,
@@ -1457,7 +1464,6 @@ class ModelBuilder(ModelrPageRequest):
         bucket = '/modelr_bucket/'
         filename = bucket + str(user.user_id) +'/' + str(time.time())
 
-        print('+++++++++++++',self.request.get('URL'))
         json_url = urllib.urlopen(self.request.get('URL'))
 
         data = json.loads(json_url.read())
@@ -1477,9 +1483,10 @@ class ModelBuilder(ModelrPageRequest):
 
         self.redirect('/dashboard')
 
-class NewScenario(ModelrPageRequest):
+class ForwardModel(ModelrPageRequest):
 
     def get(self):
+        
         user = ModelrPageRequest.verify(self)
         if user is None:
             self.redirect('/signup')
@@ -1489,6 +1496,7 @@ class NewScenario(ModelrPageRequest):
           ImageModel.all().ancestor(ModelrRoot).filter("user =",
                                             user.user_id).fetch(100)
 
+        
         imgs = [images.get_serving_url(i.image, size=1000,
                                        crop=True)
                 for i in models]
@@ -1515,7 +1523,7 @@ class NewScenario(ModelrPageRequest):
                                       rocks=rocks.fetch(100),
                             default_rocks=default_rocks.fetch(100))
 
-        template = env.get_template('new_scenario.html')
+        template = env.get_template('forward_model.html')
         html = template.render(params)
         self.response.out.write(html)
 
@@ -1613,13 +1621,12 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/signup', SignUp),
                                ('/verify_email', EmailAuthentication),
                                ('/signin', SignIn),
-                               ('/logout', Logout),
                                ('/manage_group', ManageGroup),
                                ('/carousel_test', CarouselTest),
                                ('/upload', Upload),
                                ('/upload_image', UploadImage),
                                ('/model_builder', ModelBuilder),
-                               ('/new_scenario', NewScenario),
+                               ('/forward_model', ForwardModel),
                                ('/forgot', ForgotHandler),
                                ('/reset', ResetHandler),
                                ('/signout', SignOut),

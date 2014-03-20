@@ -1,0 +1,235 @@
+{% extends "base_template.html" %} 
+{% block title %}Modelr &middot; Scenario{% endblock %} 
+
+{% block content %}
+
+<!-- style for the color boxes  -->
+<head>
+  <style>
+   .foo {   
+     float: left;
+     width: 20px;
+     height: 20px;
+     margin: 5px 5px 5px 5px;
+     border-width: 1px;
+     border-style: solid;
+     border-color: rgba(0,0,0,.2);
+   }
+  </style>
+</head>
+
+
+
+<!-- JAVASCRIPT and DATA
+================================================================ -->
+
+<script>
+ $(document).ready(function() {
+   Colors({{colors}}, 0, {{colors.__len__()}});
+
+   server = new PlotServer(host);
+   earth_structure = new EarthStructure();
+   seismic_model = new SeismicModel();
+
+   forward_model = new ForwardModel(earth_structure, null, 
+				    seismic_model, null);
+
+
+ });
+
+</script>
+
+<script>
+
+ function Colors(colors, increment, length)
+ {
+
+   var parent = document.getElementById("test");
+   var foo;
+   var i, j;
+   var div,row, dropdown, option, text;
+   var rocks = get_rocks('datalist#list_of_rocks');
+   var index = $('#myCarousel .active').index('#myCarousel .item') + 
+					      increment;
+
+   index = index % length;
+
+   while (parent.firstChild) {
+     parent.removeChild(parent.firstChild);
+   }
+
+   for (i in colors[index])
+   {
+     c=colors[index];
+     row = document.createElement("div");
+     row.className = "row";
+     foo = document.createElement("div");
+     
+     foo.className = "foo";
+     foo.style.backgroundColor = c[i];  
+     row.appendChild(foo);
+
+     dropdown = document.createElement("select");
+     option = document.createElement("option");
+     text = document.createTextNode("Rocks");
+     option.appendChild(text);
+     dropdown.appendChild(option);
+     option = document.createElement("option");
+     text = document.createTextNode("=============");
+     option.appendChild(text);
+     dropdown.appendChild(option);
+
+     for (j in rocks) {
+       option = document.createElement("option");
+       text = document.createTextNode(j);
+       option.appendChild(text);
+       dropdown.appendChild(option);
+     }
+     row.appendChild(dropdown);
+     parent.appendChild(row);
+   }  
+ }
+</script>
+
+<script>
+
+ var host = '{{HOSTNAME}}';
+
+</script>
+
+<div class="container">
+
+  <!-- This will expand the list of rocks before google app engine 
+  sends this page to the user -->
+  <!-- This list is used by javascript and not directly 
+  seen by the user -->
+  <datalist id="list_of_rocks">
+    {% for rock in rocks %}
+    <option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},{{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+	    data-name="{{rock.name}}">{{rock.name}}</option>
+    {% endfor %}
+    {% for rock in default_rocks %}
+    <option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},{{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+	    data-name="{{rock.name}}">{{rock.name}}</option>
+    {% endfor %}
+    
+  </datalist>
+
+  <!-- SCENARIO PANEL
+  =============================================================== -->
+
+    <div class="col-md-6">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">Earth Model</h3>
+	</div>
+	
+	<div class="panel-body">
+	  
+          <form class="form-horizontal" role="form">
+	    <div class="row">
+	      <div class="col-md-6">
+		<div id="myCarousel" class="carousel slide" 
+		     data-interval="false">
+		  <!-- Carousel slides -->
+		  <div class="carousel-inner">
+		    {% for i in range((images.__len__())) %}
+		    <div {% if i==0 %} class="active item" {% else %} 
+		      class="item" {% endif %}>
+		      <div class="thumbnail">
+			<img src={{images[i]}} alt="" >
+		      </div>
+		    </div>	
+		    {% endfor %}
+		  </div>
+		  
+		  <!-- Carousel nav -->
+		  <a class="carousel-control left" href="#myCarousel" 
+		     data-slide="prev" 
+		     onclick="Colors({{colors}}, -1, {{images.__len__()}})">
+		    ‹
+		  </a>
+		  <a class="carousel-control right" href="#myCarousel" 
+		     data-slide="next" 
+		     onclick="Colors({{colors}},1,{{images.__len__()}})">
+		    ›
+		  </a>
+		</div>
+	      </div>
+	      <div class="col-md-4" id="test"></div>
+	    </div>
+	  </form>
+	</div>
+      </div>
+   
+
+    <!-- This is where there survey parameters will be set -->
+    
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">Seismic Model</h3>
+	</div>
+	
+	<div class="panel-body">
+	  
+          <form id="param_form" action="">
+	    <table>
+	      <tr>
+		<td> wavelet </td>
+		<td><select>
+		  <option value="ricker"/>Ricker</option>
+		  <option value="ormsby"/>Ormsby</option>
+		</select>
+		</td>
+	      </tr>
+	      <tr>
+		<td> Wavelet Bank Start </td>
+		<td><input type="number"></td>
+	      </tr>
+	      <tr>
+		<td> Wavelet Bank End </td>
+		<td><input type="number"></td>
+	      </tr>
+	      <tr>
+		<td> Offset Angle Start </td>
+		<td><input type="number"></td>
+	      </tr>
+	      <tr>
+		<td> Offset Angle End </td>
+		<td><input type="number"></td>
+	      </tr>
+	    </table>
+	  </form>
+	</div>
+      </div>
+    </div>
+  </div>
+
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-6">
+	<button class="btn btn-default" id='create_image' 
+		onclick="server.update_img(modelbuilder)">
+          Create image
+	</button>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">Result</h3>
+	</div>
+	<div class="panel-body">
+
+          <img class="img-thumbnail" id="plot_image" href=URL 
+	       alt="Plot image">
+          <!-- Updated by the  create_image button above-->
+          </img>
+
+	</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
