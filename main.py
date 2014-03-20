@@ -616,12 +616,42 @@ class AboutHandler(ModelrPageRequest):
         html = template.render(template_params)
         self.response.out.write(html)          
 
+
 class FeaturesHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
         template_params = self.get_base_params(user=user)
         template = env.get_template('features.html')
+        html = template.render(template_params)
+        self.response.out.write(html)      
+
+
+class WishlistHandler(ModelrPageRequest):
+    def get(self):
+
+        user = self.verify()
+        template_params = self.get_base_params(user=user)
+
+
+        gh_api_key = 'token 89c9d30cddd95358b1465d1dacb1b64597b42f89'
+
+        # Uptime Robot URL
+        gh_url = 'https://api.github.com/repos/kwinkunks/modelr_app/issues'
+
+        req = urllib2.Request(gh_url)
+        req.add_header('Authorization', gh_api_key)
+        resp = urllib2.urlopen(req)
+        raw_json = resp.read()
+
+        try:
+            j = json.loads(raw_json)
+            issues = dict(zip([i['title'] for i in j], [i['body'] for i in j]))
+            template_params.update(issues=issues)
+        except:
+            issues={}
+
+        template = env.get_template('wishlist.html')
         html = template.render(template_params)
         self.response.out.write(html)          
 
@@ -1400,6 +1430,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/settings', SettingsHandler),
                                ('/about', AboutHandler),
                                ('/features', FeaturesHandler),
+                               ('/wishlist', WishlistHandler),
                                ('/help', HelpHandler),
                                ('/terms', TermsHandler),
                                ('/privacy', PrivacyHandler),
