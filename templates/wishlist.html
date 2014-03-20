@@ -29,7 +29,18 @@
 <ul>
 {% for i in issues %}
 
-<li>{{ i }}</li>
+{% set slug  = i | replace(' ','_') %}
+
+<li>{{ i }}&nbsp;<span style="color:#aaa; font-size:90%; vertical-align:middle; top:-2px" id="{{ slug }}_info" class="glyphicon glyphicon-info-sign"  data-content="{{ issues[i] }}"></span></li>
+<script>
+$('#{{ slug }}_info').popover({
+        trigger: 'hover click', 
+        html: true,
+        placement: 'right', 
+        container: 'body',
+        delay: { show: 500, hide: 1000 }
+});
+</script>
 
 {% endfor %}
 </ul>

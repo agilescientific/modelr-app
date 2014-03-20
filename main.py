@@ -646,10 +646,12 @@ class WishlistHandler(ModelrPageRequest):
 
         try:
             j = json.loads(raw_json)
-            issues = dict(zip([i['title'] for i in j], [i['body'] for i in j]))
+            titles = [i['title'] for i in j if i['state'] == 'open']
+            bodies = [i['body'] for i in j if i['state'] == 'open']
+            issues = dict(zip(titles, bodies))
             template_params.update(issues=issues)
         except:
-            issues={}
+            issues=[]
 
         template = env.get_template('wishlist.html')
         html = template.render(template_params)
