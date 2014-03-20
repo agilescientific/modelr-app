@@ -31,6 +31,7 @@ import stripe
 
 import json
 import base64
+import re
 
 from xml.etree import ElementTree
 
@@ -76,19 +77,20 @@ gcs.set_default_retry_params(my_default_retry_params)
 # Ancestor dB for all of modelr. Allows for strongly consistent
 # database queries
 ModelrRoot = ModelrParent.all().get()
-if not ModelrRoot:
+if ModelrRoot is None:
     ModelrRoot = ModelrParent()
     ModelrRoot.put()
 
 models_served = ModelServedCount.all().ancestor(ModelrRoot).get()
-if not models_served:
+if models_served is None:
     models_served = ModelServedCount(count=0, parent=ModelrRoot)
     models_served.put()
     
 # Put in the default rock database
 admin_id = 0
-admin_user = User.all().filter("user_id =", admin_id).get()
-if not admin_user:
+admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
+                                                    admin_id).get()
+if admin_user is None:
     password = "Mod3lrAdm1n"
     email="admin@modelr.io"
     
@@ -137,7 +139,7 @@ for i in default_rocks:
 # 
 #====================================================================
 # Secret API key from Stripe dashboard
-#stripe.api_key = "sk_test_flYdxpXqtIpK68FZSuUyhjg6"
+#stripe.api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
 stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
 price = 900
 tax_dict = {"AB":0.05,
@@ -154,6 +156,12 @@ tax_dict = {"AB":0.05,
             "SK":0.05,
             "YT":0.05}
 
+UR_STATUS_DICT = {'0': 'paused',
+                  '1': 'not checked yet',
+                  '2': 'up',
+                  '8': 'seems down',
+                  '9': 'down'
+                 }
 
 def RGBToString(rgb_tuple):
     """
@@ -172,7 +180,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
     
     # For the plot server
     # Ideally this should be settable by an admin_user console.
-    HOSTNAME = "localhost:8081" #"https://www.modelr.org"
+    HOSTNAME = "http://localhost:8081" #"https://www.modelr.org"
     
     def get_base_params(self, **kwargs):
         '''
@@ -286,10 +294,11 @@ class ModifyScenarioHandler(ModelrPageRequest):
         scen = Scenario.all().filter("name =",name).fetch(100)
         if scen:
             scenarios += scen
-            
-        logging.info(scenarios[0])
-        logging.info(scenarios[0].data)
+
         if scenarios:
+            logging.info(scenarios[0])
+            logging.info(scenarios[0].data)
+        
             scenario = scenarios[0]
             self.response.out.write(scenario.data)
         else:
@@ -448,6 +457,7 @@ class ScenarioHandler(ModelrPageRequest):
     '''
     def get(self):
 
+
         user = self.verify()
 
         self.response.headers['Content-Type'] = 'text/html'
@@ -482,7 +492,6 @@ class ScenarioHandler(ModelrPageRequest):
             rocks = []
             group_rocks = []
             scenarios = []
-
 
         # Get Evan's default scenarios (user id from modelr database)
         scen = Scenario.all().ancestor(ModelrRoot)
@@ -563,7 +572,6 @@ class DashboardHandler(ModelrPageRequest):
         for s in scenarios.fetch(100):
             logging.info((s.name, s))
             
-        
         template_params.update(rocks=rocks.fetch(100),
                                scenarios=scenarios.fetch(100),
                                default_rocks=default_rocks.fetch(100),
@@ -588,16 +596,15 @@ class DashboardHandler(ModelrPageRequest):
         self.response.out.write(html)
 
 
-
-
 class AboutHandler(ModelrPageRequest):
     def get(self):
 
         # Uptime robot API key for modelr.io
         #ur_api_key_modelr_io = 'm775980219-706fc15f12e5b88e4e886992'
-
-        # Uptime Robot API key for modelr.org:8080
+        # Uptime Robot API key for modelr.org REL
         #ur_api_key_modelr_org = 'm775980224-e2303a724f89ef0ab886558a'
+        # Uptime Robot API key for modelr.org DEV
+        #ur_api_key_modelr_org = 'm776083114-e34c154f2239e7c273a04dd4'
 
         ur_api_key = 'u108622-bd0a3d1e36a1bf3698514173'
 
@@ -621,50 +628,45 @@ class AboutHandler(ModelrPageRequest):
         # A dict is easily converted to an HTTP-safe query string.
         ur_query = urllib.urlencode(params)
 
-        # Opened URLs are file-like. You can't use 'with... as'.
-        # We'll construct the URL+query string ourselves, rather
-        # than passing them separately, to force urllib2 to use GET.
+        # Opened URLs are file-like.
         full_url = '{0}?{1}'.format(ur_url, ur_query)
         f = urllib2.urlopen(full_url)
-
-        # QUESTION 2a: The web API is 'open', complete the line to
-        # read it:
-        r = f.read()
-
-        # The result is a JSON string; a dict is more useful.
-        j = json.loads(r)
-
-        ur_ratio = j['monitors']['monitor'][0]['customuptimeratio']
-        ur_server_ratio = \
-          j['monitors']['monitor'][1]['customuptimeratio']
-        ur_server_status_code = j['monitors']['monitor'][1]['status']
-        ur_last_response_time = \
-          j['monitors']['monitor'][0]['responsetime'][-1]['value']
-        ur_last_server_response_time = \
-          j['monitors']['monitor'][1]['responsetime'][-1]['value']
-
-        ur_status_dict = {'0': 'paused',
-                          '1': 'not checked yet',
-                          '2': 'up',
-                          '8': 'seems down',
-                          '9': 'down'
-                       }
-
-        ur_server_status = \
-          ur_status_dict[ur_server_status_code].upper()
+        raw_json = f.read()
 
         user = self.verify()
         models_served = ModelServedCount.all().get()
-        template_params = \
-          self.get_base_params(user=user,
-                               ur_ratio=ur_ratio,
-                               ur_response_time=ur_last_response_time,
-                               ur_server_ratio=ur_server_ratio,
-                               ur_server_status=ur_server_status,
-                               ur_server_response_time=\
-                                 ur_last_server_response_time,
-                               models_served=models_served.count
-                               )
+
+        try:
+            j = json.loads(raw_json)
+            ur_ratio = j['monitors']['monitor'][0]['customuptimeratio']
+            ur_server_ratio = \
+            j['monitors']['monitor'][1]['customuptimeratio']
+            ur_server_status_code = j['monitors']['monitor'][1]['status']
+            ur_last_response_time = \
+            j['monitors']['monitor'][0]['responsetime'][-1]['value']
+            ur_last_server_response_time = \
+            j['monitors']['monitor'][1]['responsetime'][-1]['value']
+            template_params = \
+            self.get_base_params(user=user,
+                                 ur_ratio=ur_ratio,
+                                 ur_response_time=ur_last_response_time,
+                                 ur_server_ratio=ur_server_ratio,
+                                 ur_server_status=ur_server_status,
+                                 ur_server_response_time=ur_last_server_response_time,
+                                 models_served=models_served.count
+                                 )
+        except:
+
+             template_params = \
+            self.get_base_params(user=user,
+                                 ur_ratio=None,
+                                 ur_response_time=None,
+                                 ur_server_ratio=None,
+                                 ur_server_status="Unknown",
+                                 ur_server_response_time=None,
+                                 models_served=models_served.count
+                                 )
+
         
         template = env.get_template('about.html')
         html = template.render(template_params)
@@ -1114,7 +1116,7 @@ class EmailAuthentication(ModelrPageRequest):
         
             # Add the tax to the invoice
             stripe.InvoiceItem.create(customer=customer.id,
-                                      amount = int(price + tax),
+                                      amount = int(tax),
                                       currency="usd",
                                       description="Canadian Taxes")
          
@@ -1236,7 +1238,7 @@ class StripeHandler(ModelrPageRequest):
             #event["data"]["object"]["total"] = price
             
             stripe_id = event["data"]["object"]["customer"]
-            amount = event["data"]["object"]["total"]
+            amount = price #event["data"]["object"]["total"]
             event_id = event["data"]["object"]["id"]
             user = User.all().ancestor(ModelrRoot)
             user = user.filter("stripe_id =", stripe_id).fetch(1)
@@ -1597,6 +1599,13 @@ class AdminHandler(ModelrPageRequest):
                 self.response.out.write(html)
 
 
+
+class ServerError(ModelrPageRequest):
+
+    def post(self):
+
+        send_message("Server Down","Scripts did not populate")
+    
         
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
@@ -1634,6 +1643,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/manage_group', ManageGroup),
                                ('/model_served', ModelServed),
                                ('/admin_site', AdminHandler),
+                               ('/server_error', ServerError),
                                ('/.*', NotFoundPageHandler)
                                ],
                               debug=False)

@@ -140,17 +140,6 @@ ModelBuilder.prototype.default_args=function default_args(argumentss){
             this.arguments[arg] = argumentss[arg];
         }
     }
-
-    /*
-     * Asynchronously fetch the information from a single scripts 
-     * from the plotting server. 
-     * @param callback(data): do something on finish.
-     */
-    this.get_script_info = function get_script_info(script, callback){
-        $.getJSON(this.hostname + '/script_help.json?script=' + 
-		  script, callback);
-    }
-
 }
 
 /*
