@@ -62,10 +62,10 @@ img.img-thumbnail {
 	    {% endif %}
 
             
-              <div class="form-group">
+    <div class="form-group">
 		<div class="form-inline">
-		  <div class="container">
-		    <select  class="form-control" 
+		  <div class="col-sm-11">
+		    <select class="form-control" 
 			     id='scenario_loader' 
 			     onchange="load_scenario(this.value);" 
 			     placeholder="scenario name">
@@ -80,13 +80,29 @@ img.img-thumbnail {
 		    </select>
 		  </div>
 		  
+		  
+		  <div class="col-sm-offset-11">
+<span style="color:#aaa; font-size:150%; vertical-align:middle; top:4px" id="scenario_info" class="glyphicon glyphicon-info-sign" data-title="Scenarios" data-content="Scenarios are collections of the parameters you used for a particular script. The parameters control the model, the seismic experiment, and the display. You can save them to edit or view again later."></span>
+          </div>
+		  
+<script>
+$('#scenario_info').popover({
+        trigger: 'hover click', 
+        html: true,
+        placement: 'right', 
+        container: 'body',
+        delay: { show: 500, hide: 1000 }
+});
+</script>
+		  
+		  
 		</div>
       </div>
               
 	      {% if not user %}<fieldset disabled>{% endif %}
-              <div class="form-group">
+        <div class="form-group">
 		<div class="form-inline">
-		  <div class="container">
+		  <div class="col-sm-11">
 		    <select class="form-control" 
 			    id="select_script" {% if not user %}style="background-color:#bbb;" {% endif %}
 			    onchange="scenario.set_current_script(
@@ -94,8 +110,21 @@ img.img-thumbnail {
 		      <option>Please wait... </option>
 		    </select>
 		  </div>
+		  		  <div class="col-sm-offset-11">
+<span style="color:#aaa; font-size:150%; vertical-align:middle; top:4px" id="script_info" class="glyphicon glyphicon-info-sign" data-title="Scripts" data-content="Scripts are Python files, stored on our servers, that define a model, a seismic experiment, and what kinds of results are displayed. In the current release of modelr, these cannot be changed."></span>
+          </div>
+<script>
+$('#script_info').popover({
+        trigger: 'hover click', 
+        html: true,
+        placement: 'right', 
+        container: 'body',
+        delay: { show: 500, hide: 1000 }
+});
+</script>
+
 		</div>
-              </div>
+    </div>
 	      {% if not user %}</fieldset>{% endif %}
 	      
 	                    <hr/>
