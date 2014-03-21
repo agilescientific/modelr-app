@@ -5,6 +5,16 @@
 
 <head>
 <script src="/static/js/jquery.upvote.js"></script>
+<script>
+var callback = function(data) {
+    $.ajax({
+        url: '/wishlist',
+        type: 'post',
+        data: { id: data.id, up: data.upvoted, down: data.downvoted }
+    });
+};
+</script>
+
 </head>
 
 <div class="container">
@@ -29,30 +39,40 @@
   
 <h3>Wishlist</h3>
 <div style="margin:2em;"></div>
-<p>These issues are right from our code repository. Vote and help us decide what to build next!</p>
+<p>These issues are right from our code repository. Modelr subscribers can vote and help us decide what to build next!</p>
 
 {% for i in issues %}
 
-{% set slug  = i | replace(' ','_') %}
+  {% set id = issues[i]['id'] %}
 
-<div class="row" style="margin-top:20px;">
-<div id="{{slug}}_votes" class="col-md-1 upvote">
-    <a class="upvote"></a>
-    <span class="count">0</span>
-    <a class="downvote"></a>
-</div> <div style="margin-top:20px; font-size:140%;" class="col-md-offset-1"><p>{{ i }}&nbsp;&nbsp;<span style="color:#aaa; font-size:90%; vertical-align:middle; top:-2px" id="{{ slug }}_info" class="glyphicon glyphicon-info-sign"  data-content="{{ issues[i] }}"></span></p></div>
-</div>
-<script>
-$('#{{ slug }}_votes').upvote({count: 5, upvoted: 1});
+    <div class="row" style="margin-top:20px;">
+        <div id="{{ id }}_votes" class="col-md-1 upvote">
+            <a class="upvote"></a>
+            <span class="count">0</span>
+            <a class="downvote"></a>
+        </div>
+        <div style="margin-top:20px; font-size:140%;" class="col-md-offset-1">
+          <p>{{ i }}&nbsp;&nbsp;
+            <span style="color:#aaa; font-size:90%; vertical-align:middle; top:-2px"
+                  id="{{ id }}_info" class="glyphicon glyphicon-info-sign"
+                  data-content="{{ issues[i]['body'] }}">
+            </span>
+          </p>
+        </div>
+    </div>
+    <script>
 
-$('#{{ slug }}_info').popover({
-        trigger: 'hover click', 
-        html: true,
-        placement: 'right', 
-        container: 'body',
-        delay: { show: 500, hide: 1000 }
-});
-</script>
+    $('#{{ id }}_votes').upvote({ count: {{ issues[i]['count'] }} });
+    {% if user %}$('#{{ id }}_votes').upvote({ upvoted: {{ issues[i]['up'] }}, downvoted: {{ issues[i]['down'] }} });{% endif %}
+    {% if user %}$('#{{ id }}_votes').upvote({id: {{ id }}, callback: callback});{% endif %}
+
+    $('#{{ id }}_info').popover({
+            trigger: 'hover click', 
+            placement: 'right', 
+            container: 'body',
+            delay: { show: 500, hide: 1000 }
+    });
+    </script>
 
 {% endfor %}
 

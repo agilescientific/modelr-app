@@ -32,7 +32,7 @@ from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      forgot_password, send_message, make_user
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest, ActivityLog, VerifyUser, ModelServedCount
+     GroupRequest, ActivityLog, VerifyUser, ModelServedCount, Issue
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
@@ -644,18 +644,92 @@ class WishlistHandler(ModelrPageRequest):
         resp = urllib2.urlopen(req)
         raw_json = resp.read()
 
+        # I was thinking of sending a dict like 
+        # issues = 
+        #   {'Issue one': {'body':'Long description...', 'up':1, 'down':0, 'count':3},
+        #    'Issue two': {'body':'Long description...', 'up':0, 'down':0, 'count':6},
+        #     etc...
+        #    }
+        # But this should probably be an object
+        
         try:
             j = json.loads(raw_json)
-            titles = [i['title'] for i in j if i['state'] == 'open']
-            bodies = [i['body'] for i in j if i['state'] == 'open']
-            issues = dict(zip(titles, bodies))
-            template_params.update(issues=issues)
+            issues = {i['title']:{'body':i['body'], 'id':i['id']} for i in j if i['state'] == 'open'}
+            err_msg=''
         except:
-            issues=[]
+            issues={}
+            err_msg='Failed to retrieve issues from GitHub. Please check back later.'
+
+        #### DO AWESOME DATABASE STUFF
+        
+        ## FIRST, For everyone:
+        #   Retrieve the total vote count for each issue from the database
+        # Vote count can be any integer
+        
+        # Here is the object in ModelrDb.py:
+#         class Issue(db.Model):
+#         """
+#         Item for GitHub issues for voting
+#         """
+#         id = db.IntegerProperty()
+#         title = db.StringProperty()
+#         body = db.StringProperty()
+#         count = db.IntegerProperty()
+#         up = db.IntegerProperty()
+#         down = db.IntegerProperty()
+    
+        # count = Issue.all().ancestor(ModelrRoot).get()
+        
+        # OK, I don't really know what I'm doing...
+        
+        
+        ## SECOND, For logged in people only:
+        #   Retrieve the user's vote status (0 or 1) for up and down votes for each issue
+        # Upvote and downvote can both be 0, but can't both be 1
+
+        # For updating scores and recording up and down votes, see post method
+        
+        #### END OF AWESOME DATABASE STUFF
+        
+        #### FAKE DATA INSTEAD OF DATABASE
+        issues['Scenario tags']['count'] = 6 
+        issues['Units']['count'] = 5
+        issues['Add noise to models']['count'] = 4
+        issues['Rotate phase of wavelet / seismic']['count'] = 3
+        
+        issues['Scenario tags']['up'] = 1 
+        issues['Units']['up'] = 1
+        issues['Add noise to models']['up'] = 0
+        issues['Rotate phase of wavelet / seismic']['up'] = 0
+
+        issues['Scenario tags']['down'] = 0 
+        issues['Units']['down'] = 0
+        issues['Add noise to models']['down'] = 0
+        issues['Rotate phase of wavelet / seismic']['down'] = 1
+        #### END OF FAKE DATA
+
+        template_params.update(issues=issues,
+                               error=err_msg
+                               )
 
         template = env.get_template('wishlist.html')
         html = template.render(template_params)
         self.response.out.write(html)          
+
+    def post(self):
+    
+        # DON'T DO ANYTHING YET
+        pass
+        
+        # AWESOME DATABASE STUFF
+        # Non-users should not be able to post
+        # Handle the ajax callback
+        # Data:
+        #   { id: data.id, up: data.upvoted, down: data.downvoted }
+        # id = a slug identifying the issue
+        # up and down: 0 or 1 - user has up- or down-voted the issue
+        # Update the user's vote status
+        # AND update the vote count for the item
 
                                                                         
 class PricingHandler(ModelrPageRequest):

@@ -22,6 +22,17 @@ class ModelServedCount(db.Model):
     """
     count = db.IntegerProperty()
     
+class Issue(db.Model):
+    """
+    Item for GitHub issues for voting
+    """
+    id = db.IntegerProperty()
+    title = db.StringProperty()
+    body = db.StringProperty()
+    count = db.IntegerProperty()
+    up = db.IntegerProperty()
+    down = db.IntegerProperty()
+    
 class User(db.Model):
 
     user_id = db.IntegerProperty()
