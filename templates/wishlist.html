@@ -3,6 +3,10 @@
 {% block title %}Modelr &middot; Wishlist{% endblock %}
 {% block content %}
 
+<head>
+<script src="/static/js/jquery.upvote.js"></script>
+</head>
+
 <div class="container">
 
   {% if error %}
@@ -26,13 +30,20 @@
 <h3>Wishlist</h3>
 <div style="margin:2em;"></div>
 
-<ul>
 {% for i in issues %}
 
 {% set slug  = i | replace(' ','_') %}
 
-<li>{{ i }}&nbsp;<span style="color:#aaa; font-size:90%; vertical-align:middle; top:-2px" id="{{ slug }}_info" class="glyphicon glyphicon-info-sign"  data-content="{{ issues[i] }}"></span></li>
+<div class="row" style="margin-top:20px;">
+<div id="{{slug}}_votes" class="col-md-1 upvote">
+    <a class="upvote"></a>
+    <span class="count">0</span>
+    <a class="downvote"></a>
+</div> <div style="margin-top:20px; font-size:140%;" class="col-md-offset-1"><p>{{ i }}&nbsp;&nbsp;<span style="color:#aaa; font-size:90%; vertical-align:middle; top:-2px" id="{{ slug }}_info" class="glyphicon glyphicon-info-sign"  data-content="{{ issues[i] }}"></span></p></div>
+</div>
 <script>
+$('#{{ slug }}_votes').upvote({count: 5, upvoted: 1});
+
 $('#{{ slug }}_info').popover({
         trigger: 'hover click', 
         html: true,
@@ -43,6 +54,8 @@ $('#{{ slug }}_info').popover({
 </script>
 
 {% endfor %}
-</ul>
+
+<link rel="stylesheet" href="/static/css/jquery.upvote.css">
+
 {% endblock %}
 

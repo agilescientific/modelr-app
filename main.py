@@ -633,13 +633,13 @@ class WishlistHandler(ModelrPageRequest):
         user = self.verify()
         template_params = self.get_base_params(user=user)
 
-
         gh_api_key = 'token 89c9d30cddd95358b1465d1dacb1b64597b42f89'
+        url = 'https://api.github.com/repos/kwinkunks/modelr_app/issues'
+        params = {'labels':'wishlist'}
+        query = urllib.urlencode(params)
+        full_url = '{0}?{1}'.format(url, query)
 
-        # Uptime Robot URL
-        gh_url = 'https://api.github.com/repos/kwinkunks/modelr_app/issues'
-
-        req = urllib2.Request(gh_url)
+        req = urllib2.Request(full_url)
         req.add_header('Authorization', gh_api_key)
         resp = urllib2.urlopen(req)
         raw_json = resp.read()
