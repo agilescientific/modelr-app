@@ -142,6 +142,13 @@ class ModelrPageRequest(webapp2.RequestHandler):
         '''
         get the default parameters used in base_template.html
         '''
+        
+        user=self.verify()
+        
+        if user:
+            email_hash = hashlib.md5(user.email).hexdigest()
+        else:
+            email_hash=''
 
         default_rock = dict(vp=0,vs=0, rho=0, vp_std=0,
                             rho_std=0, vs_std=0,
@@ -150,7 +157,8 @@ class ModelrPageRequest(webapp2.RequestHandler):
         
         params = dict(logout=users.create_logout_url(self.request.uri),
                       HOSTNAME=self.HOSTNAME,
-                      current_rock = default_rock)
+                      current_rock = default_rock,
+                      email_hash=email_hash)
         
         params.update(kwargs)
         
