@@ -1014,8 +1014,15 @@ class EmailAuthentication(ModelrPageRequest):
         token = self.request.get('stripeToken')
 
         # Create the customer account
-        customer = stripe.Customer.create(card=token,
-                                    description="New Modelr customer")
+        try:
+            customer = stripe.Customer.create(card=token,
+                                              description="New Modelr customer")
+        except:
+            # The card has been declined
+            # Let the user know and DON'T UPGRADE USER
+            self.response.out.write("Payment failed. Credit card not accepted at this time")
+            return
+            
 
         # Check the country to see if we need to charge tax
         country = self.request.get('stripeBillingAddressCountry')
