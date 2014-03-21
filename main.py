@@ -635,7 +635,8 @@ class WishlistHandler(ModelrPageRequest):
 
         gh_api_key = 'token 89c9d30cddd95358b1465d1dacb1b64597b42f89'
         url = 'https://api.github.com/repos/kwinkunks/modelr_app/issues'
-        params = {'labels':'wishlist'}
+        
+        params = {'labels':'wishlist', 'state':'open'}
         query = urllib.urlencode(params)
         full_url = '{0}?{1}'.format(url, query)
 
@@ -644,71 +645,41 @@ class WishlistHandler(ModelrPageRequest):
         resp = urllib2.urlopen(req)
         raw_json = resp.read()
 
-        # I was thinking of sending a dict like 
-        # issues = 
-        #   {'Issue one': {'body':'Long description...', 'up':1, 'down':0, 'count':3},
-        #    'Issue two': {'body':'Long description...', 'up':0, 'down':0, 'count':6},
-        #     etc...
-        #    }
-        # But this should probably be an object
-        
         try:
-            j = json.loads(raw_json)
-            issues = {i['title']:{'body':i['body'], 'id':i['id']} for i in j if i['state'] == 'open'}
-            err_msg=''
+            git_data = json.loads(raw_json)
+            
         except:
-            issues={}
             err_msg='Failed to retrieve issues from GitHub. Please check back later.'
 
-        #### DO AWESOME DATABASE STUFF
-        
-        ## FIRST, For everyone:
-        #   Retrieve the total vote count for each issue from the database
-        # Vote count can be any integer
-        
-        # Here is the object in ModelrDb.py:
-#         class Issue(db.Model):
-#         """
-#         Item for GitHub issues for voting
-#         """
-#         id = db.IntegerProperty()
-#         title = db.StringProperty()
-#         body = db.StringProperty()
-#         count = db.IntegerProperty()
-#         up = db.IntegerProperty()
-#         down = db.IntegerProperty()
-    
-        # count = Issue.all().ancestor(ModelrRoot).get()
-        
-        # OK, I don't really know what I'm doing...
-        
-        
-        ## SECOND, For logged in people only:
-        #   Retrieve the user's vote status (0 or 1) for up and down votes for each issue
-        # Upvote and downvote can both be 0, but can't both be 1
+        else:
 
-        # For updating scores and recording up and down votes, see post method
-        
-        #### END OF AWESOME DATABASE STUFF
-        
-        #### FAKE DATA INSTEAD OF DATABASE
-        issues['Scenario tags']['count'] = 6 
-        issues['Units']['count'] = 5
-        issues['Add noise to models']['count'] = 4
-        issues['Rotate phase of wavelet / seismic']['count'] = 3
-        
-        issues['Scenario tags']['up'] = 1 
-        issues['Units']['up'] = 1
-        issues['Add noise to models']['up'] = 0
-        issues['Rotate phase of wavelet / seismic']['up'] = 0
+            err_msg = ''
+            for issue in git_data:
 
-        issues['Scenario tags']['down'] = 0 
-        issues['Units']['down'] = 0
-        issues['Add noise to models']['down'] = 0
-        issues['Rotate phase of wavelet / seismic']['down'] = 1
-        #### END OF FAKE DATA
+                # Get the user's opinion
+                status = None
+                if user:
+                    user_issues = Issue.all().ancestor(user)
+                    user_issue = user_issues.filter("issue_id =",
+                                                    issue["id"]).get()
+                    if not user_issue:
+                        Issue(parent=user, issue_id=issue["id"]).put()
+                    else:
+                        status = user_issue.vote
 
-        template_params.update(issues=issues,
+                issue.update(status=status)
+
+                # get the count
+                votes = Issue.all().ancestor(ModelrRoot)
+                up_votes = votes.filter("vote =", "U").count()
+                down_votes = votes.filter("vote =", "D").count()
+                count = up_votes - down_votes
+
+                issue.update(up=up_votes, down=down_votes,
+                             status=status, count=count)
+
+        # Write out results
+        template_params.update(issues=git_data,
                                error=err_msg
                                )
 
@@ -717,21 +688,27 @@ class WishlistHandler(ModelrPageRequest):
         self.response.out.write(html)          
 
     def post(self):
-    
-        # DON'T DO ANYTHING YET
-        pass
-        
-        # AWESOME DATABASE STUFF
-        # Non-users should not be able to post
-        # Handle the ajax callback
-        # Data:
-        #   { id: data.id, up: data.upvoted, down: data.downvoted }
-        # id = a slug identifying the issue
-        # up and down: 0 or 1 - user has up- or down-voted the issue
-        # Update the user's vote status
-        # AND update the vote count for the item
 
-                                                                        
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!')
+        
+        user = self.verify()
+        if not user:
+            return
+
+        issue_id = self.request.get('id')
+        if self.request.get('up'):
+            issue_status = 'U'
+        else:
+            issue_status = 'D'
+        
+        issue = Issue.all().ancestor(user).filter("issue_id =",
+                                                  issue_id).get()
+        issue.status = issue_status
+
+        issue.put()
+
+
 class PricingHandler(ModelrPageRequest):
     def get(self):
 

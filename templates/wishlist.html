@@ -10,7 +10,7 @@ var callback = function(data) {
     $.ajax({
         url: '/wishlist',
         type: 'post',
-        data: { id: data.id, up: data.upvoted, down: data.downvoted }
+        data: { id: data.id, up: data.upvoted, down: data.downvote }
     });
 };
 </script>
@@ -43,7 +43,7 @@ var callback = function(data) {
 
 {% for i in issues %}
 
-  {% set id = issues[i]['id'] %}
+  {% set id = i['id'] %}
 
     <div class="row" style="margin-top:20px;">
         <div id="{{ id }}_votes" class="col-md-1 upvote">
@@ -52,18 +52,18 @@ var callback = function(data) {
             <a class="downvote"></a>
         </div>
         <div style="margin-top:20px; font-size:140%;" class="col-md-offset-1">
-          <p>{{ i }}&nbsp;&nbsp;
+          <p>{{ i["title"] }}&nbsp;&nbsp;
             <span style="color:#aaa; font-size:90%; vertical-align:middle; top:-2px"
                   id="{{ id }}_info" class="glyphicon glyphicon-info-sign"
-                  data-content="{{ issues[i]['body'] }}">
+                  data-content="{{ i['body'] }}">
             </span>
           </p>
         </div>
     </div>
     <script>
 
-    $('#{{ id }}_votes').upvote({ count: {{ issues[i]['count'] }} });
-    {% if user %}$('#{{ id }}_votes').upvote({ upvoted: {{ issues[i]['up'] }}, downvoted: {{ issues[i]['down'] }} });{% endif %}
+    $('#{{ id }}_votes').upvote({ count: {{ i['up'] }} });
+    {% if user %}$('#{{ id }}_votes').upvote({ upvoted: {{ i['up'] }}, downvoted: {{ i['down'] }} });{% endif %}
     {% if user %}$('#{{ id }}_votes').upvote({id: {{ id }}, callback: callback});{% endif %}
 
     $('#{{ id }}_info').popover({
