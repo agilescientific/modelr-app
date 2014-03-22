@@ -562,8 +562,6 @@ class AboutHandler(ModelrPageRequest):
         # Uptime Robot IDs
         ur_modelr_io = '775980219'
         ur_modelr_org = '775980224'  # REL, usually
-        # ur_modelr_org_8080 = '775980224'  # REL, usually
-        # ur_modelr_org_8081 = '776083114'  # DEV, usually
 
         # Uptime Robot URL
         ur_url = 'http://api.uptimerobot.com/getMonitors'
@@ -660,7 +658,6 @@ class WishlistHandler(ModelrPageRequest):
             err_msg='Failed to retrieve issues from GitHub. Please check back later.'
 
         else:
-
             err_msg = ''
             for issue in git_data:
 
@@ -1009,7 +1006,7 @@ class ResetHandler(ModelrPageRequest):
             return
 
         current_pword = self.request.get("current_pword")
-        new_password = self.request.get("password")
+        new_password = self.request.get("new_password")
         verify = self.request.get("verify")
 
         template = env.get_template('settings.html')
