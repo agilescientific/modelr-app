@@ -32,7 +32,7 @@
 <style type="text/css">
 .divider-vertical {
 height: 50px;
-margin: 0 14px;
+margin: 0 7px;
 border-left: 1px solid #F2F2F2;
 border-right: 1px solid #FFF;
 }</style>
@@ -54,6 +54,9 @@ border-right: 1px solid #FFF;
 <body>
 
     <!-- Nav
+    ================================================== -->
+
+    <!-- FOR LARGE SCREENS
     ================================================== -->
     
 <div class="navbar-wrapper">
@@ -88,12 +91,12 @@ border-right: 1px solid #FFF;
       {% endif %}
     </ul>
      
-    <ul class="nav navbar-nav navbar-right">
+    <ul class="nav navbar-nav navbar-right hidden-xs">
       <li><a href="/help">Help</a>
       <li class="divider-vertical"></li>
       
     {% if user %}
-         <li style="margin-left:7px; margin-top:8px;"><figure style="border: 1px solid #f2f2f2;"><img src="http://www.gravatar.com/avatar/{{ email_hash }}?s=32&d=identicon" /></figure></li>
+         <li style="margin-left:7px; margin-top:8px;"><figure style="width:32px; border: 1px solid #f2f2f2;"><img src="http://www.gravatar.com/avatar/{{ email_hash }}?s=32&d=identicon" /></figure></li>
 
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ user.email }}<b class="caret"></b></a>
@@ -106,7 +109,30 @@ border-right: 1px solid #FFF;
       </li>
     {% else %}
       <li>
-      <button type="button" class="btn navbar-btn" onclick="location.href='/signin'" id="signin_button">Sign in</button>
+      <button style="margin-left:14px;" type="button" class="btn navbar-btn" onclick="location.href='/signin'" id="signin_button">Sign in</button>
+      </li>
+    {% endif %}
+    </ul>
+
+    <!-- FOR XS SCREENS
+    ================================================== -->
+
+    <ul class="nav navbar-nav navbar-right visible-xs">
+      <li><a href="/help">Help</a>
+      
+    {% if user %}
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ user.email }}<b class="caret"></b></a>
+        <ul class="dropdown-menu">
+          <li><a href="/profile">My profile</a></li>
+          <li><a href="/settings">Settings</a></li>
+          <li class="divider"></li>
+          <li><a href="/signout">Sign out</a></li>
+        </ul>
+      </li>
+    {% else %}
+      <li>
+      <button style="margin-left:14px;" type="button" class="btn navbar-btn" onclick="location.href='/signin'" id="signin_button">Sign in</button>
       </li>
     {% endif %}
     </ul>

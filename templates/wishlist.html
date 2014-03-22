@@ -46,12 +46,12 @@ var callback = function(data) {
   {% set id = i['id'] %}
 
     <div class="row" style="margin-top:20px;">
-        <div id="{{ id }}_votes" class="col-md-1 upvote">
+        <div id="{{ id }}_votes" class="col-xs-3 col-sm-2 col-md-1 upvote">
             <a class="upvote"></a>
             <span class="count">0</span>
             <a class="downvote"></a>
         </div>
-        <div style="margin-top:20px; font-size:140%;" class="col-md-offset-1">
+        <div style="margin-top:20px; font-size:140%;" class="col-xs-offset-3 col-sm-offset-2 col-md-offset-1">
           <p>{{ i["title"] }}&nbsp;&nbsp;
             <span style="color:#aaa; font-size:90%; vertical-align:middle; top:-2px"
                   id="{{ id }}_info" class="glyphicon glyphicon-info-sign"

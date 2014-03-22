@@ -3,10 +3,12 @@
 {% block title %}Modelr{% endblock %}
 {% block content %}
 
+
+
 <!-- Carousel
 ================================================== -->
 
-<div id="modelrCarousel" class="carousel slide" data-ride="carousel">
+<div id="modelrCarousel" class="carousel slide hidden-xs" data-ride="carousel">
 
   <!-- Indicators -->
   <ol class="carousel-indicators">
@@ -73,11 +75,24 @@
   </a>
 </div><!-- /.carousel -->
 
+<div class="container visible-xs">
+        <figure style="text-align:center;"><img src="/static/img/icon_144px.png" /></figure>
+        <p class="lead text-center">Fast, easy forward models<br />
+            for seismic interpreters.</p>
+          <p class="lead text-center">
+            <a class="btn btn-primary btn-lg" role="button" style="margin-bottom:6px;"
+         href="/scenario">Try <strong>modelr</strong> for free</a>
+            <a class="btn btn-info btn-lg" role="button" style="margin-bottom:6px;"
+         href="/signup">Create an account</a>
+          </p>
+</div>
+
+
     <!-- Begin MailChimp Signup Form -->
-      <div class="form-group col-md-6 col-md-offset-3" style="margin-top:2.5em; margin-bottom:2em;">
+      <div class="form-group col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3" style="margin-top:2.5em; margin-bottom:2em;">
       <div class="form-inline">
           <form action="https://agilegeoscience.us6.list-manage.com/subscribe/post?u=3e1e2cd71eeb0422366e88354&amp;id=3a00d839f5" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="form-horizontal" target="_blank" novalidate>
-	        <div class="col-md-10">
+	        <div class="col-xs-8 col-sm-10">
 	              <div class="input-group">
       <span class="input-group-addon"><span class="glyphicon glyphicon-envelope" style="color:gray;"></span></span>
 <input type="email" value="" name="EMAIL" class="form-control email" id="mce-EMAIL" placeholder="Keep in touch!" required>
@@ -85,7 +100,7 @@
               <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
               <div style="position: absolute; left: -5000px;"><input type="text" name="b_3e1e2cd71eeb0422366e88354_3a00d839f5" value=""></div>
             </div>
-            <div class="col-md-offset-10">
+            <div class="col-xs-offset-8 col-sm-offset-10">
 	          <input type="submit" value="Get notified" style="color:gray;" name="subscribe" id="mc-embedded-subscribe" class="btn btn-default">
 	        </div>
          </form>

@@ -64,7 +64,7 @@ img.img-thumbnail {
             
     <div class="form-group">
 		<div class="form-inline">
-		  <div class="col-sm-11">
+		  <div class="col-xs-11">
 		    <select class="form-control" 
 			     id='scenario_loader' 
 			     onchange="load_scenario(this.value);" 
@@ -81,7 +81,7 @@ img.img-thumbnail {
 		  </div>
 		  
 		  
-		  <div class="col-sm-offset-11">
+		  <div class="col-xs-offset-11">
 <span style="color:#aaa; font-size:150%; vertical-align:middle; top:4px" id="scenario_info" class="glyphicon glyphicon-info-sign" data-title="Scenarios" data-content="Scenarios are collections of the parameters you used for a particular script. The parameters control the model, the seismic experiment, and the display. You can save them to edit or view again later."></span>
           </div>
 		  
@@ -102,7 +102,7 @@ $('#scenario_info').popover({
 	      {% if not user %}<fieldset disabled>{% endif %}
         <div class="form-group">
 		<div class="form-inline">
-		  <div class="col-sm-11">
+		  <div class="col-xs-11">
 		    <select class="form-control" 
 			    id="select_script" {% if not user %}style="background-color:#bbb;" {% endif %}
 			    onchange="scenario.set_current_script(
@@ -110,7 +110,7 @@ $('#scenario_info').popover({
 		      <option>Please wait... </option>
 		    </select>
 		  </div>
-		  		  <div class="col-sm-offset-11">
+		  		  <div class="col-xs-offset-11">
 <span style="color:#aaa; font-size:150%; vertical-align:middle; top:4px" id="script_info" class="glyphicon glyphicon-info-sign" data-title="Scripts" data-content="Scripts are Python files, stored on our servers, that define a model, a seismic experiment, and what kinds of results are displayed. In the current release of modelr, these cannot be changed."></span>
           </div>
 <script>
@@ -152,7 +152,7 @@ $('#script_info').popover({
 		<div class="form-group">
 
 		  <div class="form-inline">
-		    <div class="col-sm-10">
+		    <div class="col-xs-10">
 		      <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
 			     id='scenario_name' 
 			     onchange="scenario.name = this.value;" 
@@ -160,7 +160,7 @@ $('#script_info').popover({
 			     maxlength="20">
 		      </input>
 		    </div>
-		    <div class="col-md-offset-10">
+		    <div class="col-xs-offset-10">
 		      <button class="btn btn-default" 
 			      onclick="save_scenario()"
 			      type="button" id="savebutton">
