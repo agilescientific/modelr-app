@@ -59,7 +59,7 @@ var callback = function(data) {
   {% set user_link = i['user']['html_url'] %}
   {% set user_name = i['user']['login'] %}
 
-    <div class="col-xs-12" style="margin-top:24px;">
+    <div class="col-xs-12" style="clear:both; margin-top:24px;">
         <div id="{{ id }}_votes" class="col-xs-3 col-sm-2 col-md-1 upvote">
             <a class="upvote{% if not user %} disabled{% endif %}"></a>
             <span class="count"></span>
