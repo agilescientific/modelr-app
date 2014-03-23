@@ -54,20 +54,26 @@ var callback = function(data) {
   {% set count = i['count'] %}
   {% set title = i['title'] %}
   {% set body = i['body'] %}
+  {% set number = i['number'] %}
+  {% set date = i['created_at'][:10] %}
+  {% set user_link = i['user']['html_url'] %}
+  {% set user = i['user']['login'] %}
 
-    <div class="row" style="margin-top:20px;">
+    <div class="col-xs-12" style="margin-top:24px;">
         <div id="{{ id }}_votes" class="col-xs-3 col-sm-2 col-md-1 upvote">
             <a class="upvote{% if not user %} disabled{% endif %}"></a>
             <span class="count"></span>
             <a class="downvote{% if not user %} disabled{% endif %}"></a>
         </div> <!-- end of voting widget -->
-        <div style="margin-top:20px; font-size:140%;" class="col-xs-offset-3 col-sm-offset-2 col-md-offset-1">
-          <p>{{ title }}&nbsp;&nbsp;
-            <span style="color:#aaa; font-size:90%; vertical-align:middle; top:-2px"
-                  id="{{ id }}_info" class="glyphicon glyphicon-info-sign"
-                  data-content="{{ body }}">
-            </span>
-          </p>
+        <div class="col-xs-offset-3 col-sm-offset-2 col-md-offset-1">
+          <h4>{{ title }}&nbsp;&nbsp;
+            <span id="{{ id }}_info"
+             data-content="Created by <a href={{ user_link }}>{{ user }}</a> on {{ date }}"
+             style="color:#aaa; font-size:80%; font-weight:light;">
+              #{{ number }}
+             </span>
+          </h4>
+          <p>{{ body }}</p>
         </div> <!-- end of text of item -->
     </div> <!-- end of row -->
 <script>
@@ -77,6 +83,7 @@ $('#{{ id }}_votes').upvote({ count: {{ count }}{% if user %}, upvoted: {{ up }}
 $('#{{ id }}_info').popover({
         trigger: 'hover click', 
         placement: 'right', 
+        html: 'true', 
         container: 'body',
         delay: { show: 500, hide: 1000 }
 });
