@@ -633,84 +633,103 @@ class FeaturesHandler(ModelrPageRequest):
         self.response.out.write(html)      
 
 
-class WishlistHandler(ModelrPageRequest):
+class FeedbackHandler(ModelrPageRequest):
     def get(self):
 
         user = self.verify()
         template_params = self.get_base_params(user=user)
 
+        # Get the list of issues from GitHub. 
+        # First, set up the request.
         gh_api_key = 'token 89c9d30cddd95358b1465d1dacb1b64597b42f89'
         url = 'https://api.github.com/repos/kwinkunks/modelr_app/issues'
-        
         params = {'labels':'wishlist', 'state':'open'}
         query = urllib.urlencode(params)
         full_url = '{0}?{1}'.format(url, query)
 
+        # Now make the request.
         req = urllib2.Request(full_url)
         req.add_header('Authorization', gh_api_key)
-        resp = urllib2.urlopen(req)
-        raw_json = resp.read()
 
         try:
+            resp = urllib2.urlopen(req)
+            raw_json = resp.read()
             git_data = json.loads(raw_json)
             
         except:
-            err_msg='Failed to retrieve issues from GitHub. Please check back later.'
+            err_msg = 'Failed to retrieve issues from GitHub. Please check back later.'
+            git_data = {}
 
         else:
             err_msg = ''
+
             for issue in git_data:
 
-                # Get the user's opinion
+                # Get the user's opinion.
                 status = None
                 if user:
                     user_issues = Issue.all().ancestor(user)
-                    user_issue = user_issues.filter("issue_id =",
-                                                    issue["id"]).get()
-                    if not user_issue:
-                        Issue(parent=user, issue_id=issue["id"]).put()
-                    else:
+                    user_issue = user_issues.filter("issue_id =", issue["id"]).get()
+                    if user_issue:
                         status = user_issue.vote
+                    else:
+                        Issue(parent=user, issue_id=issue["id"]).put()
+                        
+                up, down = 0, 0
 
-                issue.update(status=status)
+                if status == 1:
+                    up = 'true'
+                if status == -1:
+                    down = 'true'
 
-                # get the count
-                votes = Issue.all().ancestor(ModelrRoot)
-                up_votes = votes.filter("vote =", "U").count()
-                down_votes = votes.filter("vote =", "D").count()
+                issue.update(status=status,
+                             up=up,
+                             down=down)
+
+                # Get the count. We have to read the database twice. 
+                down_votes = Issue.all().ancestor(ModelrRoot).filter("issue_id =", issue["id"]).filter("vote <", 0).count()
+                up_votes = Issue.all().ancestor(ModelrRoot).filter("issue_id =", issue["id"]).filter("vote >", 0).count()
                 count = up_votes - down_votes
 
-                issue.update(up=up_votes, down=down_votes,
-                             status=status, count=count)
+                print up_votes, down_votes
 
-        # Write out results
+                issue.update(up_votes=up_votes,
+                             down_votes=down_votes,
+                             count=count)
+
+        # Write out the results.
         template_params.update(issues=git_data,
                                error=err_msg
                                )
 
-        template = env.get_template('wishlist.html')
+        template = env.get_template('feedback.html')
         html = template.render(template_params)
         self.response.out.write(html)          
 
     def post(self):
 
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!')
-        
+        # This should never happen, because voting
+        # links are disabled for non-logged-in users.
         user = self.verify()
         if not user:
             return
-
-        issue_id = self.request.get('id')
-        if self.request.get('up'):
-            issue_status = 'U'
-        else:
-            issue_status = 'D'
         
-        issue = Issue.all().ancestor(user).filter("issue_id =",
-                                                  issue_id).get()
-        issue.status = issue_status
+        # Get the data from the ajax call.
+        issue_id = int(self.request.get('id'))
+        up = self.request.get('up')
+        down = self.request.get('down')
 
+        # Set our vote flag to record the user's opinion.
+        if up == 'true':
+            issue_status = 1
+        elif down == 'true':
+            issue_status = -1
+        else:
+            issue_status = 0
+
+        # Put it in the database.
+        issue = Issue.all().ancestor(user).filter("issue_id =", issue_id).get()
+        issue.vote = issue_status
         issue.put()
 
 
@@ -1488,7 +1507,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/settings', SettingsHandler),
                                ('/about', AboutHandler),
                                ('/features', FeaturesHandler),
-                               ('/wishlist', WishlistHandler),
+                               ('/feedback', FeedbackHandler),
                                ('/help', HelpHandler),
                                ('/terms', TermsHandler),
                                ('/privacy', PrivacyHandler),

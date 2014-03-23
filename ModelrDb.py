@@ -27,7 +27,7 @@ class Issue(db.Model):
     Item for GitHub issues for voting
     """
     issue_id = db.IntegerProperty()
-    vote = db.StringProperty()
+    vote = db.IntegerProperty()
     
     
 class User(db.Model):
