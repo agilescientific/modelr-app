@@ -25,26 +25,85 @@
 
 <script>
  $(document).ready(function() {
-   Colors({{colors}}, 0, {{colors.__len__()}});
+
+   var maps = [];
+   var rocks = get_rocks("#list_of_rocks");
+
+   var rand_default = [];
+  
+   {% for im in colors %}
+   var mapping = {}
+   {% for color in (im) %}
+   var keys = Object.keys(rocks)
+   key =  keys[Math.floor((Math.random()*keys.length)+1)];
+   rock = rocks[key];
+   mapping["{{color}}"] = {name:key, property: rock};
+   maps.push(mapping);
+   {% endfor %}
+   {% endfor %}
+
+   var images = [];
+   {% for image in images %}
+   images.push("{{image}}");
+   {% endfor %}
+   
+   property_map = new PropertyMap(images, maps);
 
    server = new PlotServer(host);
-   earth_structure = new EarthStructure();
-   seismic_model = new SeismicModel();
 
-   forward_model = new ForwardModel(earth_structure, null, 
-				    seismic_model, null);
+   earth_structure = new EarthStructure(null, null, null, null, null);
+   
+   seismic_model = new Scenario(null, null, {},
+				null);
+
+
+
+   plot_container = new Scenario(null, null, {},
+				 null);
+
+   forward_model = new ForwardModel(earth_structure, 
+				    seismic_model, plot_container);
+
+   plot_container.display = display_form;
+   seismic_model.display = display_form;
+
+   plot_container.script = "forward_model.py";
+   server.get_script_info(plot_container.script, function(data){
+     plot_container.info = data;
+     plot_container.default_args(plot_container.arguments);
+     
+     console.log('div#plot_place');
+     
+
+     // This will Create a form see above
+     plot_container.display('div#plot_place');
+     
+   })
+   Colors({{colors}}, 0, {{colors.__len__()}});
+
+   seismic_model.script = "convolution_model.py";
+   server.get_script_info(seismic_model.script, function(data){
+     seismic_model.info = data;
+     seismic_model.default_args(seismic_model.arguments);
+     
+     console.log('div#seismic_place');
+     
+     // This will Create a form see above
+     seismic_model.display('div#seismic_place');
+     
+   });
 
 
  });
-
 </script>
 
 <script>
 
  function Colors(colors, increment, length)
+
  {
 
-   var parent = document.getElementById("test");
+   var div = $("#test");
    var foo;
    var i, j;
    var div,row, dropdown, option, text;
@@ -52,43 +111,43 @@
    var index = $('#myCarousel .active').index('#myCarousel .item') + 
 					      increment;
 
-   index = index % length;
+ 
 
-   while (parent.firstChild) {
-     parent.removeChild(parent.firstChild);
-   }
+   index = index % length; 
 
+   earth_structure.image = property_map.get_image(index);
+   earth_structure.mapping = property_map.get_mapping(index);
+
+   div.children().remove()
+
+   form = div.append('<form id=script_form action=""></form>');
+
+   form_text='<div>';
    for (i in colors[index])
    {
      c=colors[index];
-     row = document.createElement("div");
-     row.className = "row";
-     foo = document.createElement("div");
-     
-     foo.className = "foo";
-     foo.style.backgroundColor = c[i];  
-     row.appendChild(foo);
-
-     dropdown = document.createElement("select");
-     option = document.createElement("option");
-     text = document.createTextNode("Rocks");
-     option.appendChild(text);
-     dropdown.appendChild(option);
-     option = document.createElement("option");
-     text = document.createTextNode("=============");
-     option.appendChild(text);
-     dropdown.appendChild(option);
-
+     update_map = function (input){
+       property_map.colour_maps[index][c[i]] = input;
+     }; 
+     form_text += '<div class=row>';
+     form_text += '<div class=foo style="background-color:' + c[i] +'"></div>';
+     form_text += '<select class="script_form rock_selector" id="rock_selector" onchange="update_map(this.value)">'
      for (j in rocks) {
-       option = document.createElement("option");
-       text = document.createTextNode(j);
-       option.appendChild(text);
-       dropdown.appendChild(option);
+       selected = earth_structure.mapping[c[i]].name;
+       if (j == selected){
+       form_text += '<option value="' + j +'" selected>'+j+'</option>' ;
+       }
+       else{
+	 form_text += '<option value="' + j +'">'+j+'</option>' ;
+       }
      }
-     row.appendChild(dropdown);
-     parent.appendChild(row);
-   }  
+     form_text += '</select></div></div>';
+   }
+   form_text+='</div>';
+   form.append(form_text);
+  
  }
+
 </script>
 
 <script>
@@ -118,118 +177,98 @@
   <!-- SCENARIO PANEL
   =============================================================== -->
 
-    <div class="col-md-6">
-      <div class="panel panel-default">
-	<div class="panel-heading">
-          <h3 class="panel-title">Earth Model</h3>
-	</div>
-	
-	<div class="panel-body">
-	  
-          <form class="form-horizontal" role="form">
-	    <div class="row">
-	      <div class="col-md-6">
-		<div id="myCarousel" class="carousel slide" 
-		     data-interval="false">
-		  <!-- Carousel slides -->
-		  <div class="carousel-inner">
-		    {% for i in range((images.__len__())) %}
-		    <div {% if i==0 %} class="active item" {% else %} 
-		      class="item" {% endif %}>
-		      <div class="thumbnail">
-			<img src={{images[i]}} alt="" >
-		      </div>
-		    </div>	
-		    {% endfor %}
-		  </div>
-		  
-		  <!-- Carousel nav -->
-		  <a class="carousel-control left" href="#myCarousel" 
-		     data-slide="prev" 
-		     onclick="Colors({{colors}}, -1, {{images.__len__()}})">
-		    ‹
-		  </a>
-		  <a class="carousel-control right" href="#myCarousel" 
-		     data-slide="next" 
-		     onclick="Colors({{colors}},1,{{images.__len__()}})">
-		    ›
-		  </a>
-		</div>
-	      </div>
-	      <div class="col-md-4" id="test"></div>
-	    </div>
-	  </form>
-	</div>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Earth Model</h3>
       </div>
-   
+      
+      <div class="panel-body">
+	
+        <form class="form-horizontal" role="form">
+	  <div class="row">
+	    <div class="col-md-6">
+	      <div id="myCarousel" class="carousel slide" 
+		   data-interval="false">
+		<!-- Carousel slides -->
+		<div class="carousel-inner">
+		  {% for i in range((images.__len__())) %}
+		  <div {% if i==0 %} class="active item" {% else %} 
+		    class="item" {% endif %}>
+		    <div class="thumbnail">
+		      <img src={{images[i]}} alt="" >
+		    </div>
+		  </div>	
+		  {% endfor %}
+		</div>
+		
+		<!-- Carousel nav -->
+		<a class="carousel-control left" href="#myCarousel" 
+		   data-slide="prev" 
+		   onclick="Colors({{colors}}, -1, {{images.__len__()}})">
+		  ‹
+		</a>
+		<a class="carousel-control right" href="#myCarousel" 
+		   data-slide="next" 
+		   onclick="Colors({{colors}},1,{{images.__len__()}})">
+		  ›
+		</a>
+	      </div>
+	    </div>
+	    <div class="col-md-4" id="test"></div>
+	  </div>
+	</form>
+      </div>
+    </div>
+    
 
     <!-- This is where there survey parameters will be set -->
+    <div class="panel panel-default">
+      <div class="panel-heading">
+	<h3 class="panel-title">Seismic Model</h3>
+      </div>
+
+      <div id="seismic_place">
+      </div>
+    </div>    
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+	<h3 class="panel-title">Plot Control</h3>
+      </div>
+
+      <div id="plot_place">
+      </div>
+    </div>
     
-      <div class="panel panel-default">
-	<div class="panel-heading">
-          <h3 class="panel-title">Seismic Model</h3>
+    <div class="panel-body">
+      <div class="form-group">
+	<div class="col-sm-offset-2 col-sm-6">
+	  <button class="btn btn-default" id='create_image' 
+		  onclick="forward_model.post(server)">
+            Create image
+	  </button>
 	</div>
-	
-	<div class="panel-body">
-	  
-          <form id="param_form" action="">
-	    <table>
-	      <tr>
-		<td> wavelet </td>
-		<td><select>
-		  <option value="ricker"/>Ricker</option>
-		  <option value="ormsby"/>Ormsby</option>
-		</select>
-		</td>
-	      </tr>
-	      <tr>
-		<td> Wavelet Bank Start </td>
-		<td><input type="number"></td>
-	      </tr>
-	      <tr>
-		<td> Wavelet Bank End </td>
-		<td><input type="number"></td>
-	      </tr>
-	      <tr>
-		<td> Offset Angle Start </td>
-		<td><input type="number"></td>
-	      </tr>
-	      <tr>
-		<td> Offset Angle End </td>
-		<td><input type="number"></td>
-	      </tr>
-	    </table>
-	  </form>
-	</div>
+      </div>
+
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Result</h3>
+      </div>
+      <div class="panel-body">
+
+        <img class="img-thumbnail" id="plot_image" href=URL 
+	     alt="Plot image">
+        <!-- Updated by the  create_image button above-->
+        </img>
+
       </div>
     </div>
   </div>
-
-    <div class="form-group">
-      <div class="col-sm-offset-2 col-sm-6">
-	<button class="btn btn-default" id='create_image' 
-		onclick="server.update_img(modelbuilder)">
-          Create image
-	</button>
-      </div>
-    </div>
-
-    <div class="col-md-6">
-      <div class="panel panel-default">
-	<div class="panel-heading">
-          <h3 class="panel-title">Result</h3>
-	</div>
-	<div class="panel-body">
-
-          <img class="img-thumbnail" id="plot_image" href=URL 
-	       alt="Plot image">
-          <!-- Updated by the  create_image button above-->
-          </img>
-
-	</div>
-      </div>
-    </div>
-  </div>
+</div>
 </div>
 
 {% endblock %}

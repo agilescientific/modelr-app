@@ -46,57 +46,52 @@ function PlotServer(hostname, rocks) {
  
 };
 
-function EarthStructure(image, depth, length, units){
+function EarthStructure(image, depth, length, units, mapping){
     /*
      * Object for dealing with Earth Structures. 
      */
 
     this.image = image;
+    this.mapping = mapping;
     this.depth = depth;
     this.length = length;
     this.units = units;
 };
 
+function PropertyMap(images, colour_maps){
+    this.images = images;
+    this.colour_maps = colour_maps;}
+
+PropertyMap.prototype.get_image = function(index){
+    return this.images[index];
+}
+
+PropertyMap.prototype.get_mapping = function(index){
+    return this.colour_maps[index];
+}
 
 
-function SeismicModel(f_res, shot_spacing, sample_rate, start_f,
-		      end_f, wavelet_type, sample_rate, 
-		      reflectivity_model){
-  
-    this.f_res = f_res;
-    this.wavelet_type = wavelet_type;
-    this.sensor_spacing = sensor_spacing; 
-    this.dt = dt;
-    this.start_f = start_f; 
-    this.end_f = end_f;
-    this.reflectivity_model = reflectivity_model;
-};
-
-function Plot(cross_section, trace, angle, center_frequency,
-		   twt, overlay){
-
-    this.cross_section = cross_section;
-    this.trace = trace;
-    this.angle = angle;
-    this.center_frequency = center_frequency;
-    this.twt = twt;
-    this.overlay = overlay;
-
-};
-
-
-function ForwardModel(earth_struct, property_map, 
+function ForwardModel(earth_struct, 
 		      seismic_model, plots) {
 
     this.earth_struct = earth_struct;
-    this.property_map = property_map;
     this.seismic_model = seismic_model;
     this.plots = plots;
 };
 
 
-    
+ForwardModel.prototype.post = function get(server,callback){
 
+data = {'earth_model':this.earth_struct,
+	'seismic_model':{script:this.seismic_model.script, 
+			 args:this.seismic_model.arguments}, 
+	'plots':{script:this.plots.script,
+		 args:this.plots.arguments}};
+
+    $.post(server.hostname + '/forward_model.json', 
+	   JSON.stringify(data), 
+	   callback);
+};
 
 
 
@@ -181,6 +176,11 @@ function Scenario(name, script, arguments, rocks) {
     this.rocks = rocks;
     this.info = null;
 
+};
+
+Scenario.prototype.json_data = function json_data(){
+    var data = JSON.stringify({'plot_args': this.arguments});
+    return data 
 };
 
 /*
@@ -277,6 +277,7 @@ Scenario.prototype.qs = function() {
     return query_str;
 
 };
+
 
 /*
  * === === === === === === === === === === === === === === === === Functions ===
