@@ -687,8 +687,8 @@ class FeedbackHandler(ModelrPageRequest):
                              down=down)
 
                 # Get the count. We have to read the database twice. 
-                down_votes = Issue.all().ancestor(ModelrRoot).filter("issue_id =", issue["id"]).filter("vote <", 0).count()
-                up_votes = Issue.all().ancestor(ModelrRoot).filter("issue_id =", issue["id"]).filter("vote >", 0).count()
+                down_votes = Issue.all().ancestor(ModelrRoot).filter("issue_id =", issue["id"]).filter("vote =", -1).count()
+                up_votes = Issue.all().ancestor(ModelrRoot).filter("issue_id =", issue["id"]).filter("vote =", 1).count()
                 count = up_votes - down_votes
 
                 print up_votes, down_votes
@@ -712,12 +712,15 @@ class FeedbackHandler(ModelrPageRequest):
         # links are disabled for non-logged-in users.
         user = self.verify()
         if not user:
+            print 'no user'
             return
         
         # Get the data from the ajax call.
         issue_id = int(self.request.get('id'))
         up = self.request.get('up')
         down = self.request.get('down')
+
+        print issue_id, up, down
 
         # Set our vote flag to record the user's opinion.
         if up == 'true':
@@ -726,6 +729,7 @@ class FeedbackHandler(ModelrPageRequest):
             issue_status = -1
         else:
             issue_status = 0
+        print 'status', issue_status
 
         # Put it in the database.
         issue = Issue.all().ancestor(user).filter("issue_id =", issue_id).get()

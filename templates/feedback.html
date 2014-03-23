@@ -8,7 +8,7 @@
 <script>
 var callback = function(data) {
     $.ajax({
-        url: '/wishlist',
+        url: '/feedback',
         type: 'post',
         data: { id: data.id, up: data.upvoted, down: data.downvoted }
     });
@@ -57,7 +57,7 @@ var callback = function(data) {
   {% set number = i['number'] %}
   {% set date = i['created_at'][:10] %}
   {% set user_link = i['user']['html_url'] %}
-  {% set user = i['user']['login'] %}
+  {% set user_name = i['user']['login'] %}
 
     <div class="col-xs-12" style="margin-top:24px;">
         <div id="{{ id }}_votes" class="col-xs-3 col-sm-2 col-md-1 upvote">
@@ -68,7 +68,7 @@ var callback = function(data) {
         <div class="col-xs-offset-3 col-sm-offset-2 col-md-offset-1">
           <h4>{{ title }}&nbsp;&nbsp;
             <span id="{{ id }}_info"
-             data-content="Created by <a href={{ user_link }}>{{ user }}</a> on {{ date }}"
+             data-content="Created by <a href={{ user_link }}>{{ user_name }}</a> on {{ date }}"
              style="color:#aaa; font-size:80%; font-weight:light;">
               #{{ number }}
              </span>
