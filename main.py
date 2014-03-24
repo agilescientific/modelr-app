@@ -105,7 +105,7 @@ for i in default_rocks:
 # Secret API key from Stripe dashboard
 #stripe.api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
 stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
-price = 900
+PRICE = 900
 tax_dict = {"AB":0.05,
             "BC":0.05,
             "MB":0.05,
@@ -1122,8 +1122,8 @@ class EmailAuthentication(ModelrPageRequest):
         """
         Adds the user to the stripe customer list
         """
-
-        price = 900 # cents
+        email = self.request.get('stripeEmail')
+        price = PRICE # set at head of this file
 
         # Secret API key for Canada Post postal lookup
         cp_prod = "3a04462597330c85:46c19862981c734ff8f7b2"
@@ -1135,6 +1135,7 @@ class EmailAuthentication(ModelrPageRequest):
 
         # Create the customer account
         customer = stripe.Customer.create(card=token,
+                                    email=email,
                                     description="New Modelr customer")
 
         # Check the country to see if we need to charge tax
@@ -1190,8 +1191,6 @@ class EmailAuthentication(ModelrPageRequest):
             return
 
         # get the temp user from the database
-        email = self.request.get('stripeEmail')
-        
         try:
             initialize_user(email, customer.id, ModelrRoot,
                             tax_code, price, tax)
