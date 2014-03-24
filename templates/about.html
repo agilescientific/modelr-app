@@ -64,12 +64,12 @@
   </div>
   <div class="panel-body">
     
-    <p>Modelr.io 30-day uptime: {% if  ur_ratio %}<strong>{{ ur_ratio }}%</strong>{% endif %}
-       &nbsp; &nbsp;Response time:&nbsp;{% if ur_response_time %}<strong>{{ ur_response_time }}&nbsp;ms</strong></p>{% endif %}
-    <p>Modelr server 30-day uptime:{% if ur_server_ratio %} <strong>{{ ur_server_ratio }}%</strong>{% endif %}
-       &nbsp; &nbsp;Response time:&nbsp;{% if ur_server_response_time %} <strong>{{ ur_server_response_time }}&nbsp;ms</strong></p>{% endif %}
+    <p>Modelr.io&nbsp;30-day&nbsp;uptime:&nbsp;{% if  ur_ratio %}<strong>{{ ur_ratio }}%</strong>{% endif %}
+       &nbsp;&nbsp; Response&nbsp;time:&nbsp;{% if ur_response_time %}<strong>{{ ur_response_time }}&nbsp;ms</strong></p>{% endif %}
+    <p>Back-end 30-day uptime:{% if ur_server_ratio %} <strong>{{ ur_server_ratio }}%</strong>{% endif %}
+       &nbsp;&nbsp; Response&nbsp;time:&nbsp;{% if ur_server_response_time %}<strong>{{ ur_server_response_time }}&nbsp;ms</strong></p>{% endif %}
     <p>Server status now <span class="label{% if ur_server_status == 'UP' %} label-success{% endif %}{% if ur_server_status == 'DOWN' %} label-danger{% endif %}{% if ur_server_status == 'SEEMS DOWN' %} label-warning{% endif %}{% if ur_server_status == 'PAUSED' or 'NOT CHECKED YET' %} label-default{% endif %}">{{ ur_server_status }}</span>
-       &nbsp; &nbsp;Total models served&nbsp;<span class="badge">{{models_served}}</span></p>
+       &nbsp;&nbsp; Total&nbsp;models&nbsp;served&nbsp;<span class="badge">{{models_served}}</span></p>
 </div>
 </div> <!-- end of panel -->
 

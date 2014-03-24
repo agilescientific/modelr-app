@@ -104,6 +104,21 @@
   color: #729fcf;
 }
 
+.modelr-footer {
+  float:left;
+  color:lightgray;
+}
+
+.modelr-footer a:link,
+.modelr-footer a:visited {
+  color:#b2b2b2;
+}
+
+.modelr-footer a:hover,
+.modelr-footer a:focus {
+  color: #729fcf;
+}
+
 .navbar-btn {
   background:lightgray;
 }
