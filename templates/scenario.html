@@ -2,6 +2,7 @@
 {% block title %}Modelr &middot; Scenario{% endblock %} 
 
 {% block content %}
+<head>
 <style>
 img.img-thumbnail {
     border-style:hidden;
@@ -14,6 +15,7 @@ img.img-thumbnail {
    display:none;
 }
 </style>
+</head>
 
 <div class="container">
 
@@ -382,6 +384,7 @@ sends this page to the user -->
 <!-- This list is used by javascript and not directly seen 
 by the user -->
 <datalist id="list_of_rocks">
+  <!--[if IE 9]><select disabled style="display:none"><![endif]-->
 
   {% for rock in rocks %}
   <option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},
@@ -403,7 +406,7 @@ by the user -->
 	  data-name="{{rock.name}}">{{rock.name}}
   </option>
   {% endfor %}
-  
+  <!--[if IE 9]></select><![endif]-->
 </datalist>
 
 
