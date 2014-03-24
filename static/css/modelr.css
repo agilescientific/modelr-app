@@ -104,8 +104,13 @@
   color: #729fcf;
 }
 
-.modelr-footer {
+.modelr-footer-logo {
+  margin:4px 12px 18px 0;
   float:left;
+  color:lightgray;
+}
+
+.modelr-footer {
   color:lightgray;
 }
 
