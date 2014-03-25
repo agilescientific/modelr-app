@@ -244,10 +244,10 @@ Scenario.prototype.default_args = function default_args(argumentss) {
 
     this.arguments = {};
 
-    for ( var arg in args) {
-        this.arguments[arg] = args[arg]['default'];
-        if (arg in argumentss) {
-            this.arguments[arg] = argumentss[arg];
+    for (var i = 0; i < args.length; i++) {
+        this.arguments[args[i]["name"]] = args[i]['default'];
+        if (args[i]["name"] in argumentss) {
+            this.arguments[args[i]["name"]] = argumentss[i];
         };
 
     };
@@ -338,10 +338,10 @@ function display_form(sel) {
 
     form_text = '<table>';
 
-    for ( var arg in args) {
+    for (var arg = 0; arg < args.length; arg++) {
         form_text += '<tr>';
 
-        var deflt = this.arguments[arg];
+        var deflt = this.arguments[args[arg]['name']];
         var req = args[arg]['required'];
 
         if (deflt === null) {
@@ -353,11 +353,11 @@ function display_form(sel) {
 
         if (args[arg]['type'] == 'rock_properties_type') {
             form_text += '<td><select name="'
-                    + arg
+                    + args[arg]["name"]
                     + '" class="script_form rock_selector"><option selected hidden disabled value=""></option></select></td>';
         } else if (args[arg]['choices'] != null) {
 
-            form_text += '<td><select name="' + arg + '" class="script_form choices_selector">';
+            form_text += '<td><select name="' + args[arg]["name"] + '" class="script_form choices_selector">';
 
             for (idx in args[arg]['choices']) {
                 console.log('DEF', args[arg]['choices'][idx], deflt, args[arg]['choices'][idx] == deflt);
@@ -372,7 +372,7 @@ function display_form(sel) {
             form_text += '</select></td>';
 
         } else {
-            form_text += '<td><input class="script_form" type="text" name="' + arg + '" value="' + deflt
+            form_text += '<td><input class="script_form" type="text" name="' + args[arg]["name"] + '" value="' + deflt
                     + '"></input></td>';
         };
     };

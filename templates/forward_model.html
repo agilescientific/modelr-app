@@ -35,11 +35,11 @@
    var mapping = {}
    {% for color in (im) %}
    var keys = Object.keys(rocks)
-   key =  keys[Math.floor((Math.random()*keys.length)+1)];
+   key =  keys[Math.floor((Math.random()*keys.length))];
    rock = rocks[key];
    mapping["{{color}}"] = {name:key, property: rock};
-   maps.push(mapping);
    {% endfor %}
+   maps.push(mapping);
    {% endfor %}
 
    var images = [];
@@ -55,11 +55,14 @@
    
    seismic_model = new Scenario(null, null, {},
 				null);
+   seismic_model.on_change = function (){};
+
 
 
 
    plot_container = new Scenario(null, null, {},
 				 null);
+   plot_container.on_change = function (){};
 
    forward_model = new ForwardModel(earth_structure, 
 				    seismic_model, plot_container);
@@ -67,7 +70,7 @@
    plot_container.display = display_form;
    seismic_model.display = display_form;
 
-   plot_container.script = "forward_model.py";
+   plot_container.script = "modelr_plot.py";
    server.get_script_info(plot_container.script, function(data){
      plot_container.info = data;
      plot_container.default_args(plot_container.arguments);
@@ -98,6 +101,14 @@
 </script>
 
 <script>
+function update_image(data){
+
+   $('img#plot_image').attr('src', 
+			    "data:image/png;base64, " + 
+			    data.data); 
+ };
+</script>
+<script>
 
  function Colors(colors, increment, length)
 
@@ -127,7 +138,8 @@
    {
      c=colors[index];
      update_map = function (input){
-       property_map.colour_maps[index][c[i]] = input;
+       property_map.colour_maps[index][c[i]] = {name:input,
+						property: rocks[input]};
      }; 
      form_text += '<div class=row>';
      form_text += '<div class=foo style="background-color:' + c[i] +'"></div>';
@@ -245,7 +257,7 @@
       <div class="form-group">
 	<div class="col-sm-offset-2 col-sm-6">
 	  <button class="btn btn-default" id='create_image' 
-		  onclick="forward_model.post(server)">
+		  onclick="forward_model.post(server, update_image)">
             Create image
 	  </button>
 	</div>
