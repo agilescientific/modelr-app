@@ -114,7 +114,7 @@ def signup(email, password, parent=None):
         groups.append(domain)
     
     user = VerifyUser(email=email, password=encrypted_password,
-                      salt=salt, temp_id='ben',
+                      salt=salt, temp_id=temp_id,
                       group=groups, parent=parent)
     
     user.put()
