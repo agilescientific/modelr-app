@@ -42,7 +42,7 @@ from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Forward2DModel
+     ImageModel, Forward2DModel, Issue
 
 
 # Jinja2 environment to load templates
