@@ -2,6 +2,7 @@
 {% block title %}Modelr &middot; Scenario{% endblock %} 
 
 {% block content %}
+<head>
 <style>
 img.img-thumbnail {
     border-style:hidden;
@@ -14,6 +15,7 @@ img.img-thumbnail {
    display:none;
 }
 </style>
+</head>
 
 <div class="container">
 
@@ -62,10 +64,10 @@ img.img-thumbnail {
 	    {% endif %}
 
             
-              <div class="form-group">
+    <div class="form-group">
 		<div class="form-inline">
-		  <div class="container">
-		    <select  class="form-control" 
+		  <div class="col-xs-11">
+		    <select class="form-control" 
 			     id='scenario_loader' 
 			     onchange="load_scenario(this.value);" 
 			     placeholder="scenario name">
@@ -80,13 +82,29 @@ img.img-thumbnail {
 		    </select>
 		  </div>
 		  
+		  
+		  <div class="col-xs-offset-11">
+<span style="color:#aaa; font-size:150%; vertical-align:middle; top:4px" id="scenario_info" class="glyphicon glyphicon-info-sign" data-title="Scenarios" data-content="Scenarios are collections of the parameters you used for a particular script. The parameters control the model, the seismic experiment, and the display. You can save them to edit or view again later."></span>
+          </div>
+		  
+<script>
+$('#scenario_info').popover({
+        trigger: 'hover click', 
+        html: true,
+        placement: 'right', 
+        container: 'body',
+        delay: { show: 500, hide: 1000 }
+});
+</script>
+		  
+		  
 		</div>
       </div>
               
 	      {% if not user %}<fieldset disabled>{% endif %}
-              <div class="form-group">
+        <div class="form-group">
 		<div class="form-inline">
-		  <div class="container">
+		  <div class="col-xs-11">
 		    <select class="form-control" 
 			    id="select_script" {% if not user %}style="background-color:#bbb;" {% endif %}
 			    onchange="scenario.set_current_script(
@@ -94,8 +112,21 @@ img.img-thumbnail {
 		      <option>Please wait... </option>
 		    </select>
 		  </div>
+		  		  <div class="col-xs-offset-11">
+<span style="color:#aaa; font-size:150%; vertical-align:middle; top:4px" id="script_info" class="glyphicon glyphicon-info-sign" data-title="Scripts" data-content="Scripts are Python files, stored on our servers, that define a model, a seismic experiment, and what kinds of results are displayed. In the current release of modelr, these cannot be changed."></span>
+          </div>
+<script>
+$('#script_info').popover({
+        trigger: 'hover click', 
+        html: true,
+        placement: 'right', 
+        container: 'body',
+        delay: { show: 500, hide: 1000 }
+});
+</script>
+
 		</div>
-              </div>
+    </div>
 	      {% if not user %}</fieldset>{% endif %}
 	      
 	                    <hr/>
@@ -123,7 +154,7 @@ img.img-thumbnail {
 		<div class="form-group">
 
 		  <div class="form-inline">
-		    <div class="col-sm-10">
+		    <div class="col-xs-10">
 		      <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
 			     id='scenario_name' 
 			     onchange="scenario.name = this.value;" 
@@ -131,11 +162,11 @@ img.img-thumbnail {
 			     maxlength="20">
 		      </input>
 		    </div>
-		    <div class="col-md-offset-10">
+		    <div class="col-xs-offset-10">
 		      <button class="btn btn-default" 
 			      onclick="save_scenario()"
 			      type="button" id="savebutton">
-			save
+			        save
 		      </button>
 		    </div>
 
@@ -353,6 +384,7 @@ sends this page to the user -->
 <!-- This list is used by javascript and not directly seen 
 by the user -->
 <datalist id="list_of_rocks">
+  <!--[if IE 9]><select disabled style="display:none"><![endif]-->
 
   {% for rock in rocks %}
   <option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},
@@ -374,7 +406,7 @@ by the user -->
 	  data-name="{{rock.name}}">{{rock.name}}
   </option>
   {% endfor %}
-  
+  <!--[if IE 9]></select><![endif]-->
 </datalist>
 
 

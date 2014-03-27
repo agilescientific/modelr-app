@@ -2,25 +2,6 @@
 
 {% block title %}Modelr &middot; Settings{% endblock %}
 {% block content %}
-<head>
-<style type="text/css">
-#passstrength {
-    margin:8px 0 0 0 ;
-}
-.danger {
-    margin:8px 0 0 0 ;
-    background-color:#d9534f;
-}
-.warning {
-    margin:8px 0 0 0 ;
-    background-color:#f0ad4e;
-}
-.success {
-    margin:8px 0 0 0 ;
-    background-color:#5cb85c;
-}
-</style>
-</head>
 
   {% if error %}
   <div class="alert alert-danger">
@@ -45,79 +26,10 @@
               
   <h3>Settings</h3>
   
-  <p>There will be more stuff here one day.</p>
+  <p>There will be more stuff here one day: preferences for units, plot defaults, which modelr server, etc.</p>
 
-<div class="col-md-6">
-
-<h4>Reset my password.</h4>
-
-<p>&nbsp;</p>
-  
-  <form class="form-horizontal" action="reset" method="post">
-  
-  <div class="form-group">
-    <label for="name" class="col-sm-3 control-label">
-      Current password
-    </label>
-    <div class="col-sm-6">
-      <input class="form-control" type="password" name="current_pword">
-    </div>
-  </div>
-
-  <div class="form-group">
-  <div class="form-inline">    
-    <label for="name" class="col-sm-3 control-label">
-      New password
-    </label>
-    <div class="col-sm-6">
-      <input class="form-control" type="password" name="password" 
-	     id="password" >
-    </div>
-    <span class="badge" id="passstrength"></span>
-    </div>
-      </div>
-
-  <div class="form-group">
-    <label for="name" class="col-sm-3 control-label">
-      Verify password
-    </label>
-    <div class="col-sm-6">
-      <input class="form-control" type="password" name="verify">
-    </div>
-  </div>
-        
-    <div class="form-group">
-    <div class="col-sm-offset-3 col-sm-9">
-      <input class="btn btn-primary btn-lg" type="submit" 
-	     value="Reset my password">
-    </div>
-    </div>
-    
-  </form>
-</div>
                 
 </div>
-
-   <script type="text/javascript">
-$('#password').keyup(function(e) {
-     var strongRegex = new RegExp("^(?=.{8,})(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*\\W).*$", "g");
-     var mediumRegex = new RegExp("^(?=.{7,})(((?=.*[A-Z])(?=.*[a-z]))|((?=.*[A-Z])(?=.*[0-9]))|((?=.*[a-z])(?=.*[0-9]))).*$", "g");
-     var enoughRegex = new RegExp("(?=.{6,}).*", "g");
-     if (false == enoughRegex.test($(this).val())) {
-             $('#passstrength').removeClass('danger').html('Too short');
-     } else if (strongRegex.test($(this).val())) {
-             $('#passstrength').className = 'success';
-             $('#passstrength').removeClass('warning').addClass('success').html('Strong');
-     } else if (mediumRegex.test($(this).val())) {
-             $('#passstrength').className = 'warning';
-             $('#passstrength').removeClass('danger').removeClass('success').addClass('warning').html('Medium');
-     } else {
-             $('#passstrength').className = 'danger';
-             $('#passstrength').removeClass('warning').addClass('danger').html('Weak');
-     }
-     return true;
-});
-    </script>
 
 
 {% endblock %}
