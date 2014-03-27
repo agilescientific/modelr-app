@@ -29,8 +29,9 @@ function PlotServer(hostname, rocks) {
 	
     };
 
-    this.get_scripts = function get_scripts(callback) {
-        $.ajax({url:host + '/available_scripts.json', success:callback,
+    this.get_scripts = function get_scripts(type, callback) {
+        $.ajax({url:host + '/available_scripts.json', 
+		data:{'type': type}, success:callback,
 	       error:failure,type:"GET"});
     };
 
@@ -39,9 +40,10 @@ function PlotServer(hostname, rocks) {
      * from the plotting server. 
      * @param callback(data): do something on finish.
      */
-    this.get_script_info = function get_script_info(script, callback){
+    this.get_script_info = function get_script_info(script,type,
+						    callback){
         $.getJSON(this.hostname + '/script_help.json?script=' + 
-		  script, callback);
+		  script, {'type':type}, callback);
     };
  
 };
@@ -143,11 +145,11 @@ ForwardModel.prototype.put = function put(input_image_key,
     data = {'name': this.name, 
 	    'input_image_id': input_image_key,
 	    'output_image': output_image,
-	    'json': this.get_json()}
+	    'json': this.json_data()}
     $.post('/forward_model', data, callback)
 }
     
-ForwardModel.prototype.get_json = function get_json(){
+ForwardModel.prototype.json_data = function json_data(){
 
     data = JSON.stringify({'earth_model':this.earth_struct,
 			   'seismic_model':{script:this.seismic_model.script, 
@@ -160,85 +162,13 @@ ForwardModel.prototype.get_json = function get_json(){
 ForwardModel.prototype.post = function get(server,callback){
 
     $.post(server.hostname + '/forward_model.json', 
-	   this.get_json(), 
+	   this.json_data(), 
 	   callback);
 };
 
-
-
-
-/*
- * Class for building geometry model images
- */
-function ModelBuilder(name, script, arguments) {
-    
-    this.name = name;
-    this.script = script;
-    this.arguments = arguments;
-}
-
-
-ModelBuilder.prototype.qs = function() {
-    var args = this.arguments;
-
-    query_str = '?script=' + this.script;
-
-    for (argname in args) {
-	var value = args[argname];
-	query_str += '&' + argname + '=' + encodeURIComponent(value);
-	}
-    return query_str;
-}
-
-/*
- * Update the scenario with the default arguments provided by the 
- * plotting server.
- */
-ModelBuilder.prototype.default_args=function default_args(argumentss){
-    console.log('default_args', argumentss);
-    var args = this.info.arguments;
-
-    this.arguments = {};
-
-    for ( var arg in args) {
-        this.arguments[arg] = args[arg]['default'];
-        if (arg in argumentss) {
-            this.arguments[arg] = argumentss[arg];
-        }
-    }
-}
-
-/*
- * Update an argument.
- */
-ModelBuilder.prototype.update = function update(attr, value) {
-    this.arguments[attr] = value;
-    this.on_change();
-}
-
-/*
- * Store the current arguments of this scenario on the server.
- */
-ModelBuilder.prototype.put = function() {
-
-    var url = this.qs();
-
-    console.log(url);
-
-
-    function success(url, textStatus, jqXHR) {
-        console.log('post', textStatus);
-    }
-
-    $.post('/model_builder', {
-        'URL' : url    
-    }, success);
-    $.document.window.href="/dashboard";
-}
-
-
 /*
  * Scenario 'class'
+ * Class for handling all script style queries to the backend
  */
 function Scenario(name, script, arguments, rocks) {
     this.name = name;
@@ -335,8 +265,9 @@ Scenario.prototype.qs = function() {
 
     query_str = '?script=' + this.script;
 
-    for (argname in args) {
-        if (this.info.arguments[argname]['type'] == 'rock_properties_type') {
+    for (arg in this.info.arguments) {
+	argname=this.info.arguments[arg]['name'];
+        if (this.info.arguments[arg]['type'] == 'rock_properties_type') {
             var value = this.rocks[args[argname]];
         } else {
             var value = args[argname];
@@ -360,7 +291,7 @@ Scenario.prototype.qs = function() {
  * @param selection: selection string or tag 'select' element.
  * 
  */
-function populate_scripts(server, selection) {
+function populate_scripts(server, type, selection) {
 
     console.log("populate_scripts!");
 
@@ -369,7 +300,7 @@ function populate_scripts(server, selection) {
     // Remove options
     select_script.find('option').remove();
 
-    server.get_scripts(function(data) {
+    server.get_scripts(type, function(data) {
 
         select_script = $(selection);
         select_script.find('option').remove();

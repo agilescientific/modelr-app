@@ -21,48 +21,6 @@
 	</div>
       </div>
       
-      <div class="panel panel-default">
-	<div class="panel-heading">
-	  <h3 class="panel-title">Earth Models</h3> 
-	</div>
-	<div class="panel-body">
-	  <div id="myCarousel" class="carousel slide" 
-	       data-interval="false">
-	    <!-- Carousel slides -->
-	    <div class="carousel-inner">
-	      {% for i in range((images.__len__())) %}
-	      <div {% if i==0 %} class="active item" {% else %} 
-		class="item" {% endif %}>
-		<div class="thumbnail">
-		  <img src={{images[i]}} alt="" >
-		</div>
-	      </div>	
-	      {% endfor %}
-	    </div>
-
-	    <!-- Carousel nav -->
-	    <a class="carousel-control left" 
-	       href="#myCarousel" data-slide="prev" >‹</a>
-	    <a class="carousel-control right" 
-	       href="#myCarousel" data-slide="next" >›</a>
-	  </div>
-
-	  <form action="{{upload_url}}" method="POST" enctype="multipart/form-data">
-	    <div style='height: 0px;width:0px; overflow:hidden;'>
-	      <input type="submit" name="submit" value="Submit" id="submit">
-	      <input id="file" type="file" name="file" onchange="$('#submit').click()"/></div>
-	    <div class="btn btn-primary" 
-		   id="upload_btn" onclick="$('#file').click()">
-	      Upload Image
-	    </div>
-	  
-	    <button type="button" class="btn btn-primary" 
-		   onclick="window.location.href='/model_builder'">
-                   Build Model
-	    </button>
-	  </form>
-	</div>
-      </div>
 
       <div class="panel panel-primary">
 	<div class="panel-heading">

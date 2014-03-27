@@ -201,7 +201,7 @@ img.img-thumbnail {
      
      console.log('server.current_script');
      
-     server.get_script_info(value, function(data){
+     server.get_script_info(value, 'scenario', function(data){
        scenario.info = data;
        scenario.default_args(argumentss);
        
@@ -234,7 +234,7 @@ img.img-thumbnail {
      var img = $('img#plot_image');
      var loader = $('img#loader');
      var qs = scenario.qs();
-     var url = server.hostname +'/plot.jpeg' + qs;
+     var url = server.hostname +'/plot.jpeg' + qs + '&type=scenario';
      
      //img.attr('src','');
      loader.show();
@@ -249,7 +249,7 @@ img.img-thumbnail {
    scenario.on_change = function update_link(){
      
      var qs = scenario.qs();
-     var url = server.hostname +'/plot.jpeg' + qs;
+     var url = server.hostname +'/plot.jpeg' + qs + '&type=scenario';
      
      var p = $('p#image_link');
      p.text(url);
@@ -259,7 +259,7 @@ img.img-thumbnail {
    This populates the scripts dropdown with a list of scripts
    from the plot server.
     */
-   populate_scripts(server, 'select#select_script');
+   populate_scripts(server,'scenario', 'select#select_script');
 
    /*
    This grabs the data after the '#' in the url and updates the 

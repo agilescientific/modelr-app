@@ -528,19 +528,8 @@ class DashboardHandler(ModelrPageRequest):
         if user is None:
             self.redirect('/signin')
             return
-
-        # Make the upload url
-        upload_url = blobstore.create_upload_url('/upload')
         
-        models = \
-          ImageModel.all().ancestor(ModelrRoot).filter("user =",
-                                            user.user_id).fetch(100)
-
-        imgs = [images.get_serving_url(i.image, size=1000,crop=True)
-                for i in models]
-        
-        template_params = self.get_base_params(user=user,
-                                               images=imgs)
+        template_params = self.get_base_params(user=user)
         
         self.response.headers['Content-Type'] = 'text/html'
 
@@ -584,7 +573,6 @@ class DashboardHandler(ModelrPageRequest):
                                           parent=user)
             template_params['current_rock'] = current_rock
 
-        template_params["upload_url"] = upload_url
         
         template = env.get_template('dashboard.html')
         html = template.render(template_params)
@@ -1366,20 +1354,6 @@ class ManageGroup(ModelrPageRequest):
                         parent=ModelrRoot).put()
             self.redirect('/profile')
             return
-        
-
-class UploadImage(ModelrPageRequest):
-    def get(self):
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-        upload_url = "/upload"
-        self.response.out.write('<html><body>')
-        self.response.out.write('<form action="%s" method="POST" enctype="multipart/form-data">' % upload_url)
-        self.response.out.write("""Upload File: <input type="file" name="file"><br> <input type="submit"
-        name="submit" value="Submit"> </form></body></html>""")
-
     
 class Upload(blobstore_handlers.BlobstoreUploadHandler,
              ModelrPageRequest):
@@ -1398,7 +1372,7 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
 
         ImageModel(parent=ModelrRoot,
                    user=user.user_id,image=blob_info).put()
-        self.redirect('/dashboard')
+        self.redirect('/forward_model')
 
 class ModelBuilder(ModelrPageRequest):
 
@@ -1421,14 +1395,15 @@ class ModelBuilder(ModelrPageRequest):
         if user is None:
             self.redirect('/signup')
             return
+
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!')
         
         bucket = '/modelr_bucket/'
         filename = bucket + str(user.user_id) +'/' + str(time.time())
 
-        json_url = urllib.urlopen(self.request.get('URL'))
-
-        data = json.loads(json_url.read())
-        pic = base64.b64decode(data['data'])
+        encoded_image = self.request.get('image').split(',')[1]
+        pic = base64.b64decode(encoded_image)
         
         gcsfile = gcs.open(filename, 'w')
         gcsfile.write(pic)
@@ -1441,8 +1416,7 @@ class ModelBuilder(ModelrPageRequest):
 
         ImageModel(parent=ModelrRoot,
                    user=user.user_id, image=blob_key).put()
-
-        self.redirect('/dashboard')
+        # TODO LOgging
 
 class ForwardModel(ModelrPageRequest):
 
@@ -1453,6 +1427,9 @@ class ForwardModel(ModelrPageRequest):
             self.redirect('/signup')
             return
 
+        # Make the upload url
+        upload_url = blobstore.create_upload_url('/upload')
+        
         # Get the model images
         models = \
           ImageModel.all().ancestor(ModelrRoot).filter("user =",
@@ -1460,7 +1437,7 @@ class ForwardModel(ModelrPageRequest):
 
         # Create the serving urls
         imgs = [images.get_serving_url(i.image, size=1000,
-                                       crop=True)
+                                       crop=False)
                 for i in models]
 
         keys = [i.key() for i in models]
@@ -1486,7 +1463,8 @@ class ForwardModel(ModelrPageRequest):
                                       colors=colors,
                                       keys = keys,
                                       rocks=rocks.fetch(100),
-                            default_rocks=default_rocks.fetch(100))
+                            default_rocks=default_rocks.fetch(100),
+                                      upload_url=upload_url)
 
         template = env.get_template('forward_model.html')
         html = template.render(params)
@@ -1670,7 +1648,6 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/signin', SignIn),
                                ('/manage_group', ManageGroup),
                                ('/upload', Upload),
-                               ('/upload_image', UploadImage),
                                ('/model_builder', ModelBuilder),
                                ('/modify_forward_model', ModifyForwardModel),
                                ('/forward_model', ForwardModel),

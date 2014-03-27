@@ -19,16 +19,16 @@
 
    $(document).ready(function() {
      
-     server = new PlotServer(host);
-     modelbuilder = new ModelBuilder(name, null, {});
+     server = new PlotServer(host, null);
+     modelbuilder = new Scenario(name, null, {}, null);
 
-     modelbuilder.display = display_form
+     modelbuilder.display = display_form;
 
      modelbuilder.set_current_script = function(value, argumentss){
        modelbuilder.script = 'slab_builder.py';
        console.log('server.current_script');
 
-       server.get_script_info( value,
+       server.get_script_info( value, 'model_builder',
 		       function(data){
 	   
 	   modelbuilder.info = data;
@@ -48,12 +48,21 @@
 
      }
      
+     modelbuilder.save_model = function save_model(){
 
+       success = function(data){
+	 window.location.href='/forward_model'
+       }
+
+       image = $('img#plot_image').attr('src');
+
+       $.post('/model_builder',{'image': image}, success);
+     }
      
      modelbuilder.on_change = function update_link(){
        
        var qs = modelbuilder.qs();
-       var url = server.hostname +'/plot.json' + qs;
+       var url = server.hostname +'/plot.json' + qs + '&type=model_builder';
        
        var p = $('p#image_link');
        p.text(url);
@@ -67,7 +76,7 @@
      server.update_image = function(modelbuilder){
        var qs = modelbuilder.qs();
        var url = server.hostname +'/plot.json' + qs;
-       $.get(url, function(data){
+       $.get(url, {type:'model_builder'},function(data){
 	 $('img#plot_image').attr('src', 
 				  "data:image/png;base64, " + 
 				  data.data); });
@@ -79,7 +88,6 @@
    });
 
   </script>
-
 
 
   <!-- MODEL PANEL
@@ -138,7 +146,8 @@
     <div class="form-group">
       <form action="/model_builder" method="post">
 	<input type="hidden" id="URL" name="URL">
-	<button class="btn btn-default" type="submit">
+	<button class="btn btn-default" type="button"
+		onclick="modelbuilder.save_model()">
           Save
 	</button>
       </form>

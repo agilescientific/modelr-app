@@ -54,7 +54,7 @@
 
    property_map = new PropertyMap(images, maps, db_keys, 0);
 
-   server = new PlotServer(host);
+   server = new PlotServer(host, null);
 
    earth_structure = new EarthStructure(null, 5000, 5000, 'depth', 
 					null);
@@ -79,7 +79,8 @@
    plot_container.script = "modelr_plot.py";
    
 plot_container.set_current_script = function(value, argumentss){
-     server.get_script_info(plot_container.script, function(data){
+     server.get_script_info(plot_container.script, 'plots',
+			    function(data){
        plot_container.info = data;
        plot_container.default_args(argumentss);
      
@@ -97,9 +98,11 @@ plot_container.set_current_script = function(value, argumentss){
    Colors(0);
 
    seismic_model.script = "convolution_model.py";
-   seismic_model.set_current_script = function(value, argumentss){
+   seismic_model.set_current_script = function(value,
+					       argumentss){
 
-     server.get_script_info(seismic_model.script, function(data){
+     server.get_script_info(seismic_model.script, 'seismic',
+			    function(data){
        seismic_model.info = data;
        seismic_model.default_args(argumentss);
      
@@ -310,6 +313,21 @@ $("#units").change(function (){
 	  </div>
 	</form>
       </div>
+
+      <form action="{{upload_url}}" method="POST" enctype="multipart/form-data">
+	<div style='height: 0px;width:0px; overflow:hidden;'>
+	  <input type="submit" name="submit" value="Submit" id="submit">
+	      <input id="file" type="file" name="file" onchange="$('#submit').click()"/></div>
+	      <div class="btn btn-primary" 
+		 id="upload_btn" onclick="$('#file').click()">
+	      Upload Image
+	    </div>
+	  
+	    <button type="button" class="btn btn-primary" 
+		    onclick="window.location.href='/model_builder'">
+              Build Model
+	    </button>
+      </form>
       <!-- Earth Model Properties -->
 
      <strong>Define the units of your model</strong>
