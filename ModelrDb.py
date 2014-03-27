@@ -52,9 +52,9 @@ class Item(db.Model):
     """
     user = db.IntegerProperty()
     group = db.StringProperty()
+    date = db.DateTimeProperty(auto_now_add=True)
 
 
-    
 class Group(db.Model):
 
     name = db.StringProperty()
@@ -70,6 +70,13 @@ class ImageModel(Item):
     
     image = blobstore.BlobReferenceProperty()
 
+class Forward2DModel(Item):
+
+    name = db.StringProperty(multiline=False)
+    input_model_key = db.StringProperty()
+    output_image = blobstore.BlobReferenceProperty()
+    data = db.BlobProperty()
+    
 class Scenario(Item):
     '''
     Database of Scenarios 
@@ -77,7 +84,6 @@ class Scenario(Item):
     name = db.StringProperty(multiline=False)
     
     data = db.BlobProperty()
-    date = db.DateTimeProperty(auto_now_add=True)
 
 class Rock(Item):
     """
@@ -86,7 +92,6 @@ class Rock(Item):
     
     name = db.StringProperty(multiline=False)
     description = db.StringProperty(multiline=True)
-    date = db.DateTimeProperty(auto_now_add=True)
 
     vp = db.FloatProperty()
     vs = db.FloatProperty()

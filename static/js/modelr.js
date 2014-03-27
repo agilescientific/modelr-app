@@ -58,38 +58,109 @@ function EarthStructure(image, depth, length, units, mapping){
     this.units = units;
 };
 
-function PropertyMap(images, colour_maps){
+function PropertyMap(images, colour_maps, keys, current_index){
     this.images = images;
-    this.colour_maps = colour_maps;}
-
-PropertyMap.prototype.get_image = function(index){
-    return this.images[index];
+    this.colour_maps = colour_maps;
+    this.keys = keys;
+    this.current_index = current_index;
 }
 
-PropertyMap.prototype.get_mapping = function(index){
-    return this.colour_maps[index];
+PropertyMap.prototype.get_image = function(){
+    return this.images[this.current_index];
 }
 
+PropertyMap.prototype.get_mapping = function(){
+    return this.colour_maps[this.current_index];
+}
 
-function ForwardModel(earth_struct, 
+PropertyMap.prototype.get_key = function(){
+    return this.keys[this.current_index]
+}
+
+PropertyMap.prototype.set_index = function(index){
+    this.current_index = index;
+}
+
+PropertyMap.prototype.get_key_index = function(key){
+    return this.keys.indexOf(key);
+}
+
+PropertyMap.prototype.get_colours = function(){
+    mapping = this.colour_maps[this.current_index];
+
+    colours = [];
+
+    for (c in mapping){
+	colours.push(c);
+    }
+    return colours;
+}
+
+PropertyMap.prototype.n_maps = function(){
+
+    return this.images.length;
+}
+
+function ForwardModel(name,earth_struct, 
 		      seismic_model, plots) {
 
+    this.name = name;
     this.earth_struct = earth_struct;
     this.seismic_model = seismic_model;
     this.plots = plots;
 };
 
+ForwardModel.prototype.get = function get(name, callback){
+
+    data = {'name': name}
+    var fm = this;
+    success = function success(data){
+
+	var info = JSON.parse(data);
+	var data = JSON.parse(info["data"]);
+
+	fm.name = name;
+
+	fm.earth_struct = data.earth_model;
+
+	fm.seismic_model.script = data.seismic_model["script"];
+	fm.seismic_model.set_current_script(fm.seismic_model.script,
+					    data.seismic_model["args"]);
+
+	fm.plots.script = data.plots["script"];
+	fm.plots.set_current_script(fm.plots.script, 
+				      data.plots["args"]);
+    }
+
+    $.ajax({type:"GET", url: '/modify_forward_model', data:data, 
+	    success:function(data){ success(data); 
+				    callback(data);}});
+}
+
+ForwardModel.prototype.put = function put(input_image_key,
+					  output_image,
+					  callback){
+    data = {'name': this.name, 
+	    'input_image_id': input_image_key,
+	    'output_image': output_image,
+	    'json': this.get_json()}
+    $.post('/forward_model', data, callback)
+}
+    
+ForwardModel.prototype.get_json = function get_json(){
+
+    data = JSON.stringify({'earth_model':this.earth_struct,
+			   'seismic_model':{script:this.seismic_model.script, 
+					    args:this.seismic_model.arguments}, 
+			   'plots':{script:this.plots.script,
+				    args:this.plots.arguments}});
+    return data
+}
 
 ForwardModel.prototype.post = function get(server,callback){
 
-data = {'earth_model':this.earth_struct,
-	'seismic_model':{script:this.seismic_model.script, 
-			 args:this.seismic_model.arguments}, 
-	'plots':{script:this.plots.script,
-		 args:this.plots.arguments}};
-
     $.post(server.hostname + '/forward_model.json', 
-	   JSON.stringify(data), 
+	   this.get_json(), 
 	   callback);
 };
 
@@ -247,7 +318,7 @@ Scenario.prototype.default_args = function default_args(argumentss) {
     for (var i = 0; i < args.length; i++) {
         this.arguments[args[i]["name"]] = args[i]['default'];
         if (args[i]["name"] in argumentss) {
-            this.arguments[args[i]["name"]] = argumentss[i];
+            this.arguments[args[i]["name"]] = argumentss[args[i]["name"]];
         };
 
     };
@@ -341,7 +412,7 @@ function display_form(sel) {
     for (var arg = 0; arg < args.length; arg++) {
         form_text += '<tr>';
 
-        var deflt = this.arguments[args[arg]['name']];
+        var deflt = this.arguments[args[arg]["name"]];
         var req = args[arg]['required'];
 
         if (deflt === null) {

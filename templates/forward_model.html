@@ -30,7 +30,7 @@
    var rocks = get_rocks("#list_of_rocks");
 
    var rand_default = [];
-  
+   
    {% for im in colors %}
    var mapping = {}
    {% for color in (im) %}
@@ -47,11 +47,17 @@
    images.push("{{image}}");
    {% endfor %}
    
-   property_map = new PropertyMap(images, maps);
+   var db_keys = []
+   {% for key in keys %}
+   db_keys.push("{{key}}");
+   {% endfor %}
+
+   property_map = new PropertyMap(images, maps, db_keys, 0);
 
    server = new PlotServer(host);
 
-   earth_structure = new EarthStructure(null, null, null, null, null);
+   earth_structure = new EarthStructure(null, 5000, 5000, 'depth', 
+					null);
    
    seismic_model = new Scenario(null, null, {},
 				null);
@@ -64,53 +70,122 @@
 				 null);
    plot_container.on_change = function (){};
 
-   forward_model = new ForwardModel(earth_structure, 
+   forward_model = new ForwardModel(null,earth_structure, 
 				    seismic_model, plot_container);
 
    plot_container.display = display_form;
    seismic_model.display = display_form;
 
    plot_container.script = "modelr_plot.py";
-   server.get_script_info(plot_container.script, function(data){
-     plot_container.info = data;
-     plot_container.default_args(plot_container.arguments);
+   
+plot_container.set_current_script = function(value, argumentss){
+     server.get_script_info(plot_container.script, function(data){
+       plot_container.info = data;
+       plot_container.default_args(argumentss);
      
-     console.log('div#plot_place');
+       console.log('div#plot_place');
      
 
-     // This will Create a form see above
-     plot_container.display('div#plot_place');
+       // This will Create a form see above
+       plot_container.display('div#plot_place');
      
-   })
-   Colors({{colors}}, 0, {{colors.__len__()}});
+     })
+   }
+
+
+
+   Colors(0);
 
    seismic_model.script = "convolution_model.py";
-   server.get_script_info(seismic_model.script, function(data){
-     seismic_model.info = data;
-     seismic_model.default_args(seismic_model.arguments);
+   seismic_model.set_current_script = function(value, argumentss){
+
+     server.get_script_info(seismic_model.script, function(data){
+       seismic_model.info = data;
+       seismic_model.default_args(argumentss);
      
-     console.log('div#seismic_place');
+       console.log('div#seismic_place');
      
      // This will Create a form see above
-     seismic_model.display('div#seismic_place');
-     
-   });
+       seismic_model.display('div#seismic_place');
+     });
+   }
+   
 
+   var hash = window.location.hash.substring(1);
+   
+   if (hash != ''){
+     model_name = hash;
+     load_scenario(model_name);
+   }
+else{
+     seismic_model.set_current_script(seismic_model.script, 
+				      seismic_model.arguments);
+     plot_container.set_current_script(plot_container.script, 
+				       plot_container.arguments);
+   }
+
+
+$("#depth").val(forward_model.earth_struct.depth);
+$("#depth").change( function (){
+    forward_model.earth_struct.depth = this.value;
+});
+$("#length").val(forward_model.earth_struct.length);
+$("#length").change(function (){
+   forward_model.earth_struct.length = this.value;
+});
+$("#units").val(forward_model.earth_struct.units);
+$("#units").change(function (){
+     forward_model.earth_struct.units = this.value;
+});
 
  });
 </script>
 
 <script>
-function update_image(data){
+ function update_image(data){
 
    $('img#plot_image').attr('src', 
 			    "data:image/png;base64, " + 
 			    data.data); 
  };
+
+ function save_model(){
+
+   var input_image = property_map.get_key();
+   var output_image = $('img#plot_image').attr("src");
+   forward_model.put(input_image, output_image);
+};
+
+ // Loads a scenario
+ load_scenario = function load_scenario(scenario_name){
+
+   callback_function = function(data){
+
+     data = JSON.parse(data);
+
+     $('#plot_image').attr('src', data.output_image);
+     index = property_map.get_key_index(data.input_image_key);
+
+     $('myCarousel').carousel(index);
+
+     property_map.set_index(index);
+
+     property_map.colour_maps[index] = forward_model.earth_struct.mapping
+     Colors(0);
+
+     
+   }
+
+   forward_model.get(scenario_name, function(data){
+     callback_function(data);
+   });
+ }
+
+
 </script>
 <script>
 
- function Colors(colors, increment, length)
+ function Colors(increment)
 
  {
 
@@ -122,32 +197,36 @@ function update_image(data){
    var index = $('#myCarousel .active').index('#myCarousel .item') + 
 					      increment;
 
- 
+   
+   var length = property_map.n_maps();
 
    index = index % length; 
 
-   earth_structure.image = property_map.get_image(index);
-   earth_structure.mapping = property_map.get_mapping(index);
+   property_map.set_index(index);
+   forward_model.earth_struct.image = property_map.get_image();
+   forward_model.earth_struct.mapping = property_map.get_mapping();
 
    div.children().remove()
 
    form = div.append('<form id=script_form action=""></form>');
 
    form_text='<div>';
-   for (i in colors[index])
+   c = property_map.get_colours();
+
+   for (i in c)
    {
-     c=colors[index];
      update_map = function (input){
        property_map.colour_maps[index][c[i]] = {name:input,
 						property: rocks[input]};
      }; 
      form_text += '<div class=row>';
      form_text += '<div class=foo style="background-color:' + c[i] +'"></div>';
-     form_text += '<select class="script_form rock_selector" id="rock_selector" onchange="update_map(this.value)">'
+     form_text += '<select  id="rock_selector" onchange="update_map(this.value)">'
+     
      for (j in rocks) {
-       selected = earth_structure.mapping[c[i]].name;
+       selected = forward_model.earth_struct.mapping[c[i]].name;
        if (j == selected){
-       form_text += '<option value="' + j +'" selected>'+j+'</option>' ;
+	 form_text += '<option value="' + j +'" selected>'+j+'</option>' ;
        }
        else{
 	 form_text += '<option value="' + j +'">'+j+'</option>' ;
@@ -157,7 +236,7 @@ function update_image(data){
    }
    form_text+='</div>';
    form.append(form_text);
-  
+   
  }
 
 </script>
@@ -217,12 +296,12 @@ function update_image(data){
 		<!-- Carousel nav -->
 		<a class="carousel-control left" href="#myCarousel" 
 		   data-slide="prev" 
-		   onclick="Colors({{colors}}, -1, {{images.__len__()}})">
+		   onclick="Colors(-1)">
 		  ‹
 		</a>
 		<a class="carousel-control right" href="#myCarousel" 
 		   data-slide="next" 
-		   onclick="Colors({{colors}},1,{{images.__len__()}})">
+		   onclick="Colors(1)">
 		  ›
 		</a>
 	      </div>
@@ -231,6 +310,32 @@ function update_image(data){
 	  </div>
 	</form>
       </div>
+      <!-- Earth Model Properties -->
+
+     <strong>Define the units of your model</strong>
+    <form id="earth_properties">
+      <table>
+	<tr>
+	  <td>Length of the model</td>
+	  <td><input class="script_form" type="number" id="length" name="length"></input>
+	  </td>
+	</tr>
+	<tr>
+	  <td>Depth of the model</td>
+	    <td><input class="script_form" type="number" id="depth" name="depth">
+	    </input></td>
+	</tr>
+	<tr>
+	    <td>Model domain</td>
+	    <td><select name="units" id="units" class="script_form rock_selector">
+	      <option>time</option>
+	      <option>depth</option>
+	    </select>
+	    </td>
+	</tr>
+      </table>
+    </form>
+
     </div>
     
 
@@ -263,6 +368,27 @@ function update_image(data){
 	</div>
       </div>
 
+      <div class="form-group">
+
+	<div class="form-inline">
+	  <div class="col-sm-10">
+	    <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
+		   id='scenario_name' 
+		   onchange="forward_model.name = this.value;" 
+		   placeholder="Scenario name" 
+		   maxlength="20">
+	    </input>
+	  </div>
+	  <div class="col-md-offset-10">
+	    <button class="btn btn-default" 
+		    onclick="save_model()"
+		    type="button" id="savebutton">
+	      save
+	    </button>
+	  </div>
+
+	</div>
+      </div>
     </div>
   </div>
   <div class="col-md-6">
@@ -281,6 +407,6 @@ function update_image(data){
     </div>
   </div>
 </div>
-</div>
 
-{% endblock %}
+
+   {% endblock %}

@@ -42,7 +42,7 @@ from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel
+     ImageModel, Forward2DModel
 
 
 
@@ -1367,47 +1367,6 @@ class ManageGroup(ModelrPageRequest):
             self.redirect('/profile')
             return
         
-class CarouselTest(ModelrPageRequest):
-
-    def get(self):
-  
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-
-        models = \
-          ImageModel.all().ancestor(ModelrRoot).filter("user =",
-                                            user.user_id).fetch(100)
-
-        imgs = [images.get_serving_url(i.image, size=1000,
-                                       crop=True)
-                for i in models]
-     
-        
-
-        readers = [blobstore.BlobReader(i.image.key())
-                   for i in models]
-
-        colors = [[RGBToString(j[1])
-                   for j in Image.open(i).convert('RGB').getcolors()]
-                  for i in readers]
-        
-        rocks = Rock.all()
-        rocks.ancestor(user)
-        rocks.filter("user =", user.user_id)
-        rocks.order("-date")
-
-        default_rocks = Rock.all()
-        default_rocks.filter("user =", admin_id)
-        params = self.get_base_params(user=user,
-                                      images=imgs,
-                                      colors=colors,
-                                      rocks=rocks.fetch(100),
-                            default_rocks=default_rocks.fetch(100))
-        template = env.get_template('image_testing.html')
-        html = template.render(params)
-        self.response.out.write(html)
 
 class UploadImage(ModelrPageRequest):
     def get(self):
@@ -1493,25 +1452,28 @@ class ForwardModel(ModelrPageRequest):
         if user is None:
             self.redirect('/signup')
             return
-        
+
+        # Get the model images
         models = \
           ImageModel.all().ancestor(ModelrRoot).filter("user =",
                                             user.user_id).fetch(100)
 
-        
+        # Create the serving urls
         imgs = [images.get_serving_url(i.image, size=1000,
                                        crop=True)
                 for i in models]
-     
+
+        keys = [i.key() for i in models]
         
 
+        # Read in each image to get the RGB colours
         readers = [blobstore.BlobReader(i.image.key())
                    for i in models]
-
         colors = [[RGBToString(j[1])
                    for j in Image.open(i).convert('RGB').getcolors()]
                   for i in readers]
-        
+
+        # Grab the rocks
         rocks = Rock.all()
         rocks.ancestor(user)
         rocks.filter("user =", user.user_id)
@@ -1522,6 +1484,7 @@ class ForwardModel(ModelrPageRequest):
         params = self.get_base_params(user=user,
                                       images=imgs,
                                       colors=colors,
+                                      keys = keys,
                                       rocks=rocks.fetch(100),
                             default_rocks=default_rocks.fetch(100))
 
@@ -1529,7 +1492,82 @@ class ForwardModel(ModelrPageRequest):
         html = template.render(params)
         self.response.out.write(html)
 
+    def post(self):
+
+        user = self.verify()
+        if not user:
+            self.redirect('/signup')
+
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!')
+
+        name = self.request.get('name')
+
+        # Make image blobs
+        input_model_key = self.request.get('input_image_id')
         
+        output_image = self.request.get('output_image')
+        bucket = '/modelr_bucket/'
+        output_filename = (bucket + str(user.user_id) +'/2' +
+                           str(time.time()))
+        
+        # Write to cloud services
+        gcsfile = gcs.open(output_filename, 'w')
+        gcsfile.write(base64.b64decode(output_image.split(',')[1]))
+        gcsfile.close()
+
+        # Make a blob reference
+        bs_file = '/gs' + output_filename
+        output_blob_key = blobstore.create_gs_key(bs_file)
+
+        # Get the rest of data
+        data = self.request.get('json')
+
+        # TODO Group
+        fmodel = Forward2DModel.all().ancestor(user).filter("name =",
+                                                        name).get()
+        if not fmodel:
+            fmodel = Forward2DModel(parent=user)
+            fmodel.user = user.user_id
+            fmodel.name = name
+            # TODO GROUP
+
+        fmodel.data = data.encode()
+        fmodel.input_model_key = input_model_key
+        fmodel.output_image = output_blob_key
+        fmodel.put()
+
+class ModifyForwardModel(ModelrPageRequest):
+
+    def get(self):
+        user = self.verify()
+        if not user:
+            self.redirect("/signup")
+
+        model_name = self.request.get("name")
+            
+        # TODO Handle failure
+
+        model = \
+          Forward2DModel.all().ancestor(user).filter("name =",
+                                                     model_name).get()
+        if model is None:
+        # TODO
+            pass
+        key = model.input_model_key
+        data = {"input_image_key": str(key),
+                "output_image": images.get_serving_url(model.output_image),
+                "data": model.data}
+        
+        self.response.write(json.dumps(data))
+
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity='fetched_forward_model',
+                        parent=ModelrRoot).put()
+        return
+
+    
 class NotFoundPageHandler(ModelrPageRequest):
     def get(self):
         self.error(404)        
@@ -1631,10 +1669,10 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/verify_email', EmailAuthentication),
                                ('/signin', SignIn),
                                ('/manage_group', ManageGroup),
-                               ('/carousel_test', CarouselTest),
                                ('/upload', Upload),
                                ('/upload_image', UploadImage),
                                ('/model_builder', ModelBuilder),
+                               ('/modify_forward_model', ModifyForwardModel),
                                ('/forward_model', ForwardModel),
                                ('/forgot', ForgotHandler),
                                ('/reset', ResetHandler),
