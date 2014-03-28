@@ -32,6 +32,7 @@ import stripe
 import json
 import base64
 import re
+import StringIO
 
 from xml.etree import ElementTree
 
@@ -1473,13 +1474,33 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             return
         
         upload_files = self.get_uploads()
-        # 'file' is file upload field in the form
 
-        print "test ++++++++++ ", upload_files
         blob_info = upload_files[0]
 
+        reader = blobstore.BlobReader(blob_info.key())
+        
+        # Quantize to less than 6 colours
+        im = Image.open(reader).convert('P', palette=Image.ADAPTIVE,
+                                        colors=6)
+        output = StringIO.StringIO()
+        im.save(output, format='PNG')
+        
+        bucket = '/modelr_bucket/'
+        output_filename = (bucket + str(user.user_id) +'/2' +
+                           str(time.time()))
+        
+        gcsfile = gcs.open(output_filename, 'w')
+        gcsfile.write(output.getvalue())
+
+        output.close()
+        gcsfile.close()
+
+        # Make a blob reference
+        bs_file = '/gs' + output_filename
+        output_blob_key = blobstore.create_gs_key(bs_file)
+        
         ImageModel(parent=ModelrRoot,
-                   user=user.user_id,image=blob_info).put()
+                   user=user.user_id,image=output_blob_key).put()
         self.redirect('/forward_model')
 
 class ModelBuilder(ModelrPageRequest):
