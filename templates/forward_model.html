@@ -250,8 +250,14 @@ $("#units").change(function (){
 
 </script>
 
-<div class="container">
 
+
+<div class="container">
+  {% if error %}
+  <div class="alert alert-danger">
+      <strong>Something's wrong...</strong> {{ error }}
+  </div>
+  {% endif %}
   <!-- This will expand the list of rocks before google app engine 
   sends this page to the user -->
   <!-- This list is used by javascript and not directly 
