@@ -1386,7 +1386,7 @@ class StripeHandler(ModelrPageRequest):
                 self.response.write("ALL OK")
                 return
             
-            tax = tax_dict.get(user[0].tax_code, 'None')
+            tax = tax_dict.get(user[0].tax_code, None)
             if not tax:
                 self.response.write("ALL OK")
                 return
