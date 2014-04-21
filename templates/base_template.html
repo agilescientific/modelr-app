@@ -18,17 +18,24 @@
 <link rel="stylesheet" href="/static/css/modelr.css" type="text/css" media="screen">
 
 <!-- Fonts -->
-<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
+<link href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
 
 <!-- Apple touch icon -->
 <link rel="apple-touch-icon" href="/static/img/apple-touch-icon_152px.png">
 
 <style type="text/css">
   body {
-    padding-top: 60px;
+    padding-top: 24px;
     padding-bottom: 40px;
     }
 </style>
+<style type="text/css">
+.divider-vertical {
+height: 50px;
+margin: 0 7px;
+border-left: 1px solid #F2F2F2;
+border-right: 1px solid #FFF;
+}</style>
 
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.js"></script>
@@ -46,7 +53,27 @@
 
 <body>
 
+    <!-- Browser warnings
+    ================================================== -->
+
+<!--[if IE lt 9]>
+<header class="masthead">
+  <div class="container">
+<div class="alert alert-danger alert-dismissable">
+  <div style="font-size:250%; text-align:center; opacity:0.67; padding:0.2em; width:2.5em; float:left; vertical-align:middle;"><span class="glyphicon glyphicon-thumbs-down"></span>
+</div>
+  <p class="lead">Please note that Modelr does not support Internet Explorer 7 or 8.<br />
+We recommend using IE10+, or a recent version of another browser.</p>
+  </div>
+  </div>
+</header>	
+<![endif]-->
+
+
     <!-- Nav
+    ================================================== -->
+
+    <!-- FOR LARGE SCREENS
     ================================================== -->
     
 <div class="navbar-wrapper">
@@ -81,11 +108,16 @@
       {% endif %}
     </ul>
      
-    <ul class="nav navbar-nav navbar-right">
+    <ul class="nav navbar-nav navbar-right hidden-xs">
+      <li><a href="/feedback">Feedback</a>
       <li><a href="/help">Help</a>
+      <li class="divider-vertical"></li>
+      
     {% if user %}
+         <li style="margin-left:7px; margin-top:8px;"><figure style="width:32px; border: 1px solid #f2f2f2;"><img src="https://www.gravatar.com/avatar/{{ email_hash }}?s=32&d=identicon" /></figure></li>
+
       <li class="dropdown">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ user.email if user else "" }}<b class="caret"></b></a>
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ user.email }}<b class="caret"></b></a>
         <ul class="dropdown-menu">
           <li><a href="/profile">My profile</a></li>
           <li><a href="/settings">Settings</a></li>
@@ -95,7 +127,30 @@
       </li>
     {% else %}
       <li>
-      <button type="button" class="btn navbar-btn" onclick="location.href='/signin'" id="signin_button">Sign in</button>
+      <button style="margin-left:14px;" type="button" class="btn navbar-btn" onclick="location.href='/signin'" id="signin_button">Sign in</button>
+      </li>
+    {% endif %}
+    </ul>
+
+    <!-- FOR XS SCREENS
+    ================================================== -->
+
+    <ul class="nav navbar-nav navbar-right visible-xs">
+      <li><a href="/help">Help</a>
+      
+    {% if user %}
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ user.email }}<b class="caret"></b></a>
+        <ul class="dropdown-menu">
+          <li><a href="/profile">My profile</a></li>
+          <li><a href="/settings">Settings</a></li>
+          <li class="divider"></li>
+          <li><a href="/signout">Sign out</a></li>
+        </ul>
+      </li>
+    {% else %}
+      <li>
+      <button style="margin-left:14px;" type="button" class="btn navbar-btn" onclick="location.href='/signin'" id="signin_button">Sign in</button>
       </li>
     {% endif %}
     </ul>
@@ -120,14 +175,20 @@
 <div class="container">
 {% block footer %}   {% endblock %}
 <div style="clear:both;"></div>
-<div style="float:right;">
+<div style="float:right; margin-left:4px; margin-bottom:18px">
 <!-- Begin DigiCert site seal HTML and JavaScript -->
-<div id="DigiCertClickID_ROpNO0rb" data-language="en_US"></div>
-<script type="text/javascript">
-var __dcid = __dcid || [];__dcid.push(["DigiCertClickID_ROpNO0rb", "10", "s", "black", "ROpNO0rb"]);(function(){var cid=document.createElement("script");cid.async=true;cid.src="//seal.digicert.com/seals/cascade/seal.min.js";var s = document.getElementsByTagName("script");var ls = s[(s.length - 1)];ls.parentNode.insertBefore(cid, ls.nextSibling);}());
-</script>
-<!-- End DigiCert site seal HTML and JavaScript -->          </div>
-<div style="float:left;"><p style="color:lightgray" ><a href="http://www.agilegeoscience.com/"><img src="/static/img/agile_logo.png" width="60px" /></a></p></div><div><p style="color:lightgray">&nbsp;&nbsp;&nbsp;<a style="color:lightgray" href="http://www.agilegeoscience.com/">Agile Geoscience 2014</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/about">About</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/terms">Terms</a> &nbsp;&bullet;&nbsp; <a style="color:lightgray" href="/privacy">Privacy</a><br />&nbsp;&nbsp;&nbsp;<span style="font-size:75%;">Modelr & the Modelr logo are trademarks of Agile Geoscience Ltd</span></p></div>
+  <div id="DigiCertClickID_ROpNO0rb" data-language="en_US"></div>
+    <script type="text/javascript">
+      var __dcid = __dcid || [];__dcid.push(["DigiCertClickID_ROpNO0rb", "10", "s", "black", "ROpNO0rb"]);(function(){var cid=document.createElement("script");cid.async=true;cid.src="https://seal.digicert.com/seals/cascade/seal.min.js";var s = document.getElementsByTagName("script");var ls = s[(s.length - 1)];ls.parentNode.insertBefore(cid, ls.nextSibling);}());
+    </script>
+<!-- End DigiCert site seal HTML and JavaScript -->
+</div>
+<div class="modelr-footer-logo">
+  <a href="http://www.agilegeoscience.com/"><img src="/static/img/agile_logo.png" width="60px" /></a>
+</div>
+<div class="modelr-footer">
+  <p><a href="http://www.agilegeoscience.com/">Agile Geoscience 2014</a>&nbsp;&nbsp;&nbsp;&nbsp; <a href="/about">About</a>&nbsp;&bullet;&nbsp;<a href="/terms">Terms</a>&nbsp;&bullet;&nbsp;<a href="/privacy">Privacy</a><br />
+  <span style="display:block; margin-top:3px; font-size:75%;">Modelr & the Modelr logo are trademarks of Agile&nbsp;Geoscience&nbsp;Ltd</span></p></div>
 </div>
 </footer>
 

@@ -32,7 +32,7 @@ from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      forgot_password, send_message, make_user
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest, ActivityLog, VerifyUser, ModelServedCount
+     GroupRequest, ActivityLog, VerifyUser, ModelServedCount, Issue
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
@@ -105,7 +105,7 @@ for i in default_rocks:
 # Secret API key from Stripe dashboard
 #stripe.api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
 stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
-price = 900
+PRICE = 900
 tax_dict = {"AB":0.05,
             "BC":0.05,
             "MB":0.05,
@@ -142,6 +142,13 @@ class ModelrPageRequest(webapp2.RequestHandler):
         '''
         get the default parameters used in base_template.html
         '''
+        
+        user=self.verify()
+        
+        if user:
+            email_hash = hashlib.md5(user.email).hexdigest()
+        else:
+            email_hash=''
 
         default_rock = dict(vp=0,vs=0, rho=0, vp_std=0,
                             rho_std=0, vs_std=0,
@@ -150,7 +157,8 @@ class ModelrPageRequest(webapp2.RequestHandler):
         
         params = dict(logout=users.create_logout_url(self.request.uri),
                       HOSTNAME=self.HOSTNAME,
-                      current_rock = default_rock)
+                      current_rock = default_rock,
+                      email_hash=email_hash)
         
         params.update(kwargs)
         
@@ -554,8 +562,6 @@ class AboutHandler(ModelrPageRequest):
         # Uptime Robot IDs
         ur_modelr_io = '775980219'
         ur_modelr_org = '775980224'  # REL, usually
-        # ur_modelr_org_8080 = '775980224'  # REL, usually
-        # ur_modelr_org_8081 = '776083114'  # DEV, usually
 
         # Uptime Robot URL
         ur_url = 'http://api.uptimerobot.com/getMonitors'
@@ -581,6 +587,15 @@ class AboutHandler(ModelrPageRequest):
 
         try:
             j = json.loads(raw_json)
+            
+            ur_ratio = j['monitors']['monitor'][0]['customuptimeratio']
+            ur_server_ratio = j['monitors']['monitor'][1]['customuptimeratio']
+            ur_server_status_code = j['monitors']['monitor'][1]['status']
+            ur_last_response_time = j['monitors']['monitor'][0]['responsetime'][-1]['value']
+            ur_last_server_response_time = j['monitors']['monitor'][1]['responsetime'][-1]['value']
+            
+            ur_server_status = UR_STATUS_DICT[ur_server_status_code].upper()
+            
             template_params = \
             self.get_base_params(user=user,
                                  ur_ratio=ur_ratio,
@@ -592,7 +607,7 @@ class AboutHandler(ModelrPageRequest):
                                  )
         except:
 
-             template_params = \
+            template_params = \
             self.get_base_params(user=user,
                                  ur_ratio=None,
                                  ur_response_time=None,
@@ -607,6 +622,7 @@ class AboutHandler(ModelrPageRequest):
         html = template.render(template_params)
         self.response.out.write(html)          
 
+
 class FeaturesHandler(ModelrPageRequest):
     def get(self):
 
@@ -614,9 +630,113 @@ class FeaturesHandler(ModelrPageRequest):
         template_params = self.get_base_params(user=user)
         template = env.get_template('features.html')
         html = template.render(template_params)
+        self.response.out.write(html)      
+
+
+class FeedbackHandler(ModelrPageRequest):
+    def get(self):
+
+        user = self.verify()
+        template_params = self.get_base_params(user=user)
+
+        # Get the list of issues from GitHub. 
+        # First, set up the request.
+        gh_api_key = 'token 89c9d30cddd95358b1465d1dacb1b64597b42f89'
+        url = 'https://api.github.com/repos/kwinkunks/modelr_app/issues'
+        params = {'labels':'wishlist', 'state':'open'}
+        query = urllib.urlencode(params)
+        full_url = '{0}?{1}'.format(url, query)
+
+        # Now make the request.
+        req = urllib2.Request(full_url)
+        req.add_header('Authorization', gh_api_key)
+
+        try:
+            resp = urllib2.urlopen(req)
+            raw_json = resp.read()
+            git_data = json.loads(raw_json)
+            
+        except:
+            err_msg = 'Failed to retrieve issues from GitHub. Please check back later.'
+            git_data = {}
+
+        else:
+            err_msg = ''
+
+            for issue in git_data:
+
+                # Get the user's opinion.
+                status = None
+                if user:
+                    user_issues = Issue.all().ancestor(user)
+                    user_issue = user_issues.filter("issue_id =", issue["id"]).get()
+                    if user_issue:
+                        status = user_issue.vote
+                    else:
+                        Issue(parent=user, issue_id=issue["id"]).put()
+                        
+                up, down = 0, 0
+
+                if status == 1:
+                    up = 'true'
+                if status == -1:
+                    down = 'true'
+
+                issue.update(status=status,
+                             up=up,
+                             down=down)
+
+                # Get the count. We have to read the database twice. 
+                down_votes = Issue.all().ancestor(ModelrRoot).filter("issue_id =", issue["id"]).filter("vote =", -1).count()
+                up_votes = Issue.all().ancestor(ModelrRoot).filter("issue_id =", issue["id"]).filter("vote =", 1).count()
+                count = up_votes - down_votes
+
+                print up_votes, down_votes
+
+                issue.update(up_votes=up_votes,
+                             down_votes=down_votes,
+                             count=count)
+
+        # Write out the results.
+        template_params.update(issues=git_data,
+                               error=err_msg
+                               )
+
+        template = env.get_template('feedback.html')
+        html = template.render(template_params)
         self.response.out.write(html)          
 
-                                                                        
+    def post(self):
+
+        # This should never happen, because voting
+        # links are disabled for non-logged-in users.
+        user = self.verify()
+        if not user:
+            print 'no user'
+            return
+        
+        # Get the data from the ajax call.
+        issue_id = int(self.request.get('id'))
+        up = self.request.get('up')
+        down = self.request.get('down')
+
+        print issue_id, up, down
+
+        # Set our vote flag to record the user's opinion.
+        if up == 'true':
+            issue_status = 1
+        elif down == 'true':
+            issue_status = -1
+        else:
+            issue_status = 0
+        print 'status', issue_status
+
+        # Put it in the database.
+        issue = Issue.all().ancestor(user).filter("issue_id =", issue_id).get()
+        issue.vote = issue_status
+        issue.put()
+
+
 class PricingHandler(ModelrPageRequest):
     def get(self):
 
@@ -909,7 +1029,7 @@ class ResetHandler(ModelrPageRequest):
             return
 
         current_pword = self.request.get("current_pword")
-        new_password = self.request.get("password")
+        new_password = self.request.get("new_password")
         verify = self.request.get("verify")
 
         template = env.get_template('settings.html')
@@ -1002,8 +1122,8 @@ class EmailAuthentication(ModelrPageRequest):
         """
         Adds the user to the stripe customer list
         """
-
-        price = 900 # cents
+        email = self.request.get('stripeEmail')
+        price = PRICE # set at head of this file
 
         # Secret API key for Canada Post postal lookup
         cp_prod = "3a04462597330c85:46c19862981c734ff8f7b2"
@@ -1016,6 +1136,7 @@ class EmailAuthentication(ModelrPageRequest):
         # Create the customer account
         try:
             customer = stripe.Customer.create(card=token,
+                                    email=email,
                                               description="New Modelr customer")
         except:
             # The card has been declined
@@ -1077,8 +1198,6 @@ class EmailAuthentication(ModelrPageRequest):
             return
 
         # get the temp user from the database
-        email = self.request.get('stripeEmail')
-        
         try:
             initialize_user(email, customer.id, ModelrRoot,
                             tax_code, price, tax)
@@ -1175,7 +1294,7 @@ class StripeHandler(ModelrPageRequest):
             #event["data"]["object"]["total"] = price
             
             stripe_id = event["data"]["object"]["customer"]
-            amount = price #event["data"]["object"]["total"]
+            amount = PRICE 
             event_id = event["data"]["object"]["id"]
             user = User.all().ancestor(ModelrRoot)
             user = user.filter("stripe_id =", stripe_id).fetch(1)
@@ -1192,7 +1311,7 @@ class StripeHandler(ModelrPageRequest):
                 self.response.write("ALL OK")
                 return
             
-            tax = tax_dict.get(user[0].tax_code, 'None')
+            tax = tax_dict.get(user[0].tax_code, None)
             if not tax:
                 self.response.write("ALL OK")
                 return
@@ -1398,6 +1517,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/settings', SettingsHandler),
                                ('/about', AboutHandler),
                                ('/features', FeaturesHandler),
+                               ('/feedback', FeedbackHandler),
                                ('/help', HelpHandler),
                                ('/terms', TermsHandler),
                                ('/privacy', PrivacyHandler),
