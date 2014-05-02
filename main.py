@@ -1528,9 +1528,9 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             reader = blobstore.BlobReader(blob_info.key())
         
             # Quantize to less than 6 colours so our app doesn't explode
-            im = Image.open(reader).convert('P',
+            im = Image.open(reader).resize((480,480)).convert('P',
                                             palette=Image.ADAPTIVE,
-                                            colors=6)
+                                            colors=8)
             output = StringIO.StringIO()
             im.save(output, format='PNG')
             

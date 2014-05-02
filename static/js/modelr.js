@@ -48,16 +48,36 @@ function PlotServer(hostname, rocks) {
  
 };
 
-function EarthStructure(image, depth, length, units, mapping){
+function EarthStructure(image, mapping, datafile){
     /*
      * Object for dealing with Earth Structures. 
      */
 
     this.image = image;
     this.mapping = mapping;
-    this.depth = depth;
-    this.length = length;
-    this.units = units;
+    this.datafile = datafile;
+    this.info = null;
+    this.arguments = {};
+};
+
+EarthStructure.prototype.default_args = function default_args(argumentss) {
+    console.log('default_args', argumentss);
+    
+    var args = this.info.arguments;
+
+    this.arguments = {};
+
+    for (var i = 0; i < args.length; i++) {
+        this.arguments[args[i]["name"]] = args[i]['default'];
+        if (args[i]["name"] in argumentss) {
+            this.arguments[args[i]["name"]] = argumentss[args[i]["name"]];
+        };
+    };
+};
+
+EarthStructure.prototype.update = function update(attr, value) {
+    this.arguments[attr] = value;
+    this.on_change();
 };
 
 function PropertyMap(images, colour_maps, keys, current_index){
@@ -65,7 +85,7 @@ function PropertyMap(images, colour_maps, keys, current_index){
     this.colour_maps = colour_maps;
     this.keys = keys;
     this.current_index = current_index;
-}
+};
 
 PropertyMap.prototype.get_image = function(){
     return this.images[this.current_index];
@@ -73,6 +93,13 @@ PropertyMap.prototype.get_image = function(){
 
 PropertyMap.prototype.get_mapping = function(){
     return this.colour_maps[this.current_index];
+}
+
+PropertyMap.prototype.update_mapping = function(colour, name,
+                                                property){
+    
+    this.colour_maps[this.current_index][colour].name = name;
+    this.colour_maps[this.current_index][colour].property = property;
 }
 
 PropertyMap.prototype.get_key = function(){
@@ -159,8 +186,10 @@ ForwardModel.prototype.json_data = function json_data(){
     return data
 }
 
-ForwardModel.prototype.post = function get(server,callback){
+ForwardModel.prototype.post = function post(server,callback,
+                                            update=update){
 
+    this.earth_struct.update=update;
     $.post(server.hostname + '/forward_model.json', 
 	   this.json_data(), 
 	   callback);
@@ -334,7 +363,9 @@ function display_form(sel) {
     form = div.find('form#script_form');
     var data = this.info;
 
-    form.append('<div class="well well-sm"><strong>' + data.description + '</strong></div>');
+    var sliders = [];
+
+    //form.append('<div class="well well-sm"><strong>' + data.description + '</strong></div>');
 
     args = data.arguments;
 
@@ -351,7 +382,7 @@ function display_form(sel) {
         };
 
 //        form_text += '<td>' + arg + ':</td>';
-        form_text += '<td>' + args[arg]['help'] + '</td>';
+        
 
         if (args[arg]['type'] == 'rock_properties_type') {
             form_text += '<td><select name="'
@@ -373,16 +404,36 @@ function display_form(sel) {
             };
             form_text += '</select></td>';
 
-        } else {
-            form_text += '<td><input class="script_form" type="text" name="' + args[arg]["name"] + '" value="' + deflt
+        } else if(args[arg]['interface'] == 'slider'){
+	    min = args[arg]['range'][0]
+	    max = args[arg]['range'][1]
+	    name = args[arg]['name']
+	    current =  '<td><input id="'+ name +'" data-slider-id= type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="14"/>'
+	    form_text += current;
+
+	    sliders.push(name);
+	}else {
+	    current = '<td><input class="script_form" type="text" name="' + args[arg]["name"] + '" value="' + deflt
                     + '"></input></td>';
+            form_text += current;
         };
+	form_text += '<td>' + args[arg]['help'] + '</td>';
     };
 
     form_text += '</table>';
 
     form.append(form_text);
 
+    for (var i=0; i < sliders.length; i++){
+	$('#'+sliders[i]).slider({
+	    tooltip:'hide',
+	    formater: function(value) {
+		return 'Current value: ' + value;
+	    }
+	}).on('slideStop', function(ev){
+	    scenario.update(ev.target.id, ev.value);
+	});
+    };
     // inputs = form.find('.script_form');
     // inputs.change(server.input_changed);
     inputs = form.find('.script_form');
