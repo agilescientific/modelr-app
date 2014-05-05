@@ -189,7 +189,7 @@ ForwardModel.prototype.json_data = function json_data(){
 ForwardModel.prototype.post = function post(server,callback,
                                             update=update){
 
-    this.earth_struct.update=update;
+    this.earth_struct.update_model=update;
     $.post(server.hostname + '/forward_model.json', 
 	   this.json_data(), 
 	   callback);
