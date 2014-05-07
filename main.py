@@ -187,7 +187,8 @@ class ModelrPageRequest(webapp2.RequestHandler):
     # For the plot server
     # Ideally this should be settable by an admin_user console.
 
-    HOSTNAME = "https://www.modelr.org:8081" #"https://www.modelr.org"
+    #HOSTNAME = "https://www.modelr.org:8081" #"https://www.modelr.org"
+    HOSTNAME = "http://localhost:8081"
     
     def get_base_params(self, **kwargs):
         '''
