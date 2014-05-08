@@ -17,7 +17,8 @@ from google.appengine.api import users
 # For image serving
 import cloudstorage as gcs
 
-from PIL import Image
+from PIL import Image, ImageFilter
+import numpy as np
 
 from jinja2 import Environment, FileSystemLoader
 import time
@@ -44,7 +45,6 @@ from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
      ImageModel, Forward2DModel, Issue
-
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
@@ -1526,11 +1526,47 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
         try:
             # Read the image file
             reader = blobstore.BlobReader(blob_info.key())
-        
-            # Quantize to less than 6 colours so our app doesn't explode
-            im = Image.open(reader).resize((480,480)).convert('P',
-                                            palette=Image.ADAPTIVE,
-                                            colors=8)
+
+            im = Image.open(reader, 'r')
+            im = im.convert('RGB').resize((480,480))
+
+
+            image = np.array(im)
+
+            def fix_alias(image, axis):
+                
+                diff1 = (image - np.roll(image,-2,axis)).sum(axis=2) != 0
+                diff2 = (image - np.roll(image,-1,axis)).sum(axis=2) != 0
+                diff3 = (image - np.roll(image, 1,axis)).sum(axis=2) != 0
+                diff4 = (image - np.roll(image, 2,axis)).sum(axis=2) != 0
+                
+                aliased = np.logical_or(np.logical_and(diff2,diff3),
+                                        np.logical_and(diff1,diff4))
+                
+                image[aliased, :] = np.roll(image,5,axis)[aliased,:]
+                
+                return image
+                
+
+            
+            image = fix_alias(image, 0)
+            image = fix_alias(image,1)
+    
+    
+            im = Image.fromarray(image)
+            
+            histogram = im.histogram()
+            best_values = [i[0] for i in sorted(enumerate(histogram),
+                                                key=lambda x:x[1])]
+            colors = []
+            for count, col in zip(histogram,best_values):
+                if count > 3000:
+                    colors.append(col)
+
+            
+            im = im.convert('P', palette=Image.ADAPTIVE,
+                            colors=8)
+            
             output = StringIO.StringIO()
             im.save(output, format='PNG')
             
@@ -1552,7 +1588,8 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
                        user=user.user_id,image=output_blob_key).put()
             self.redirect('/forward_model')
 
-        except:
+        except Exception as e:
+            print "ERRRRRRRRR", e
             self.redirect('/forward_model?error=True')
         
 

@@ -170,7 +170,7 @@
    $('#loader').hide();
  };
 
-function update_model(){
+ function update_model(){
    $("#loader").show();
    forward_model.post(server, update_image, update=true)
  };
@@ -302,11 +302,14 @@ function update_model(){
   <!-- SCENARIO PANEL
   =============================================================== -->
 
-  <div class="col-md-6">
+  <div class="row">
     <div class="panel panel-default">
       <div class="panel-heading">
         <h3 class="panel-title">Model</h3>
       </div>
+    <div class="col-md-6">
+    
+      
       
       <div class="panel-body">
 	<form action="{{upload_url}}" method="POST" enctype="multipart/form-data">
@@ -358,62 +361,70 @@ function update_model(){
 	</form>
       </div>
     </div>
+  </div>
 
-    <!-- Earth Model Properties -->
-    <div id="earth_properties" class="col-md-8"></div>
-    
-    <div class="col-md-4">
+  <!-- Earth Model Properties -->
+  <div class="col-md-6">
+    <div id="earth_properties"></div>
       <button class="btn btn-success" id='create_image' style="postion: absolute; top: 50%"
 	      onclick="update_model()">
         Update
       </button>
-    </div>
-    
-    
-    <!--<div class="panel-body">
-      <div class="panel-body col-md-6">
-	
-	<div class="form-group">
-	  
-	  <div class="form-inline">
-	    <div class="col-sm-10">
-	      <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
-		     id='scenario_name' 
-		     onchange="forward_model.name = this.value;" 
-		     placeholder="Scenario name" 
-		     maxlength="20">
-	      </input>
-	    </div>
-	    <div class="col-md-offset-10">
-	      <button class="btn btn-default" 
-		      onclick="save_model()"
-		      type="button" id="savebutton">
-		save
-	      </button>
-	    </div>
-	    
-	  </div>
-	</div>
-      </div> 
-    </div> //-->
   </div>
+  
+  
+  <!--<div class="panel-body">
+    <div class="panel-body col-md-6">
+      
+      <div class="form-group">
+	
+	<div class="form-inline">
+	  <div class="col-sm-10">
+	    <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
+		   id='scenario_name' 
+		   onchange="forward_model.name = this.value;" 
+		   placeholder="Scenario name" 
+		   maxlength="20">
+	    </input>
+	  </div>
+	  <div class="col-md-offset-10">
+	    <button class="btn btn-default" 
+		    onclick="save_model()"
+		    type="button" id="savebutton">
+	      save
+	    </button>
+	  </div>
+	  
+	</div>
+      </div>
+    </div> 
+  </div> //-->
+</div>
 
-  <div class="col-md-6">
+<div class="row">
     <div class="panel panel-default">
       <div class="panel-heading">
 	<h3 class="panel-title">Result</h3>
       </div>
       <div class="panel-body">
-	
-	<img class="img-thumbnail" id="plot_image" href=URL alt="" 
-	     src="/static/img/placeholder_model_image.png" 
-	     height=350, width=350 />
-	<img style="position:absolute;top:0;left:0" id="loader" src="/static/img/ajax-loader.gif" />
-	<!-- Updated by the  create_image button above-->
-	
-	<div id="plot_place" class="col-md-6"></div>
+	<div class="col-md-9">
+	  <img class="img-thumbnail" id="plot_image" href=URL alt="" 
+	       src="/static/img/placeholder_model_image.png" 
+	       height=800, width=1200 />
+	  <img style="position:absolute;top:0;left:0" id="loader" src="/static/img/ajax-loader.gif" />
+	  <!-- Updated by the  create_image button above-->
+	</div>
+	<div class="panel-heading">
+	  <h3 class="panel-title">Plot Controls</h3>
+	</div>
+	<div class="col-md-3">
+	<div id="plot_place" class="row"></div>
 	<!-- This is where there survey parameters will be set -->
-	<div id="seismic_place" class="col-md-6"></div>
+	<div id="seismic_place" class="row"></div>
+	</div>
+
+	
+	
 	
       </div>
     </div>

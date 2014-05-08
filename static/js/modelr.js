@@ -365,7 +365,7 @@ function display_form(sel) {
 
     var sliders = [];
 
-    //form.append('<div class="well well-sm"><strong>' + data.description + '</strong></div>');
+    form.append('<div class="well well-sm"><strong>' + data.description + '</strong></div>');
 
     args = data.arguments;
 
@@ -408,7 +408,7 @@ function display_form(sel) {
 	    min = args[arg]['range'][0]
 	    max = args[arg]['range'][1]
 	    name = args[arg]['name']
-	    current =  '<td><input id="'+ name +'" data-slider-id= type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="14"/>'
+	    current =  '<td><label id="'+name+'dis">14</label></td><td><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="14"/>'
 	    form_text += current;
 
 	    sliders.push(name);
@@ -428,11 +428,15 @@ function display_form(sel) {
 	$('#'+sliders[i]).slider({
 	    tooltip:'hide',
 	    formater: function(value) {
-		return 'Current value: ' + value;
+		return  value;
 	    }
 	}).on('slideStop', function(ev){
 	    scenario.update(ev.target.id, ev.value);
-	});
+	}).on('slide', function(ev){
+	    label = $('#'+ev.target.id +'dis');
+	    label.text(ev.value);});
+	
+
     };
     // inputs = form.find('.script_form');
     // inputs.change(server.input_changed);
