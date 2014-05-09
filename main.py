@@ -39,7 +39,7 @@ from xml.etree import ElementTree
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      verify, verify_signup, initialize_user, reset_password, \
-     forgot_password, send_message, make_user
+     forgot_password, send_message, make_user, delete_account
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
@@ -1046,7 +1046,7 @@ class ProfileHandler(ModelrPageRequest):
                 
         err_string = '&'.join(err_string) if err_string else ''
         self.redirect('/profile?' + err_string)
-                                    
+                           
         
 class SettingsHandler(ModelrPageRequest):
     
@@ -1105,14 +1105,53 @@ class ResetHandler(ModelrPageRequest):
         new_password = self.request.get("new_password")
         verify = self.request.get("verify")
 
-        template = env.get_template('settings.html')
-
+        template = env.get_template('profile.html')
         
         try:
             reset_password(user,current_pword,new_password,
                            verify)
-            template = env.get_template('settings.html')
             msg = ("You reset your password.")
+            html = template.render(user=user,success=msg)
+            self.response.out.write(html)
+        except AuthExcept as e:
+            html = template.render(user=user, error=e.msg)
+        
+class DeleteHandler(ModelrPageRequest):
+    """
+    Class for deleting account
+
+    There is some placeholder code below, and 
+    also see delete_account() in ModAuth.py
+
+    Steps:
+    
+    1. Ask user if they are sure (Bootstrap modal in JS?)
+       http://stackoverflow.com/questions/8982295/confirm-delete-modal-dialog-with-twitter-bootstrap
+
+    2. Suspend Subscription with delete method in Stripe,
+       using at_period_end=True (note, this is NOT the default)
+       Docs > https://stripe.com/docs/api#cancel_subscription
+    
+    3. Remove them from MailChimp customer list
+       Docs > http://apidocs.mailchimp.com/api/2.0/lists/unsubscribe.php
+    
+    4. Give them some confirmation by email?
+       Some code in bogus function to do this now
+
+    """
+
+    def post(self):
+
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        template = env.get_template('message.html')
+        
+        try:
+            delete_account(user) # This function does nothing
+            msg = ("You have deleted your account.")
             html = template.render(user=user,success=msg)
             self.response.out.write(html)
         except AuthExcept as e:
@@ -1841,6 +1880,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/forward_model', ForwardModel),
                                ('/forgot', ForgotHandler),
                                ('/reset', ResetHandler),
+                               ('/delete', DeleteHandler),
                                ('/signout', SignOut),
                                ('/stripe', StripeHandler),
                                ('/manage_group', ManageGroup),
