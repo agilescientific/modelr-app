@@ -348,3 +348,26 @@ def reset_password(user, current_pword, new_password,
     # Save it in the database
     user.put()
     
+def delete_account(user):
+    """
+    Delete the user. See notes in DeleteHandler() in main.py
+    """
+    return
+
+    user = User.all().ancestor(parent).filter("email =",
+                                              email).fetch(1)
+    if not user:
+        raise AuthExcept('invalid email')
+    user = user[0]
+
+    mail.send_mail(sender="Hello <hello@modelr.io>",
+              to="<%s>" % user.email,
+              subject="Modelr account deleted",
+              body="""
+You have deleted your account.
+
+Thank you for using Modelr. We hope to meet again some day.
+
+Cheers,
+Matt, Evan, and Ben
+""")
