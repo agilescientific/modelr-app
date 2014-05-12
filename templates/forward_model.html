@@ -97,8 +97,7 @@
 	 console.log('div#plot_place');
 	 
 
-	 // This will Create a form see above
-	 plot_container.display('div#plot_place');
+	
 	 
        })
    }
@@ -115,8 +114,7 @@
 	 
 	 console.log('div#seismic_place');
 	 
-	 // This will Create a form see above
-	 seismic_model.display('div#seismic_place');
+
        });
    }
    
@@ -171,8 +169,25 @@
  };
 
  function update_model(){
+
+   cb = function(data){
+
+     // This will Create a form see above
+     seismic_model.display('div#seismic_place', 
+			   metadata=data.metadata);
+     // This will Create a form see above
+     plot_container.display('div#plot_place',
+			    metadata=data.metadata);
+     
+     update_image(data);
+   };
+
    $("#loader").show();
-   forward_model.post(server, update_image, update=true)
+   forward_model.post(server, cb, update=true);
+
+
+
+   $("html, body").scrollTop($("#plot_image").offset().top);
  };
 
  function save_model(){
@@ -235,7 +250,7 @@
 
    form = div.append('<form id=script_form action=""></form>');
 
-   form_text='<div col-md-8>';
+   form_text='<div col-md-3>';
    c = property_map.get_colours();
 
    update_map = function (input, colour){
@@ -307,7 +322,7 @@
       <div class="panel-heading">
         <h3 class="panel-title">Model</h3>
       </div>
-    <div class="col-md-6">
+    <div class="col-md-9">
     
       
       
@@ -328,7 +343,7 @@
 	</form>
         <form class="form-horizontal" role="form">
 	  <div class="row">
-	    <div class="col-md-6">
+	    <div class="col-md-9">
 	      <div id="myCarousel" class="carousel slide" 
 		   data-interval="false" style="width: 100%; height: 100%">
 		<!-- Carousel slides -->
@@ -356,7 +371,7 @@
 		</a>
 	      </div>
 	    </div>
-	    <div class="col-md-6" id="test"></div>
+	    <div class="col-md-3" id="test"></div>
 	  </div>
 	</form>
       </div>
@@ -364,7 +379,7 @@
   </div>
 
   <!-- Earth Model Properties -->
-  <div class="col-md-6">
+  <div class="col-md-3">
     <div id="earth_properties"></div>
       <button class="btn btn-success" id='create_image' style="postion: absolute; top: 50%"
 	      onclick="update_model()">

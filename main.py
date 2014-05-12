@@ -1508,6 +1508,66 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
     the blobstore
     """
 
+
+    def closest(self,x,y, pixels):
+
+            if pixels[x,y] in self.best_colours:
+                return pixels[x,y]
+            if (x == 0): self.x_iterate = 1
+            if (y == 0): self.y_iterate = 1
+            if (y == (pixels.shape[-1]-1)): self.y_iterate = -1
+            if (x == (pixels.shape[0]-1)):
+                print "WTF"
+                self.x_iterate = -1
+            
+            return self.closest(x + self.x_iterate, y + self.y_iterate,
+                                pixels)
+    def posterize(self,image):
+
+        self.x_iterate = -1
+        self.y_iterate = -1
+        # make a greyscaled version for histograms
+        g_im = image.convert('P', palette=Image.ADAPTIVE)
+        # Get as a numpy array
+        pixels = np.array(g_im)
+
+        count, colours = np.histogram(pixels,
+                                      pixels.max()-pixels.min() + 1)
+
+        colours = np.array(colours, dtype=int)
+        colours = colours[1:]
+        
+        # Take only colors that make up 1% of the image
+        self.best_colours = colours[count > (.01 * pixels.size)]
+
+        if self.best_colours.size < 2:
+            return g_im.convert('P',
+                                palette=Image.ADAPTIVE,
+                                colors=15)
+        
+        # find pixels that need adjusting
+        fix_index = np.zeros(pixels.shape, dtype=bool)
+        for colour in self.best_colours:
+            fix_index = np.logical_or(pixels==colour, fix_index)
+
+
+        fix_index = np.array((np.where(fix_index == False)))
+
+        
+        
+        for x,y in zip(fix_index[0], fix_index[1]):
+                
+            pixels[x,y] = self.closest(x,y, pixels)
+    
+        
+        g_im.paste(Image.fromarray(pixels))
+
+        n_colours = self.best_colours.size
+        if n_colours > 15: n_colours =15
+        return g_im.convert('P',
+                            palette=Image.ADAPTIVE,
+                            colors=n_colours)
+    
     def post(self):
 
         # Only registered users can do this
@@ -1530,42 +1590,7 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             im = Image.open(reader, 'r')
             im = im.convert('RGB').resize((480,480))
 
-
-            image = np.array(im)
-
-            def fix_alias(image, axis):
-                
-                diff1 = (image - np.roll(image,-2,axis)).sum(axis=2) != 0
-                diff2 = (image - np.roll(image,-1,axis)).sum(axis=2) != 0
-                diff3 = (image - np.roll(image, 1,axis)).sum(axis=2) != 0
-                diff4 = (image - np.roll(image, 2,axis)).sum(axis=2) != 0
-                
-                aliased = np.logical_or(np.logical_and(diff2,diff3),
-                                        np.logical_and(diff1,diff4))
-                
-                image[aliased, :] = np.roll(image,5,axis)[aliased,:]
-                
-                return image
-                
-
-            
-            image = fix_alias(image, 0)
-            image = fix_alias(image,1)
-    
-    
-            im = Image.fromarray(image)
-            
-            histogram = im.histogram()
-            best_values = [i[0] for i in sorted(enumerate(histogram),
-                                                key=lambda x:x[1])]
-            colors = []
-            for count, col in zip(histogram,best_values):
-                if count > 3000:
-                    colors.append(col)
-
-            
-            im = im.convert('P', palette=Image.ADAPTIVE,
-                            colors=8)
+            im = self.posterize(im)
             
             output = StringIO.StringIO()
             im.save(output, format='PNG')
@@ -1651,11 +1676,11 @@ class ForwardModel(ModelrPageRequest):
         
         # Get the model images
         models = \
-          ImageModel.all().ancestor(ModelrRoot).filter("user =",
-                                            user.user_id).fetch(100)
+          ImageModel.all().ancestor(ModelrRoot).\
+          order("-date").filter("user =", user.user_id).fetch(100)
 
         # Create the serving urls
-        imgs = [images.get_serving_url(i.image, size=1000,
+        imgs = [images.get_serving_url(i.image, size=1400,
                                        crop=False)
                 for i in models]
 

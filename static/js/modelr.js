@@ -353,7 +353,7 @@ function populate_scripts(server, type, selection) {
 /*
  * @param sel: is a div to put the resulting form into.
  */
-function display_form(sel) {
+function display_form(sel, metadata) {
 
     var div = $(sel);
     div.children().remove();
@@ -369,7 +369,7 @@ function display_form(sel) {
 
     args = data.arguments;
 
-    form_text = '<table>';
+    form_text = '<table width="100%">';
 
     for (var arg = 0; arg < args.length; arg++) {
         form_text += '<tr>';
@@ -408,7 +408,7 @@ function display_form(sel) {
 	    min = args[arg]['range'][0]
 	    max = args[arg]['range'][1]
 	    name = args[arg]['name']
-	    current =  '<td><label id="'+name+'dis">14</label></td><td><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="14"/>'
+	    current =  '<td><label id="'+name+'dis">'+args[arg]["default"] + '</label><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="'+args[arg]["default"]+'"/>'
 	    form_text += current;
 
 	    sliders.push(name);
@@ -431,10 +431,30 @@ function display_form(sel) {
 		return  value;
 	    }
 	}).on('slideStop', function(ev){
-	    scenario.update(ev.target.id, ev.value);
+
+	    if(ev.target.id in metadata){
+		scale = metadata[ev.target.id]
+		index = scale.length * ev.value / 100
+		value = index | 0
+		if(value >= scale.length){
+		    value = scale.length -1;
+		};
+	    } else {value=ev.value}
+
+	    scenario.update(ev.target.id, value);
 	}).on('slide', function(ev){
+	    if(ev.target.id in metadata){
+		scale = metadata[ev.target.id]
+		index = scale.length * ev.value / 100
+		index = (index) | 0
+		if(index >= scale.length){
+		    index = scale.length -1;
+		};
+		value = scale[index]
+	    } else {value=ev.value}
 	    label = $('#'+ev.target.id +'dis');
-	    label.text(ev.value);});
+	    value = value | 0
+	    label.text(value);});
 	
 
     };
