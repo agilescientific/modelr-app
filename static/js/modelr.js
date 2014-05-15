@@ -186,6 +186,11 @@ ForwardModel.prototype.json_data = function json_data(){
     return data
 }
 
+ForwardModel.prototype.cleanUp = function cleanUp(server){
+
+    $.post(server.hostname + '/delete_model',
+	   JSON.stringify({filename: this.earth_struct.datafile}));
+}
 ForwardModel.prototype.post = function post(server,callback,
                                             update=update){
 

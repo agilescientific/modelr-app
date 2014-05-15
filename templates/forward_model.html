@@ -25,6 +25,9 @@
 ================================================================ -->
 <script src="static/js/bootstrap-slider.js"></script>
 
+
+
+
 <script>
  $(document).ready(function() {
 
@@ -135,7 +138,9 @@
    }
    earth_structure.on_change = function(){};
 
-
+   window.onbeforeunload = function(){
+     forward_model.cleanUp(server);
+   };
 
    Colors(0);
    var hash = window.location.hash.substring(1);
@@ -158,6 +163,8 @@
 </script>
 
 <script>
+
+
 
  function update_image(data){
 
