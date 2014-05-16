@@ -40,7 +40,7 @@ from xml.etree import ElementTree
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      verify, verify_signup, initialize_user, reset_password, \
-     forgot_password, send_message, make_user, delete_account
+     forgot_password, send_message, make_user, cancel_subscription
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
@@ -1150,13 +1150,14 @@ class DeleteHandler(ModelrPageRequest):
         template = env.get_template('message.html')
         
         try:
-            delete_account(user) # This function does nothing
-            msg = ("You have deleted your account.")
-            html = template.render(user=user,success=msg)
-            self.response.out.write(html)
+            cancel_subscription(user) 
+            msg = "Unsubscribed from Modelr"
+            html = template.render(user=user, msg=msg)
+            self.response.write(html)
+            
         except AuthExcept as e:
             html = template.render(user=user, error=e.msg)
-        
+            self.response.write(html)
             
 
 class SignUp(webapp2.RequestHandler):
@@ -1439,12 +1440,36 @@ class StripeHandler(ModelrPageRequest):
 
             self.response.write("ALL OK")
 
+        # 
+        elif (event["type"] == 'customer.subscription.deleted'):
+
+            # for stripe
+            self.response.write("ALL OK")
+            
+            stripe_id = event["data"]["object"]["customer"]
+
+            user = User.all().ancestor(ModelrRoot)
+            user = user.filter("stripe_id =", stripe_id).fetch(1)
+
+            # This should never ever happen
+            if not user:
+                message = ("Failed to find modelr user for stripe " +
+                           "user %s, but was invoiced by stripe " +
+                           "event %s" % (stripe_id,event_id))
+                send_message(subject="Non-existent user canceled",
+                             message=message)
+
+                return
+            
+            user[0].delete()
+            
         # Send an email otherwise. We can trim this down to ones we
         # actually care about.
         else:
-            message = str(event)
-            send_message(subject=event["type"],
-                         message=message)
+            # Too many hooks, too much noise. commented out
+            #message = str(event)
+            #send_message(subject=event["type"],
+            #             message=message)
             self.response.write("ALL OK")
 
         
@@ -1775,7 +1800,7 @@ class ForwardModel(ModelrPageRequest):
         output_image = self.request.get('output_image')
         bucket = '/modelr_bucket/'
         output_filename = (bucket + str(user.user_id) +'/2' +
-                           str(time.time()))
+                           st(time.time()))
         
         # Write to cloud services
         gcsfile = gcs.open(output_filename, 'w')

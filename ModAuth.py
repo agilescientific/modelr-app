@@ -8,6 +8,7 @@ import hashlib
 import random
 import re
 import string
+import stripe
 
 PASS_RE =  re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+\.[\S]+$" )
@@ -348,23 +349,28 @@ def reset_password(user, current_pword, new_password,
     # Save it in the database
     user.put()
     
-def delete_account(user):
+def cancel_subscription(user):
     """
     Delete the user. See notes in DeleteHandler() in main.py
     """
-    return
 
-    user = User.all().ancestor(parent).filter("email =",
-                                              email).fetch(1)
-    if not user:
-        raise AuthExcept('invalid email')
-    user = user[0]
+    try:
+        stripe_customer = stripe.Customer.retrieve(user.stripe_id)
+        stripe_customer.subscriptions.all(limit=1)[0].\
+          delete(at_period_end=True)
 
+        # TODO MailChimp
+    except Exception as e:
+        raise AuthExcept("Failed to unsubscribe user: " + user.email)
+    
+
+    
     mail.send_mail(sender="Hello <hello@modelr.io>",
               to="<%s>" % user.email,
               subject="Modelr account deleted",
               body="""
-You have deleted your account.
+You have unsubscribed from Modelr. Your account will be deleted
+at the end of the billing cycle.
 
 Thank you for using Modelr. We hope to meet again some day.
 
