@@ -39,6 +39,7 @@ class User(db.Model):
     group = db.StringListProperty()
     stripe_id = db.StringProperty()
     tax_code = db.StringProperty()
+    unsubscribed = db.BooleanProperty(default=False)
 
 class ActivityLog(db.Model):
 

@@ -359,6 +359,8 @@ def cancel_subscription(user):
         stripe_customer.subscriptions.all(limit=1)[0].\
           delete(at_period_end=True)
 
+        user.unsubscribed = True
+
         # TODO MailChimp
     except Exception as e:
         raise AuthExcept("Failed to unsubscribe user: " + user.email)
