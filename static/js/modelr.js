@@ -418,7 +418,13 @@ function display_form(sel, metadata) {
 	    min = args[arg]['range'][0]
 	    max = args[arg]['range'][1]
 	    name = args[arg]['name']
-	    current =  '<td><label id="'+name+'dis">'+args[arg]["default"] + '</label><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="'+args[arg]["default"]+'"/>'
+
+	    if(name in metadata){
+		scale = metadata[name];
+		def = scale[args[arg]['default']]
+	    }
+	    else {def = args[arg]['default']};
+	    current =  '<td><label id="'+name+'dis">'+(def|0) + '</label><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="'+def+'"/>'
 	    form_text += current;
 
 	    sliders.push(name);
