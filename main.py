@@ -44,7 +44,7 @@ from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Forward2DModel, Issue
+     ImageModel, Forward2DModel, Issue, EarthModel
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
@@ -187,7 +187,8 @@ class ModelrPageRequest(webapp2.RequestHandler):
     # For the plot server
     # Ideally this should be settable by an admin_user console.
 
-    #HOSTNAME = "https://www.modelr.org:8081" #"https://www.modelr.org"
+    #HOSTNAME = "https://www.modelr.org:8081"
+    #"https://www.modelr.org"
     HOSTNAME = "http://127.0.0.1:8081"
     
     def get_base_params(self, **kwargs):
@@ -800,7 +801,8 @@ class FeedbackHandler(ModelrPageRequest):
 
 
         # Put it in the database.
-        issue = Issue.all().ancestor(user).filter("issue_id =", issue_id).get()
+        issue = Issue.all().ancestor(user).filter("issue_id =",
+                                                  issue_id).get()
         issue.vote = issue_status
         issue.put()
 
@@ -1795,12 +1797,13 @@ class ForwardModel(ModelrPageRequest):
         name = self.request.get('name')
 
         # Make image blobs
-        input_model_key = self.request.get('input_image_id')
+        input_model_id = self.request.get('input_image_id')
+        input_model = ImageModel(key_name=input_model_id)
         
         output_image = self.request.get('output_image')
         bucket = '/modelr_bucket/'
         output_filename = (bucket + str(user.user_id) +'/2' +
-                           st(time.time()))
+                           str(time.time()))
         
         # Write to cloud services
         gcsfile = gcs.open(output_filename, 'w')
@@ -1815,20 +1818,116 @@ class ForwardModel(ModelrPageRequest):
         data = self.request.get('json')
 
         # TODO Group
-        fmodel = Forward2DModel.all().ancestor(user).filter("name =",
-                                                        name).get()
+        fmodel = Forward2DModel.all().ancestor(input_model).\
+            filter("name =",name).get()
         if not fmodel:
-            fmodel = Forward2DModel(parent=user)
+            fmodel = Forward2DModel(parent=input_model)
             fmodel.user = user.user_id
             fmodel.name = name
             # TODO GROUP
 
         fmodel.data = data.encode()
-        fmodel.input_model_key = input_model_key
         fmodel.output_image = output_blob_key
         fmodel.put()
 
-class ModifyForwardModel(ModelrPageRequest):
+class EarthModelHandler(ModelrPageRequest):
+
+    def get(self):
+
+        user = self.verify()
+        if not user:
+            self.redirect('/signup')
+
+        try:
+            # Get the root of the model
+            input_model_key = self.request.get('image_key')
+            input_model = ImageModel(key_name=input_model_key)
+            
+            name = self.request.get('name')
+
+            # If the name is provided, return the model, otherwise
+            # return a list of the earth model names associated
+            # with the model.
+            if name:
+
+                earth_model = EarthModel.all().ancestor(input_model)
+                earth_model = earth_model.filter("user =",
+                                                 user.user_id)
+                earth_model = earth_model.filter("name =",
+                                                 name)
+
+                earth_model = earth_model.get()
+
+                self.response.out.write(earth_model.data)
+
+            else:
+
+                
+                earth_models = EarthModel.all().ancestor(input_model)
+                
+                earth_models = earth_models.filter("user =",
+                                                  user.user_id)
+        
+                earth_models = earth_models.fetch(100)
+
+                output = json.dumps([em.name for em in earth_models])
+                self.response.out.write(output)
+            
+        except Exception as e:
+            self.response.out.write(json.dumps([]))
+
+    def post(self):
+
+        user = self.verify()
+        if not user:
+            self.redirect('/signup')
+
+        try:
+            # Get the root of the model
+            input_model_key = self.request.get('image_key')
+            image_model = ImageModel(key_name=input_model_key)
+            
+            name = self.request.get('name')
+
+            # Get the rest of data
+            data = self.request.get('json')
+
+            earth_model = EarthModel(user=user.user_id,
+                                     data=data.encode(),
+                                     name=name,
+                                     parent=image_model)
+            earth_model.put()
+        
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.out.write('All OK!!')
+
+        except Exception as e:
+            # TODO Handle failure
+            pass
+
+    def delete(self):
+
+        user = self.verify()
+        if not user:
+            self.redirect('/signup')
+
+        try:
+            # Get the root of the model
+            input_model_key = self.request.get('input_image_id')
+
+            name = self.request.get('name')
+
+            model = EarthModel.all().ancestor(input_model_key)
+            model = model.filter("user =", user.user_id)
+            model = model.filter("name =", name).get()
+
+            if model:
+                model.delete()
+        except Exception as e:
+            pass
+        
+
+class Forward2DModelHandler(ModelrPageRequest):
 
     def get(self):
         user = self.verify()
@@ -1963,8 +2062,10 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/manage_group', ManageGroup),
                                ('/upload', Upload),
                                ('/model_builder', ModelBuilder),
-                               ('/modify_forward_model', ModifyForwardModel),
+                               ('/modify_forward_model',
+                                Forward2DModelHandler),
                                ('/forward_model', ForwardModel),
+                               ('/earth_model', EarthModelHandler),
                                ('/forgot', ForgotHandler),
                                ('/reset', ResetHandler),
                                ('/delete', DeleteHandler),

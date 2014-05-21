@@ -79,6 +79,11 @@ class ImageModel(Item):
     
     image = blobstore.BlobReferenceProperty()
 
+class EarthModel(Item):
+
+    name = db.StringProperty(multiline=False)
+    data = db.BlobProperty()
+     
 class Forward2DModel(Item):
 
     name = db.StringProperty(multiline=False)
@@ -91,7 +96,6 @@ class Scenario(Item):
     Database of Scenarios 
     '''
     name = db.StringProperty(multiline=False)
-    
     data = db.BlobProperty()
 
 class Rock(Item):

@@ -95,6 +95,11 @@ PropertyMap.prototype.get_mapping = function(){
     return this.colour_maps[this.current_index];
 }
 
+PropertyMap.prototype.set_current_map = function(map){
+    this.colour_maps[this.current_index] = map;
+}
+
+
 PropertyMap.prototype.update_mapping = function(colour, name,
                                                 property){
     

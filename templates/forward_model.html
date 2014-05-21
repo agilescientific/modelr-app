@@ -100,7 +100,7 @@
 	 console.log('div#plot_place');
 	 
 
-	
+	 
 	 
        })
    }
@@ -165,13 +165,28 @@
 <script>
 
 
+ function update_em_list(image_key){
 
+   $.get('/earth_model', {image_key: image_key},
+	  function success(data){
+
+       select = $('#earth_loader')
+       select.children().remove()
+
+
+       data = JSON.parse(data);
+       for (i=0; i< data.length; i++){
+	 select.append('<option value=' + data[i] +'>' + data[i]
+		       +'</option>')
+       };
+     });
+ };
  function update_image(data){
 
 
    $('img#plot_image').attr('src', 
 			    "data:image/png;base64, " + 
-			    data.data); 
+			    data.data, "json"); 
    $('#loader').hide();
  };
 
@@ -229,6 +244,25 @@
    });
  }
 
+function save_earthmodel(){
+   var image_key = property_map.get_key();
+   var name = forward_model.earth_struct.name;
+
+   $.post('/earth_model', {image_key: image_key,
+			   name: name,
+			   json:JSON.stringify(forward_model.earth_struct)});
+ };
+
+function load_earthmodel(name, property_map){
+
+   var image_key = property_map.get_key();
+   $.get('/earth_model',{image_key: image_key,
+			 name: name},
+	 function callback(data) {
+       property_map.set_current_map(JSON.parse(data).mapping);
+       Colors(0);
+     });
+ };
 
 </script>
 <script>
@@ -237,7 +271,7 @@
 
  {
 
-   var div = $("#test");
+   var div = $("#color_map");
    var foo;
    var div,row, dropdown, option, text;
    var rocks = get_rocks('datalist#list_of_rocks');
@@ -246,6 +280,8 @@
 
    
    var length = property_map.n_maps();
+
+   
 
    index = index % length; 
 
@@ -259,6 +295,10 @@
 
    form_text='<div col-md-3>';
    c = property_map.get_colours();
+
+   if( increment != 0 ){
+     update_em_list(property_map.get_key());
+   };
 
    update_map = function (input, colour){
      property_map.update_mapping(colour, input, rocks[input]);
@@ -285,6 +325,9 @@
    }
    form_text+='</div>';
    form.append(form_text);
+
+  
+
  }
 
 </script>
@@ -329,101 +372,130 @@
       <div class="panel-heading">
         <h3 class="panel-title">Model</h3>
       </div>
-    <div class="col-md-9">
-    
-      
-      
-      <div class="panel-body">
-	<form action="{{upload_url}}" method="POST" enctype="multipart/form-data">
-	  <div style='height: 0px;width:0px; overflow:hidden;'>
-	    <input type="submit" name="submit" value="Submit" id="submit">
-	    <input id="file" type="file" name="file" onchange="$('#submit').click()"/></div>
-	    <div class="btn btn-primary" 
-		 id="upload_btn" onclick="$('#file').click()">
-	      Upload image
-	    </div>
-	    
-	    <button type="button" class="btn btn-primary" 
-		    onclick="window.location.href='/model_builder'">
-              Make a wedge
-	    </button>
-	</form>
-        <form class="form-horizontal" role="form">
-	  <div class="row">
-	    <div class="col-md-9">
-	      <div id="myCarousel" class="carousel slide" 
-		   data-interval="false" style="width: 100%; height: 100%">
-		<!-- Carousel slides -->
-		<div class="carousel-inner">
-		  {% for i in range((images.__len__())) %}
-		  <div {% if i==0 %} class="active item" {% else %} 
-		    class="item" {% endif %}>
-		    <div class="thumbnail">
-		      <img src={{images[i]}} alt="" >
-		    </div>
-		  </div>	
-		  {% endfor %}
+      <div class="col-md-9">
+	
+	
+	
+	<div class="panel-body">
+	  <form action="{{upload_url}}" method="POST" enctype="multipart/form-data">
+	    <div style='height: 0px;width:0px; overflow:hidden;'>
+	      <input type="submit" name="submit" value="Submit" id="submit">
+	      <input id="file" type="file" name="file" onchange="$('#submit').click()"/></div>
+	      <div class="btn btn-primary" 
+		   id="upload_btn" onclick="$('#file').click()">
+		Upload image
+	      </div>
+	      
+	      <button type="button" class="btn btn-primary" 
+		      onclick="window.location.href='/model_builder'">
+		Make a wedge
+	      </button>
+	  </form>
+          <form class="form-horizontal" role="form">
+	    <div class="row">
+	      <div class="col-md-9">
+		<div id="myCarousel" class="carousel slide" 
+		     data-interval="false" style="width: 100%; height: 100%">
+		  <!-- Carousel slides -->
+		  <div class="carousel-inner">
+		    {% for i in range((images.__len__())) %}
+		    <div {% if i==0 %} class="active item" {% else %} 
+		      class="item" {% endif %}>
+		      <div class="thumbnail">
+			<img src={{images[i]}} alt="" >
+		      </div>
+		    </div>	
+		    {% endfor %}
+		  </div>
+		  
+		  <!-- Carousel nav -->
+		  <a class="carousel-control left" href="#myCarousel" 
+		     data-slide="prev" 
+		     onclick="Colors(-1)">
+		    ‹
+		  </a>
+		  <a class="carousel-control right" href="#myCarousel" 
+		     data-slide="next" 
+		     onclick="Colors(1)">
+		    ›
+		  </a>
 		</div>
-		
-		<!-- Carousel nav -->
-		<a class="carousel-control left" href="#myCarousel" 
-		   data-slide="prev" 
-		   onclick="Colors(-1)">
-		  ‹
-		</a>
-		<a class="carousel-control right" href="#myCarousel" 
-		   data-slide="next" 
-		   onclick="Colors(1)">
-		  ›
-		</a>
+	      </div>
+	      <div class="col-md-3">
+		<select class="form-control" id="earth_loader"
+			onchange="load_earthmodel(this.value, property_map)"
+			placeholder="earth model name">
+		  <option value="">Earth Models
+		  </option>
+		</select>
+	      <div id="color_map"></div>
 	      </div>
 	    </div>
-	    <div class="col-md-3" id="test"></div>
-	  </div>
-	</form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Earth Model Properties -->
-  <div class="col-md-3">
-    <div id="earth_properties"></div>
-      <button class="btn btn-success" id='create_image' style="postion: absolute; top: 50%"
-	      onclick="update_model()">
-        Update
-      </button>
-  </div>
-  
-  
-  <!--<div class="panel-body">
-    <div class="panel-body col-md-6">
-      
-      <div class="form-group">
-	
-	<div class="form-inline">
-	  <div class="col-sm-10">
-	    <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
-		   id='scenario_name' 
-		   onchange="forward_model.name = this.value;" 
-		   placeholder="Scenario name" 
-		   maxlength="20">
-	    </input>
-	  </div>
-	  <div class="col-md-offset-10">
-	    <button class="btn btn-default" 
-		    onclick="save_model()"
-		    type="button" id="savebutton">
-	      save
-	    </button>
-	  </div>
-	  
+	  </form>
 	</div>
       </div>
-    </div> 
-  </div> //-->
-</div>
+    </div>
 
-<div class="row">
+    <!-- Earth Model Properties -->
+    <div class="col-md-3">
+      <div id="earth_properties"></div>
+<div class="form-group">
+	 
+	  <div class="form-inline">
+	    <div class="col-sm-10">
+	      <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
+		     id='earth_model_name',
+	      onchange="forward_model.earth_struct.name = this.value"
+		     placeholder="Earth model name" 
+		     maxlength="20">
+	      </input>
+	    </div>
+	    <div class="col-md-offset-10">
+	      <button class="btn btn-default" 
+		      onclick="save_earthmodel()"
+		      type="button" id="saveearthbutton">
+		save
+	      </button>
+	    </div>
+	    
+	  </div>
+	</div>
+      <button class="btn btn-success" id='create_image' style="postion: absolute; top: 50%"
+	      onclick="update_model()">
+        Update Plot
+      </button>
+    </div>
+    
+    
+    <div class="panel-body">
+      <div class="panel-body col-md-6">
+
+	<div class="form-group">
+	 
+	  <div class="form-inline">
+	    <div class="col-sm-10">
+	      <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
+		     id='scenario_name' 
+		     onchange="forward_model.name = this.value;" 
+		     placeholder="Scenario name" 
+		     maxlength="20">
+	      </input>
+	    </div>
+	    <div class="col-md-offset-10">
+	      <button class="btn btn-default" 
+		      onclick="save_model()"
+		      type="button" id="savebutton">
+		save
+	      </button>
+	    </div>
+	    
+	  </div>
+	</div>
+      </div> 
+    </div> 
+  </div>
+
+  <div class="row">
     <div class="panel panel-default">
       <div class="panel-heading">
 	<h3 class="panel-title">Result</h3>
@@ -440,9 +512,9 @@
 	  <h3 class="panel-title">Plot Controls</h3>
 	</div>
 	<div class="col-md-3">
-	<div id="plot_place" class="row"></div>
-	<!-- This is where there survey parameters will be set -->
-	<div id="seismic_place" class="row"></div>
+	  <div id="plot_place" class="row"></div>
+	  <!-- This is where there survey parameters will be set -->
+	  <div id="seismic_place" class="row"></div>
 	</div>
 
 	
