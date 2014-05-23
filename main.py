@@ -1785,50 +1785,6 @@ class ForwardModel(ModelrPageRequest):
         html = template.render(params)
         self.response.out.write(html)
 
-    def post(self):
-
-        user = self.verify()
-        if not user:
-            self.redirect('/signup')
-
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!')
-
-        name = self.request.get('name')
-
-        # Make image blobs
-        input_model_id = self.request.get('input_image_id')
-        input_model = ImageModel(key_name=input_model_id)
-        
-        output_image = self.request.get('output_image')
-        bucket = '/modelr_bucket/'
-        output_filename = (bucket + str(user.user_id) +'/2' +
-                           str(time.time()))
-        
-        # Write to cloud services
-        gcsfile = gcs.open(output_filename, 'w')
-        gcsfile.write(base64.b64decode(output_image.split(',')[1]))
-        gcsfile.close()
-
-        # Make a blob reference
-        bs_file = '/gs' + output_filename
-        output_blob_key = blobstore.create_gs_key(bs_file)
-
-        # Get the rest of data
-        data = self.request.get('json')
-
-        # TODO Group
-        fmodel = Forward2DModel.all().ancestor(input_model).\
-            filter("name =",name).get()
-        if not fmodel:
-            fmodel = Forward2DModel(parent=input_model)
-            fmodel.user = user.user_id
-            fmodel.name = name
-            # TODO GROUP
-
-        fmodel.data = data.encode()
-        fmodel.output_image = output_blob_key
-        fmodel.put()
 
 class EarthModelHandler(ModelrPageRequest):
 
@@ -1855,6 +1811,7 @@ class EarthModelHandler(ModelrPageRequest):
                                                  user.user_id)
                 earth_model = earth_model.filter("name =",
                                                  name)
+                
 
                 earth_model = earth_model.get()
 
@@ -1867,13 +1824,15 @@ class EarthModelHandler(ModelrPageRequest):
                 
                 earth_models = earth_models.filter("user =",
                                                   user.user_id)
-        
+
+                earth_models.order('-date')
                 earth_models = earth_models.fetch(100)
 
                 output = json.dumps([em.name for em in earth_models])
                 self.response.out.write(output)
             
         except Exception as e:
+            print e
             self.response.out.write(json.dumps([]))
 
     def post(self):
@@ -1892,10 +1851,18 @@ class EarthModelHandler(ModelrPageRequest):
             # Get the rest of data
             data = self.request.get('json')
 
-            earth_model = EarthModel(user=user.user_id,
-                                     data=data.encode(),
-                                     name=name,
-                                     parent=image_model)
+            # See if we are overwriting
+            earth_model = EarthModel.all().ancestor(image_model)
+            earth_model = earth_model.filter('user =', user.user_id)
+            earth_model = earth_model.filter('name =', name).get()
+
+            if earth_model:
+                earth_model.data = data.encode()
+            else:
+                earth_model = EarthModel(user=user.user_id,
+                                         data=data.encode(),
+                                         name=name,
+                                         parent=image_model)
             earth_model.put()
         
             self.response.headers['Content-Type'] = 'text/plain'

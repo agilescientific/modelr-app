@@ -116,10 +116,10 @@
 	 seismic_model.default_args(argumentss);
 	 
 	 console.log('div#seismic_place');
-	 
-
        });
-   }
+			    
+   update_em_list(property_map);
+   };
    
    earth_structure.script = "earth_model.py";
    earth_structure.set_current_script = function(value,
@@ -136,12 +136,17 @@
 	 earth_structure.display('div#earth_properties');
        });
    }
-   earth_structure.on_change = function(){};
+   earth_structure.on_change = function(){
+     plot_container.set_current_script(plot_container.script, 
+				       plot_container.arguments);
+     earth_structure.set_current_script(earth_structure.script,
+					earth_structure.arguments);
+   };
 
    window.onbeforeunload = function(){
      forward_model.cleanUp(server);
    };
-
+   
    Colors(0);
    var hash = window.location.hash.substring(1);
    
@@ -158,17 +163,17 @@
 					earth_structure.arguments);
    };
 
-
+   update_em_list(property_map);
  });
 </script>
 
 <script>
 
 
- function update_em_list(image_key){
+ function update_em_list(property_map){
 
-   $.get('/earth_model', {image_key: image_key},
-	  function success(data){
+   $.get('/earth_model', {image_key: property_map.get_key()},
+	 function success(data){
 
        select = $('#earth_loader')
        select.children().remove()
@@ -212,48 +217,20 @@
    $("html, body").scrollTop($("#plot_image").offset().top);
  };
 
- function save_model(){
 
-   var input_image = property_map.get_key();
-   var output_image = $('img#plot_image').attr("src");
-   forward_model.put(input_image, output_image);
- };
-
- // Loads a scenario
- load_scenario = function load_scenario(scenario_name){
-
-   callback_function = function(data){
-
-     data = JSON.parse(data);
-
-     $('#plot_image').attr('src', data.output_image);
-     index = property_map.get_key_index(data.input_image_key);
-
-     $('myCarousel').carousel(index);
-
-     property_map.set_index(index);
-
-     property_map.colour_maps[index] = forward_model.earth_struct.mapping
-     Colors(0);
-
-     
-   }
-
-   forward_model.get(scenario_name, function(data){
-     callback_function(data);
-   });
- }
-
-function save_earthmodel(){
+ function save_earthmodel(){
    var image_key = property_map.get_key();
    var name = forward_model.earth_struct.name;
 
    $.post('/earth_model', {image_key: image_key,
 			   name: name,
-			   json:JSON.stringify(forward_model.earth_struct)});
+			   json:JSON.stringify(forward_model.earth_struct)},
+	  function callback(data){
+       update_em_list(property_map)});
+
  };
 
-function load_earthmodel(name, property_map){
+ function load_earthmodel(name, property_map){
 
    var image_key = property_map.get_key();
    $.get('/earth_model',{image_key: image_key,
@@ -285,6 +262,11 @@ function load_earthmodel(name, property_map){
 
    index = index % length; 
 
+   if(index < 0){
+     index = length-1;
+   };
+
+
    property_map.set_index(index);
    forward_model.earth_struct.image = property_map.get_image();
    forward_model.earth_struct.mapping = property_map.get_mapping();
@@ -296,14 +278,17 @@ function load_earthmodel(name, property_map){
    form_text='<div col-md-3>';
    c = property_map.get_colours();
 
-   if( increment != 0 ){
-     update_em_list(property_map.get_key());
-   };
+
 
    update_map = function (input, colour){
      property_map.update_mapping(colour, input, rocks[input]);
      forward_model.earth_struct.mapping = property_map.get_mapping();
    }; 
+
+   if( increment != 0 ){
+     update_em_list(property_map);
+   };
+
    for (var i=0; i < c.length; i++){
 
      colour = c[i];
@@ -326,9 +311,10 @@ function load_earthmodel(name, property_map){
    form_text+='</div>';
    form.append(form_text);
 
-  
+   
 
  }
+
 
 </script>
 
@@ -428,7 +414,7 @@ function load_earthmodel(name, property_map){
 		  <option value="">Earth Models
 		  </option>
 		</select>
-	      <div id="color_map"></div>
+		<div id="color_map"></div>
 	      </div>
 	    </div>
 	  </form>
@@ -439,59 +425,32 @@ function load_earthmodel(name, property_map){
     <!-- Earth Model Properties -->
     <div class="col-md-3">
       <div id="earth_properties"></div>
-<div class="form-group">
-	 
-	  <div class="form-inline">
-	    <div class="col-sm-10">
-	      <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
-		     id='earth_model_name',
-	      onchange="forward_model.earth_struct.name = this.value"
-		     placeholder="Earth model name" 
-		     maxlength="20">
-	      </input>
-	    </div>
-	    <div class="col-md-offset-10">
-	      <button class="btn btn-default" 
-		      onclick="save_earthmodel()"
-		      type="button" id="saveearthbutton">
-		save
-	      </button>
-	    </div>
-	    
+      <div class="form-group">
+	
+	<div class="form-inline">
+	  <div class="col-sm-10">
+	    <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
+		   id='earth_model_name',
+	    onchange="forward_model.earth_struct.name = this.value"
+		   placeholder="Earth model name" 
+		   maxlength="20">
+	    </input>
 	  </div>
+	  <div class="col-md-offset-10">
+	    <button class="btn btn-default" 
+		    onclick="save_earthmodel()"
+		    type="button" id="saveearthbutton">
+	      save
+	    </button>
+	  </div>
+	  
 	</div>
-      <button class="btn btn-success" id='create_image' style="postion: absolute; top: 50%"
+      </div>
+      <button class="btn btn-success" id='create_image' 
+	      style="postion: absolute; top: 50%"
 	      onclick="update_model()">
         Update Plot
       </button>
-    </div>
-    
-    
-    <div class="panel-body">
-      <div class="panel-body col-md-6">
-
-	<div class="form-group">
-	 
-	  <div class="form-inline">
-	    <div class="col-sm-10">
-	      <input {% if not user %}style="background-color:#bbb;" {% endif %}class="form-control" 
-		     id='scenario_name' 
-		     onchange="forward_model.name = this.value;" 
-		     placeholder="Scenario name" 
-		     maxlength="20">
-	      </input>
-	    </div>
-	    <div class="col-md-offset-10">
-	      <button class="btn btn-default" 
-		      onclick="save_model()"
-		      type="button" id="savebutton">
-		save
-	      </button>
-	    </div>
-	    
-	  </div>
-	</div>
-      </div> 
     </div> 
   </div>
 
