@@ -527,12 +527,22 @@ class ScenarioHandler(ModelrPageRequest):
         scen = scen.filter("user =", admin_id).fetch(100)
         if scen: 
             scenarios += scen
-        
+
+        if user:
+            model_data = EarthModel.all().filter("user =",
+                                             user.user_id).fetch(1000)
+            earth_models = [{"image_key": i.parent_key().name(),
+                         "name": i.name} for i in model_data]
+
+        else:
+            earth_models = []
+            
         template_params = \
           self.get_base_params(user=user,rocks=rocks,
                                default_rocks=default_rocks,
                                group_rocks=group_rocks,
-                               scenarios=scenarios)
+                               scenarios=scenarios,
+                               earth_models=earth_models)
                 
         template = env.get_template('scenario.html')
 
@@ -1798,7 +1808,8 @@ class EarthModelHandler(ModelrPageRequest):
             # Get the root of the model
             input_model_key = self.request.get('image_key')
             input_model = ImageModel(key_name=input_model_key)
-            
+
+            print "++++++++++++++++", input_model.image
             name = self.request.get('name')
 
             # If the name is provided, return the model, otherwise
@@ -1807,12 +1818,13 @@ class EarthModelHandler(ModelrPageRequest):
             if name:
 
                 earth_model = EarthModel.all().ancestor(input_model)
+            
                 earth_model = earth_model.filter("user =",
                                                  user.user_id)
+                
                 earth_model = earth_model.filter("name =",
                                                  name)
                 
-
                 earth_model = earth_model.get()
 
                 self.response.out.write(earth_model.data)
@@ -1833,13 +1845,13 @@ class EarthModelHandler(ModelrPageRequest):
             
         except Exception as e:
             print e
-            self.response.out.write(json.dumps([]))
+            self.response.out.write(json.dumps({'failed':True}))
 
     def post(self):
 
         user = self.verify()
         if not user:
-            self.redirect('/signup')
+            return
 
         try:
             # Get the root of the model

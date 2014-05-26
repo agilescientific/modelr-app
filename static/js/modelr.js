@@ -9,13 +9,16 @@
 /*
  * Server class
  */
-function PlotServer(hostname, rocks) {
+function PlotServer(hostname, rocks, earth_models) {
 
     // The host hosting plots.
     this.hostname = hostname;
 
     // (rock name , rock property) pairs
     this.rocks = rocks;
+
+    this.earth_models = earth_models;
+
 
     /*
      * Asynchronously fetch the list of scripts from the 
@@ -209,11 +212,12 @@ ForwardModel.prototype.post = function post(server,callback,
  * Scenario 'class'
  * Class for handling all script style queries to the backend
  */
-function Scenario(name, script, arguments, rocks) {
+function Scenario(name, script, arguments, rocks, models) {
     this.name = name;
     this.script = script;
     this.arguments = arguments;
     this.rocks = rocks;
+    this.models = models
     this.info = null;
 
 };
@@ -306,9 +310,14 @@ Scenario.prototype.qs = function() {
 
     for (arg in this.info.arguments) {
 	argname=this.info.arguments[arg]['name'];
-        if (this.info.arguments[arg]['type'] == 'rock_properties_type') {
+        if (this.info.arguments[arg]['type'] == 
+	    'rock_properties_type') {
             var value = this.rocks[args[argname]];
-        } else {
+        } else if(this.info.arguments[arg]['type'] == 
+		  'earth_model_type'){
+	    var value = JSON.stringify(this.models[args[argname]]);
+	}
+	else{
             var value = args[argname];
 
         };
@@ -398,7 +407,11 @@ function display_form(sel, metadata) {
             form_text += '<td><select name="'
                     + args[arg]["name"]
                     + '" class="script_form rock_selector"><option selected hidden disabled value=""></option></select></td>';
-        } else if (args[arg]['choices'] != null) {
+        } else if(args[arg]['type'] == 'earth_model_type') {
+ form_text += '<td><select name="'
+                    + args[arg]["name"]
+                    + '" class="script_form model_selector"><option selected hidden disabled value=""></option></select></td>';}
+	else if (args[arg]['choices'] != null) {
 
             form_text += '<td><select name="' + args[arg]["name"] + '" class="script_form choices_selector">';
 
@@ -428,7 +441,7 @@ function display_form(sel, metadata) {
 	    form_text += current;
 
 	    sliders.push(name);
-	}else {
+	} else {
 	    current = '<td><input class="script_form" type="text" name="' + args[arg]["name"] + '" value="' + deflt
                     + '"></input></td>';
             form_text += current;
@@ -488,11 +501,28 @@ function display_form(sel, metadata) {
     for (rname in server.rocks) {
         rock_prop = server.rocks[rname];
 
-        selectors.append('<option value="' + rname + '">' + rname + '</option>');
+        selectors.append('<option value="' + rname + '">' + rname + 
+			 '</option>');
     };
 
+    model_selectors = form.find('.model_selector');
+
+    if (model_selectors){
+	for (var model in server.earth_models){
+	    model_selectors.append('<option value="' + 
+				   model +'">' +
+				   model + '</option>');
+	};
+    };
     var scenario = this;
     $("select.rock_selector option").filter(function() {
+        // may want to use $.trim in here
+        var name = $(this).parent().attr('name');
+
+        return $(this).val() == scenario.arguments[name];
+    }).attr('selected', true);
+
+$("select.model_selector option").filter(function() {
         // may want to use $.trim in here
         var name = $(this).parent().attr('name');
 
@@ -521,6 +551,23 @@ function get_rocks(datalist) {
     });
 
     return rcks;
+};
+
+function get_models(datalist) {
+    list_of_models = $(datalist).find('option');
+
+    var models = [];
+    list_of_models.each(function(index) {
+        var name = $(list_of_models[index]).attr('data-name');
+	var image_key = $(list_of_models[index]).attr('data-value');
+        
+	$.get('/earth_model', {name: name, image_key: image_key},
+	      function callback(data){
+		  models[name] = JSON.parse(data);
+	      });
+    });   
+    
+    return models;
 };
 
 function save_scenario(scenario) {

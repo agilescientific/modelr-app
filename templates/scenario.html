@@ -217,8 +217,10 @@ $('#script_info').popover({
    $.ajaxSetup({timeout:10000}); //in milliseconds
    
    server = new PlotServer(host, 
-			   get_rocks('datalist#list_of_rocks'));
-   scenario = new Scenario(name, null, {}, server.rocks);
+			   get_rocks('datalist#list_of_rocks'),
+			   get_models('datalist#list_of_models'));
+   scenario = new Scenario(name, null, {}, server.rocks, 
+			   server.earth_models);
    
    // This is specific to this page. will create a form.
    scenario.display = display_form;
@@ -374,6 +376,22 @@ $('#script_info').popover({
    scenario.name = scenario_name;
    scenario.get();
 }
+
+// Load an earth model based on its name and corresponding image key
+function load_earthmodel(image_key, name){
+
+   $.get('/earth_model', {image_key: image_key, 
+			  name: name},
+	 function callback(data){
+       data = JSON.parse(data);
+
+       if(data["failed"]){
+	 alert("model not found");
+       } 
+       else{}
+     });
+ };
+
  
 </script>
 
@@ -409,5 +427,12 @@ by the user -->
   <!--[if IE 9]></select><![endif]-->
 </datalist>
 
+<datalist id="list_of_models">
 
+{% for model in earth_models %}
+  <option data-value='{{model["image_key"]}}' 
+	  data-name='{{model["name"]}}'>
+  </option>
+{% endfor %}
+</datalist>
 {% endblock %}

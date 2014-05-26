@@ -62,7 +62,7 @@
 
    property_map = new PropertyMap(images, maps, db_keys, 0);
 
-   server = new PlotServer(host, null);
+   server = new PlotServer(host, null, null);
 
    earth_structure = new EarthStructure(null, 5000, 5000, 'depth', 
 					property_map.get_mapping(),
@@ -178,7 +178,7 @@
        select = $('#earth_loader')
        select.children().remove()
 
-
+       select.append('<option value="null" selected hidden disabled>Load Earth Model</option>')
        data = JSON.parse(data);
        for (i=0; i< data.length; i++){
 	 select.append('<option value=' + data[i] +'>' + data[i]
@@ -236,8 +236,13 @@
    $.get('/earth_model',{image_key: image_key,
 			 name: name},
 	 function callback(data) {
-       property_map.set_current_map(JSON.parse(data).mapping);
+       data = JSON.parse(data);
+       if(data["failed"]){
+	 Colors(0);
+       } else{
+       property_map.set_current_map(data.mapping);
        Colors(0);
+       };
      });
  };
 
