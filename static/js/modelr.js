@@ -434,10 +434,10 @@ function display_form(sel, metadata) {
 
 	    if(name in metadata){
 		scale = metadata[name];
-		def = scale[args[arg]['default']]
+		def = scale[deflt]
 	    }
-	    else {def = args[arg]['default']};
-	    current =  '<td><label id="'+name+'dis">'+(def|0) + '</label><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="'+def+'"/>'
+	    else {def = deflt };//args[arg]['default']};
+	    current =  '<td><label id="'+name+'dis">'+(def|0) + '</label><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="'+deflt+'"/>'
 	    form_text += current;
 
 	    sliders.push(name);
