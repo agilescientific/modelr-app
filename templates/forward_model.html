@@ -230,7 +230,7 @@
 
  };
 
- function load_earthmodel(name, property_map){
+ function load_earthmodel(name){
 
    var image_key = property_map.get_key();
    $.get('/earth_model',{image_key: image_key,
@@ -241,6 +241,8 @@
 	 Colors(0);
        } else{
        property_map.set_current_map(data.mapping);
+	 forward_model.earth_struct.set_current_script(forward_model.earth_struct.script,
+						       data.arguments);
        Colors(0);
        };
      });
@@ -414,7 +416,7 @@
 	      </div>
 	      <div class="col-md-3">
 		<select class="form-control" id="earth_loader"
-			onchange="load_earthmodel(this.value, property_map)"
+			onchange="load_earthmodel(this.value, property_map, forward_model)"
 			placeholder="earth model name">
 		  <option value="">Earth Models
 		  </option>
