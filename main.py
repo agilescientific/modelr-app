@@ -23,6 +23,8 @@ import numpy as np
 from jinja2 import Environment, FileSystemLoader
 import time
 from os.path import join, dirname
+import os
+
 import hashlib
 import logging
 import urllib
@@ -79,6 +81,14 @@ ModelrRoot = ModelrParent.all().get()
 if ModelrRoot is None:
     ModelrRoot = ModelrParent()
     ModelrRoot.put()
+
+# Check if we are running the dev server
+if os.environ.get('SERVER_SOFTWARE','').startswith('Development'):
+    LOCAL = True
+    logging.debug("[*] Debug info activated")
+    stripe.verify_ssl_certs = False
+else:
+    LOCAL = False
 
 # Initialize the model served counter
 models_served = ModelServedCount.all().ancestor(ModelrRoot).get()
@@ -143,9 +153,7 @@ for i in default_rocks:
 # Global Variables
 #====================================================================
 # Secret API key from Stripe dashboard
-#stripe.api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
-# TODO have a test mode flag that takes care some of this stuff
-stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
+
 PRICE = 900
 tax_dict = {"AB":0.05,
             "BC":0.05,
@@ -186,10 +194,10 @@ class ModelrPageRequest(webapp2.RequestHandler):
     
     # For the plot server
     # Ideally this should be settable by an admin_user console.
-
-    #HOSTNAME = "https://www.modelr.org:8081"
-    #"https://www.modelr.org"
-    HOSTNAME = "http://127.0.0.1:8081"
+    if LOCAL is True:
+        HOSTNAME = "http://127.0.0.1:8081"
+    else:
+        HOSTNAME = "https://www.modelr.org"
     
     def get_base_params(self, **kwargs):
         '''
@@ -919,6 +927,7 @@ class ProfileHandler(ModelrPageRequest):
             self.redirect('/signup')
             return
 
+        print user.unsubscribed
         groups=[]
         for group in user.group:
             g = Group.all().ancestor(ModelrRoot).filter("name =",
@@ -1161,8 +1170,14 @@ class DeleteHandler(ModelrPageRequest):
 
         template = env.get_template('message.html')
         
+        if LOCAL:
+            stripe_api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
+            
+        else:
+            stripe_api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
+            
         try:
-            cancel_subscription(user) 
+            cancel_subscription(user, stripe_api_key) 
             msg = "Unsubscribed from Modelr"
             html = template.render(user=user, msg=msg)
             self.response.write(html)
@@ -1223,7 +1238,10 @@ class SignUp(webapp2.RequestHandler):
                 
 
 class EmailAuthentication(ModelrPageRequest):
-
+    """
+    This is where billing and user account creation takes place
+    """
+    
     def get(self):
 
         user_id = self.request.get("user_id")
@@ -1237,8 +1255,14 @@ class EmailAuthentication(ModelrPageRequest):
             self.redirect('/signup?error=auth_failed')
             return
 
+        if LOCAL:
+            stripe_public_key = "pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
+        else:
+            stripe_public_key = "pk_live_5CZcduRr07BZPG2A5OAhisW9"
+            
         msg = "Thank you for verifying your email address."
-        params = self.get_base_params(user=user)
+        params = self.get_base_params(user=user,
+                                      stripe_key=stripe_public_key)
         template = env.get_template('checkout.html')
         html = template.render(params, success=msg)
         self.response.out.write(html)
@@ -1249,6 +1273,13 @@ class EmailAuthentication(ModelrPageRequest):
         """
         email = self.request.get('stripeEmail')
         price = PRICE # set at head of this file
+
+        if LOCAL:
+            stripe.api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
+            
+        else:
+            stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
+            
 
         # Secret API key for Canada Post postal lookup
         cp_prod = "3a04462597330c85:46c19862981c734ff8f7b2"
@@ -1461,7 +1492,7 @@ class StripeHandler(ModelrPageRequest):
             stripe_id = event["data"]["object"]["customer"]
 
             user = User.all().ancestor(ModelrRoot)
-            user = user.filter("stripe_id =", stripe_id).fetch(1)
+            user = user.filter("stripe_id =", stripe_id).get()
 
             # This should never ever happen
             if not user:
@@ -1473,7 +1504,8 @@ class StripeHandler(ModelrPageRequest):
 
                 return
             
-            user[0].delete()
+            user.delete()
+            self.response.write("ALL OK")
             
         # Send an email otherwise. We can trim this down to ones we
         # actually care about.

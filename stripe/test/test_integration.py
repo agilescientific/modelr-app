@@ -12,7 +12,7 @@ import stripe
 
 from stripe.test.helper import (
     StripeTestCase,
-    NOW, DUMMY_CARD, DUMMY_CHARGE, DUMMY_PLAN, DUMMY_COUPON,
+    NOW, DUMMY_CARD, DUMMY_DEBIT_CARD, DUMMY_CHARGE, DUMMY_PLAN, DUMMY_COUPON,
     DUMMY_RECIPIENT, DUMMY_TRANSFER, DUMMY_INVOICE_ITEM)
 
 
@@ -237,14 +237,14 @@ class BalanceTransactionTest(StripeTestCase):
 
     def test_list_balance_transactions(self):
         balance_transactions = stripe.BalanceTransaction.all()
-        self.assertTrue(hasattr(balance_transactions, 'count'))
+        self.assertTrue(hasattr(balance_transactions, 'has_more'))
         self.assertTrue(isinstance(balance_transactions.data, list))
 
 
 class ApplicationFeeTest(StripeTestCase):
     def test_list_application_fees(self):
         application_fees = stripe.ApplicationFee.all()
-        self.assertTrue(hasattr(application_fees, 'count'))
+        self.assertTrue(hasattr(application_fees, 'has_more'))
         self.assertTrue(isinstance(application_fees.data, list))
 
 
@@ -275,15 +275,47 @@ class CustomerTest(StripeTestCase):
         customer = stripe.Customer()
         self.assertRaises(ValueError, setattr, customer, "description", "")
 
-    def test_update_customer_card(self):
-        customer = stripe.Customer.all(count=1).data[0]
+    def test_customer_add_card(self):
+        customer = stripe.Customer.create(description="add_customer_card")
         card = customer.cards.create(card=DUMMY_CARD)
-
-        card.name = 'Python bindings test'
         card.save()
 
-        self.assertEqual('Python bindings test',
-                         customer.cards.retrieve(card.id).name)
+        updated_customer = stripe.Customer.retrieve(customer.id)
+        retrieved_card = updated_customer.cards.retrieve(card.id)
+        self.assertEqual(len(updated_customer.cards.data), 1)
+        self.assertEqual(retrieved_card.id, card.id)
+
+    def test_customer_update_card(self):
+        customer = stripe.Customer.create(description="update_customer_card")
+        card = customer.cards.create(card=DUMMY_CARD)
+        card.save()
+
+        updated_customer = stripe.Customer.retrieve(customer.id)
+        retrieved_card = updated_customer.cards.retrieve(card.id)
+        self.assertEqual(len(updated_customer.cards.data), 1)
+        self.assertEqual(retrieved_card.id, card.id)
+
+        retrieved_card.name = 'The Best'
+        retrieved_card.save()
+
+        post_update_customer = stripe.Customer.retrieve(customer.id)
+        post_update_card = post_update_customer.cards.retrieve(card.id)
+
+        self.assertEqual('The Best', post_update_card.name)
+
+    def test_customer_delete_card(self):
+        customer = stripe.Customer.create(description="update_customer_card")
+        card = customer.cards.create(card=DUMMY_CARD)
+        card.save()
+
+        updated_customer = stripe.Customer.retrieve(customer.id)
+        retrieved_card = updated_customer.cards.retrieve(card.id)
+        self.assertEqual(len(updated_customer.cards.data), 1)
+
+        retrieved_card.delete()
+
+        post_delete_customer = stripe.Customer.retrieve(customer.id)
+        self.assertEquals(len(post_delete_customer.cards.data), 0)
 
 
 class TransferTest(StripeTestCase):
@@ -307,6 +339,60 @@ class RecipientTest(StripeTestCase):
         # Weak assertion since the list could be empty
         for transfer in recipient.transfers().data:
             self.assertTrue(isinstance(transfer, stripe.Transfer))
+
+    def test_recipient_add_card(self):
+        recipient = stripe.Recipient.create(
+            name="Best Debitholder",
+            description="add_recipient_card",
+            type="individual"
+        )
+        card = recipient.cards.create(card=DUMMY_DEBIT_CARD)
+        card.save()
+
+        updated_recipient = stripe.Recipient.retrieve(recipient.id)
+        retrieved_card = updated_recipient.cards.retrieve(card.id)
+        self.assertEqual(len(updated_recipient.cards.data), 1)
+        self.assertEqual(retrieved_card.id, card.id)
+
+    def test_recipient_update_card(self):
+        recipient = stripe.Recipient.create(
+            name="Best Debitholder",
+            description="update_recipient_card",
+            type="individual"
+        )
+        card = recipient.cards.create(card=DUMMY_DEBIT_CARD)
+        card.save()
+
+        updated_recipient = stripe.Recipient.retrieve(recipient.id)
+        retrieved_card = updated_recipient.cards.retrieve(card.id)
+        self.assertEqual(len(updated_recipient.cards.data), 1)
+        self.assertEqual(retrieved_card.id, card.id)
+
+        retrieved_card.name = 'The Best'
+        retrieved_card.save()
+
+        post_update_recipient = stripe.Recipient.retrieve(recipient.id)
+        post_update_card = post_update_recipient.cards.retrieve(card.id)
+
+        self.assertEqual('The Best', post_update_card.name)
+
+    def test_recipient_delete_card(self):
+        recipient = stripe.Recipient.create(
+            name="Best Debitholder",
+            description="update_recipient_card",
+            type="individual"
+        )
+        card = recipient.cards.create(card=DUMMY_DEBIT_CARD)
+        card.save()
+
+        updated_recipient = stripe.Recipient.retrieve(recipient.id)
+        retrieved_card = updated_recipient.cards.retrieve(card.id)
+        self.assertEqual(len(updated_recipient.cards.data), 1)
+
+        retrieved_card.delete()
+
+        post_delete_recipient = stripe.Recipient.retrieve(recipient.id)
+        self.assertEquals(len(post_delete_recipient.cards.data), 0)
 
 
 class CustomerPlanTest(StripeTestCase):
@@ -332,14 +418,13 @@ class CustomerPlanTest(StripeTestCase):
                           plan=DUMMY_PLAN['id'])
         customer = stripe.Customer.create(
             plan=DUMMY_PLAN['id'], card=DUMMY_CARD)
-        self.assertTrue(hasattr(customer, 'subscription'))
+        self.assertTrue(hasattr(customer, 'subscriptions'))
         self.assertFalse(hasattr(customer, 'plan'))
         customer.delete()
-        self.assertFalse(hasattr(customer, 'subscription'))
         self.assertFalse(hasattr(customer, 'plan'))
         self.assertTrue(customer.deleted)
 
-    def test_update_and_cancel_subscription(self):
+    def test_legacy_update_and_cancel_subscription(self):
         customer = stripe.Customer.create(card=DUMMY_CARD)
 
         sub = customer.update_subscription(plan=DUMMY_PLAN['id'])
@@ -351,6 +436,38 @@ class CustomerPlanTest(StripeTestCase):
         self.assertTrue(customer.subscription.cancel_at_period_end)
         customer.cancel_subscription()
         self.assertEqual(customer.subscription.status, 'canceled')
+
+    def test_create_and_cancel_customer_subscription(self):
+        customer = stripe.Customer.create(card=DUMMY_CARD)
+
+        subscription = customer.subscriptions.create(plan=DUMMY_PLAN['id'])
+        self.assertEqual(DUMMY_PLAN['id'], subscription.plan.id)
+
+        subscription = customer.subscriptions.retrieve(subscription.id)
+        subscription.delete(at_period_end=True)
+        subscription = customer.subscriptions.retrieve(subscription.id)
+        self.assertEqual(subscription.status, 'active')
+        self.assertTrue(subscription.cancel_at_period_end)
+
+        subscription = customer.subscriptions.retrieve(subscription.id)
+        subscription = subscription.delete()
+        self.assertEqual(subscription.status, 'canceled')
+
+    def test_create_and_update_customer_subscription(self):
+        customer = stripe.Customer.create(card=DUMMY_CARD)
+        subscription = customer.subscriptions.create(plan=DUMMY_PLAN['id'])
+        self.assertEqual(DUMMY_PLAN['id'], subscription.plan.id)
+
+        subscription = customer.subscriptions.retrieve(subscription.id)
+        trial_end_dttm = datetime.datetime.now() + datetime.timedelta(days=15)
+        trial_end_int = int(time.mktime(trial_end_dttm.timetuple()))
+        subscription.trial_end = trial_end_int
+        subscription.plan = subscription.plan.id
+        subscription.save()
+
+        self.assertEqual(
+            trial_end_int,
+            customer.subscriptions.retrieve(subscription.id).trial_end)
 
     def test_datetime_trial_end(self):
         customer = stripe.Customer.create(
@@ -431,6 +548,29 @@ class CustomerCouponTest(StripeTestCase):
 
         customer.delete_discount()
         self.assertEqual(None, customer.discount)
+
+
+class SubscriptionCouponTest(StripeTestCase):
+
+    def setUp(self):
+        super(SubscriptionCouponTest, self).setUp()
+        self.plan_obj = stripe.Plan.create(**DUMMY_PLAN)
+        self.coupon_obj = stripe.Coupon.create(**DUMMY_COUPON)
+
+    def tearDown(self):
+        self.coupon_obj.delete()
+
+    def test_attach_coupon_to_subscription(self):
+        customer = stripe.Customer.create(card=DUMMY_CARD)
+
+        subscription = customer.subscriptions.create(
+            plan=DUMMY_PLAN['id'], coupon=self.coupon_obj.id)
+
+        self.assertTrue(hasattr(subscription, 'discount'))
+        self.assertNotEqual(None, subscription.discount)
+
+        subscription.delete_discount()
+        self.assertEqual(None, subscription.discount)
 
 
 class InvalidRequestErrorTest(StripeTestCase):

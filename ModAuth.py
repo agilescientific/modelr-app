@@ -119,6 +119,9 @@ def signup(email, password, parent=None):
                       group=groups, parent=parent)
     
     user.put()
+
+    print("http://modelr.io/verify_email?user_id=%s" %
+          str(user.temp_id))
     
     mail.send_mail(sender="Hello <hello@modelr.io>",
               to="<%s>" % user.email,
@@ -349,20 +352,27 @@ def reset_password(user, current_pword, new_password,
     # Save it in the database
     user.put()
     
-def cancel_subscription(user):
+def cancel_subscription(user,stripe_api_key):
     """
     Delete the user. See notes in DeleteHandler() in main.py
     """
 
     try:
-        stripe_customer = stripe.Customer.retrieve(user.stripe_id)
-        stripe_customer.subscriptions.all(limit=1)[0].\
-          delete(at_period_end=True)
 
+        stripe.api_key = stripe_api_key
+        stripe_customer = stripe.Customer.retrieve(user.stripe_id)
+
+        sub_id = stripe_customer.subscriptions["data"][0]["id"]
+
+        stripe_customer.subscriptions.retrieve(sub_id).delete(at_period_end=True)
+        
+        
         user.unsubscribed = True
+        user.put()
 
         # TODO MailChimp
     except Exception as e:
+        print e
         raise AuthExcept("Failed to unsubscribe user: " + user.email)
     
 

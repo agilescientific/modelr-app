@@ -1,5 +1,6 @@
 import urllib
 import warnings
+import sys
 
 from stripe import api_requestor, error, util
 
@@ -9,7 +10,8 @@ def convert_to_stripe_object(resp, api_key):
              'invoice': Invoice, 'invoiceitem': InvoiceItem,
              'plan': Plan, 'coupon': Coupon, 'token': Token, 'event': Event,
              'transfer': Transfer, 'list': ListObject, 'recipient': Recipient,
-             'card': Card, 'application_fee': ApplicationFee}
+             'card': Card, 'application_fee': ApplicationFee,
+             'subscription': Subscription}
 
     if isinstance(resp, list):
         return [convert_to_stripe_object(i, api_key) for i in resp]
@@ -26,7 +28,6 @@ def convert_to_stripe_object(resp, api_key):
 
 
 class StripeObject(dict):
-
     def __init__(self, id=None, api_key=None, **params):
         super(StripeObject, self).__init__()
 
@@ -65,6 +66,11 @@ class StripeObject(dict):
                     k, str(self), k))
 
         super(StripeObject, self).__setitem__(k, v)
+
+        # Allows for unpickling in Python 3.x
+        if not hasattr(self, '_unsaved_values'):
+            self._unsaved_values = set()
+
         self._unsaved_values.add(k)
 
     def __getitem__(self, k):
@@ -129,13 +135,18 @@ class StripeObject(dict):
         ident_parts = [type(self).__name__]
 
         if isinstance(self.get('object'), basestring):
-            ident_parts.append(self.get('object').encode('utf8'))
+            ident_parts.append(self.get('object'))
 
         if isinstance(self.get('id'), basestring):
-            ident_parts.append('id=%s' % (self.get('id').encode('utf8'),))
+            ident_parts.append('id=%s' % (self.get('id'),))
 
-        return '<%s at %s> JSON: %s' % (
+        unicode_repr = '<%s at %s> JSON: %s' % (
             ' '.join(ident_parts), hex(id(self)), str(self))
+
+        if sys.version_info[0] < 3:
+            return unicode_repr.encode('utf-8')
+        else:
+            return unicode_repr
 
     def __str__(self):
         return util.json.dumps(self, sort_keys=True, indent=2)
@@ -327,19 +338,33 @@ class Card(UpdateableAPIResource, DeletableAPIResource):
 
     def instance_url(self):
         self.id = util.utf8(self.id)
-        self.customer = util.utf8(self.customer)
-
-        base = Customer.class_url()
-        cust_extn = urllib.quote_plus(self.customer)
         extn = urllib.quote_plus(self.id)
+        if (hasattr(self, 'customer')):
+            self.customer = util.utf8(self.customer)
 
-        return "%s/%s/cards/%s" % (base, cust_extn, extn)
+            base = Customer.class_url()
+            owner_extn = urllib.quote_plus(self.customer)
+
+        elif (hasattr(self, 'recipient')):
+            self.recipient = util.utf8(self.recipient)
+
+            base = Recipient.class_url()
+            owner_extn = urllib.quote_plus(self.recipient)
+
+        else:
+            raise error.InvalidRequestError(
+                "Could not determine whether card_id %s is "
+                "attached to a customer "
+                "or a recipient." % self.id)
+
+        return "%s/%s/cards/%s" % (base, owner_extn, extn)
 
     @classmethod
     def retrieve(cls, id, api_key=None, **params):
         raise NotImplementedError(
-            "Can't retrieve a card without a customer ID. Use "
-            "customer.cards.retrieve('card_id') instead.")
+            "Can't retrieve a card without a customer or recipient"
+            "ID. Use customer.cards.retrieve('card_id') or "
+            "recipient.cards.retrieve('card_id') instead.")
 
 
 class Charge(CreateableAPIResource, ListableAPIResource,
@@ -436,6 +461,31 @@ class InvoiceItem(CreateableAPIResource, UpdateableAPIResource,
 class Plan(CreateableAPIResource, DeletableAPIResource,
            UpdateableAPIResource, ListableAPIResource):
     pass
+
+
+class Subscription(UpdateableAPIResource, DeletableAPIResource):
+
+    def instance_url(self):
+        self.id = util.utf8(self.id)
+        self.customer = util.utf8(self.customer)
+
+        base = Customer.class_url()
+        cust_extn = urllib.quote_plus(self.customer)
+        extn = urllib.quote_plus(self.id)
+
+        return "%s/%s/subscriptions/%s" % (base, cust_extn, extn)
+
+    @classmethod
+    def retrieve(cls, id, api_key=None, **params):
+        raise NotImplementedError(
+            "Can't retrieve a subscription without a customer ID. "
+            "Use customer.subscriptions.retrieve('subscription_id') instead.")
+
+    def delete_discount(self, **params):
+        requestor = api_requestor.APIRequestor(self.api_key)
+        url = self.instance_url() + '/discount'
+        _, api_key = requestor.request('delete', url)
+        self.refresh_from({'discount': None}, api_key, True)
 
 
 class Token(CreateableAPIResource):
