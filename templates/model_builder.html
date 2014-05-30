@@ -1,5 +1,5 @@
-{% extends "base_template.html" %} 
-{% block title %}Modelr &middot; Model Builder{% endblock %} 
+  {% extends "base_template.html" %} 
+{% block title %}Modelr &middot; Model builder{% endblock %} 
 
 {% block content %}
 
@@ -94,64 +94,59 @@
   =================================================================-->
   <div class="row">
 
-    <div class="col-md-6">
-      <div class="panel panel-default">
-	<div class="panel-heading">
-          <h3 class="panel-title">Model Builder</h3>
-	</div>
+  <div class="col-md-6">
+    <div class="panel panel-default">
+	    <div class="panel-heading">
+        <h3 class="panel-title">Model builder</h3>
+	    </div>
 	
-	<div class="panel-body">
-	  <img class="img-thumbnail" id="example_image"
-	       src="/static/img/mb_example.png">
+    	<div class="panel-body">
+    	  <img class="img-thumbnail" id="example_image"
+    	       src="/static/img/mb_example.png">
 
-          <!-- Div to place the form into see builder.display and 
-	  display_form functions-->
-          <div class="container" id="builder_place">
+          <!-- Div to place the form into see builder.display and display_form functions-->
+          <div style="margin:16px 0 16px 0;" id="builder_place">
           </div>
-	  
+        
           <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-6">
-	      <button class="btn btn-default" id='create_image' 
-		      onclick="server.update_image(modelbuilder)">
+            
+              <button class="btn btn-primary" id='create_image' 
+                       onclick="server.update_image(modelbuilder)">
                 Create image
-	      </button>
-            </div>
+              </button>
           </div>
-
-          </form>
-
-	</div>  <!-- end of panel-body -->
-      </div>
-    </div>
+    	</div>  <!-- end of panel-body -->
+    </div> <!-- end of panel -->
+  </div> <!-- end of col -->
     
-    <!-- RESULT PANEL
-    ===============================================================-->
+  <!-- RESULT PANEL
+  ===============================================================-->
 
     <div class="col-md-6">
       <div class="panel panel-default">
-	<div class="panel-heading">
+	      <div class="panel-heading">
           <h3 class="panel-title">Result</h3>
-	</div>
-	<div class="panel-body">
+	      </div>
 
-    <!-- Updated by the  create_image button above-->
-    <img class="img-thumbnail" id="plot_image" alt="Placeholder" src="/static/img/placeholder_model_image.png" />
+	      <div class="panel-body">
+          <!-- Updated by the  create_image button above-->
+          <img class="img-thumbnail" id="plot_image" 
+               alt="Placeholder" src="/static/img/placeholder_model_image.png" />
 
-	</div>
-      </div>
-    </div>
+          <div style="margin-top:16px;" class="form-group">
+            <form action="/model_builder" method="post">
+              <input type="hidden" id="URL" name="URL">
+              <button class="btn btn-default" type="button"
+                      onclick="modelbuilder.save_model()">
+                Save
+              </button>
+            </form>
+          </div>
+        </div> <!-- end of panel body -->
+      </div> <!-- end of panel -->
+    </div> <!-- end of col -->
 
-    <div class="form-group">
-      <form action="/model_builder" method="post">
-	<input type="hidden" id="URL" name="URL">
-	<button class="btn btn-default" type="button"
-		onclick="modelbuilder.save_model()">
-          Save
-	</button>
-      </form>
-    </div>
-
-  </div>
+  </div> <!-- end of row -->
 
   <!-- URL PANEL
   ================================================================ -->

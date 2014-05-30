@@ -446,7 +446,7 @@ function display_form(sel, metadata) {
                     + '"></input></td>';
             form_text += current;
         };
-	form_text += '<td>' + args[arg]['help'] + '</td>';
+	form_text += '<td style="font-size:90%; padding-left:6px;">' + args[arg]['help'] + '</td>';
     };
 
     form_text += '</table>';
