@@ -101,7 +101,7 @@ $('#scenario_info').popover({
 		</div>
       </div>
               
-	      {% if not user %}<fieldset disabled>{% endif %}
+	      <fieldset{% if not user %} disabled{% endif %}>
         <div class="form-group">
 		<div class="form-inline">
 		  <div class="col-xs-11">
@@ -127,7 +127,7 @@ $('#script_info').popover({
 
 		</div>
     </div>
-	      {% if not user %}</fieldset>{% endif %}
+	      </fieldset>
 	      
 	                    <hr/>
 
