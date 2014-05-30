@@ -611,11 +611,19 @@ class DashboardHandler(ModelrPageRequest):
             logging.info((s.name, s))
 
         # TODO Get the forward models
-        
+        image_models = ImageModel.all().fetch(100)
+
+        models = [{"image": images.get_serving_url(i.image, size=200,
+                                                crop=False),
+                   "image_key": str(i.key()),
+                  "models": EarthModel.all().ancestor(i).fetch(100)}
+                  for i in image_models]
+
         template_params.update(rocks=rocks.fetch(100),
                                scenarios=scenarios.fetch(100),
                                default_rocks=default_rocks.fetch(100),
-                               rock_groups=rock_groups)
+                               rock_groups=rock_groups,
+                               models=models)
 
         # Check if a rock is being edited
         if self.request.get("selected_rock"):
@@ -1718,8 +1726,9 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             bs_file = '/gs' + output_filename
             output_blob_key = blobstore.create_gs_key(bs_file)
         
-            ImageModel(parent=ModelrRoot,
-                       user=user.user_id,image=output_blob_key).put()
+            ImageModel(parent=user,
+                       user=user.user_id,
+                       image=output_blob_key).put()
             self.redirect('/forward_model')
 
         except Exception as e:
@@ -1767,7 +1776,7 @@ class ModelBuilder(ModelrPageRequest):
 
         blob_key = blobstore.create_gs_key(bs_file)
 
-        ImageModel(parent=ModelrRoot,
+        ImageModel(parent=user,
                    user=user.user_id, image=blob_key).put()
         # TODO LOgging
 
@@ -1785,20 +1794,23 @@ class ForwardModel(ModelrPageRequest):
         
         # Get the model images
         models = \
-          ImageModel.all().ancestor(ModelrRoot).\
-          order("-date").filter("user =", user.user_id).fetch(100)
+          ImageModel.all().ancestor(user).\
+          order("-date").fetch(100)
+
+        # Get the default models
+        default_models = \
+          ImageModel.all().ancestor(admin_user).fetch(100)
 
         # Create the serving urls
         imgs = [images.get_serving_url(i.image, size=1400,
                                        crop=False)
-                for i in models]
+                for i in (models + default_models)]
 
-        keys = [i.key() for i in models]
-        
+        keys = [str(i.key()) for i in (models + default_models)]
 
         # Read in each image to get the RGB colours
         readers = [blobstore.BlobReader(i.image.key())
-                   for i in models]
+                   for i in (models + default_models)]
         colors = [[RGBToString(j[1])
                    for j in Image.open(i).convert('RGB').getcolors()]
                   for i in readers]
@@ -1828,6 +1840,34 @@ class ForwardModel(ModelrPageRequest):
         self.response.out.write(html)
 
 
+class ImageModelHandler(ModelrPageRequest):
+
+    
+
+    def get(self):
+
+        user = self.verify()
+        if not user:
+            self.redirect('/signup')
+            return
+        
+        models = ImageModel.all().ancestor(user).fetch(1000)
+    
+    def delete(self):
+
+        user = self.verify()
+        if not user:
+            self.redirect('/signup')
+            return
+
+        image_key = self.request.get("image_key")
+
+        print image_key
+        image = ImageModel.get(image_key)
+
+        image.delete()
+
+        
 class EarthModelHandler(ModelrPageRequest):
 
     def get(self):
@@ -1835,13 +1875,13 @@ class EarthModelHandler(ModelrPageRequest):
         user = self.verify()
         if not user:
             self.redirect('/signup')
+            return
 
         try:
             # Get the root of the model
             input_model_key = self.request.get('image_key')
-            input_model = ImageModel(key_name=input_model_key)
+            input_model = ImageModel.get(str(input_model_key))
 
-            print "++++++++++++++++", input_model.image
             name = self.request.get('name')
 
             # If the name is provided, return the model, otherwise
@@ -1850,14 +1890,25 @@ class EarthModelHandler(ModelrPageRequest):
             if name:
 
                 earth_model = EarthModel.all().ancestor(input_model)
-            
+
+                # Check first for a user model with the right name
                 earth_model = earth_model.filter("user =",
                                                  user.user_id)
                 
                 earth_model = earth_model.filter("name =",
                                                  name)
-                
+
                 earth_model = earth_model.get()
+
+                if not earth_model:
+                    # Check in the defaults
+                    earth_model = \
+                      EarthModel.all().ancestor(input_model)
+
+                    earth_model = earth_model.filter("user =",
+                                                       admin_id)
+                    earth_model = earth_model.filter("name =",
+                                                       name).get()
 
                 self.response.out.write(earth_model.data)
 
@@ -1865,12 +1916,18 @@ class EarthModelHandler(ModelrPageRequest):
 
                 
                 earth_models = EarthModel.all().ancestor(input_model)
+
+                def_models = EarthModel.all().ancestor(input_model)
                 
                 earth_models = earth_models.filter("user =",
                                                   user.user_id)
-
+                def_models = def_models.filter("user =",
+                                                 admin_id)
                 earth_models.order('-date')
-                earth_models = earth_models.fetch(100)
+                def_models.order('-date')
+                
+                earth_models = (earth_models.fetch(100) +
+                                def_models.fetch(100))
 
                 output = json.dumps([em.name for em in earth_models])
                 self.response.out.write(output)
@@ -1888,7 +1945,8 @@ class EarthModelHandler(ModelrPageRequest):
         try:
             # Get the root of the model
             input_model_key = self.request.get('image_key')
-            image_model = ImageModel(key_name=input_model_key)
+            image_model = ImageModel.get(input_model_key)
+
             
             name = self.request.get('name')
 
@@ -2076,6 +2134,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/modify_forward_model',
                                 Forward2DModelHandler),
                                ('/forward_model', ForwardModel),
+                               ('/image_model', ImageModelHandler),
                                ('/earth_model', EarthModelHandler),
                                ('/forgot', ForgotHandler),
                                ('/reset', ResetHandler),

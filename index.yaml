@@ -20,6 +20,12 @@ indexes:
 - kind: ImageModel
   ancestor: yes
   properties:
+  - name: date
+    direction: desc
+
+- kind: ImageModel
+  ancestor: yes
+  properties:
   - name: user
   - name: date
 
