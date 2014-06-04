@@ -278,7 +278,7 @@
  <div class="row" id="{{img['image_key']}}">
 
             <div class="col-lg-2 col-md-2">
-                <a href="#">
+                <a href="/forward_model#image_key={{img['image_key']}}">
                     <img class="img-responsive" src="{{img['image']}}" alt="" >
                 </a>
 		<button class="btn btn-danger btn-xs" onclick='delete_image("{{img['image_key']}}")'>delete</button>
@@ -288,7 +288,7 @@
                 
                 {% for model in img["models"] %}
 	      <div class="row">
-                <a href="/forward_model#">{{model.name}}</a>
+                <a href="/forward_model#image_key={{img['image_key']}}&name={{model.name}}">{{model.name}}</a>
 		<button class="btn btn-danger btn-xs" 
 			onclick='delete_model("{{img['image_key']}}","{{model.name}}", this.parentNode)'>delete</button>
 	      </div>
