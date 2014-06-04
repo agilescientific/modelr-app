@@ -163,7 +163,11 @@
      var index = property_map.get_key_index(image_key);
      property_map.set_index(index);
 
-  
+     // Update the image
+     $('#myCarousel').carousel(index);
+
+     // Update the properties
+     Colors(index);
 
      if(params.length > 1){
        var name = params[1].split('=')[1];
@@ -171,14 +175,10 @@
      };
 
    } else{
-     var index = 0;
+     Colors(0);
    };
 
-   // Update the image
-   $('#myCarousel').carousel(index);
 
-   // Update the properties
-   Colors(index);
 
    // Update the available saved earth models
    update_em_list(property_map);
