@@ -290,7 +290,7 @@ class RemoveScenarioHandler(ModelrPageRequest):
                     activity=activity,
                     parent=ModelrRoot).put()
         
-        self.redirect('/dashboard')
+        self.redirect('/dashboard#scenarios')
 
     
 class ModifyScenarioHandler(ModelrPageRequest):
@@ -425,7 +425,7 @@ class AddRockHandler(ModelrPageRequest):
         ActivityLog(user_id=user.user_id,
                     activity=activity,
                     parent=ModelrRoot).put()
-        self.redirect('/dashboard')
+        self.redirect('/dashboard#rocks')
     
 
 class RemoveRockHandler(ModelrPageRequest):
@@ -452,9 +452,9 @@ class RemoveRockHandler(ModelrPageRequest):
             rock.delete()
             
         except IndexError:
-            self.redirect('/dashboard')
+            self.redirect('/dashboard#rocks')
         else:
-            self.redirect('/dashboard')
+            self.redirect('/dashboard#rocks')
  
                      
 class ModifyRockHandler(ModelrPageRequest):
@@ -483,9 +483,10 @@ class ModifyRockHandler(ModelrPageRequest):
         try:
             rock = current_rock[0]
             key = rock.key()
-            self.redirect('/dashboard?selected_rock=' + str(key.id()))
+            self.redirect('/dashboard?selected_rock=' +
+                          str(key.id()) + '#rocks')
         except IndexError:
-            self.redirect('/dashboard')
+            self.redirect('/dashboard#rocks')
 
                
 class ScenarioHandler(ModelrPageRequest):

@@ -275,11 +275,11 @@
 <div class="tab-pane" id="models">
 
   {% for img in models %}
- <div class="row">
+ <div class="row" id="{{img['image_key']}}">
 
             <div class="col-lg-2 col-md-2">
                 <a href="#">
-                    <img class="img-responsive" src="{{img['image']}}" alt="">
+                    <img class="img-responsive" src="{{img['image']}}" alt="" >
                 </a>
 		<button class="btn btn-danger btn-xs" onclick='delete_image("{{img['image_key']}}")'>delete</button>
             </div>
@@ -299,31 +299,40 @@
 </div>
 
 <script>
-  $('#rocks a').click(function (e) {
-  e.preventDefault()
-  $(this).tab('show')
-  });
 
-  $('#scenarios a').click(function (e) {
+// Show tabs on clicking
+$('.tabbable .nav-tabs a').click(function (e) {
   e.preventDefault()
   $(this).tab('show')
   });
+  
 
-  $('#feed a').click(function (e) {
-  e.preventDefault()
-  $(this).tab('show')
-  });
+
 
 function delete_image(image_key){
 
-   $.ajax('/image_model?image_key=' + image_key, {type:"DELETE"});
+   callback = function(data){
+
+    var elem = document.getElementById(image_key);
+    elem.parentNode.removeChild(elem);
+   }
+  
+   $.ajax('/image_model?image_key=' + image_key, {type:"DELETE",
+						  success: callback});
 
 };
+
 
 </script>
 
 <script>
  $(document).ready(function() {
+   
+
+   var activeTab = $('[href=' + location.hash + ']');
+   activeTab && activeTab.tab('show');
+
+
    function toggleChevron(e) {
      $(e.target)
         .prev('.panel-heading')
