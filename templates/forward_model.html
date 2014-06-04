@@ -147,23 +147,42 @@
      forward_model.cleanUp(server);
    };
    
-   Colors(0);
+
+   seismic_model.set_current_script(seismic_model.script, 
+				      seismic_model.arguments);
+   plot_container.set_current_script(plot_container.script, 
+				     plot_container.arguments);
+   earth_structure.set_current_script(earth_structure.script,
+				      earth_structure.arguments);
+   
    var hash = window.location.hash.substring(1);
    
    if (hash != ''){
-     model_name = hash;
-     load_scenario(model_name);
-   }
-   else{
-     seismic_model.set_current_script(seismic_model.script, 
-				      seismic_model.arguments);
-     plot_container.set_current_script(plot_container.script, 
-				       plot_container.arguments);
-     earth_structure.set_current_script(earth_structure.script,
-					earth_structure.arguments);
+     var params = hash.split('&');
+     image_key = params[0].split('=')[1];
+     var index = property_map.get_key_index(image_key);
+     property_map.set_index(index);
+
+  
+
+     if(params.length > 1){
+       var name = params[1].split('=')[1];
+       load_fullmodel(image_key, name);
+     };
+
+   } else{
+     var index = 0;
    };
 
+   // Update the image
+   $('#myCarousel').carousel(index);
+
+   // Update the properties
+   Colors(index);
+
+   // Update the available saved earth models
    update_em_list(property_map);
+
  });
 </script>
 
@@ -248,17 +267,25 @@
      });
  };
 
+ function load_fullmodel(image_key, model_name){
+
+   // set the property map index
+   index = property_map.get_key_index(image_key);
+   property_map.set_index(index);
+
+   load_earthmodel(model_name);
+};
+
 </script>
 <script>
 
- function Colors(increment)
-
- {
+ function Colors(increment){
 
    var div = $("#color_map");
    var foo;
    var div,row, dropdown, option, text;
    var rocks = get_rocks('datalist#list_of_rocks');
+
    var index = $('#myCarousel .active').index('#myCarousel .item') + 
 					      increment;
 

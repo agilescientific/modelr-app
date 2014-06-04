@@ -278,7 +278,7 @@
  <div class="row" id="{{img['image_key']}}">
 
             <div class="col-lg-2 col-md-2">
-                <a href="#">
+                <a href="/forward_model#image_key={{img['image_key']}}">
                     <img class="img-responsive" src="{{img['image']}}" alt="" >
                 </a>
 		<button class="btn btn-danger btn-xs" onclick='delete_image("{{img['image_key']}}")'>delete</button>
@@ -287,7 +287,11 @@
             <div class="col-lg-5 col-md-5">
                 
                 {% for model in img["models"] %}
-                <a href="/forward_model#">{{model.name}}</a><button class="btn btn-danger btn-xs" >delete</button>
+	      <div class="row">
+                <a href="/forward_model#image_key={{img['image_key']}}&name={{model.name}}">{{model.name}}</a>
+		<button class="btn btn-danger btn-xs" 
+			onclick='delete_model("{{img['image_key']}}","{{model.name}}", this.parentNode)'>delete</button>
+	      </div>
 		{% endfor%}
             </div>
 
@@ -302,12 +306,25 @@
 
 // Show tabs on clicking
 $('.tabbable .nav-tabs a').click(function (e) {
-  e.preventDefault()
-  $(this).tab('show')
+  e.preventDefault();
+  $(this).tab('show');
   });
   
 
 
+function delete_model(image_key, model_name, element){
+
+   callback = function(data){
+
+     if (JSON.parse(data)["success"]){
+	 element.parentNode.removeChild(element);
+	 };
+   };
+
+   $.ajax('/earth_model?input_image_id=' + image_key + '&' + 'name=' + model_name,
+	  {type: "DELETE",
+	   success: callback})
+ };
 
 function delete_image(image_key){
 

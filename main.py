@@ -1987,14 +1987,21 @@ class EarthModelHandler(ModelrPageRequest):
 
             name = self.request.get('name')
 
-            model = EarthModel.all().ancestor(input_model_key)
+            image_model = ImageModel.get(input_model_key)
+
+            
+            model = EarthModel.all().ancestor(image_model)
+            
             model = model.filter("user =", user.user_id)
             model = model.filter("name =", name).get()
 
             if model:
                 model.delete()
+                
+            self.response.out.write(json.dumps({'success':True}))
         except Exception as e:
-            pass
+            print e
+            self.response.out.write(json.dumps({'success':False}))
         
 
 class Forward2DModelHandler(ModelrPageRequest):
