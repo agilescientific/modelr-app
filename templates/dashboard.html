@@ -265,7 +265,7 @@
           <h3 class="panel-title">Welcome</h3>
 	</div>
 	<div class="panel-body">
-          <p><strong>Welcome to Modelr!</strong> To get started, make some rocks using the form on the right. Then make a scenario in the box below.</p>
+          <p><strong>Welcome to Modelr!</strong></p><p> To get started, try our <a href="/section_model">section model</a> or <a href="/scenario">scenario</a> pages. Use the tabs on the right to manage your rocks and models!</p>
           <p><a href="/help">Need more help?</a></p>
 	</div>
       </div>
@@ -278,17 +278,19 @@
  <div class="row" id="{{img['image_key']}}">
 
             <div class="col-lg-2 col-md-2">
-                <a href="/forward_model#image_key={{img['image_key']}}">
+                <a href="/section_model#image_key={{img['image_key']}}">
                     <img class="img-responsive" src="{{img['image']}}" alt="" >
                 </a>
+		{% if img.editable %}
 		<button class="btn btn-danger btn-xs" onclick='delete_image("{{img['image_key']}}")'>delete</button>
-            </div>
+		{% endif %}
+	    </div>
 
             <div class="col-lg-5 col-md-5">
                 
                 {% for model in img["models"] %}
 	      <div class="row">
-                <a href="/forward_model#image_key={{img['image_key']}}&name={{model.name}}">{{model.name}}</a>
+                <a href="/section_model#image_key={{img['image_key']}}&name={{model.name}}">{{model.name}}</a>
 		<button class="btn btn-danger btn-xs" 
 			onclick='delete_model("{{img['image_key']}}","{{model.name}}", this.parentNode)'>delete</button>
 	      </div>
@@ -323,7 +325,7 @@ function delete_model(image_key, model_name, element){
 
    $.ajax('/earth_model?input_image_id=' + image_key + '&' + 'name=' + model_name,
 	  {type: "DELETE",
-	   success: callback})
+	   success: callback});
  };
 
 function delete_image(image_key){
