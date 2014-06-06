@@ -13,7 +13,7 @@
       <li class="active"><a href="#feed" data-toggle="tab">Feed</a></li>
       <li><a href="#rocks" data-toggle="tab">Rocks</a></li>
       <li><a href="#scenarios" data-toggle="tab">Scenarios</a></li>
-      <li><a href="#models" data-toggle="tab">Models</a></li>
+      <li><a href="#models" data-toggle="tab">Section Models</a></li>
     </ul>
     
 
@@ -274,35 +274,50 @@
 
 <div class="tab-pane" id="models">
 
+  <div class="panel panel-primary">
+    <div class="panel-heading">
+      <h3 class="panel-title">Section Models</h3>
+    </div>
+    <p><b>Manage your uploaded images and saved section models.   
+      Note: Deleting an image will remove all associated models.</b></p>
+  </div>
+    <hr>
+
   {% for img in models %}
  <div class="row" id="{{img['image_key']}}">
 
             <div class="col-lg-2 col-md-2">
+	      
                 <a href="/section_model#image_key={{img['image_key']}}">
                     <img class="img-responsive" src="{{img['image']}}" alt="" >
                 </a>
+		<button class="btn btn-success btn-xs" href="/section_model#image_key={{img['image_key']}}">open image</button>
 		{% if img.editable %}
-		<button class="btn btn-danger btn-xs" onclick='delete_image("{{img['image_key']}}")'>delete</button>
+		<button class="btn btn-danger btn-xs" onclick='delete_image("{{img['image_key']}}")'>delete image</button>
 		{% endif %}
+		
 	    </div>
 
             <div class="col-lg-5 col-md-5">
-                
+	      
+                <tr>
                 {% for model in img["models"] %}
 	      <div class="row">
-                <a href="/section_model#image_key={{img['image_key']}}&name={{model.name}}">{{model.name}}</a>
+                <td><strong><a href="/section_model#image_key={{img['image_key']}}&name={{model.name}}">{{model.name}}</a></strong></td>
+		<td> <a class="btn btn-success btn-xs" href="/section_model#image_key={{img['image_key']}}&name={{model.name}}" > open&nbsp;</a> &nbsp;&nbsp;</td>
 		<button class="btn btn-danger btn-xs" 
 			onclick='delete_model("{{img['image_key']}}","{{model.name}}", this.parentNode)'>delete</button>
 	      </div>
 		{% endfor%}
+	      
             </div>
 
         </div>
 	<hr>
 	{% endfor %}
     </div>
-  </div>
 </div>
+    </div>
 
 <script>
 
