@@ -200,7 +200,7 @@ ForwardModel.prototype.cleanUp = function cleanUp(server){
 	   JSON.stringify({filename: this.earth_struct.datafile}));
 }
 ForwardModel.prototype.post = function post(server,callback,
-                                            update=update){
+                                            update){
 
     this.earth_struct.update_model=update;
     $.post(server.hostname + '/forward_model.json', 

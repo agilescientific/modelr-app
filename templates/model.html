@@ -40,9 +40,9 @@
    var rand_default = [];
    
    {% for im in colors %}
-   var mapping = {}
+   var mapping = {};
    {% for color in (im) %}
-   var keys = Object.keys(rocks)
+   var keys = Object.keys(rocks);
    key =  keys[Math.floor((Math.random()*keys.length))];
    rock = rocks[key];
    mapping["{{color}}"] = {name:key, property: rock};
@@ -55,7 +55,7 @@
    images.push("{{image}}");
    {% endfor %}
    
-   var db_keys = []
+   var db_keys = [];
    {% for key in keys %}
    db_keys.push("{{key}}");
    {% endfor %}
