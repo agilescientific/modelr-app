@@ -82,7 +82,8 @@ We recommend using IE10+, or a recent version of another browser.</p>
 <div class="container">
   <!-- Brand and toggle get grouped for better mobile display -->
   <div class="navbar-header">
-    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+    <button type="button" class="navbar-toggle" data-toggle="collapse"
+	    data-target=".navbar-collapse">
       <span class="sr-only">Toggle navigation</span>
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
@@ -99,6 +100,8 @@ We recommend using IE10+, or a recent version of another browser.</p>
   <div class="navbar-collapse collapse">
     <ul class="nav navbar-nav">
       {% if user %}
+      <li><a href="/section_model">Section Model</a></li>
+      <li><a href="/scenario">Scenario</a></li>
       <li><a href="/dashboard">Dashboard</a></li>
       {% endif %}
       {% if not user %}
@@ -114,7 +117,8 @@ We recommend using IE10+, or a recent version of another browser.</p>
       <li class="divider-vertical"></li>
       
     {% if user %}
-         <li style="margin-left:7px; margin-top:8px;"><figure style="width:32px; border: 1px solid #f2f2f2;"><img src="https://www.gravatar.com/avatar/{{ email_hash }}?s=32&d=identicon" /></figure></li>
+         <li style="margin-left:7px; margin-top:8px;">
+	   <figure style="width:32px; border: 1px solid #f2f2f2;"><img src="https://www.gravatar.com/avatar/{{ email_hash }}?s=32&d=identicon" /></figure></li>
 
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ user.email }}<b class="caret"></b></a>

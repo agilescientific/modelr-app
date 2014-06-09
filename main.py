@@ -252,7 +252,7 @@ class MainHandler(ModelrPageRequest):
         # Redirect to the dashboard if the user is logged in
         user = self.verify()
         if user:
-            self.redirect('/scenario')
+            self.redirect('/dashboard')
         
         template_params = self.get_base_params()
         template = env.get_template('index.html')
@@ -611,15 +611,30 @@ class DashboardHandler(ModelrPageRequest):
         for s in scenarios.fetch(100):
             logging.info((s.name, s))
 
-        # TODO Get the forward models
-        image_models = ImageModel.all().fetch(100)
+    
+        default_image_models = \
+          ImageModel.all().filter("user =", admin_id).fetch(100)
 
-        models = [{"image": images.get_serving_url(i.image, size=200,
-                                                crop=False),
-                   "image_key": str(i.key()),
-                  "models": EarthModel.all().ancestor(i).fetch(100)}
-                  for i in image_models]
+        user_image_models = \
+          ImageModel.all().filter("user =", user.user_id).fetch(100)
 
+        default_models = [{"image": images.get_serving_url(i.image,
+                                                           size=200,
+                                                          crop=False),
+                           "image_key": str(i.key()),
+                           "editable": False,
+                           "models": EarthModel.all().ancestor(i).filter("user =", user.user_id).fetch(100)}
+                                      for i in default_image_models]
+
+        user_models = [{"image": images.get_serving_url(i.image,
+                                                           size=200,
+                                                          crop=False),
+                           "image_key": str(i.key()),
+                           "editable": True,
+                           "models": EarthModel.all().ancestor(i).filter("user =", user.user_id).fetch(100)}
+                                      for i in user_image_models]
+        models = user_models + default_models
+        
         template_params.update(rocks=rocks.fetch(100),
                                scenarios=scenarios.fetch(100),
                                default_rocks=default_rocks.fetch(100),
@@ -1638,7 +1653,8 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
                 print "WTF"
                 self.x_iterate = -1
             
-            return self.closest(x + self.x_iterate, y + self.y_iterate,
+            return self.closest(x + self.x_iterate, y +
+                                self.y_iterate,
                                 pixels)
     def posterize(self,image):
 
@@ -1730,11 +1746,11 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             ImageModel(parent=user,
                        user=user.user_id,
                        image=output_blob_key).put()
-            self.redirect('/forward_model')
+            self.redirect('/section_model')
 
         except Exception as e:
             print "ERRRRRRRRR", e
-            self.redirect('/forward_model?error=True')
+            self.redirect('/section_model?error=True')
         
 
 class ModelBuilder(ModelrPageRequest):
@@ -1781,7 +1797,7 @@ class ModelBuilder(ModelrPageRequest):
                    user=user.user_id, image=blob_key).put()
         # TODO LOgging
 
-class ForwardModel(ModelrPageRequest):
+class SectionModel(ModelrPageRequest):
 
     def get(self):
         
@@ -1836,7 +1852,7 @@ class ForwardModel(ModelrPageRequest):
         if self.request.get("error"):
             params.update(error="Invalid image file")
         
-        template = env.get_template('forward_model.html')
+        template = env.get_template('section_model.html')
         html = template.render(params)
         self.response.out.write(html)
 
@@ -2139,9 +2155,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/manage_group', ManageGroup),
                                ('/upload', Upload),
                                ('/model_builder', ModelBuilder),
-                               ('/modify_forward_model',
-                                Forward2DModelHandler),
-                               ('/forward_model', ForwardModel),
+                               ('/section_model', SectionModel),
                                ('/image_model', ImageModelHandler),
                                ('/earth_model', EarthModelHandler),
                                ('/forgot', ForgotHandler),
