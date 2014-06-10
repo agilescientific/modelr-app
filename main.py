@@ -1797,12 +1797,12 @@ class ModelBuilder(ModelrPageRequest):
 
         ImageModel(parent=user,
                    user=user.user_id, image=blob_key).put()
-        # TODO LOgging
+        # TODO Logging
 
-class SectionModel(ModelrPageRequest):
+
+class ModelHandler(ModelrPageRequest):
 
     def get(self):
-        
         user = ModelrPageRequest.verify(self)
         if user is None:
             self.redirect('/signup')
@@ -1853,14 +1853,12 @@ class SectionModel(ModelrPageRequest):
         if self.request.get("error"):
             params.update(error="Invalid image file")
         
-        template = env.get_template('section_model.html')
+        template = env.get_template('model.html')
         html = template.render(params)
         self.response.out.write(html)
 
 
 class ImageModelHandler(ModelrPageRequest):
-
-    
 
     def get(self):
 
@@ -2083,8 +2081,6 @@ class AdminHandler(ModelrPageRequest):
         html = template.render(user=user)
         self.response.out.write(html)
         
-
-        
     def post(self):
 
         user = self.verify()
@@ -2122,7 +2118,6 @@ class AdminHandler(ModelrPageRequest):
                 self.response.out.write(html)
 
 
-
 class ServerError(ModelrPageRequest):
 
     def post(self):
@@ -2157,7 +2152,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/manage_group', ManageGroup),
                                ('/upload', Upload),
                                ('/model_builder', ModelBuilder),
-                               ('/section_model', SectionModel),
+                               ('/model', ModelHandler),
                                ('/image_model', ImageModelHandler),
                                ('/earth_model', EarthModelHandler),
                                ('/forgot', ForgotHandler),

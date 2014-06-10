@@ -5,25 +5,17 @@
 {% block content %}
 
 <div class="container">
-  <div class="row">
-    
-
 
     <ul class="nav nav-tabs">
       <li class="active"><a href="#feed" data-toggle="tab">Feed</a></li>
       <li><a href="#rocks" data-toggle="tab">Rocks</a></li>
       <li><a href="#scenarios" data-toggle="tab">Scenarios</a></li>
-      <li><a href="#models" data-toggle="tab">Section Models</a></li>
+      <li><a href="#models" data-toggle="tab">Models</a></li>
     </ul>
     
-
     <div class="tab-content">
       <div class="tab-pane" id="scenarios">
-	<div class="panel panel-primary">
-	  <div class="panel-heading">
-            <h3 class="panel-title">Scenarios</h3>
-	  </div>
-	  <div class="panel-body">
+            <h4>Scenarios</h4>
 	    <table class="table table-condensed table-hover">
               <tbody>
 		{% for scenario in scenarios %}
@@ -41,22 +33,17 @@
               </tbody>
             </table>
             <a class="btn btn-primary" href="/scenario" role="button">Make a new scenario</a>
-	  </div>
 	</div>
-      </div>
 
 
 <!-- Start of right-hand column -->
 
       <div class="tab-pane" id="rocks">
-      <div class="col-md-8">
-	<div class="panel panel-default">
-	  <div class="panel-heading">
-            <h3 class="panel-title">My rocks</h3>
-	  </div>
-	  <div class="panel-body">
+
+      <div>
+        <h4>My rocks</h4>
 	    <table class="table table-condensed table-hover">
-              <thead>
+        <thead>
 		<tr>
 		  <th></th>
 		  <th>V<sub>P</sub></th>
@@ -67,8 +54,8 @@
 		  <th>Rho std</th>
 		  <th></th>
 		</tr>
-              </thead>
-              <tbody>
+        </thead>
+        <tbody>
 		{% for rock in rocks %}
 		<tr>
 		  <form class="form-horizontal" name="input" action="edit_rock" method="post">
@@ -87,7 +74,6 @@
               </tbody>
             </table>
 	  </div>
-	</div>
 
 	{% for rock_group in rock_groups %}
 	<div class="panel panel-default">
@@ -253,34 +239,28 @@
 	    </form>
 	  </div> <!-- end of panel body -->
 	</div> <!-- end of panel  -->
+
       </div>
-    </div>
 
 
 <div class="tab-pane active" id="feed">
-    <div class="col-md-4">
-      
-      <div class="panel panel-default">
-	<div class="panel-heading">
-          <h3 class="panel-title">Welcome</h3>
-	</div>
-	<div class="panel-body">
-          <p><strong>Welcome to Modelr!</strong></p><p> To get started, try our <a href="/section_model">section model</a> or <a href="/scenario">scenario</a> pages. Use the tabs on the right to manage your rocks and models!</p>
-          <p><a href="/help">Need more help?</a></p>
-	</div>
-      </div>
+    <div class="col-md-6">
+          <h4>Welcome to Modelr!</h4>
+          <p class="lead"> To get started, try our <a href="/model">model</a> or <a href="/scenario">scenario</a> pages. Use the tabs on the right to manage your rocks and models!</p>
+          <p class="lead"><a href="/help">Need more help?</a></p>
     </div>
 </div>
 
 <div class="tab-pane" id="models">
 
-  <div class="panel panel-primary">
-    <div class="panel-heading">
-      <h3 class="panel-title">Section Models</h3>
+      <h4>Models</h4>
+
+    <p>Manage your uploaded images and saved models.</p>
+
+      <div class="alert alert-warning">
+    <strong>Note:</strong> Deleting an image will remove all associated models.
     </div>
-    <p><b>Manage your uploaded images and saved section models.   
-      Note: Deleting an image will remove all associated models.</b></p>
-  </div>
+
     <hr>
 
   {% for img in models %}
@@ -288,10 +268,10 @@
 
             <div class="col-lg-2 col-md-2">
 	      
-                <a href="/section_model#image_key={{img['image_key']}}">
-                    <img class="img-responsive" src="{{img['image']}}" alt="" >
+                <a href="/model#image_key={{img['image_key']}}">
+                    <img class="img-rounded" src="{{img['image']}}" alt="" >
                 </a>
-		<button class="btn btn-success btn-xs" href="/section_model#image_key={{img['image_key']}}">open image</button>
+		<button class="btn btn-success btn-xs" href="/model#image_key={{img['image_key']}}">open image</button>
 		{% if img.editable %}
 		<button class="btn btn-danger btn-xs" onclick='delete_image("{{img['image_key']}}")'>delete image</button>
 		{% endif %}
@@ -303,8 +283,8 @@
                 <tr>
                 {% for model in img["models"] %}
 	      <div class="row">
-                <td><strong><a href="/section_model#image_key={{img['image_key']}}&name={{model.name}}">{{model.name}}</a></strong></td>
-		<td> <a class="btn btn-success btn-xs" href="/section_model#image_key={{img['image_key']}}&name={{model.name}}" > open&nbsp;</a> &nbsp;&nbsp;</td>
+                <td><strong><a href="/model#image_key={{img['image_key']}}&name={{model.name}}">{{model.name}}</a></strong></td>
+		<td> <a class="btn btn-success btn-xs" href="/model#image_key={{img['image_key']}}&name={{model.name}}" > open&nbsp;</a> &nbsp;&nbsp;</td>
 		<button class="btn btn-danger btn-xs" 
 			onclick='delete_model("{{img['image_key']}}","{{model.name}}", this.parentNode)'>delete</button>
 	      </div>
