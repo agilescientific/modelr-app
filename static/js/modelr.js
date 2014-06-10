@@ -200,7 +200,7 @@ ForwardModel.prototype.cleanUp = function cleanUp(server){
 	   JSON.stringify({filename: this.earth_struct.datafile}));
 }
 ForwardModel.prototype.post = function post(server,callback,
-                                            update=update){
+                                            update){
 
     this.earth_struct.update_model=update;
     $.post(server.hostname + '/forward_model.json', 
@@ -462,8 +462,9 @@ function display_form(sel, metadata) {
 	}).on('slideStop', function(ev){
 
 	    if(ev.target.id in metadata){
+		// Assume scale is generic 0->1000
 		scale = metadata[ev.target.id]
-		index = scale.length * ev.value / 100
+		index = (scale.length * ev.value / 1000.0) +1
 		value = index | 0
 		if(value >= scale.length){
 		    value = scale.length -1;
@@ -474,7 +475,7 @@ function display_form(sel, metadata) {
 	}).on('slide', function(ev){
 	    if(ev.target.id in metadata){
 		scale = metadata[ev.target.id]
-		index = scale.length * ev.value / 100
+		index = scale.length * ev.value / 1000
 		index = (index) | 0
 		if(index >= scale.length){
 		    index = scale.length -1;

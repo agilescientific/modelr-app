@@ -1724,7 +1724,7 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             reader = blobstore.BlobReader(blob_info.key())
 
             im = Image.open(reader, 'r')
-            im = im.convert('RGB').resize((480,480))
+            im = im.convert('RGB').resize((350,350))
 
             im = self.posterize(im)
             
@@ -1748,11 +1748,11 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             ImageModel(parent=user,
                        user=user.user_id,
                        image=output_blob_key).put()
-            self.redirect('/section_model')
+            self.redirect('/model')
 
         except Exception as e:
             print "ERRRRRRRRR", e
-            self.redirect('/section_model?error=True')
+            self.redirect('/model?error=True')
         
 
 class ModelBuilder(ModelrPageRequest):
@@ -1796,13 +1796,14 @@ class ModelBuilder(ModelrPageRequest):
         blob_key = blobstore.create_gs_key(bs_file)
 
         ImageModel(parent=user,
-                   user=user.user_id, image=blob_key).put()
-        # TODO LOgging
+                   user=user.user_id,
+                   image=blob_key).put()
+        # TODO Logging
 
-class SectionModel(ModelrPageRequest):
+
+class ModelHandler(ModelrPageRequest):
 
     def get(self):
-        
         user = ModelrPageRequest.verify(self)
         if user is None:
             self.redirect('/signup')
@@ -1853,14 +1854,12 @@ class SectionModel(ModelrPageRequest):
         if self.request.get("error"):
             params.update(error="Invalid image file")
         
-        template = env.get_template('section_model.html')
+        template = env.get_template('model.html')
         html = template.render(params)
         self.response.out.write(html)
 
 
 class ImageModelHandler(ModelrPageRequest):
-
-    
 
     def get(self):
 
@@ -2083,8 +2082,6 @@ class AdminHandler(ModelrPageRequest):
         html = template.render(user=user)
         self.response.out.write(html)
         
-
-        
     def post(self):
 
         user = self.verify()
@@ -2122,7 +2119,6 @@ class AdminHandler(ModelrPageRequest):
                 self.response.out.write(html)
 
 
-
 class ServerError(ModelrPageRequest):
 
     def post(self):
@@ -2157,7 +2153,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/manage_group', ManageGroup),
                                ('/upload', Upload),
                                ('/model_builder', ModelBuilder),
-                               ('/section_model', SectionModel),
+                               ('/model', ModelHandler),
                                ('/image_model', ImageModelHandler),
                                ('/earth_model', EarthModelHandler),
                                ('/forgot', ForgotHandler),
