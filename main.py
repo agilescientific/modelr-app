@@ -1724,7 +1724,7 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             reader = blobstore.BlobReader(blob_info.key())
 
             im = Image.open(reader, 'r')
-            im = im.convert('RGB').resize((480,480))
+            im = im.convert('RGB').resize((350,350))
 
             im = self.posterize(im)
             
@@ -1748,11 +1748,11 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             ImageModel(parent=user,
                        user=user.user_id,
                        image=output_blob_key).put()
-            self.redirect('/section_model')
+            self.redirect('/model')
 
         except Exception as e:
             print "ERRRRRRRRR", e
-            self.redirect('/section_model?error=True')
+            self.redirect('/model?error=True')
         
 
 class ModelBuilder(ModelrPageRequest):
@@ -1796,7 +1796,8 @@ class ModelBuilder(ModelrPageRequest):
         blob_key = blobstore.create_gs_key(bs_file)
 
         ImageModel(parent=user,
-                   user=user.user_id, image=blob_key).put()
+                   user=user.user_id,
+                   image=blob_key).put()
         # TODO Logging
 
 
