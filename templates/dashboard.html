@@ -266,15 +266,17 @@
   {% for img in models %}
  <div class="row" id="{{img['image_key']}}">
 
-            <div class="col-lg-2 col-md-2">
+            <div class="col-lg-3 col-md-3">
 	      
                 <a href="/model#image_key={{img['image_key']}}">
                     <img class="img-rounded" src="{{img['image']}}" alt="" >
                 </a>
-		<button class="btn btn-success btn-xs" href="/model#image_key={{img['image_key']}}">open image</button>
+		
+		<a class="btn btn-success btn-xs" href="/model#image_key={{img['image_key']}}">open image</a>
 		{% if img.editable %}
 		<button class="btn btn-danger btn-xs" onclick='delete_image("{{img['image_key']}}")'>delete image</button>
 		{% endif %}
+		
 		
 	    </div>
 
