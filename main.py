@@ -2173,8 +2173,9 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/model_served', ModelServed),
                                ('/admin_site', AdminHandler),
                                ('/server_error', ServerError),
+                               ('/drawing_tips', DrawingTips),
                                ('/.*', NotFoundPageHandler),
-                               ('/drawing_tips', DrawingTips)
+                               
                                ],
                               debug=False)
 
