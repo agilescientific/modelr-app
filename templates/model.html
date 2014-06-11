@@ -1,5 +1,5 @@
 {% extends "base_template.html" %} 
-{% block title %}Modelr &middot; Section Model{% endblock %} 
+{% block title %}Modelr &middot; Section model{% endblock %} 
 
 {% block content %}
 
@@ -40,9 +40,9 @@
    var rand_default = [];
    
    {% for im in colors %}
-   var mapping = {}
+   var mapping = {};
    {% for color in (im) %}
-   var keys = Object.keys(rocks)
+   var keys = Object.keys(rocks);
    key =  keys[Math.floor((Math.random()*keys.length))];
    rock = rocks[key];
    mapping["{{color}}"] = {name:key, property: rock};
@@ -55,7 +55,7 @@
    images.push("{{image}}");
    {% endfor %}
    
-   var db_keys = []
+   var db_keys = [];
    {% for key in keys %}
    db_keys.push("{{key}}");
    {% endfor %}
@@ -64,8 +64,7 @@
 
    server = new PlotServer(host, null, null);
 
-   earth_structure = new EarthStructure(null, 5000, 5000, 'depth', 
-					property_map.get_mapping(),
+   earth_structure = new EarthStructure(null, property_map.get_mapping(),
 					{{user.user_id}} + '.hf5');
    
    seismic_model = new Scenario(null, null, {},
