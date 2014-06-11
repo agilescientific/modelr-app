@@ -1200,7 +1200,7 @@ class DeleteHandler(ModelrPageRequest):
             stripe_api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
             
         else:
-            stripe_api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
+            stripe_api_key = "sk_test_e1fBcKwSV6TfDrMqmCQBMWTP"
             
         try:
             cancel_subscription(user, stripe_api_key) 
@@ -1284,7 +1284,7 @@ class EmailAuthentication(ModelrPageRequest):
         if LOCAL:
             stripe_public_key = "pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
         else:
-            stripe_public_key = "pk_live_5CZcduRr07BZPG2A5OAhisW9"
+            stripe_public_key = "pk_test_5CZcduRr07BZPG2A5OAhisW9"
             
         msg = "Thank you for verifying your email address."
         params = self.get_base_params(user=user,
@@ -1304,7 +1304,7 @@ class EmailAuthentication(ModelrPageRequest):
             stripe.api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
             
         else:
-            stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
+            stripe.api_key = "sk_test_e1fBcKwSV6TfDrMqmCQBMWTP"
             
 
         # Secret API key for Canada Post postal lookup
