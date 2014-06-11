@@ -1,0 +1,114 @@
+{% extends "base_template.html" %}
+
+{% block title %}Modelr &middot; Drawing tips{% endblock %}
+{% block content %}
+
+<div class="container">
+
+  {% if error %}
+  <div class="alert alert-danger">
+      <strong>Something's wrong...</strong> {{ error }}
+  </div>
+  {% endif %}
+
+  {% if warning %}
+  <div class="alert alert-warning">
+      <strong>Sorry...</strong> {{ warning }} 
+  </div>
+  {% endif %}
+
+  {% if success %}
+  <div class="alert alert-success">
+      <strong>Success!</strong> {{ success }} 
+  </div>
+  {% endif %}
+  
+<h4>Drawing a suitable image for Modelr</h4>
+<div style="margin:2em;"></div>
+
+<div class="panel-group" id="accordion">
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+          POINT 1
+        </a>
+      </h4>
+    </div>
+    <div id="collapseOne" class="panel-collapse collapse">
+      <div class="panel-body">
+
+      <p>Sentance 1</p>
+
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="http://placehold.it/150x150" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Remove blackness</h4>
+            Remove anything that you don't want in the whitespace.<a href="/scenario">Scenario</a>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+    <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+          POINT 2
+        </a>
+      </h4>
+    </div>
+    <div id="collapseTwo" class="panel-collapse collapse">
+      <div class="panel-body">
+
+      <p>Sentance 2</p>
+
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="http://placehold.it/150x150" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Use color wisely</h4>
+            Colors should be distinct, but they don't have to be too distinct.
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+<div style="margin-top:36px;"></div>
+<h4>Can't figure something out? Got a bright idea? Get in touch...</h4>
+
+<div class="col-md-8" style="margin-top:18px;">
+
+  <form class="form-horizontal" action="help" method="POST">
+  
+  <div class="form-group">
+    <label for="name" class="col-sm-2 control-label">Email</label>
+    <div class="col-sm-offset-2">
+      <input class="form-control" type="email" name="email"  
+	     value={{user.email}}>
+    </div>
+    </div>
+    
+      <div class="form-group">
+      <label for="categories" class="col-sm-2 control-label">Message</label>
+      <div class="col-sm-offset-2">
+        <textarea name="message" rows="3" placeholder="What's on your mind?" class="form-control"></textarea>
+      </div>
+    </div>
+
+  <div class="form-group">
+  <div class="col-sm-offset-2">
+    <input class="btn btn-primary btn-lg" type="submit" 
+	   value="Send your message">
+  </div>
+  </div>
+
+</div>
+</div>
+
+{% endblock %}
