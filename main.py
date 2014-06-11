@@ -620,15 +620,17 @@ class DashboardHandler(ModelrPageRequest):
 
         default_models = [{"image": images.get_serving_url(i.image,
                                                            size=200,
-                                                          crop=False),
+                                                          crop=False,
+                                                          secure_url=True),
                            "image_key": str(i.key()),
                            "editable": False,
                            "models": EarthModel.all().ancestor(i).filter("user =", user.user_id).fetch(100)}
                                       for i in default_image_models]
 
         user_models = [{"image": images.get_serving_url(i.image,
-                                                           size=200,
-                                                          crop=False),
+                                                        size=200,
+                                                        crop=False,
+                                                        secure_url=True),
                            "image_key": str(i.key()),
                            "editable": True,
                            "models": EarthModel.all().ancestor(i).filter("user =", user.user_id).fetch(100)}
@@ -1722,7 +1724,7 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             reader = blobstore.BlobReader(blob_info.key())
 
             im = Image.open(reader, 'r')
-            im = im.convert('RGB').resize((480,480))
+            im = im.convert('RGB').resize((350,350))
 
             im = self.posterize(im)
             
@@ -1794,7 +1796,8 @@ class ModelBuilder(ModelrPageRequest):
         blob_key = blobstore.create_gs_key(bs_file)
 
         ImageModel(parent=user,
-                   user=user.user_id, image=blob_key).put()
+                   user=user.user_id,
+                   image=blob_key).put()
         # TODO Logging
 
 
@@ -1810,9 +1813,8 @@ class ModelHandler(ModelrPageRequest):
         upload_url = blobstore.create_upload_url('/upload')
         
         # Get the model images
-        models = \
-          ImageModel.all().ancestor(user).\
-          order("-date").fetch(100)
+        models = ImageModel.all().ancestor(user).order("-date")
+        models = models.fetch(100)
 
         # Get the default models
         default_models = \
@@ -1820,7 +1822,7 @@ class ModelHandler(ModelrPageRequest):
 
         # Create the serving urls
         imgs = [images.get_serving_url(i.image, size=1400,
-                                       crop=False)
+                                       crop=False, secure_url=True)
                 for i in (models + default_models)]
 
         keys = [str(i.key()) for i in (models + default_models)]
@@ -2037,7 +2039,8 @@ class Forward2DModelHandler(ModelrPageRequest):
             pass
         key = model.input_model_key
         data = {"input_image_key": str(key),
-                "output_image": images.get_serving_url(model.output_image),
+                "output_image": images.get_serving_url(model.output_image,
+                                                       secure_url=True),
                 "data": model.data}
         
         self.response.write(json.dumps(data))
