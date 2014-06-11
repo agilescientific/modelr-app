@@ -1746,11 +1746,11 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             ImageModel(parent=user,
                        user=user.user_id,
                        image=output_blob_key).put()
-            self.redirect('/section_model')
+            self.redirect('/model')
 
         except Exception as e:
             print "ERRRRRRRRR", e
-            self.redirect('/section_model?error=True')
+            self.redirect('/model?error=True')
         
 
 class ModelBuilder(ModelrPageRequest):
