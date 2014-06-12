@@ -2130,16 +2130,8 @@ class ServerError(ModelrPageRequest):
     def post(self):
 
         send_message("Server Down","Scripts did not populate")
-
-# class DrawingTips(ModelrPageRequest):
-    
-#     def get(self):
-#         template = env.get_template('drawing_tips.html')
-#         user = self.verify()
-#         params = self.get_base_params(user=user)
-#         html = template.render(params)
-#         self.response.out.write(html)
         
+
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
                                ('/add_rock', AddRockHandler),
@@ -2179,7 +2171,6 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/model_served', ModelServed),
                                ('/admin_site', AdminHandler),
                                ('/server_error', ServerError),
-#                               ('/drawing_tips', DrawingTips),
                                ('/.*', NotFoundPageHandler)
                                ],
                               debug=False)
