@@ -23,20 +23,19 @@
   </div>
   {% endif %}
   
-<h4>Building a seismic forward model in Modelr consists of four steps:</h4>
-<div style="margin:2em;"></div>
+<h3>4 steps to building a seismic forward model</h3>
 
 <div class="panel-group" id="accordion">
 
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
           1. Define the geometry of the layers.
         </a>
       </h4>
     </div>
-    <div id="collapseTwo" class="panel-collapse collapse">
+    <div id="collapseOne" class="panel-collapse collapse in">
       <div class="panel-body">
 
       <p>There are three ways to define the geometries for an earth model: use a scenario (classic Modelr workflow), build a simple model, or upload an image.</p>
@@ -65,24 +64,24 @@
           </a>
           <div class="media-body">
             <h4 class="media-heading">Upload an image</h4>
-            To upload an image, use the <strong>Upload image</strong> button on the <a href="/model">Model</a> page. For tips on how to draw good models, <a href="/drawing_tips">click here</a>
+            <p>You can upload an image of a model. This way, you can make seismic from arbitrary models. To upload an image, use the <strong>Upload image</strong> button on the <a href="/model">Model</a> page.</p>
+            <p><a href="/help/drawing">Get tips on drawing models.</a></p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Resume normal service... -->
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
           2. Select the rock for each layer.
         </a>
       </h4>
     </div>
     
-    <div id="collapseThree" class="panel-collapse collapse"> 
+    <div id="collapseTwo" class="panel-collapse collapse"> 
       <div class="panel-body">
 
       <p>Assign rock properties to each color in the model.</p>
@@ -125,12 +124,12 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
           3. Define the seismic experiment.
         </a>
       </h4>
     </div>
-    <div id="collapseFour" class="panel-collapse collapse"> 
+    <div id="collapseThree" class="panel-collapse collapse"> 
       <div class="panel-body">
          Choose acquisition domain: a cross-section (spatial), an angle gather, or bandwidth at a user specified trace location in the cross section). Future releases will allow accessing the 4 dimensional seismic model (x, t, angle, and bandwidth) in horizontal dimensions (i.e. a time slice through angle, bandwidth space on the x and y axis)
       </div>
@@ -139,12 +138,12 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseFive">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
           4. Choose the display parameters.
         </a>
       </h4>
     </div>
-    <div id="collapseFive" class="panel-collapse collapse">
+    <div id="collapseFour" class="panel-collapse collapse">
       <div class="panel-body">
         <ul>
         <li>You can choose to display the synthetics seismic model, along with the layers or reflectivity values of the interfaces in the physical model. These can be used as underlays for directly comparing the positioning and resolution of seismic events.</li>
@@ -157,6 +156,14 @@
     </div>
   </div>
 </div>
+
+<div style="margin-top:36px;"></div>
+<h4>More help</h4>
+<ul>
+<li><a href="/help/drawing">Help with drawing models</a></li>
+<li><a href="http://subsurfwiki.org/wiki/Category:Modelr">Pages about Modelr in SubSurfWiki</a></li>
+<li>To come: videos</li>
+</ul>
 
 <div style="margin-top:36px;"></div>
 <h4>Can't figure something out? Got a bright idea? Get in touch...</h4>
@@ -187,6 +194,7 @@
   </div>
   </div>
 
+</div>
 </div>
 </div>
 

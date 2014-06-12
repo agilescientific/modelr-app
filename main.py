@@ -870,11 +870,17 @@ class PricingHandler(ModelrPageRequest):
    
    
 class HelpHandler(ModelrPageRequest):
-    def get(self):
+    def get(self, subpage):
 
+        if subpage:
+            page = subpage
+        else:
+            page = 'help'
+        page+= '.html'
+        
         user = self.verify()
         template_params = self.get_base_params(user=user)
-        template = env.get_template('help.html')
+        template = env.get_template(page)
         html = template.render(template_params)
         activity = "help"
         
@@ -2125,14 +2131,14 @@ class ServerError(ModelrPageRequest):
 
         send_message("Server Down","Scripts did not populate")
 
-class DrawingTips(ModelrPageRequest):
+# class DrawingTips(ModelrPageRequest):
     
-    def get(self):
-        template = env.get_template('drawing_tips.html')
-        user = self.verify()
-        params = self.get_base_params(user=user)
-        html = template.render(params)
-        self.response.out.write(html)
+#     def get(self):
+#         template = env.get_template('drawing_tips.html')
+#         user = self.verify()
+#         params = self.get_base_params(user=user)
+#         html = template.render(params)
+#         self.response.out.write(html)
         
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
@@ -2152,7 +2158,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/about', AboutHandler),
                                ('/features', FeaturesHandler),
                                ('/feedback', FeedbackHandler),
-                               ('/help', HelpHandler),
+                               ('/help/?([-\w]+)?', HelpHandler),
                                ('/terms', TermsHandler),
                                ('/privacy', PrivacyHandler),
                                ('/signup', SignUp),
@@ -2173,7 +2179,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/model_served', ModelServed),
                                ('/admin_site', AdminHandler),
                                ('/server_error', ServerError),
-                               ('/drawing_tips', DrawingTips),
+#                               ('/drawing_tips', DrawingTips),
                                ('/.*', NotFoundPageHandler)
                                ],
                               debug=False)
