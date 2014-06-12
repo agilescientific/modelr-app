@@ -28,39 +28,15 @@
 
 <div class="panel-group" id="accordion">
 
-<!-- THERE ARE 2 VERSIONS OF THE FIRST PANEL -->
-<!-- VERSION 1 -->
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
           1. Define the geometry of the layers.
         </a>
       </h4>
     </div>
-    <div id="collapseOne" class="panel-collapse collapse in">
-      <div class="panel-body">
-        <p>There are three ways to define the geometries for an earth model: use a scenario (classic Modelr workflow), build a simple model, or upload an image.</p>
-        <p>To use the classic Modelr workflow, with modeling scripts, use or build a <a href="/scenario">Scenario</a>:</p>
-        <p><img src="/static/img/help/help_channel_wedge_slab.PNG" alt="" /></p>
-        <p>To build a simple model from scratch, either use the <a href="/model_builder">Model builder</a> to make a new image, or use a predefined <a href="/scenario">Scenario</a>:</p>
-        <p><img src="http://placehold.it/650x250"></p>
-        <p>To upload an image, use the <strong>Upload image</strong> button on the <a href="/model">Model</a> page.</p>
-        <p><img src="/static/img/help/help_image_upload.PNG" alt="" /></p>
-      </div>
-    </div>
-  </div>
-
-<!-- VERSION 2 -->
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-          1. Define the geometry of the layers.
-        </a>
-      </h4>
-    </div>
-    <div id="collapseOne" class="panel-collapse collapse in">
+    <div id="collapseTwo" class="panel-collapse collapse">
       <div class="panel-body">
 
       <p>There are three ways to define the geometries for an earth model: use a scenario (classic Modelr workflow), build a simple model, or upload an image.</p>
@@ -89,7 +65,7 @@
           </a>
           <div class="media-body">
             <h4 class="media-heading">Upload an image</h4>
-            To upload an image, use the <strong>Upload image</strong> button on the <a href="/model">Model</a> page.
+            To upload an image, use the <strong>Upload image</strong> button on the <a href="/model">Model</a> page. For tips on how to draw good models, <a href="/drawing_tips">click here</a>
           </div>
         </div>
       </div>
@@ -100,13 +76,13 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
           2. Select the rock for each layer.
         </a>
       </h4>
     </div>
     
-    <div id="collapseOne" class="panel-collapse collapse in">
+    <div id="collapseThree" class="panel-collapse collapse"> 
       <div class="panel-body">
 
       <p>Assign rock properties to each color in the model.</p>
@@ -149,12 +125,12 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
           3. Define the seismic experiment.
         </a>
       </h4>
     </div>
-    <div id="collapseThree" class="panel-collapse collapse">
+    <div id="collapseFour" class="panel-collapse collapse"> 
       <div class="panel-body">
          Choose acquisition domain: a cross-section (spatial), an angle gather, or bandwidth at a user specified trace location in the cross section). Future releases will allow accessing the 4 dimensional seismic model (x, t, angle, and bandwidth) in horizontal dimensions (i.e. a time slice through angle, bandwidth space on the x and y axis)
       </div>
@@ -163,12 +139,12 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseFive">
           4. Choose the display parameters.
         </a>
       </h4>
     </div>
-    <div id="collapseFour" class="panel-collapse collapse">
+    <div id="collapseFive" class="panel-collapse collapse">
       <div class="panel-body">
         <ul>
         <li>You can choose to display the synthetics seismic model, along with the layers or reflectivity values of the interfaces in the physical model. These can be used as underlays for directly comparing the positioning and resolution of seismic events.</li>

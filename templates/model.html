@@ -69,17 +69,15 @@
    
    seismic_model = new Scenario(null, null, {},
 				null);
-   seismic_model.on_change = function (){
-     forward_model.post(server, update_image, update=false);
-   };
+   
+   seismic_model.on_change = param_changed;
 
 
 
 
    plot_container = new Scenario(null, null, {},
 				 null);
-   plot_container.on_change = function (){
-     forward_model.post(server, update_image, update=false)};
+   plot_container.on_change = param_changed;
 
    forward_model = new ForwardModel(null,earth_structure, 
 				    seismic_model, plot_container);
@@ -212,6 +210,12 @@
 			    data.data, "json"); 
    $('#loader').hide();
  };
+
+ function param_changed(){
+
+     $('#loader').show();
+     forward_model.post(server, update_image, update=false);
+   };
 
  function update_model(){
 
