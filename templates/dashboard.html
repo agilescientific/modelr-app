@@ -8,14 +8,14 @@
 
     <ul class="nav nav-tabs">
       <li class="active"><a href="#feed" data-toggle="tab">Feed</a></li>
-      <li><a href="#rocks" data-toggle="tab">Rocks</a></li>
       <li><a href="#scenarios" data-toggle="tab">Scenarios</a></li>
       <li><a href="#models" data-toggle="tab">Models</a></li>
+      <li><a href="#rocks" data-toggle="tab">Rocks</a></li>
     </ul>
     
     <div class="tab-content">
       <div class="tab-pane" id="scenarios">
-            <h4>Scenarios</h4>
+            <h2>Scenarios</h2>
 	    <table class="table table-condensed table-hover">
               <tbody>
 		{% for scenario in scenarios %}
@@ -41,7 +41,7 @@
       <div class="tab-pane" id="rocks">
 
       <div>
-        <h4>My rocks</h4>
+        <h2>My rocks</h2>
 	    <table class="table table-condensed table-hover">
         <thead>
 		<tr>
@@ -158,69 +158,87 @@
 	    <h3 class="panel-title">Add rock</h3>
 	  </div>
 	  <div class="panel-body">
-	    <form name="input" action="add_rock" method="post">
-	      <form class="form-horizontal" role="form">
 
+	    <form role="form" name="input" action="add_rock" method="post">
+
+
+		<div class="row">
 		<div class="form-group">
 		  <label for="name" class="col-sm-2 control-label">Name</label>
 		  <div class="col-sm-10">
 		    <input class="form-control" type="text" name="name" value={{current_rock.name}} placeholder=""/>
 		  </div>
 		</div>
+		</div>
+
 		
+		<div class="row">
 		<div class="form-group">
 		  <label for="description" class="col-sm-2 control-label">Description</label>
 		  <div class="col-sm-10">
-		    <input class="form-control" type="text" name="description" value={{current_rock.description}} />
+		    <textarea class="form-control" name="description" value={{current_rock.description}}></textarea>
 		  </div>
 		</div>
-
-		<div class="form-group">
-		  <label for="description" class="col-sm-2 control-label">Rho</label>
-		  <div class="col-sm-10">
-		    <input class="form-control" type="text" name="rho" value={{current_rock.rho}} />
-		  </div>
 		</div>
 
+
+<fieldset>
+<legend>Properties</legend>
+
+		<div class="row">
 		<div class="form-group">
-		  <label for="description" class="col-sm-2 control-label">V<sub>P</sub></label>
-		  <div class="col-sm-10">
+		  <label for="vp" class="col-sm-2 control-label">V<sub>P</sub></label>
+		  <div class="col-sm-4">
 		    <input class="form-control" type="text" name="vp" value={{current_rock.vp}} />
 		  </div>
-		</div>
-
+		 </div>
 		<div class="form-group">
-		  <label for="description" class="col-sm-2 control-label">V<sub>S</sub></label>
-		  <div class="col-sm-10">
+		  <label for="vp std" class="col-sm-2 control-label">V<sub>P</sub> std</label>
+		  <div class="col-sm-4">
+		    <input class="form-control" type="text" name="vp_std" value={{current_rock.vp_std}} />
+		  </div>
+		 </div>
+		 </div>
+
+		<div class="row">
+		<div class="form-group">
+		  <label for="vs" class="col-sm-2 control-label">V<sub>S</sub></label>
+		  <div class="col-sm-4">
 		    <input class="form-control" type="text" name="vs" value={{current_rock.vs}}  />
 		  </div>
 		</div>
-
 		<div class="form-group">
-		  <label for="description" class="col-sm-2 control-label">Rho std</label>
-		  <div class="col-sm-10">
-		    <input class="form-control" type="text" name="rho_std" value={{current_rock.rho_std}} />
-		  </div>
-		</div>
-
-		<div class="form-group">
-		  <label for="description" class="col-sm-2 control-label">V<sub>P</sub> std</label>
-		  <div class="col-sm-10">
-		    <input class="form-control" type="text" name="vp_std" value={{current_rock.vp_std}} />
-		  </div>
-		</div>
-
-		<div class="form-group">
-		  <label for="description" class="col-sm-2 control-label">V<sub>S</sub> std</label>
-		  <div class="col-sm-10">
+		  <label for="vs std" class="col-sm-2 control-label">V<sub>S</sub> std</label>
+		  <div class="col-sm-4">
 		    <input class="form-control" type="text" name="vs_std" value={{current_rock.vs_std}} />
 		  </div>
 		</div>
+		</div>
 
+	    <div class="row">
+	    <div class="form-group">
+		  <label for="rho" class="col-sm-2 control-label">Rho</label>
+		  <div class="col-sm-4">
+		    <input class="form-control" type="text" name="rho" value={{current_rock.rho}} />
+		  </div>
+		</div>
 		<div class="form-group">
-		  <label for="description" class="col-sm-2 control-label">Share</label>
+		  <label for="rho std" class="col-sm-2 control-label">Rho std</label>
+		  <div class="col-sm-4">
+		    <input class="form-control" type="text" name="rho_std" value={{current_rock.rho_std}} />
+		  </div>
+		</div>
+		</div>
+
+</fieldset>
+
+
+
+		<div class="row">
+		<div class="form-group">
+		  <label for="sharing" class="col-sm-2 control-label">Share</label>
 		  <div class="col-sm-10">
-		    <select name="group">
+		    <select class="form-control" name="group">
 		      <option value="private">Private</option>
 		      {% for group in user.group %}
 		      <option value={{group}} {% if group==current_rock.group %} selected {% endif %}>{{group.capitalize()}}</option>
@@ -228,15 +246,19 @@
 		    </select>
 		  </div>
 		</div>
-		
-		<div class="form-group">
-		  <div class="col-sm-offset-2 col-sm-10">
-		    <button type="submit" class="btn btn-default">Add this rock</button>
-		  </div>
 		</div>
 		
-	      </form>
+		<div class="row">
+		<div class="form-group">
+		  <div class="col-sm-offset-2 col-sm-4">
+		    <button type="submit" class="btn btn-primary">Add this rock</button>
+		  </div>
+		</div>
+		</div>
+		
 	    </form>
+
+
 	  </div> <!-- end of panel body -->
 	</div> <!-- end of panel  -->
 
@@ -245,7 +267,7 @@
 
 <div class="tab-pane active" id="feed">
     <div class="col-md-6">
-          <h4>Welcome to Modelr!</h4>
+          <h2>Welcome to Modelr!</h2>
           <p class="lead"> To get started, try our <a href="/model">model</a> or <a href="/scenario">scenario</a> pages. Use the tabs on the right to manage your rocks and models!</p>
           <p class="lead"><a href="/help">Need more help?</a></p>
     </div>
@@ -253,7 +275,7 @@
 
 <div class="tab-pane" id="models">
 
-      <h4>Models</h4>
+      <h2>Models</h2>
 
     <p>Manage your uploaded images and saved models.</p>
 
