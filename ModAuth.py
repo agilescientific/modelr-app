@@ -131,7 +131,7 @@ Welcome to Modelr!
 
 We need to verify your email address. Click the link below to validate your account and continue to billing. 
 
-  http://modelr.io/verify_email?user_id=%s
+  https://totemic-union-491.appspot.com/verify_email?user_id=%s
 
 Cheers,
 Matt, Evan, and Ben
