@@ -1,0 +1,223 @@
+{% extends "base_template.html" %}
+
+{% block title %}Modelr &middot; Drawing{% endblock %}
+{% block content %}
+
+<div class="container">
+
+  {% if error %}
+  <div class="alert alert-danger">
+      <strong>Something's wrong...</strong> {{ error }}
+  </div>
+  {% endif %}
+
+  {% if warning %}
+  <div class="alert alert-warning">
+      <strong>Sorry...</strong> {{ warning }} 
+  </div>
+  {% endif %}
+
+  {% if success %}
+  <div class="alert alert-success">
+      <strong>Success!</strong> {{ success }} 
+  </div>
+  {% endif %}
+  
+<ol class="breadcrumb">
+  <li><a href="/help">Help</a></li>
+  <li class="active">Drawing</li>
+</ol>
+
+<h3>Making an image for Modelr</h3>
+<p>Here are a few tips to keep in mind so that an image can be effortlessly read into an earth model. If you can't easily re-work an illustration to fit the requirements, it might be easier to redraw the model using a vector graphics program such as <a href="http://inkscape.org/">Inkscape</a>, which is free, or Adobe Illustrator.
+</p>
+
+<div class="panel-group" id="accordion">
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+          Remove annotation, labels, and rock outlines
+        </a>
+      </h4>
+    </div>
+
+    <div id="collapseOne" class="panel-collapse collapse in">
+      <div class="panel-body">
+
+      <p>Each colour is mapped to a rock class, so in order to avoid annotations and labels from being turned into rock classes, 
+      you need to remove them from the image. </p>
+
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/drawing/remove_annotation.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Remove annotations</h4>
+            Remove anything that you don't want to be detected and classified as a rock. 
+            This includes text, text labels, scales, legends, outlines, and so on.
+          </div>
+        </div>
+                
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/drawing/remove_rock_outlines.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Remove rock outlines</h4>
+            If you have outlines between rocks, it could be mapped to its own rock class. You just want the rocks — it's the contrasts that will contribute to reflectivity model.
+          </div>
+        </div>
+        
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/drawing/just_rocks.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">So only rocks remain</h4>
+            Save the file as <a href="http://www.agilegeoscience.com/journal/2012/8/7/how-to-choose-an-image-format.html">a PNG file</a>.
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    </div>
+  
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+            Use colour wisely
+          </a>
+        </h4>
+      </div>
+    
+    <div id="collapseTwo" class="panel-collapse collapse">
+      <div class="panel-body">
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/drawing/use_colour_wisely.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Colour sensitivity</h4>
+            Colours should be distinct, but they don't have to be too distinct. 
+            For instance, the contrasts in the image show to the left
+            will work just fine. Modelr classifies rocks based on unique RGB colour values. If you want to make an earth model with 5 rocks in it, the image should only have 5 colours in it. The colours you choose are up to you, and are handled arbitrarily.
+          </div>
+        </div>
+        
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/drawing/two_rocks_same_colour.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Rock assignment</h4>
+            Note that you can set two or more different colours to the same rock after you have imported it. However, the two yellow zones in the example shown here will necessarily have the same rock assignment.
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
+        Geological information density
+        </a>
+        </h4>
+      </div>
+    
+    <div id="collapseThree" class="panel-collapse collapse">
+      <div class="panel-body">
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/drawing/geol_info_density1.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Fine details are fine...</h4>
+            Models can contain a high level of detail, resolution, and complexity, as long as each colour constitutes more than 1% of the image area. Each pixel becomes a spatial sample of the earth. 
+          </div>
+        </div>
+        
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/drawing/geol_info_density2.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">...but small bits of colour will be skipped</h4>
+            In order to deal with compression artifacts, blended colours at interfaces, and other 
+            issues with digital images, Modelr will not create a rock classification 
+            for any colour instance that takes up less than 1% of the total image area.
+          </div>
+        </div>
+        
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/drawing/geol_info_density3.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Crop and zoom</h4>
+            If a colour is not being identified by the rock classification system, it could be because it is too small. The model dimensions may be larger than they need to be. Consider cropping the image to zoom in and focus on the area you are interested in.
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    </div>
+
+    <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
+      Resolution, size, and scales
+      </a>
+      </h4>
+    </div>
+    
+    <div id="collapseFour" class="panel-collapse collapse">
+      <div class="panel-body">
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/drawing/avoid_visible_pixels.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Avoid visible pixels</h4>
+            If you can see individual pixels, the image probably doesn't have enough resolution and your seismic experiment will suffer from sampling artifacts.
+          </div>
+        </div>
+        
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/drawing/minimum_pixel_dimensions.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Minimum image dimensions</h4>
+            By default, the number of traces in the synthetic will be the same 
+            as the width of the image in pixels. As a result, one way to add more
+            traces to your synthetic model is to boost the resolution of 
+            your input image. Note that large images will be slower to process.
+          </div>
+        </div>
+        
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/drawing/size_and_scale2.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">The vertical scale can be changed</h4>
+            The vertical scale is set after upload, so the aspect ratio can be essentially anything that allows
+            you to achieve the information density and geological complexity that you want to model. 
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+{% endblock %}
