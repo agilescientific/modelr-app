@@ -1,0 +1,169 @@
+  {% extends "base_template.html" %} 
+{% block title %}Modelr &middot; Model builder{% endblock %} 
+
+{% block content %}
+
+
+<div class="container">
+  <!-- JAVASCRIPT and DATA
+  =================================================================-->
+
+  <script>
+   var host = '{{HOSTNAME}}';
+  </script>
+
+  <script>
+
+   $(document).ready(function() {
+     
+     server = new PlotServer(host, null);
+     modelbuilder = new Scenario(name, null, {}, null);
+
+     modelbuilder.display = display_form;
+
+     modelbuilder.set_current_script = function(value, argumentss){
+       modelbuilder.script = 'slab_builder.py';
+       console.log('server.current_script');
+
+       server.get_script_info( value, 'model_builder',
+		       function(data){
+	   
+	   modelbuilder.info = data;
+	   modelbuilder.default_args(argumentss);
+	   console.log('div#builder_place');
+	   
+	   modelbuilder.display('div#builder_place');
+	   modelbuilder.on_change();
+	 }  
+		       )
+
+       // Select the script in the 'select' element of this page.  
+       $("select#select_script option").filter(function() {
+         //may want to use $.trim in here
+         return $(this).val() == value; 
+       }).attr('selected', true);
+
+     }
+     
+     modelbuilder.save_model = function save_model(){
+
+       success = function(data){
+	 window.location.href='/model'
+       }
+
+       image = $('img#plot_image').attr('src');
+
+       $.post('/model_builder',{'image': image}, success);
+     }
+     
+     modelbuilder.on_change = function update_link(){
+       
+       var qs = modelbuilder.qs();
+       var url = server.hostname +'/plot.json' + qs + '&type=model_builder';
+       
+       var p = $('p#image_link');
+       p.text(url);
+       p.attr('href', url)  
+     }
+  
+     modelbuilder.set_current_script('slab_builder.py',
+				     modelbuilder.arguments);
+
+     // This is specific to this display.
+     server.update_image = function(modelbuilder){
+       var qs = modelbuilder.qs();
+       var url = server.hostname +'/plot.json' + qs;
+       $.get(url, {type:'model_builder'},function(data){
+	 $('img#plot_image').attr('src', 
+				  "data:image/png;base64, " + 
+				  data.data); });
+       $('#URL').attr('value', url);
+       
+     }
+     
+
+   });
+
+  </script>
+
+
+  <!-- MODEL PANEL
+  =================================================================-->
+  <div class="row">
+
+  <div class="col-md-6">
+    <div class="panel panel-default">
+	    <div class="panel-heading">
+        <h3 class="panel-title">Model builder</h3>
+	    </div>
+	
+    	<div class="panel-body">
+    	  <img class="img-thumbnail" id="example_image"
+    	       src="/static/img/mb_example.png">
+
+          <!-- Div to place the form into see builder.display and display_form functions-->
+          <div style="margin:16px 0 16px 0;" id="builder_place">
+          </div>
+        
+          <div class="form-group">
+            
+              <button class="btn btn-primary" id='create_image' 
+                       onclick="server.update_image(modelbuilder)">
+                Create image
+              </button>
+          </div>
+    	</div>  <!-- end of panel-body -->
+    </div> <!-- end of panel -->
+  </div> <!-- end of col -->
+    
+  <!-- RESULT PANEL
+  ===============================================================-->
+
+    <div class="col-md-6">
+      <div class="panel panel-default">
+	      <div class="panel-heading">
+          <h3 class="panel-title">Result</h3>
+	      </div>
+
+	      <div class="panel-body">
+          <!-- Updated by the  create_image button above-->
+          <img class="img-thumbnail" id="plot_image" 
+               alt="Placeholder" src="/static/img/placeholder_model_image.png" />
+
+          <div style="margin-top:16px;" class="form-group">
+            <form action="/model_builder" method="post">
+              <input type="hidden" id="URL" name="URL">
+              <button class="btn btn-default" type="button"
+                      onclick="modelbuilder.save_model()">
+                Save
+              </button>
+            </form>
+          </div>
+        </div> <!-- end of panel body -->
+      </div> <!-- end of panel -->
+    </div> <!-- end of col -->
+
+  </div> <!-- end of row -->
+
+  <!-- URL PANEL
+  ================================================================ -->
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+          <h3 class="panel-title">URL</h3>
+	</div>
+	<div class="panel-body">
+          <!-- Create and display the image / see the user defined 
+	  server.update_img -->
+          <p id="image_link" style="font-size: 10px;">URL</p>
+	</div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  {% endblock %}

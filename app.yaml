@@ -1,4 +1,4 @@
-application: agilemodelr
+application: agile-modelr
 version: 1
 runtime: python27
 api_version: 1
@@ -23,3 +23,12 @@ libraries:
 
 - name: jinja2
   version: "2.6"
+
+- name: PIL
+  version: latest
+
+- name: numpy
+  version: latest
+
+- name: ssl
+  version: latest

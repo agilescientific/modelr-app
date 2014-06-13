@@ -1,5 +1,5 @@
 from google.appengine.ext import db
-
+from google.appengine.ext import blobstore
 """
 Authentication and permissions will be structured similar to linux
 wuth groups and users. Group permissions can be added to an item to
@@ -39,6 +39,7 @@ class User(db.Model):
     group = db.StringListProperty()
     stripe_id = db.StringProperty()
     tax_code = db.StringProperty()
+    unsubscribed = db.BooleanProperty(default=False)
 
 class ActivityLog(db.Model):
 
@@ -60,6 +61,8 @@ class Item(db.Model):
     """
     user = db.IntegerProperty()
     group = db.StringProperty()
+    date = db.DateTimeProperty(auto_now_add=True)
+
 
 class Group(db.Model):
 
@@ -71,15 +74,29 @@ class GroupRequest(db.Model):
 
     user = db.IntegerProperty()
     group = db.StringProperty()
+
+class ImageModel(Item):
+    
+    image = blobstore.BlobReferenceProperty()
+
+class EarthModel(Item):
+
+    name = db.StringProperty(multiline=False)
+    data = db.BlobProperty()
+     
+class Forward2DModel(Item):
+
+    name = db.StringProperty(multiline=False)
+    input_model_key = db.StringProperty()
+    output_image = blobstore.BlobReferenceProperty()
+    data = db.BlobProperty()
     
 class Scenario(Item):
     '''
     Database of Scenarios 
     '''
     name = db.StringProperty(multiline=False)
-    
     data = db.BlobProperty()
-    date = db.DateTimeProperty(auto_now_add=True)
 
 class Rock(Item):
     """
@@ -88,7 +105,6 @@ class Rock(Item):
     
     name = db.StringProperty(multiline=False)
     description = db.StringProperty(multiline=True)
-    date = db.DateTimeProperty(auto_now_add=True)
 
     vp = db.FloatProperty()
     vs = db.FloatProperty()

@@ -23,10 +23,10 @@
   </div>
   {% endif %}
   
-<h4>Building a seismic forward model in Modelr consists of four steps:</h4>
-<div style="margin:2em;"></div>
+<h3>4 steps to building a seismic forward model</h3>
 
 <div class="panel-group" id="accordion">
+
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
@@ -37,10 +37,41 @@
     </div>
     <div id="collapseOne" class="panel-collapse collapse in">
       <div class="panel-body">
-        Choose channel or wedge (for a 3 layer model), or Stochastic AVO for 2-layer half-space reflectivity explorer.
+
+      <p>There are three ways to define the geometries for an earth model: use a scenario (classic Modelr workflow), build a simple model, or upload an image.</p>
+
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/help_integrated_scenarios_thumb.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Integrated scenarios</h4>
+            To use the classic Modelr workflow, with self-contained scripts that describe the model, the experiment, and the display properties, use or build a <a href="/scenario">Scenario</a>.
+          </div>
+        </div>
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/help_build_a_model_thumb.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Build a model</h4>
+            To build a simple model from scratch, either use the <a href="/model_builder">Model builder</a> to make a new image, or use a predefined <a href="/scenario">Scenario</a>.
+          </div>
+        </div>
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/help_upload_an_image_thumb.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Upload an image</h4>
+            <p>You can upload an image of a model. This way, you can make seismic from arbitrary models. To upload an image, use the <strong>Upload image</strong> button on the <a href="/model">Model</a> page.</p>
+            <p><a href="/help/drawing">Get tips on drawing models.</a></p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
@@ -49,9 +80,44 @@
         </a>
       </h4>
     </div>
-    <div id="collapseTwo" class="panel-collapse collapse">
+    
+    <div id="collapseTwo" class="panel-collapse collapse"> 
       <div class="panel-body">
-         Select rocks for each layer from your list of available rock types.
+
+      <p>Assign rock properties to each color in the model.</p>
+        
+        <div class="media">
+          <a class="pull-left" href="#">
+            <p><img src="/static/img/help/help_edit_rocks.png"></p>
+          </a>
+            <div class="media-body">
+                <h4 class="media-heading">Define your own rocks</h4>
+                Each rock in modelr has a set of physical and statistical properties. 
+                You can define and manage a collection of your own rock properties from the <a href="/model">Dashboard</a> page, 
+                or you can use some of the public default rocks.
+            </div>
+        </div>
+        
+         <div class="media">
+          <a class="pull-left" href="#">
+            <p><img src="/static/img/help/help_default_rocks.png"></p>
+          </a>
+            <div class="media-body">
+                <h4 class="media-heading">Use default rocks</h4>
+                Choose one of the rocks from the public default section.
+            </div>
+        </div>
+          
+    
+        <div class="media">
+          <a class="pull-left" href="#">
+            <img class="media-object" src="/static/img/help/help_pick_rocks.png" alt="...">
+          </a>
+          <div class="media-body">
+            <h4 class="media-heading">Assign rocks to your model</h4>
+              Select rocks for each layer from your list of available rock types.
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -63,7 +129,7 @@
         </a>
       </h4>
     </div>
-    <div id="collapseThree" class="panel-collapse collapse">
+    <div id="collapseThree" class="panel-collapse collapse"> 
       <div class="panel-body">
          Choose acquisition domain: a cross-section (spatial), an angle gather, or bandwidth at a user specified trace location in the cross section). Future releases will allow accessing the 4 dimensional seismic model (x, t, angle, and bandwidth) in horizontal dimensions (i.e. a time slice through angle, bandwidth space on the x and y axis)
       </div>
@@ -90,6 +156,14 @@
     </div>
   </div>
 </div>
+
+<div style="margin-top:36px;"></div>
+<h4>More help</h4>
+<ul>
+<li><a href="/help/drawing">Help with drawing models</a></li>
+<li><a href="http://subsurfwiki.org/wiki/Category:Modelr">Pages about Modelr in SubSurfWiki</a></li>
+<li>To come: videos</li>
+</ul>
 
 <div style="margin-top:36px;"></div>
 <h4>Can't figure something out? Got a bright idea? Get in touch...</h4>
@@ -120,6 +194,7 @@
   </div>
   </div>
 
+</div>
 </div>
 </div>
 

@@ -8,6 +8,7 @@ import hashlib
 import random
 import re
 import string
+import stripe
 
 PASS_RE =  re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+\.[\S]+$" )
@@ -118,8 +119,10 @@ def signup(email, password, parent=None):
                       group=groups, parent=parent)
     
     user.put()
-    
 
+    print("http://modelr.io/verify_email?user_id=%s" %
+          str(user.temp_id))
+    
     mail.send_mail(sender="Hello <hello@modelr.io>",
               to="<%s>" % user.email,
               subject="Modelr email verification",
@@ -309,7 +312,8 @@ Here's your new password!
 
     %s
     
-Please sign in with this new password, and then change it in your profile page.
+Please sign in with this new password, and then change it in your
+profile page.
 
   http://modelr.io/signin?redirect=settings
 
@@ -348,3 +352,40 @@ def reset_password(user, current_pword, new_password,
     # Save it in the database
     user.put()
     
+def cancel_subscription(user,stripe_api_key):
+    """
+    Delete the user. See notes in DeleteHandler() in main.py
+    """
+
+    try:
+
+        stripe.api_key = stripe_api_key
+        stripe_customer = stripe.Customer.retrieve(user.stripe_id)
+
+        sub_id = stripe_customer.subscriptions["data"][0]["id"]
+
+        stripe_customer.subscriptions.retrieve(sub_id).delete(at_period_end=True)
+        
+        
+        user.unsubscribed = True
+        user.put()
+
+        # TODO MailChimp
+    except Exception as e:
+        print e
+        raise AuthExcept("Failed to unsubscribe user: " + user.email)
+    
+
+    
+    mail.send_mail(sender="Hello <hello@modelr.io>",
+              to="<%s>" % user.email,
+              subject="Modelr account deleted",
+              body="""
+You have unsubscribed from Modelr. Your account will be deleted
+at the end of the billing cycle.
+
+Thank you for using Modelr. We hope to meet again some day.
+
+Cheers,
+Matt, Evan, and Ben
+""")

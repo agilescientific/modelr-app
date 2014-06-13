@@ -4,59 +4,105 @@
 # Agile Geoscience
 # 2012-2014
 #
-from google.appengine.api import users
+
 from google.appengine.ext import webapp as webapp2
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
+from google.appengine.ext.webapp import blobstore_handlers
+from google.appengine.ext import blobstore
+from google.appengine.api import images
 from google.appengine.api import urlfetch
+from google.appengine.api import users
+
+# For image serving
+import cloudstorage as gcs
+
+from PIL import Image, ImageFilter
+import numpy as np
 
 from jinja2 import Environment, FileSystemLoader
-
+import time
 from os.path import join, dirname
+import os
+
 import hashlib
 import logging
 import urllib
 import urllib2
-import base64
-import time
+
 import stripe
 
 import json
+import base64
 import re
+import StringIO
 
 from xml.etree import ElementTree
 
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      verify, verify_signup, initialize_user, reset_password, \
-     forgot_password, send_message, make_user
+     forgot_password, send_message, make_user, cancel_subscription
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest, ActivityLog, VerifyUser, ModelServedCount, Issue
+     GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
+     ImageModel, Forward2DModel, Issue, EarthModel
 
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
                                                'templates')))
 
+
+# Retry can help overcome transient urlfetch or GCS issues,
+# such as timeouts.
+my_default_retry_params = gcs.RetryParams(initial_delay=0.2,
+                                          max_delay=5.0,
+                                          backoff_factor=2,
+                                          max_retry_period=15)
+
+# All requests to GCS using the GCS client within current GAE request
+# and current thread will use this retry params as default. If a
+# default is not set via this mechanism, the library's built-in
+# default will be used. Any GCS client function can also be given a
+# more specific retry params that overrides the default.
+# Note: the built-in default is good enough for most cases. We
+# override retry_params here only for demo purposes.
+gcs.set_default_retry_params(my_default_retry_params)
+
+
+
 #=====================================================================
 # Define Global Variables
 #=====================================================================
 # Ancestor dB for all of modelr. Allows for strongly consistent
-# database queries
+# database queries. (all entities update together, so every page is
+# is sync)
 ModelrRoot = ModelrParent.all().get()
 if ModelrRoot is None:
     ModelrRoot = ModelrParent()
     ModelrRoot.put()
 
+# Check if we are running the dev server
+if os.environ.get('SERVER_SOFTWARE','').startswith('Development'):
+    LOCAL = True
+    logging.debug("[*] Debug info activated")
+    stripe.verify_ssl_certs = False
+else:
+    LOCAL = False
+
+# Initialize the model served counter
 models_served = ModelServedCount.all().ancestor(ModelrRoot).get()
 if models_served is None:
     models_served = ModelServedCount(count=0, parent=ModelrRoot)
     models_served.put()
     
-# Put in the default rock database
+# Put in the default rock database under the admin account.
+# The admin account is set up so every user can view our default
+# scenarios and rocks
 admin_id = 0
 admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
                                                     admin_id).get()
+# Create the admin account
 if admin_user is None:
     password = "Mod3lrAdm1n"
     email="admin@modelr.io"
@@ -65,7 +111,8 @@ if admin_user is None:
                            password=password,
                            parent=ModelrRoot)
     
-   
+# Create the public group. All users are automatically entitled
+# to part of this group.
 public = Group.all().ancestor(ModelrRoot).filter("name =", 'public')
 public = public.fetch(1)
 
@@ -102,9 +149,11 @@ for i in default_rocks:
     rock.put()
 
 
+#====================================================================
+# Global Variables
+#====================================================================
 # Secret API key from Stripe dashboard
-#stripe.api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
-stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
+
 PRICE = 900
 tax_dict = {"AB":0.05,
             "BC":0.05,
@@ -127,6 +176,15 @@ UR_STATUS_DICT = {'0': 'paused',
                   '9': 'down'
                  }
 
+# Helper function
+def RGBToString(rgb_tuple):
+    """
+    Convert a color to a css readable string
+    """
+    
+    color = 'rgb(%s,%s,%s)'% rgb_tuple
+    return color
+
 
 class ModelrPageRequest(webapp2.RequestHandler):
     """
@@ -136,7 +194,10 @@ class ModelrPageRequest(webapp2.RequestHandler):
     
     # For the plot server
     # Ideally this should be settable by an admin_user console.
-    HOSTNAME = "https://www.modelr.org"
+    if LOCAL is True:
+        HOSTNAME = "http://127.0.0.1:8081"
+    else:
+        HOSTNAME = "https://www.modelr.org"
     
     def get_base_params(self, **kwargs):
         '''
@@ -191,7 +252,7 @@ class MainHandler(ModelrPageRequest):
         # Redirect to the dashboard if the user is logged in
         user = self.verify()
         if user:
-            self.redirect('/scenario')
+            self.redirect('/dashboard')
         
         template_params = self.get_base_params()
         template = env.get_template('index.html')
@@ -229,7 +290,7 @@ class RemoveScenarioHandler(ModelrPageRequest):
                     activity=activity,
                     parent=ModelrRoot).put()
         
-        self.redirect('/dashboard')
+        self.redirect('/dashboard#scenarios')
 
     
 class ModifyScenarioHandler(ModelrPageRequest):
@@ -238,6 +299,8 @@ class ModifyScenarioHandler(ModelrPageRequest):
     '''
     def get(self):
 
+        # Get the user but don't redirect. Guests can play with
+        # scenarios as well, they just can't post.
         user = self.verify()
         
         self.response.headers['Content-Type'] = 'application/json'
@@ -252,7 +315,7 @@ class ModifyScenarioHandler(ModelrPageRequest):
         else:
             scenarios=[]
 
-        # Get Evan's default scenarios (user id from modelr database)
+        # Get Evan's default scenarios (created with the admin)
         scen = Scenario.all().ancestor(ModelrRoot).filter("user_id =",
                                                           admin_id)
         scen = Scenario.all().filter("name =",name).fetch(100)
@@ -281,7 +344,8 @@ class ModifyScenarioHandler(ModelrPageRequest):
         if user is None:
             self.redirect('/signup')
             return
-            
+
+        # Output for successful post reception
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
 
@@ -297,7 +361,8 @@ class ModifyScenarioHandler(ModelrPageRequest):
         scenarios.filter("user =", user.user_id)
         scenarios.filter("name =", name)
         scenarios = scenarios.fetch(1)
-        
+
+        # Rewrite if the name exists, create new one if it doesn't
         if scenarios:
             scenario = scenarios[0]
         else:
@@ -305,7 +370,8 @@ class ModifyScenarioHandler(ModelrPageRequest):
             scenario.user = user.user_id
             scenario.name = name
             scenario.group = group
-            
+
+        # Save in Db
         scenario.data = data.encode()
         scenario.put()
 
@@ -332,14 +398,15 @@ class AddRockHandler(ModelrPageRequest):
         rocks.filter("user =", user.user_id)
         rocks.filter("name =", name)
         rocks = rocks.fetch(1)
-        
+
+        # Rewrite if the rock exists
         if rocks:
             rock = rocks[0]
         else:
             rock = Rock(parent=user)
             rock.user = user.user_id
 
-            
+        # Populate the object
         rock.vp = float(self.request.get('vp'))
         rock.vs = float(self.request.get('vs'))
         rock.rho = float(self.request.get('rho'))
@@ -350,13 +417,15 @@ class AddRockHandler(ModelrPageRequest):
 
         rock.name = self.request.get('name')
         rock.group = self.request.get('group')
+
+        # Save in the database
         rock.put()
 
         activity = "added_rock"
         ActivityLog(user_id=user.user_id,
                     activity=activity,
                     parent=ModelrRoot).put()
-        self.redirect('/dashboard')
+        self.redirect('/dashboard#rocks')
     
 
 class RemoveRockHandler(ModelrPageRequest):
@@ -376,14 +445,16 @@ class RemoveRockHandler(ModelrPageRequest):
         ActivityLog(user_id=user.user_id,
                     activity=activity,
                     parent=ModelrRoot).put()
+
+        # Delete the rock if it exists
         try:
             rock = selected_rock.fetch(1)[0]
             rock.delete()
             
         except IndexError:
-            self.redirect('/dashboard')
+            self.redirect('/dashboard#rocks')
         else:
-            self.redirect('/dashboard')
+            self.redirect('/dashboard#rocks')
  
                      
 class ModifyRockHandler(ModelrPageRequest):
@@ -407,12 +478,15 @@ class ModifyRockHandler(ModelrPageRequest):
         ActivityLog(user_id=user.user_id,
                     activity=activity,
                     parent=ModelrRoot).put()
+
+        # reload the dashboard with the rock selected for editing
         try:
             rock = current_rock[0]
             key = rock.key()
-            self.redirect('/dashboard?selected_rock=' + str(key.id()))
+            self.redirect('/dashboard?selected_rock=' +
+                          str(key.id()) + '#rocks')
         except IndexError:
-            self.redirect('/dashboard')
+            self.redirect('/dashboard#rocks')
 
                
 class ScenarioHandler(ModelrPageRequest):
@@ -421,7 +495,7 @@ class ScenarioHandler(ModelrPageRequest):
     '''
     def get(self):
 
-
+        # Check for a user, but allow guests as well
         user = self.verify()
 
         self.response.headers['Content-Type'] = 'text/html'
@@ -462,12 +536,22 @@ class ScenarioHandler(ModelrPageRequest):
         scen = scen.filter("user =", admin_id).fetch(100)
         if scen: 
             scenarios += scen
-        
+
+        if user:
+            model_data = EarthModel.all().filter("user =",
+                                             user.user_id).fetch(1000)
+            earth_models = [{"image_key": i.parent_key().name(),
+                         "name": i.name} for i in model_data]
+
+        else:
+            earth_models = []
+            
         template_params = \
           self.get_base_params(user=user,rocks=rocks,
                                default_rocks=default_rocks,
                                group_rocks=group_rocks,
-                               scenarios=scenarios)
+                               scenarios=scenarios,
+                               earth_models=earth_models)
                 
         template = env.get_template('scenario.html')
 
@@ -492,11 +576,12 @@ class DashboardHandler(ModelrPageRequest):
         if user is None:
             self.redirect('/signin')
             return
-
+        
         template_params = self.get_base_params(user=user)
         
         self.response.headers['Content-Type'] = 'text/html'
 
+        # Get all the rocks
         rocks = Rock.all()
         rocks.ancestor(user)
         rocks.filter("user =", user.user_id)
@@ -511,8 +596,9 @@ class DashboardHandler(ModelrPageRequest):
                    'rocks':
                     Rock.all().ancestor(ModelrRoot).filter("group =",
                                                     name).fetch(100)}
-            rock_groups.append(dic) 
-            
+            rock_groups.append(dic)
+
+        # Get all the user scenarios
         scenarios = Scenario.all()
         if not user.user_id == admin_id:
             scenarios.ancestor(user)
@@ -524,11 +610,38 @@ class DashboardHandler(ModelrPageRequest):
         
         for s in scenarios.fetch(100):
             logging.info((s.name, s))
-            
+
+    
+        default_image_models = \
+          ImageModel.all().filter("user =", admin_id).fetch(100)
+
+        user_image_models = \
+          ImageModel.all().filter("user =", user.user_id).fetch(100)
+
+        default_models = [{"image": images.get_serving_url(i.image,
+                                                           size=200,
+                                                          crop=False,
+                                                          secure_url=True),
+                           "image_key": str(i.key()),
+                           "editable": False,
+                           "models": EarthModel.all().ancestor(i).filter("user =", user.user_id).fetch(100)}
+                                      for i in default_image_models]
+
+        user_models = [{"image": images.get_serving_url(i.image,
+                                                        size=200,
+                                                        crop=False,
+                                                        secure_url=True),
+                           "image_key": str(i.key()),
+                           "editable": True,
+                           "models": EarthModel.all().ancestor(i).filter("user =", user.user_id).fetch(100)}
+                                      for i in user_image_models]
+        models = user_models + default_models
+        
         template_params.update(rocks=rocks.fetch(100),
                                scenarios=scenarios.fetch(100),
                                default_rocks=default_rocks.fetch(100),
-                               rock_groups=rock_groups)
+                               rock_groups=rock_groups,
+                               models=models)
 
         # Check if a rock is being edited
         if self.request.get("selected_rock"):
@@ -536,6 +649,7 @@ class DashboardHandler(ModelrPageRequest):
             current_rock = Rock.get_by_id(int(rock_id),
                                           parent=user)
             template_params['current_rock'] = current_rock
+
         
         template = env.get_template('dashboard.html')
         html = template.render(template_params)
@@ -669,7 +783,8 @@ class FeedbackHandler(ModelrPageRequest):
                 status = None
                 if user:
                     user_issues = Issue.all().ancestor(user)
-                    user_issue = user_issues.filter("issue_id =", issue["id"]).get()
+                    user_issue = user_issues.filter("issue_id =",
+                                                    issue["id"]).get()
                     if user_issue:
                         status = user_issue.vote
                     else:
@@ -691,7 +806,6 @@ class FeedbackHandler(ModelrPageRequest):
                 up_votes = Issue.all().ancestor(ModelrRoot).filter("issue_id =", issue["id"]).filter("vote =", 1).count()
                 count = up_votes - down_votes
 
-                print up_votes, down_votes
 
                 issue.update(up_votes=up_votes,
                              down_votes=down_votes,
@@ -705,6 +819,7 @@ class FeedbackHandler(ModelrPageRequest):
         template = env.get_template('feedback.html')
         html = template.render(template_params)
         self.response.out.write(html)          
+
 
     def post(self):
 
@@ -720,8 +835,6 @@ class FeedbackHandler(ModelrPageRequest):
         up = self.request.get('up')
         down = self.request.get('down')
 
-        print issue_id, up, down
-
         # Set our vote flag to record the user's opinion.
         if up == 'true':
             issue_status = 1
@@ -729,13 +842,15 @@ class FeedbackHandler(ModelrPageRequest):
             issue_status = -1
         else:
             issue_status = 0
-        print 'status', issue_status
+
 
         # Put it in the database.
-        issue = Issue.all().ancestor(user).filter("issue_id =", issue_id).get()
+        issue = Issue.all().ancestor(user).filter("issue_id =",
+                                                  issue_id).get()
         issue.vote = issue_status
         issue.put()
 
+        # TODO log in the activity log
 
 class PricingHandler(ModelrPageRequest):
     def get(self):
@@ -755,11 +870,17 @@ class PricingHandler(ModelrPageRequest):
    
    
 class HelpHandler(ModelrPageRequest):
-    def get(self):
+    def get(self, subpage):
 
+        if subpage:
+            page = subpage
+        else:
+            page = 'help'
+        page+= '.html'
+        
         user = self.verify()
         template_params = self.get_base_params(user=user)
-        template = env.get_template('help.html')
+        template = env.get_template(page)
         html = template.render(template_params)
         activity = "help"
         
@@ -831,11 +952,14 @@ class PrivacyHandler(ModelrPageRequest):
 class ProfileHandler(ModelrPageRequest):
     
     def get(self):
+
+        # Check for user cookies
         user = self.verify()
         if user is None:
             self.redirect('/signup')
             return
 
+        print user.unsubscribed
         groups=[]
         for group in user.group:
             g = Group.all().ancestor(ModelrRoot).filter("name =",
@@ -854,14 +978,14 @@ class ProfileHandler(ModelrPageRequest):
             join_error = "Group does not exists"
             template_params.update(join_error=join_error)
 
-        # Get the user requests
+        # Get the user permission requests
         req = \
           GroupRequest.all().ancestor(ModelrRoot).filter("user =",
                                                          user.user_id)
         if req:
             template_params.update(requests=req)
 
-        # Get the adminstrative requests
+        # Get the users adminstrative requests
         admin_groups = \
           Group.all().ancestor(ModelrRoot).filter("admin =",
                                                   user.user_id)
@@ -887,6 +1011,8 @@ class ProfileHandler(ModelrPageRequest):
         self.response.out.write(html)
 
     def post(self):
+
+        # Check for a user
         user = self.verify()
         if user is None:
             self.redirect('/signup')
@@ -973,7 +1099,7 @@ class ProfileHandler(ModelrPageRequest):
                 
         err_string = '&'.join(err_string) if err_string else ''
         self.redirect('/profile?' + err_string)
-                                    
+                           
         
 class SettingsHandler(ModelrPageRequest):
     
@@ -1032,19 +1158,65 @@ class ResetHandler(ModelrPageRequest):
         new_password = self.request.get("new_password")
         verify = self.request.get("verify")
 
-        template = env.get_template('settings.html')
-
+        template = env.get_template('profile.html')
         
         try:
             reset_password(user,current_pword,new_password,
                            verify)
-            template = env.get_template('settings.html')
             msg = ("You reset your password.")
             html = template.render(user=user,success=msg)
             self.response.out.write(html)
         except AuthExcept as e:
             html = template.render(user=user, error=e.msg)
         
+class DeleteHandler(ModelrPageRequest):
+    """
+    Class for deleting account
+
+    There is some placeholder code below, and 
+    also see delete_account() in ModAuth.py
+
+    Steps:
+    
+    1. Ask user if they are sure (Bootstrap modal in JS?)
+       http://stackoverflow.com/questions/8982295/confirm-delete-modal-dialog-with-twitter-bootstrap
+
+    2. Suspend Subscription with delete method in Stripe,
+       using at_period_end=True (note, this is NOT the default)
+       Docs > https://stripe.com/docs/api#cancel_subscription
+    
+    3. Remove them from MailChimp customer list
+       Docs > http://apidocs.mailchimp.com/api/2.0/lists/unsubscribe.php
+    
+    4. Give them some confirmation by email?
+       Some code in bogus function to do this now
+
+    """
+
+    def post(self):
+
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        template = env.get_template('message.html')
+        
+        if LOCAL:
+            stripe_api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
+            
+        else:
+            stripe_api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
+            
+        try:
+            cancel_subscription(user, stripe_api_key) 
+            msg = "Unsubscribed from Modelr"
+            html = template.render(user=user, msg=msg)
+            self.response.write(html)
+            
+        except AuthExcept as e:
+            html = template.render(user=user, error=e.msg)
+            self.response.write(html)
             
 
 class SignUp(webapp2.RequestHandler):
@@ -1098,7 +1270,10 @@ class SignUp(webapp2.RequestHandler):
                 
 
 class EmailAuthentication(ModelrPageRequest):
-
+    """
+    This is where billing and user account creation takes place
+    """
+    
     def get(self):
 
         user_id = self.request.get("user_id")
@@ -1112,8 +1287,14 @@ class EmailAuthentication(ModelrPageRequest):
             self.redirect('/signup?error=auth_failed')
             return
 
+        if LOCAL:
+            stripe_public_key = "pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
+        else:
+            stripe_public_key = "pk_live_5CZcduRr07BZPG2A5OAhisW9"
+            
         msg = "Thank you for verifying your email address."
-        params = self.get_base_params(user=user)
+        params = self.get_base_params(user=user,
+                                      stripe_key=stripe_public_key)
         template = env.get_template('checkout.html')
         html = template.render(params, success=msg)
         self.response.out.write(html)
@@ -1124,6 +1305,13 @@ class EmailAuthentication(ModelrPageRequest):
         """
         email = self.request.get('stripeEmail')
         price = PRICE # set at head of this file
+
+        if LOCAL:
+            stripe.api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
+            
+        else:
+            stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
+            
 
         # Secret API key for Canada Post postal lookup
         cp_prod = "3a04462597330c85:46c19862981c734ff8f7b2"
@@ -1136,15 +1324,14 @@ class EmailAuthentication(ModelrPageRequest):
         # Create the customer account
         try:
             customer = stripe.Customer.create(card=token,
-                                    email=email,
+                                              email=email,
                                               description="New Modelr customer")
         except:
             # The card has been declined
             # Let the user know and DON'T UPGRADE USER
             self.response.out.write("Payment failed. Credit card not accepted at this time")
             return
-            
-
+        
         # Check the country to see if we need to charge tax
         country = self.request.get('stripeBillingAddressCountry')
         if country == "Canada":
@@ -1170,7 +1357,8 @@ class EmailAuthentication(ModelrPageRequest):
             # This is super hacky, but the only way I could get the
             # XML out
             province = []
-            for i in xml_root.iter('{http://www.canadapost.ca/ws/postoffice}province'):
+            for i in xml_root.iter('{http://www.canadapost.ca/ws/'+
+                                   'postoffice}province'):
                 province.append(i.text)
             tax_code = province[0]
         
@@ -1204,8 +1392,11 @@ class EmailAuthentication(ModelrPageRequest):
         except:
 
             send_message(subject="Registration Failed",
-                         message="Failed to register user %s to Modelr but was billed by Stripe. Customer ID: %s" %(email, customer.id))
-            self.response.write("Registration failed. Charges will be cancelled")
+                         message=("Failed to register user %s to " +
+                        "Modelr but was billed by Stripe. " +
+                        "Customer ID: %s") %(email, customer.id))
+            self.response.write("Registration failed. Charges will "
+                                + "be cancelled")
             raise
         
         self.redirect('/signin?verified=true')
@@ -1290,7 +1481,8 @@ class StripeHandler(ModelrPageRequest):
 
             # For testing, change it to a known user in stripe
             # and use the webhooks testings
-            #event["data"]["object"]["customer"] = "cus_3ZL6yHJqE8DfTx"
+            #event["data"]["object"]["customer"] = \
+            # "cus_3ZL6yHJqE8DfTx"
             #event["data"]["object"]["total"] = price
             
             stripe_id = event["data"]["object"]["customer"]
@@ -1324,17 +1516,45 @@ class StripeHandler(ModelrPageRequest):
 
             self.response.write("ALL OK")
 
+        # 
+        elif (event["type"] == 'customer.subscription.deleted'):
+
+            # for stripe
+            self.response.write("ALL OK")
+            
+            stripe_id = event["data"]["object"]["customer"]
+
+            user = User.all().ancestor(ModelrRoot)
+            user = user.filter("stripe_id =", stripe_id).get()
+
+            # This should never ever happen
+            if not user:
+                message = ("Failed to find modelr user for stripe " +
+                           "user %s, but was invoiced by stripe " +
+                           "event %s" % (stripe_id,event_id))
+                send_message(subject="Non-existent user canceled",
+                             message=message)
+
+                return
+            
+            user.delete()
+            self.response.write("ALL OK")
+            
         # Send an email otherwise. We can trim this down to ones we
         # actually care about.
         else:
-            message = str(event)
-            send_message(subject=event["type"],
-                         message=message)
+            # Too many hooks, too much noise. commented out
+            #message = str(event)
+            #send_message(subject=event["type"],
+            #             message=message)
             self.response.write("ALL OK")
 
         
 
 class ManageGroup(ModelrPageRequest):
+    """
+    Manages and administrates group permissions
+    """
 
     def get(self):
         
@@ -1422,7 +1642,423 @@ class ManageGroup(ModelrPageRequest):
                         parent=ModelrRoot).put()
             self.redirect('/profile')
             return
+    
+class Upload(blobstore_handlers.BlobstoreUploadHandler,
+             ModelrPageRequest):
+    """
+    Handles uploads from users. Allows them to upload images to
+    the blobstore
+    """
+
+
+    def closest(self,x,y, pixels):
+
+            if pixels[x,y] in self.best_colours:
+                return pixels[x,y]
+            if (x == 0): self.x_iterate = 1
+            if (y == 0): self.y_iterate = 1
+            if (y == (pixels.shape[-1]-1)): self.y_iterate = -1
+            if (x == (pixels.shape[0]-1)):
+                print "WTF"
+                self.x_iterate = -1
+            
+            return self.closest(x + self.x_iterate, y +
+                                self.y_iterate,
+                                pixels)
+    def posterize(self,image):
+
+        self.x_iterate = -1
+        self.y_iterate = -1
+        # make a greyscaled version for histograms
+        g_im = image.convert('P', palette=Image.ADAPTIVE)
+        # Get as a numpy array
+        pixels = np.array(g_im)
+
+        count, colours = np.histogram(pixels,
+                                      pixels.max()-pixels.min() + 1)
+
+        colours = np.array(colours, dtype=int)
+        colours = colours[1:]
         
+        # Take only colors that make up 1% of the image
+        self.best_colours = colours[count > (.01 * pixels.size)]
+
+        if self.best_colours.size < 2:
+            return g_im.convert('P',
+                                palette=Image.ADAPTIVE,
+                                colors=15)
+        
+        # find pixels that need adjusting
+        fix_index = np.zeros(pixels.shape, dtype=bool)
+        for colour in self.best_colours:
+            fix_index = np.logical_or(pixels==colour, fix_index)
+
+
+        fix_index = np.array((np.where(fix_index == False)))
+
+        
+        
+        for x,y in zip(fix_index[0], fix_index[1]):
+                
+            pixels[x,y] = self.closest(x,y, pixels)
+    
+        
+        g_im.paste(Image.fromarray(pixels))
+
+        n_colours = self.best_colours.size
+        if n_colours > 15: n_colours =15
+        return g_im.convert('P',
+                            palette=Image.ADAPTIVE,
+                            colors=n_colours)
+    
+    def post(self):
+
+        # Only registered users can do this
+        user = ModelrPageRequest.verify(self)
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        # Get the blob files
+        upload_files = self.get_uploads()
+
+        blob_info = upload_files[0]
+
+        # All this is in a try incase the image format isn't accepted
+
+        try:
+            # Read the image file
+            reader = blobstore.BlobReader(blob_info.key())
+
+            im = Image.open(reader, 'r')
+            im = im.convert('RGB').resize((350,350))
+
+            im = self.posterize(im)
+            
+            output = StringIO.StringIO()
+            im.save(output, format='PNG')
+            
+            bucket = '/modelr_bucket/'
+            output_filename = (bucket + str(user.user_id) +'/2' +
+                               str(time.time()))
+        
+            gcsfile = gcs.open(output_filename, 'w')
+            gcsfile.write(output.getvalue())
+
+            output.close()
+            gcsfile.close()
+
+            # Make a blob reference
+            bs_file = '/gs' + output_filename
+            output_blob_key = blobstore.create_gs_key(bs_file)
+        
+            ImageModel(parent=user,
+                       user=user.user_id,
+                       image=output_blob_key).put()
+            self.redirect('/model')
+
+        except Exception as e:
+            print "ERRRRRRRRR", e
+            self.redirect('/model?error=True')
+        
+
+class ModelBuilder(ModelrPageRequest):
+
+    def get(self):
+        
+        user = ModelrPageRequest.verify(self)
+        if user is None:
+            self.redirect('/signup')
+            return
+    
+        params = self.get_base_params(user=user)
+        template = env.get_template('model_builder.html')
+        html = template.render(params)
+        self.response.out.write(html)
+        
+
+    def post(self):
+
+        user = ModelrPageRequest.verify(self)
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!')
+        
+        bucket = '/modelr_bucket/'
+        filename = bucket + str(user.user_id) +'/' + str(time.time())
+
+        encoded_image = self.request.get('image').split(',')[1]
+        pic = base64.b64decode(encoded_image)
+        
+        gcsfile = gcs.open(filename, 'w')
+        gcsfile.write(pic)
+
+        gcsfile.close()
+
+        bs_file = '/gs' + filename
+
+        blob_key = blobstore.create_gs_key(bs_file)
+
+        ImageModel(parent=user,
+                   user=user.user_id,
+                   image=blob_key).put()
+        # TODO Logging
+
+
+class ModelHandler(ModelrPageRequest):
+
+    def get(self):
+        user = ModelrPageRequest.verify(self)
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        # Make the upload url
+        upload_url = blobstore.create_upload_url('/upload')
+        
+        # Get the model images
+        models = ImageModel.all().ancestor(user).order("-date")
+        models = models.fetch(100)
+
+        # Get the default models
+        default_models = \
+          ImageModel.all().ancestor(admin_user).fetch(100)
+
+        # Create the serving urls
+        imgs = [images.get_serving_url(i.image, size=1400,
+                                       crop=False, secure_url=True)
+                for i in (models + default_models)]
+
+        keys = [str(i.key()) for i in (models + default_models)]
+
+        # Read in each image to get the RGB colours
+        readers = [blobstore.BlobReader(i.image.key())
+                   for i in (models + default_models)]
+        colors = [[RGBToString(j[1])
+                   for j in Image.open(i).convert('RGB').getcolors()]
+                  for i in readers]
+
+        # Grab the rocks
+        rocks = Rock.all()
+        rocks.ancestor(user)
+        rocks.filter("user =", user.user_id)
+        rocks.order("-date")
+
+        default_rocks = Rock.all()
+        default_rocks.filter("user =", admin_id)
+        params = self.get_base_params(user=user,
+                                      images=imgs,
+                                      colors=colors,
+                                      keys = keys,
+                                      rocks=rocks.fetch(100),
+                            default_rocks=default_rocks.fetch(100),
+                                      upload_url=upload_url)
+
+        # Check if there was an upload error (see Upload handler)
+        if self.request.get("error"):
+            params.update(error="Invalid image file")
+        
+        template = env.get_template('model.html')
+        html = template.render(params)
+        self.response.out.write(html)
+
+
+class ImageModelHandler(ModelrPageRequest):
+
+    def get(self):
+
+        user = self.verify()
+        if not user:
+            self.redirect('/signup')
+            return
+        
+        models = ImageModel.all().ancestor(user).fetch(1000)
+    
+    def delete(self):
+
+        user = self.verify()
+        if not user:
+            self.redirect('/signup')
+            return
+
+        image_key = self.request.get("image_key")
+
+        print image_key
+        image = ImageModel.get(image_key)
+
+        image.delete()
+
+        
+class EarthModelHandler(ModelrPageRequest):
+
+    def get(self):
+
+        user = self.verify()
+        if not user:
+            self.redirect('/signup')
+            return
+
+        try:
+            # Get the root of the model
+            input_model_key = self.request.get('image_key')
+            input_model = ImageModel.get(str(input_model_key))
+
+            name = self.request.get('name')
+
+            # If the name is provided, return the model, otherwise
+            # return a list of the earth model names associated
+            # with the model.
+            if name:
+
+                earth_model = EarthModel.all().ancestor(input_model)
+
+                # Check first for a user model with the right name
+                earth_model = earth_model.filter("user =",
+                                                 user.user_id)
+                
+                earth_model = earth_model.filter("name =",
+                                                 name)
+
+                earth_model = earth_model.get()
+
+                if not earth_model:
+                    # Check in the defaults
+                    earth_model = \
+                      EarthModel.all().ancestor(input_model)
+
+                    earth_model = earth_model.filter("user =",
+                                                       admin_id)
+                    earth_model = earth_model.filter("name =",
+                                                       name).get()
+
+                self.response.out.write(earth_model.data)
+
+            else:
+
+                
+                earth_models = EarthModel.all().ancestor(input_model)
+
+                def_models = EarthModel.all().ancestor(input_model)
+                
+                earth_models = earth_models.filter("user =",
+                                                  user.user_id)
+                def_models = def_models.filter("user =",
+                                                 admin_id)
+                earth_models.order('-date')
+                def_models.order('-date')
+                
+                earth_models = (earth_models.fetch(100) +
+                                def_models.fetch(100))
+
+                output = json.dumps([em.name for em in earth_models])
+                self.response.out.write(output)
+            
+        except Exception as e:
+            print e
+            self.response.out.write(json.dumps({'failed':True}))
+
+    def post(self):
+
+        user = self.verify()
+        if not user:
+            return
+
+        try:
+            # Get the root of the model
+            input_model_key = self.request.get('image_key')
+            image_model = ImageModel.get(input_model_key)
+
+            
+            name = self.request.get('name')
+
+            # Get the rest of data
+            data = self.request.get('json')
+
+            # See if we are overwriting
+            earth_model = EarthModel.all().ancestor(image_model)
+            earth_model = earth_model.filter('user =', user.user_id)
+            earth_model = earth_model.filter('name =', name).get()
+
+            if earth_model:
+                earth_model.data = data.encode()
+            else:
+                earth_model = EarthModel(user=user.user_id,
+                                         data=data.encode(),
+                                         name=name,
+                                         parent=image_model)
+            earth_model.put()
+        
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.out.write('All OK!!')
+
+        except Exception as e:
+            # TODO Handle failure
+            pass
+
+    def delete(self):
+
+        user = self.verify()
+        if not user:
+            self.redirect('/signup')
+
+        try:
+            # Get the root of the model
+            input_model_key = self.request.get('input_image_id')
+
+            name = self.request.get('name')
+
+            image_model = ImageModel.get(input_model_key)
+
+            
+            model = EarthModel.all().ancestor(image_model)
+            
+            model = model.filter("user =", user.user_id)
+            model = model.filter("name =", name).get()
+
+            if model:
+                model.delete()
+                
+            self.response.out.write(json.dumps({'success':True}))
+        except Exception as e:
+            print e
+            self.response.out.write(json.dumps({'success':False}))
+        
+
+class Forward2DModelHandler(ModelrPageRequest):
+
+    def get(self):
+        user = self.verify()
+        if not user:
+            self.redirect("/signup")
+
+        model_name = self.request.get("name")
+            
+        # TODO Handle failure
+
+        model = \
+          Forward2DModel.all().ancestor(user).filter("name =",
+                                                     model_name).get()
+        if model is None:
+        # TODO
+            pass
+        key = model.input_model_key
+        data = {"input_image_key": str(key),
+                "output_image": images.get_serving_url(model.output_image,
+                                                       secure_url=True),
+                "data": model.data}
+        
+        self.response.write(json.dumps(data))
+
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity='fetched_forward_model',
+                        parent=ModelrRoot).put()
+        return
+
+    
 class NotFoundPageHandler(ModelrPageRequest):
     def get(self):
         self.error(404)        
@@ -1452,8 +2088,6 @@ class AdminHandler(ModelrPageRequest):
         template = env.get_template('admin_site.html')
         html = template.render(user=user)
         self.response.out.write(html)
-        
-
         
     def post(self):
 
@@ -1491,15 +2125,14 @@ class AdminHandler(ModelrPageRequest):
                                        email=email)
                 self.response.out.write(html)
 
-        
 
 class ServerError(ModelrPageRequest):
 
     def post(self):
 
         send_message("Server Down","Scripts did not populate")
-    
         
+
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
                                ('/add_rock', AddRockHandler),
@@ -1518,14 +2151,21 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/about', AboutHandler),
                                ('/features', FeaturesHandler),
                                ('/feedback', FeedbackHandler),
-                               ('/help', HelpHandler),
+                               ('/help/?([-\w]+)?', HelpHandler),
                                ('/terms', TermsHandler),
                                ('/privacy', PrivacyHandler),
                                ('/signup', SignUp),
                                ('/verify_email', EmailAuthentication),
                                ('/signin', SignIn),
+                               ('/manage_group', ManageGroup),
+                               ('/upload', Upload),
+                               ('/model_builder', ModelBuilder),
+                               ('/model', ModelHandler),
+                               ('/image_model', ImageModelHandler),
+                               ('/earth_model', EarthModelHandler),
                                ('/forgot', ForgotHandler),
                                ('/reset', ResetHandler),
+                               ('/delete', DeleteHandler),
                                ('/signout', SignOut),
                                ('/stripe', StripeHandler),
                                ('/manage_group', ManageGroup),
@@ -1535,6 +2175,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/.*', NotFoundPageHandler)
                                ],
                               debug=False)
+
 
 
 def main():

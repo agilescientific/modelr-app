@@ -101,7 +101,7 @@ $('#scenario_info').popover({
 		</div>
       </div>
               
-	      {% if not user %}<fieldset disabled>{% endif %}
+	      <fieldset{% if not user %} disabled{% endif %}>
         <div class="form-group">
 		<div class="form-inline">
 		  <div class="col-xs-11">
@@ -127,7 +127,7 @@ $('#script_info').popover({
 
 		</div>
     </div>
-	      {% if not user %}</fieldset>{% endif %}
+	      </fieldset>
 	      
 	                    <hr/>
 
@@ -217,8 +217,10 @@ $('#script_info').popover({
    $.ajaxSetup({timeout:10000}); //in milliseconds
    
    server = new PlotServer(host, 
-			   get_rocks('datalist#list_of_rocks'));
-   scenario = new Scenario(name, null, {}, server.rocks);
+			   get_rocks('datalist#list_of_rocks'),
+			   get_models('datalist#list_of_models'));
+   scenario = new Scenario(name, null, {}, server.rocks, 
+			   server.earth_models);
    
    // This is specific to this page. will create a form.
    scenario.display = display_form;
@@ -232,7 +234,7 @@ $('#script_info').popover({
      
      console.log('server.current_script');
      
-     server.get_script_info(value, function(data){
+     server.get_script_info(value, 'scenario', function(data){
        scenario.info = data;
        scenario.default_args(argumentss);
        
@@ -265,7 +267,7 @@ $('#script_info').popover({
      var img = $('img#plot_image');
      var loader = $('img#loader');
      var qs = scenario.qs();
-     var url = server.hostname +'/plot.jpeg' + qs;
+     var url = server.hostname +'/plot.jpeg' + qs + '&type=scenario';
      
      //img.attr('src','');
      loader.show();
@@ -280,7 +282,7 @@ $('#script_info').popover({
    scenario.on_change = function update_link(){
      
      var qs = scenario.qs();
-     var url = server.hostname +'/plot.jpeg' + qs;
+     var url = server.hostname +'/plot.jpeg' + qs + '&type=scenario';
      
      var p = $('p#image_link');
      p.text(url);
@@ -290,7 +292,7 @@ $('#script_info').popover({
    This populates the scripts dropdown with a list of scripts
    from the plot server.
     */
-   populate_scripts(server, 'select#select_script');
+   populate_scripts(server,'scenario', 'select#select_script');
 
    /*
    This grabs the data after the '#' in the url and updates the 
@@ -374,6 +376,22 @@ $('#script_info').popover({
    scenario.name = scenario_name;
    scenario.get();
 }
+
+// Load an earth model based on its name and corresponding image key
+function load_earthmodel(image_key, name){
+
+   $.get('/earth_model', {image_key: image_key, 
+			  name: name},
+	 function callback(data){
+       data = JSON.parse(data);
+
+       if(data["failed"]){
+	 alert("model not found");
+       } 
+       else{}
+     });
+ };
+
  
 </script>
 
@@ -409,5 +427,12 @@ by the user -->
   <!--[if IE 9]></select><![endif]-->
 </datalist>
 
+<datalist id="list_of_models">
 
+{% for model in earth_models %}
+  <option data-value='{{model["image_key"]}}' 
+	  data-name='{{model["name"]}}'>
+  </option>
+{% endfor %}
+</datalist>
 {% endblock %}
