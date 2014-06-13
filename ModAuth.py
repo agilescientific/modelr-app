@@ -123,7 +123,7 @@ def signup(email, password, parent=None):
     print("http://modelr.io/verify_email?user_id=%s" %
           str(user.temp_id))
     
-    mail.send_mail(sender="Hello <hello@modelr.io>",
+    mail.send_mail(sender="Hello <ben.bougher@gmail.com>",
               to="<%s>" % user.email,
               subject="Modelr email verification",
               body="""
@@ -204,7 +204,7 @@ def initialize_user(email, stripe_id, parent, tax_code, price, tax):
     verified_user.delete()
 
     # send a payment confirmation email
-    mail.send_mail(sender="Hello <hello@modelr.io>",
+    mail.send_mail(sender="Hello <ben.bougher@gmail.com>",
               to="<%s>" % user.email,
               subject="Modelr subscription confirmation",
               body="""
@@ -278,8 +278,8 @@ def send_message(subject, message):
     """
     
     # send the message
-    mail.send_mail(sender="Hello <hello@modelr.io>",
-                   to="hello@modelr.io",
+    mail.send_mail(sender="Hello <ben.bougher@gmail.com>",
+                   to="ben.bougher@gmail.com",
                    subject=subject,
                    body=message)
 
@@ -304,7 +304,7 @@ def forgot_password(email, parent):
     new = generate_password()
 
     # send a new password email
-    mail.send_mail(sender="Hello <hello@modelr.io>",
+    mail.send_mail(sender="Hello <ben.bougher@gmail.com>",
               to="<%s>" % user.email,
               subject="Modelr password reset",
               body="""
@@ -377,7 +377,7 @@ def cancel_subscription(user,stripe_api_key):
     
 
     
-    mail.send_mail(sender="Hello <hello@modelr.io>",
+    mail.send_mail(sender="Hello <ben.bougher@gmail.com>",
               to="<%s>" % user.email,
               subject="Modelr account deleted",
               body="""
