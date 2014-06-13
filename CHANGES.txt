@@ -1,0 +1,2 @@
+modelr 0.2 Jun 13
+Added image based modelling
