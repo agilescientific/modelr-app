@@ -1738,7 +1738,7 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             output = StringIO.StringIO()
             im.save(output, format='PNG')
             
-            bucket = '/modelr_bucket/'
+            bucket = '/modelr_live_bucket/'
             output_filename = (bucket + str(user.user_id) +'/2' +
                                str(time.time()))
         
@@ -1787,7 +1787,7 @@ class ModelBuilder(ModelrPageRequest):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
         
-        bucket = '/modelr_bucket/'
+        bucket = '/modelr_live_bucket/'
         filename = bucket + str(user.user_id) +'/' + str(time.time())
 
         encoded_image = self.request.get('image').split(',')[1]
