@@ -1,3 +1,6 @@
+modelr 0.2.2
+fixed ordering of vp, vs, rho
+
 modelr 0.2.1 Jun 14
 changed path to cloud bucket
 
