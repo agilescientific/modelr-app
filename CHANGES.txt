@@ -1,4 +1,4 @@
-modelr 0.2.2
+modelr 0.2.2 Jun 17
 fixed ordering of vp, vs, rho
 
 modelr 0.2.1 Jun 14
