@@ -405,13 +405,13 @@ by the user -->
   <!--[if IE 9]><select disabled style="display:none"><![endif]-->
 
   {% for rock in rocks %}
-  <option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},
+  <option data-value="{{rock.vp}},{{rock.vs}},{{rock.rho}},
 	  {{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
 	  data-name="{{rock.name}}">{{rock.name}}</option>
   {% endfor %}
   {% for group in group_rocks %}
   {% for rock in group.rocks %}
-  <option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},
+  <option data-value="{{rock.vp}},{{rock.vs}},{{rock.rho}},
 	  {{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
 	  data-name="{{rock.name}}">
     {{rock.name}}
@@ -419,7 +419,7 @@ by the user -->
   {% endfor %}
   {% endfor %}
   {% for rock in default_rocks %}
-  <option data-value="{{rock.vp}},{{rock.rho}},{{rock.vs}},
+  <option data-value="{{rock.vp}},{{rock.vs}},{{rock.rho}},
 	  {{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
 	  data-name="{{rock.name}}">{{rock.name}}
   </option>

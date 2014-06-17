@@ -1328,13 +1328,14 @@ class EmailAuthentication(ModelrPageRequest):
 
         # Create the customer account
         try:
-            customer = \
-              stripe.Customer.create(card=token,
-                                     email=email,
-                                    description="New Modelr customer")
-
+            customer = stripe.Customer.create(card=token,
+                                              email=email,
+                                              description="New Modelr customer")
         except:
-            self.response.out.write("Payment failed, credit card type not excepted")
+            # The card has been declined
+            # Let the user know and DON'T UPGRADE USER
+            self.response.out.write("Payment failed. Credit card not accepted at this time")
+            return
         
         # Check the country to see if we need to charge tax
         country = self.request.get('stripeBillingAddressCountry')
@@ -1490,7 +1491,7 @@ class StripeHandler(ModelrPageRequest):
             #event["data"]["object"]["total"] = price
             
             stripe_id = event["data"]["object"]["customer"]
-            amount = price #event["data"]["object"]["total"]
+            amount = PRICE 
             event_id = event["data"]["object"]["id"]
             user = User.all().ancestor(ModelrRoot)
             user = user.filter("stripe_id =", stripe_id).fetch(1)
@@ -1742,7 +1743,7 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             output = StringIO.StringIO()
             im.save(output, format='PNG')
             
-            bucket = '/modelr_bucket/'
+            bucket = '/modelr_live_bucket/'
             output_filename = (bucket + str(user.user_id) +'/2' +
                                str(time.time()))
         
@@ -1791,7 +1792,7 @@ class ModelBuilder(ModelrPageRequest):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
         
-        bucket = '/modelr_bucket/'
+        bucket = '/modelr_live_bucket/'
         filename = bucket + str(user.user_id) +'/' + str(time.time())
 
         encoded_image = self.request.get('image').split(',')[1]
