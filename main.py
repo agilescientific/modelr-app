@@ -138,6 +138,8 @@ for i in default_rocks:
         rock.name = i['name']
         rock.group = 'public'
             
+    rock.description = i['description']
+
     rock.vp = float(i['vp'])
     rock.vs = float(i['vs'])
     rock.rho = float(i['rho'])
@@ -385,48 +387,7 @@ class AddRockHandler(ModelrPageRequest):
     '''
     add a rock 
     '''
-    def post(self):
-
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-        
-        name = self.request.get('name')
-        
-        rocks = Rock.all()
-        rocks.ancestor(user)
-        rocks.filter("user =", user.user_id)
-        rocks.filter("name =", name)
-        rocks = rocks.fetch(1)
-
-        # Rewrite if the rock exists
-        if rocks:
-            rock = rocks[0]
-        else:
-            rock = Rock(parent=user)
-            rock.user = user.user_id
-
-        # Populate the object
-        rock.vp = float(self.request.get('vp'))
-        rock.vs = float(self.request.get('vs'))
-        rock.rho = float(self.request.get('rho'))
-
-        rock.vp_std = float(self.request.get('vp_std'))
-        rock.vs_std = float(self.request.get('vs_std'))
-        rock.rho_std = float(self.request.get('rho_std'))
-
-        rock.name = self.request.get('name')
-        rock.group = self.request.get('group')
-
-        # Save in the database
-        rock.put()
-
-        activity = "added_rock"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
-        self.redirect('/dashboard#rocks')
-    
+    pass    
 
 class RemoveRockHandler(ModelrPageRequest):
 
@@ -659,6 +620,50 @@ class DashboardHandler(ModelrPageRequest):
                     activity=activity,
                     parent=ModelrRoot).put()
         self.response.out.write(html)
+
+    def post(self):
+
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+        
+        name = self.request.get('name')
+        
+        rocks = Rock.all()
+        rocks.ancestor(user)
+        rocks.filter("user =", user.user_id)
+        rocks.filter("name =", name)
+        rocks = rocks.fetch(1)
+
+        # Rewrite if the rock exists
+        if rocks:
+            rock = rocks[0]
+        else:
+            rock = Rock(parent=user)
+            rock.user = user.user_id
+
+        # Populate the object
+        rock.vp = float(self.request.get('vp'))
+        rock.vs = float(self.request.get('vs'))
+        rock.rho = float(self.request.get('rho'))
+
+        rock.vp_std = float(self.request.get('vp_std'))
+        rock.vs_std = float(self.request.get('vs_std'))
+        rock.rho_std = float(self.request.get('rho_std'))
+
+        rock.description = self.request.get('description')
+        rock.name = self.request.get('name')
+        rock.group = self.request.get('group')
+
+        # Save in the database
+        rock.put()
+
+        activity = "added_rock"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
+        self.redirect('/dashboard#rocks')
+
 
 
 class AboutHandler(ModelrPageRequest):
@@ -1323,13 +1328,14 @@ class EmailAuthentication(ModelrPageRequest):
 
         # Create the customer account
         try:
-            customer = \
-              stripe.Customer.create(card=token,
-                                     email=email,
-                                    description="New Modelr customer")
-
+            customer = stripe.Customer.create(card=token,
+                                              email=email,
+                                              description="New Modelr customer")
         except:
-            self.response.out.write("Payment failed, credit card type not excepted")
+            # The card has been declined
+            # Let the user know and DON'T UPGRADE USER
+            self.response.out.write("Payment failed. Credit card not accepted at this time")
+            return
         
         # Check the country to see if we need to charge tax
         country = self.request.get('stripeBillingAddressCountry')
@@ -1485,7 +1491,7 @@ class StripeHandler(ModelrPageRequest):
             #event["data"]["object"]["total"] = price
             
             stripe_id = event["data"]["object"]["customer"]
-            amount = price #event["data"]["object"]["total"]
+            amount = PRICE 
             event_id = event["data"]["object"]["id"]
             user = User.all().ancestor(ModelrRoot)
             user = user.filter("stripe_id =", stripe_id).fetch(1)
@@ -1737,7 +1743,7 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             output = StringIO.StringIO()
             im.save(output, format='PNG')
             
-            bucket = '/modelr_bucket/'
+            bucket = '/modelr_live_bucket/'
             output_filename = (bucket + str(user.user_id) +'/2' +
                                str(time.time()))
         
@@ -1786,7 +1792,7 @@ class ModelBuilder(ModelrPageRequest):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
         
-        bucket = '/modelr_bucket/'
+        bucket = '/modelr_live_bucket/'
         filename = bucket + str(user.user_id) +'/' + str(time.time())
 
         encoded_image = self.request.get('image').split(',')[1]
@@ -2134,7 +2140,6 @@ class ServerError(ModelrPageRequest):
 
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
-                               ('/add_rock', AddRockHandler),
                                ('/edit_rock', ModifyRockHandler),
                                ('/remove_rock', RemoveRockHandler),
                                ('/scenario', ScenarioHandler),
