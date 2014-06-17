@@ -115,10 +115,13 @@
         </thead>
         <tbody>
           {% for rock in rocks %}
+
+          {% set slug  = rock.name | replace(' ','-') %}
+
           <tr>
             <form class="form-horizontal" name="input" action="edit_rock" method="post">
               <input type="hidden" name="name" value="{{rock.name}}" />
-              <td><strong>{{rock.name}}</strong></td>
+              <td><strong>{{ rock.name }}</strong><span style="color:#bbb; font-size:100%; vertical-align:middle; left:6px; top:-2px;" class="glyphicon glyphicon-info-sign" id="rock_desc_{{ slug }}" data-container="body" data-toggle="popover" data-placement="right" data-content="{{ rock.description }}"></td>
               <td>{{rock.vp}}</td>
               <td>{{rock.vs}}</td>
               <td>{{rock.rho}}</td>
@@ -128,9 +131,21 @@
               <td><input class="btn btn-success btn-xs" type="submit" name="action" value="edit">&nbsp;&nbsp;&nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" formaction="/remove_rock" method="post" value="remove" /></td>
             </form>
           </tr>
+
+      <script>
+        $('#rock_desc_{{ slug }}').popover({
+        trigger: 'hover click', 
+        html: true,
+        placement: 'right', 
+        container: 'body',
+        delay: { show: 500, hide: 1000 }
+        });
+      </script>
+
           {% endfor %}
         </tbody>
       </table>
+
 
       <!-- ------ Shared rocks, if any ------- -->
       {% for rock_group in rock_groups %}
@@ -216,13 +231,13 @@
           <h3 class="panel-title">Add rock</h3>
         </div>
         <div class="panel-body">
-          <form class="form-horizontal" role="form" name="input" action="add_rock" method="post">
+          <form class="form-horizontal" role="form" name="input" method="post">
 
             <div class="row"> <!-- NAME -->
               <div class="form-group">
                 <label for="name" class="col-sm-2 control-label">Name</label>
                 <div class="col-sm-9">
-                  <input class="form-control" type="text" name="name" value={{current_rock.name}} />
+                  <input class="form-control" type="text" name="name" value="{{current_rock.name}}" />
                 </div>
               </div>
             </div> <!-- /row -->
@@ -231,7 +246,7 @@
               <div class="form-group">
                 <label for="description" class="col-sm-2 control-label">Description</label>
                 <div class="col-sm-9">
-                  <textarea class="form-control" name="description" value={{current_rock.description}}></textarea>
+                  <textarea class="form-control" rows="2" name="description">{{ current_rock.description }}</textarea>
                 </div>
               </div>
             </div> <!-- /row -->

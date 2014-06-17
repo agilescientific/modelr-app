@@ -138,6 +138,8 @@ for i in default_rocks:
         rock.name = i['name']
         rock.group = 'public'
             
+    rock.description = i['description']
+
     rock.vp = float(i['vp'])
     rock.vs = float(i['vs'])
     rock.rho = float(i['rho'])
@@ -385,48 +387,7 @@ class AddRockHandler(ModelrPageRequest):
     '''
     add a rock 
     '''
-    def post(self):
-
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-        
-        name = self.request.get('name')
-        
-        rocks = Rock.all()
-        rocks.ancestor(user)
-        rocks.filter("user =", user.user_id)
-        rocks.filter("name =", name)
-        rocks = rocks.fetch(1)
-
-        # Rewrite if the rock exists
-        if rocks:
-            rock = rocks[0]
-        else:
-            rock = Rock(parent=user)
-            rock.user = user.user_id
-
-        # Populate the object
-        rock.vp = float(self.request.get('vp'))
-        rock.vs = float(self.request.get('vs'))
-        rock.rho = float(self.request.get('rho'))
-
-        rock.vp_std = float(self.request.get('vp_std'))
-        rock.vs_std = float(self.request.get('vs_std'))
-        rock.rho_std = float(self.request.get('rho_std'))
-
-        rock.name = self.request.get('name')
-        rock.group = self.request.get('group')
-
-        # Save in the database
-        rock.put()
-
-        activity = "added_rock"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
-        self.redirect('/dashboard#rocks')
-    
+    pass    
 
 class RemoveRockHandler(ModelrPageRequest):
 
@@ -659,6 +620,50 @@ class DashboardHandler(ModelrPageRequest):
                     activity=activity,
                     parent=ModelrRoot).put()
         self.response.out.write(html)
+
+    def post(self):
+
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+        
+        name = self.request.get('name')
+        
+        rocks = Rock.all()
+        rocks.ancestor(user)
+        rocks.filter("user =", user.user_id)
+        rocks.filter("name =", name)
+        rocks = rocks.fetch(1)
+
+        # Rewrite if the rock exists
+        if rocks:
+            rock = rocks[0]
+        else:
+            rock = Rock(parent=user)
+            rock.user = user.user_id
+
+        # Populate the object
+        rock.vp = float(self.request.get('vp'))
+        rock.vs = float(self.request.get('vs'))
+        rock.rho = float(self.request.get('rho'))
+
+        rock.vp_std = float(self.request.get('vp_std'))
+        rock.vs_std = float(self.request.get('vs_std'))
+        rock.rho_std = float(self.request.get('rho_std'))
+
+        rock.description = self.request.get('description')
+        rock.name = self.request.get('name')
+        rock.group = self.request.get('group')
+
+        # Save in the database
+        rock.put()
+
+        activity = "added_rock"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
+        self.redirect('/dashboard#rocks')
+
 
 
 class AboutHandler(ModelrPageRequest):
@@ -2134,7 +2139,6 @@ class ServerError(ModelrPageRequest):
 
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
-                               ('/add_rock', AddRockHandler),
                                ('/edit_rock', ModifyRockHandler),
                                ('/remove_rock', RemoveRockHandler),
                                ('/scenario', ScenarioHandler),
