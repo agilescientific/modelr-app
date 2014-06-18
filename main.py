@@ -501,7 +501,7 @@ class ScenarioHandler(ModelrPageRequest):
         if user:
             model_data = EarthModel.all().filter("user =",
                                              user.user_id).fetch(1000)
-            earth_models = [{"image_key": i.parent_key().name(),
+            earth_models = [{"image_key": str(i.parent_key()),
                          "name": i.name} for i in model_data]
 
         else:
