@@ -1,3 +1,6 @@
+modelr 0.2.2.2 Jun 20
+updated default rocks, delete child models when parent image is deleted
+
 modelr 0.2.2.1 Jun 18
 Fixed forward_model script in scenarios (bug fix patch)
 
