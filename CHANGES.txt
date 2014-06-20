@@ -1,3 +1,9 @@
+modelr 0.2.2.1 Jun 18
+Fixed forward_model script in scenarios (bug fix patch)
+
+modelr 0.2.2 Jun 17
+fixed ordering of vp, vs, rho (big bug fix)
+
 modelr 0.2.1 Jun 14
 changed path to cloud bucket
 
