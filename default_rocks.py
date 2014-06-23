@@ -67,7 +67,9 @@ default_rocks = [ {'name':'Shale',
                    {'name':'Bitumen Sand',
                    'description': '',
                    'vp': 2375, 'vs': 1000, 'rho': 2075,
-                   'vp_std': 50, 'vs_std': 50, 'rho_std':50 }]
+                   'vp_std': 50, 'vs_std': 50, 'rho_std':50 }
+
+                   ]
 
    
 

@@ -1,5 +1,5 @@
 {% extends "base_template.html" %} 
-{% block title %}Modelr &middot; Section model{% endblock %} 
+{% block title %}Modelr &middot; Model{% endblock %} 
 
 {% block content %}
 
@@ -19,14 +19,9 @@
   <link rel="stylesheet" href="static/css/slider.css">
 </head>
 
-
-
 <!-- JAVASCRIPT and DATA
 ================================================================ -->
 <script src="static/js/bootstrap-slider.js"></script>
-
-
-
 
 <script>
  $(document).ready(function() {
@@ -72,9 +67,6 @@
    
    seismic_model.on_change = param_changed;
 
-
-
-
    plot_container = new Scenario(null, null, {},
 				 null);
    plot_container.on_change = param_changed;
@@ -95,10 +87,7 @@
 	 plot_container.default_args(argumentss);
 	 
 	 console.log('div#plot_place');
-	 
-
-	 
-	 
+	
        })
    }
 
@@ -226,11 +215,15 @@
 			   metadata=data.metadata);
      // This will Create a form see above
      plot_container.display('div#plot_place',
-			    metadata=data.metadata);
+          metadata=data.metadata);
      
+     $('div#meta_place').replaceWith(
+          data.metadata['moduli']
+          );
+     console.log(data.metadata);
+
      update_image(data);
    };
-
    $("#loader").show();
    forward_model.post(server, cb, update=true);
 
@@ -438,7 +431,7 @@ $('#model_info').popover({
 });
 </script>
 
-	        <div id="myCarousel" class="carousel slide" data-interval="false" style="margin-top:20px; width:100%; height:100%">
+	        <div id="myCarousel" class="carousel slide" data-interval="false" style="margin-top:20px; width:100%;">
             <form class="form-horizontal" role="form">
 
 	            <!-- Carousel slides -->
@@ -525,27 +518,37 @@ $('#model_info').popover({
 
     <div class="panel panel-default">
       <div class="panel-heading">
-	      <h3 class="panel-title">Result</h3>
+        <h3 class="panel-title">Result</h3>
       </div>
       <div class="panel-body">
-	      <div class="col-md-9">
-	        <img class="img-thumbnail" id="plot_image" href=URL alt="" 
-	           src="/static/img/placeholder_model_image.png" 
-	           height=800, width=1200 />
-	        <img style="position:absolute;top:0;left:0" id="loader" src="/static/img/ajax-loader.gif" />
-	        <!-- Updated by the  create_image button above-->
-	      </div>
-	      <div class="panel-heading">
-	        <h3 class="panel-title">Plot controls</h3>
-	      </div>
-	      <div class="col-md-3">
-	        <div id="plot_place" class="row"></div>
-	          <!-- This is where there survey parameters will be set -->
-	        <div style="margin-top:24px;" id="seismic_place" class="row"></div>
-	      </div>
-	
+        <div class="col-md-9">
+          <img class="img-thumbnail" id="plot_image" href=URL alt="" 
+             src="/static/img/placeholder_model_image.png" 
+             height=800, width=1200 />
+          <img style="position:absolute;top:0;left:0" id="loader" src="/static/img/ajax-loader.gif" />
+          <!-- Updated by the  create_image button above-->
+        </div>
+        <div class="panel-heading">
+          <h3 class="panel-title">Plot controls</h3>
+        </div>
+        <div class="col-md-3">
+          <div id="plot_place" class="row"></div>
+            <!-- This is where there survey parameters will be set -->
+          <div style="margin-top:24px;" id="seismic_place" class="row"></div>
+        </div>
+  
       </div>
-    </div>
+    </div> <!-- end of panel -->
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Metadata</h3>
+      </div>
+      <div class="panel-body">
+        <p><div id="meta_place"></div></p>
+      </div> <!-- end of panel-body -->
+    </div> <!-- end of panel -->
+
 
 </div>
 
