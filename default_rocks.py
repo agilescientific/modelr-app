@@ -1,6 +1,6 @@
 
 default_rocks = [ {'name':'Shale',
-                    'description': 'Grey 2001 AVO classes',
+                    'description': 'Grey 2001, AVO classes',
                     'vp': 3000, 'vs': 1600, 'rho': 2500,
                     'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
                     
@@ -14,6 +14,11 @@ default_rocks = [ {'name':'Shale',
                    'vp': 3300, 'vs': 1950, 'rho': 2200,
                    'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
                    
+                   {'name':'Gas Sand (Class 2p)',
+                   'description': 'Class 2p AVO response when underlying shale',
+                   'vp': 3400, 'vs': 2055, 'rho': 2300,
+                   'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
+                   
                    {'name':'Gas Sand (Class 3)',
                    'description': 'Class 3 AVO response when underlying shale',
                    'vp': 2770, 'vs': 1780, 'rho': 2185,
@@ -22,11 +27,6 @@ default_rocks = [ {'name':'Shale',
                    {'name':'Gas Sand (Class 4)',
                    'description': 'Class 4 AVO response when underlying shale',
                    'vp': 2200, 'vs': 1400, 'rho': 2000,
-                   'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
-
-                   {'name':'Gas Sand (Class 2)',
-                   'description': 'Class 2 AVO response when underlying shale',
-                   'vp': 3400, 'vs': 2055, 'rho': 2300,
                    'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
 
                    {'name':'Hard Shale',
@@ -67,7 +67,9 @@ default_rocks = [ {'name':'Shale',
                    {'name':'Bitumen Sand',
                    'description': '',
                    'vp': 2375, 'vs': 1000, 'rho': 2075,
-                   'vp_std': 50, 'vs_std': 50, 'rho_std':50 }]
+                   'vp_std': 50, 'vs_std': 50, 'rho_std':50 }
+
+                   ]
 
    
 

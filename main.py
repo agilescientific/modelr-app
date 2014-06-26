@@ -698,8 +698,13 @@ class AboutHandler(ModelrPageRequest):
 
         # Opened URLs are file-like.
         full_url = '{0}?{1}'.format(ur_url, ur_query)
-        f = urllib2.urlopen(full_url)
-        raw_json = f.read()
+        try:
+            f = urllib2.urlopen(full_url)
+            raw_json = f.read()
+
+        except Exception as e:
+            print "Failed to retrieve stats.",
+            print "Uptime Robot may be down:", e
 
         user = self.verify()
         models_served = ModelServedCount.all().get()
