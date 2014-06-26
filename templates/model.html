@@ -89,6 +89,8 @@
    plot_container.script = "cross_sections.py";
    
    plot_container.set_current_script = function(value, argumentss){
+     
+     plot_container.script=value;
      server.get_script_info(plot_container.script, 'plots',
 			    function(data){
 	 plot_container.info = data;
@@ -96,10 +98,19 @@
 	 
 	 console.log('div#plot_place');
 	 
+	 plot_container.display('div#plot_place');
+	 plot_container.on_change();
 
 	 
 	 
-       })
+       });
+
+// Select the script in the 'select' element of this 
+     // page.  
+     $("select#select_plot option").filter(function() {
+       //may want to use $.trim in here
+       return $(this).val() == value; 
+     }).attr('selected', true);
    }
 
 
@@ -180,6 +191,8 @@
    // Update the available saved earth models
    update_em_list(property_map);
 
+   // Populate the plot options
+   populate_scripts(server, 'plots', 'select#select_plot')
  });
 </script>
 
@@ -509,7 +522,10 @@ $('#model_info').popover({
             </form>
             </fieldset>
 
+	    
             <div class="form-group">
+	      <select class="form-control" id="select_plot" onchange="plot_container.set_current_script($(this).val(), plot_container.arguments)">
+	      </select>
               <button class="btn btn-primary" id='create_image' 
                   style="postion: absolute; top: 50%"
                   onclick="update_model()">
@@ -539,6 +555,8 @@ $('#model_info').popover({
 	        <h3 class="panel-title">Plot controls</h3>
 	      </div>
 	      <div class="col-md-3">
+
+		
 	        <div id="plot_place" class="row"></div>
 	          <!-- This is where there survey parameters will be set -->
 	        <div style="margin-top:24px;" id="seismic_place" class="row"></div>
