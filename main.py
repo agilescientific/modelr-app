@@ -1549,6 +1549,14 @@ class StripeHandler(ModelrPageRequest):
             
             user.delete()
             self.response.write("ALL OK")
+
+
+        elif (event["type"] == 'customer.subscription.created'):
+
+            message = str(event)
+            send_message(subject=event["type"],
+                         message=message)
+            self.response.write("All OK")
             
         # Send an email otherwise. We can trim this down to ones we
         # actually care about.
