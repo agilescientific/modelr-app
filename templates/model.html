@@ -203,7 +203,7 @@
 
    // Populate the plot options
    populate_scripts(server, 'plots', 'select#select_plot', 
-		    'Plot Type');
+		    'Plot type');
 
    seismic_model.set_current_script(seismic_model.script, 
 				      seismic_model.arguments);
@@ -563,9 +563,7 @@ $('#model_info').popover({
       </div>
       <div class="panel-body">
 	      <div class="col-md-9">
-		<select class="form-control" id="select_plot" 
-		      onchange="plot_container.set_current_script($(this).val(), plot_container.arguments)">
-	      </select>
+		
 	        <img class="img-thumbnail" id="plot_image" href=URL alt="" 
 	           src="/static/img/placeholder_model_image.png" 
 	           height=800, width=1200 />
@@ -577,10 +575,14 @@ $('#model_info').popover({
 		
 	        <h3 class="panel-title">Plot controls</h3>
 	      </div>
+	 
 	      <div class="col-md-3">
-		
-		
-	        <div id="plot_place" class="row"></div>
+
+	      <select class="form-control" id="select_plot" 
+		      onchange="plot_container.set_current_script($(this).val(), plot_container.arguments)">
+              </select>
+                
+	        <div id="plot_place" class="row" style="margin-top:24px;"></div>
 	          <!-- This is where there survey parameters will be set -->
 	        <div style="margin-top:24px;" id="seismic_place" class="row"></div>
 	      </div>
