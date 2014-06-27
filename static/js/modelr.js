@@ -339,7 +339,7 @@ Scenario.prototype.qs = function() {
  * @param selection: selection string or tag 'select' element.
  * 
  */
-function populate_scripts(server, type, selection) {
+function populate_scripts(server, type, selection, placeholder='Scripts------') {
 
     console.log("populate_scripts!");
 
@@ -353,14 +353,14 @@ function populate_scripts(server, type, selection) {
         select_script = $(selection);
         select_script.find('option').remove();
 
-        select_script.append('<option value="" selected disabled hidden>Scripts </option>');
+        select_script.append('<option value="" selected disabled hidden>' + placeholder +' </option>');
 
         for ( var i = 0; i < data.length; i++) {
             var script_doc = data[i];
             var script = script_doc[0];
             var doc = script_doc[1];
             select_script.append('<option value=' + script + '>' + 
-				 script + ' --- ' + doc.slice(0, 20)+ 
+				 doc.slice(0, 50)+ 
 				 '</option>');
         };
 

@@ -88,7 +88,8 @@
 
    plot_container.script = "cross_sections.py";
    
-   plot_container.set_current_script = function(value, argumentss){
+   plot_container.set_current_script = function(value, argumentss,
+						plot=true){
      
      plot_container.script=value;
      server.get_script_info(plot_container.script, 'plots',
@@ -96,13 +97,25 @@
 	 plot_container.info = data;
 	 plot_container.default_args(argumentss);
 	 
+
+
 	 console.log('div#plot_place');
-	 
-	 plot_container.display('div#plot_place');
-	 plot_container.on_change();
 
 	 
+
+	 cb = function(data){
+	   plot_container.display('div#plot_place', data.metadata);
+	   plot_container.on_change();
+	   update_image(data);
+	 }
+
+	 if(plot){
+	   $('#loader').show();
+	   forward_model.post(server, cb, update=false);
+	 };
 	 
+
+
        });
 
 // Select the script in the 'select' element of this 
@@ -111,6 +124,8 @@
        //may want to use $.trim in here
        return $(this).val() == value; 
      }).attr('selected', true);
+
+     
    }
 
 
@@ -156,12 +171,7 @@
    };
    
 
-   seismic_model.set_current_script(seismic_model.script, 
-				      seismic_model.arguments);
-   plot_container.set_current_script(plot_container.script, 
-				     plot_container.arguments);
-   earth_structure.set_current_script(earth_structure.script,
-				      earth_structure.arguments);
+
    
    var hash = window.location.hash.substring(1);
    
@@ -192,7 +202,16 @@
    update_em_list(property_map);
 
    // Populate the plot options
-   populate_scripts(server, 'plots', 'select#select_plot')
+   populate_scripts(server, 'plots', 'select#select_plot', 
+		    'Plot Type');
+
+   seismic_model.set_current_script(seismic_model.script, 
+				      seismic_model.arguments);
+   plot_container.set_current_script(plot_container.script, 
+  				     plot_container.arguments,
+				     plot=false);
+   earth_structure.set_current_script(earth_structure.script,
+				      earth_structure.arguments);
  });
 </script>
 
@@ -249,7 +268,7 @@
 
 
 
-   $("html, body").scrollTop($("#plot_image").offset().top);
+   $("html, body").scrollTop($("#plot_header").offset().top);
  };
 
 
@@ -524,8 +543,7 @@ $('#model_info').popover({
 
 	    
             <div class="form-group">
-	      <select class="form-control" id="select_plot" onchange="plot_container.set_current_script($(this).val(), plot_container.arguments)">
-	      </select>
+	      
               <button class="btn btn-primary" id='create_image' 
                   style="postion: absolute; top: 50%"
                   onclick="update_model()">
@@ -541,21 +559,26 @@ $('#model_info').popover({
 
     <div class="panel panel-default">
       <div class="panel-heading">
-	      <h3 class="panel-title">Result</h3>
+	      <h3 class="panel-title" id="plot_header">Result</h3>
       </div>
       <div class="panel-body">
 	      <div class="col-md-9">
+		<select class="form-control" id="select_plot" 
+		      onchange="plot_container.set_current_script($(this).val(), plot_container.arguments)">
+	      </select>
 	        <img class="img-thumbnail" id="plot_image" href=URL alt="" 
 	           src="/static/img/placeholder_model_image.png" 
 	           height=800, width=1200 />
 	        <img style="position:absolute;top:0;left:0" id="loader" src="/static/img/ajax-loader.gif" />
 	        <!-- Updated by the  create_image button above-->
 	      </div>
+	      
 	      <div class="panel-heading">
+		
 	        <h3 class="panel-title">Plot controls</h3>
 	      </div>
 	      <div class="col-md-3">
-
+		
 		
 	        <div id="plot_place" class="row"></div>
 	          <!-- This is where there survey parameters will be set -->
