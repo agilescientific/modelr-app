@@ -28,7 +28,7 @@ function PlotServer(hostname, rocks, earth_models) {
 
     function failure(){
 	$.post('/server_error');
-	alert("Modelr is experience technical difficulties. Please check back soon.");
+	alert("Modelr is experiencing technical difficulties. Please check back soon.");
 	
     };
 
