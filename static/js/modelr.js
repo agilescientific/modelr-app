@@ -339,7 +339,12 @@ Scenario.prototype.qs = function() {
  * @param selection: selection string or tag 'select' element.
  * 
  */
-function populate_scripts(server, type, selection, placeholder='Scripts------') {
+function populate_scripts(server, type, selection, placeholder) {
+
+    // Broswer-tolerant way to assign default
+    //placeholder = (typeof placeholder !== 'undefined') ? placeholder = "Scripts";
+    // Not sure about syntax so I'll do it the simple way
+    placeholder = placeholder || "Scripts";
 
     console.log("populate_scripts!");
 

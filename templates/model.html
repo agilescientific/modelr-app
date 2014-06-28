@@ -89,7 +89,11 @@
    plot_container.script = "cross_sections.py";
    
    plot_container.set_current_script = function(value, argumentss,
-						plot=true){
+						plot){
+
+     // Not certain this is a safe way to set default
+     // typeof might be better
+     plot = plot || true;
      
      plot_container.script=value;
      server.get_script_info(plot_container.script, 'plots',
