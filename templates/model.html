@@ -241,6 +241,9 @@
 			    "data:image/png;base64, " + 
 			    data.data, "json"); 
    $('#loader').hide();
+
+  
+
  };
 
  function param_changed(){
@@ -248,6 +251,18 @@
      $('#loader').show();
      forward_model.post(server, update_image, update=false);
    };
+
+ function display_metadata(data){
+
+   tag = $('#model_metadata');
+   tag.children().remove();
+
+
+   for (rock in data['moduli']){
+     tag.append('<p>' + rock + ':' + 
+		JSON.stringify(data['moduli'][rock]) + '</p');
+   };
+};
 
  function update_model(){
 
@@ -259,13 +274,9 @@
      // This will Create a form see above
      plot_container.display('div#plot_place',
           metadata=data.metadata);
-
-     // This should place the 'moduli' item from metadata
-     $("#model_metadata").replaceWith(
-          //data.metadata['test']);
-          "Simple placeholder.");
      
      update_image(data);
+     display_metadata(data.metadata);
    };
 
    $("#loader").show();
@@ -341,7 +352,7 @@
    forward_model.earth_struct.image = property_map.get_image();
    forward_model.earth_struct.mapping = property_map.get_mapping();
    
-   div.children().remove()
+   div.children().remove();
 
    form = div.append('<form id=script_form action=""></form>');
 
