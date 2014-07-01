@@ -1669,20 +1669,39 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
     """
 
 
-    def closest(self,x,y, pixels):
+    def closest(self,x,y, pixels, offset):
 
-            if pixels[x,y] in self.best_colours:
+        if pixels[x,y] in self.best_colours:
                 return pixels[x,y]
-            if (x == 0): self.x_iterate = 1
-            if (y == 0): self.y_iterate = 1
-            if (y == (pixels.shape[-1]-1)): self.y_iterate = -1
-            if (x == (pixels.shape[0]-1)):
-                print "WTF"
-                self.x_iterate = -1
-            
-            return self.closest(x + self.x_iterate, y +
-                                self.y_iterate,
-                                pixels)
+
+        x_low = np.amax((0,x - offset))
+        x_high = np.amin((x + offset, pixels.shape[0]-1))
+        y_low = np.amax((0,y - offset))
+        y_high = np.amin((y + offset, pixels.shape[1]-1))
+
+        x_index = np.concatenate((np.ones(y_high-y_low) * x_low,
+                                  np.arange(x_low, x_high),
+                                  np.ones(y_high-y_low) * x_high,
+                                  np.arange(x_low, x_high)))
+        
+        y_index = np.concatenate((np.arange(y_low,y_high,dtype='int'),
+                                  np.ones(x_high-x_low,dtype='int')*y_high,
+                                  np.arange(y_low,y_high,dtype='int'),
+                                  np.ones(x_high-x_low, dtype='int')*y_low))
+
+        
+        data = pixels[x_index.astype('int'),
+                      y_index.astype('int')].flatten()
+
+        counts = np.empty_like(self.best_colours)
+        for i, col in enumerate(self.best_colours):
+            counts[i] = (data==col).sum()
+
+        if (counts.sum()==0):
+            return self.closest(x, y, pixels, offset + 1)
+
+        return self.best_colours[np.argmax(counts)]
+    
     def posterize(self,image):
 
         self.x_iterate = -1
@@ -1701,7 +1720,8 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
         # Take only colors that make up 1% of the image
         self.best_colours = colours[count > (.01 * pixels.size)]
 
-        if self.best_colours.size < 2:
+        if ((self.best_colours.size < 2) or
+            (self.best_colours.size > 15)):
             return g_im.convert('P',
                                 palette=Image.ADAPTIVE,
                                 colors=15)
@@ -1717,9 +1737,9 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
         
         
         for x,y in zip(fix_index[0], fix_index[1]):
-                
-            pixels[x,y] = self.closest(x,y, pixels)
-    
+
+            point =  self.closest(x,y, pixels, 1)
+            pixels[x,y] =point
         
         g_im.paste(Image.fromarray(pixels))
 
