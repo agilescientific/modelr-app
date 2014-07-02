@@ -11,7 +11,7 @@ default_rocks = [ {'name':'Shale',
                    
                    {'name':'Gas Sand (Class 2)',
                    'description': 'Class 2 AVO response when underlying shale',
-                   'vp': 3400, 'vs': 2055, 'rho': 2300,
+                   'vp': 3300, 'vs': 1950, 'rho': 2200,
                    'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
                    
                    {'name':'Gas Sand (Class 3)',

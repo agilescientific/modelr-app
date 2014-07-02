@@ -1891,9 +1891,10 @@ class ImageModelHandler(ModelrPageRequest):
 
         image_key = self.request.get("image_key")
 
-        print image_key
         image = ImageModel.get(image_key)
-
+        for i in db.Query().ancestor(image).fetch(1000):
+            i.delete()
+        
         image.delete()
 
         
