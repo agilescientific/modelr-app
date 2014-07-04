@@ -98,11 +98,7 @@
 	 plot_container.info = data;
 	 plot_container.default_args(argumentss);
 	 
-
-
 	 console.log('div#plot_place');
-
-	 
 
 	 cb = function(data){
 	   plot_container.display('div#plot_place', data.metadata);
@@ -115,9 +111,7 @@
 	   forward_model.post(server, cb, update=false);
 	 };
 	 
-
-
-       });
+});
 
 // Select the script in the 'select' element of this 
      // page.  
@@ -126,9 +120,7 @@
        return $(this).val() == value; 
      }).attr('selected', true);
 
-     
    }
-
 
    seismic_model.script = "convolution_model.py";
    seismic_model.set_current_script = function(value,
@@ -171,8 +163,6 @@
      forward_model.cleanUp(server);
    };
    
-
-
    
    var hash = window.location.hash.substring(1);
    
@@ -198,7 +188,6 @@
    };
 
 
-
    // Update the available saved earth models
    update_em_list(property_map);
 
@@ -216,53 +205,87 @@
 </script>
 
 <script>
+function update_em_list(property_map){
 
+  $.get('/earth_model', {image_key: property_map.get_key()},
+	function success(data){
 
- function update_em_list(property_map){
+      select = $('#earth_loader')
+      select.children().remove()
 
-   $.get('/earth_model', {image_key: property_map.get_key()},
-	 function success(data){
-
-       select = $('#earth_loader')
-       select.children().remove()
-
-       select.append('<option value="null" selected hidden disabled>Load saved earth model</option>')
-       data = JSON.parse(data);
-       for (i=0; i< data.length; i++){
-	 select.append('<option value=' + data[i] +'>' + data[i]
+      select.append('<option value="null" selected hidden disabled>Load saved earth model</option>')
+      data = JSON.parse(data);
+      for (i=0; i< data.length; i++){
+	      select.append('<option value=' + data[i] +'>' + data[i]
 		       +'</option>')
-       };
-     });
- };
- function update_image(data){
+        };
+  });
+};
 
-
-   $('img#plot_image').attr('src', 
+function update_image(data){
+  $('img#plot_image').attr('src', 
 			    "data:image/png;base64, " + 
 			    data.data, "json"); 
-   $('#loader').hide();
-
-  
-
- };
-
- function param_changed(){
-
-     $('#loader').show();
-     forward_model.post(server, update_image, update=false);
-   };
-
- function display_metadata(data){
-
-   tag = $('#model_metadata');
-   tag.children().remove();
-
-
-   for (rock in data['moduli']){
-     tag.append('<p>' + rock + ':' + 
-		JSON.stringify(data['moduli'][rock]) + '</p');
-   };
+  $('#loader').hide();
 };
+
+function param_changed(){
+
+    $('#loader').show();
+    forward_model.post(server, update_image, update=false);
+};
+
+// START OF DISPLAY METADATA *****
+function display_metadata(data){
+  // This function displays the elastic moduli for each model
+
+  // Define a couple of helper functions
+  // There may be a more elegant way to do this...
+  var replacer2 = function(key, val) {
+    return val.toFixed ? Number(val.toFixed(2)) : val;
+  }
+
+  var replacer4 = function(key, val) {
+    return val.toFixed ? Number(val.toFixed(4)) : val;
+  }
+
+  // We'll start a table, then append into it...
+  var $table = $('<table></table>').addClass('table table-striped');
+
+    // Build the head, with the column titles
+    // This styling should move to modelr.css
+    $table.append('<thead><tr></tr></thead>'); 
+    $table.append('<th></th>'); 
+    $table.append('<th style="text-align:right;">Z<br /><span style="color:lightgrey; font-weight:normal;">Pa·s·m<sup>−1</sup></span></th>'); 
+    $table.append('<th style="text-align:right;">PR</th>'); 
+    $table.append('<th style="text-align:right;">E<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
+    $table.append('<th style="text-align:right;">&lambda;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
+    $table.append('<th style="text-align:right;">&mu;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
+    $table.append('<th style="text-align:right;">K<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
+    $table.append('<th style="text-align:right;">M<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
+
+    // Build the body; start with tag, then append into it
+    $table.append('<tbody></tbody>'); 
+
+    for (rock in data['moduli']){
+      var row = $('<tr style="text-align:right;"></tr>');
+      row.append('<td style="text-align:left;">' + rock + '</td>');
+      row.append('<td>' + JSON.stringify(data['moduli'][rock]['imp']/1000000, replacer2) + '</td>');
+      row.append('<td>' + JSON.stringify(data['moduli'][rock]['pr'], replacer4) + '</td>');
+      row.append('<td>' + JSON.stringify(data['moduli'][rock]['youngs']/1000000000, replacer2) + '</td>');
+      row.append('<td>' + JSON.stringify(data['moduli'][rock]['lam']/1000000000, replacer2) + '</td>');
+      row.append('<td>' + JSON.stringify(data['moduli'][rock]['mu']/1000000000, replacer2) + '</td>');
+      row.append('<td>' + JSON.stringify(data['moduli'][rock]['bulk']/1000000000, replacer2) + '</td>');
+      row.append('<td>' + JSON.stringify(data['moduli'][rock]['pmod']/1000000000, replacer2) + '</td>');
+
+      $table.append(row);
+    }
+
+    // Finally replace the div with the table
+    $('#model_metadata').replaceWith($table);
+
+};
+// END OF DISPLAY METADATA *****
 
  function update_model(){
 
@@ -277,16 +300,14 @@
      
      update_image(data);
      display_metadata(data.metadata);
+
    };
 
    $("#loader").show();
    forward_model.post(server, cb, update=true);
 
-
-
    $("html, body").scrollTop($("#plot_header").offset().top);
  };
-
 
  function save_earthmodel(){
    var image_key = property_map.get_key();
@@ -297,11 +318,9 @@
 			   json:JSON.stringify(forward_model.earth_struct)},
 	  function callback(data){
        update_em_list(property_map)});
-
  };
 
  function load_earthmodel(name){
-
    var image_key = property_map.get_key();
    $.get('/earth_model',{image_key: image_key,
 			 name: name},
@@ -319,7 +338,6 @@
  };
 
  function load_fullmodel(image_key, model_name){
-
    // set the property map index
    index = property_map.get_key_index(image_key);
    property_map.set_index(index);
@@ -330,8 +348,7 @@
 </script>
 <script>
 
- function Colors(increment){
-
+function Colors(increment){
    var div = $("#color_map");
    var foo;
    var div,row, dropdown, option, text;
@@ -389,19 +406,68 @@
    }
    form_text+='</div>';
    form.append(form_text);
-
-   
-
- }
-
+}
 </script>
 
 <script>
-
  var host = '{{HOSTNAME}}';
-
 </script>
 
+<script>
+// Provides the CSV export
+$(document).ready(function () {
+
+    function exportTableToCSV($table, filename) {
+
+        var $rows = $table.find('tr:has(td)'),
+
+            // Temporary delimiter characters unlikely to be typed by keyboard
+            // This is to avoid accidentally splitting the actual contents
+            tmpColDelim = String.fromCharCode(11), // vertical tab character
+            tmpRowDelim = String.fromCharCode(0), // null character
+
+            // actual delimiter characters for CSV format
+            colDelim = '","',
+            rowDelim = '"\r\n"',
+
+            // Grab text from table into CSV formatted string
+            csv = '"' + $rows.map(function (i, row) {
+                var $row = $(row),
+                    $cols = $row.find('td');
+
+                return $cols.map(function (j, col) {
+                    var $col = $(col),
+                        text = $col.text();
+
+                    return text.replace('"', '""'); // escape double quotes
+
+                }).get().join(tmpColDelim);
+
+            }).get().join(tmpRowDelim)
+                .split(tmpRowDelim).join(rowDelim)
+                .split(tmpColDelim).join(colDelim) + '"',
+
+            // Data URI
+            csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+        $(this)
+            .attr({
+            'download': filename,
+                'href': csvData,
+                'target': '_blank'
+        });
+    }
+
+    // This must be a hyperlink
+    $(".export").click(function (event) {
+        // CSV
+        exportTableToCSV.apply(this, [$('#dvData>table'), 'export.csv']);
+        
+        // IF CSV, don't do event.preventDefault() or return false
+        // We actually need this to be a typical hyperlink
+    });
+});
+</script>
 
 <!-- BUILD PAGE
 ==================================================================-->
@@ -604,14 +670,15 @@ $('#model_info').popover({
 
     <div class="panel panel-default">
       <div class="panel-heading">
-        <h3 class="panel-title" id="plot_header">Metadata</h3>
+      <div style="float:right; margin-top:-2px;"><a class="btn btn-default btn-xs export" href="#">Export CSV</a></div>
+        <h3 class="panel-title">Metadata</h3>
       </div>
-      <div class="panel-body">
-    
-          <div id="model_metadata"></div>
+      <div class="panel-body" id="dvData">
+
+           <div id="model_metadata"></div>
           
-      </div>
-    </div>
+      </div> <!-- end of panel body -->
+    </div> <!-- end of panel -->
 
 
 </div>
