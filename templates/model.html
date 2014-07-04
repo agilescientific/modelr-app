@@ -256,19 +256,19 @@ function display_metadata(data){
     // This styling should move to modelr.css
     $table.append('<thead><tr></tr></thead>'); 
     $table.append('<th></th>'); 
-    $table.append('<th style="text-align:right;">Z<br /><span style="color:lightgrey; font-weight:normal;">Pa·s·m<sup>−1</sup></span></th>'); 
-    $table.append('<th style="text-align:right;">PR</th>'); 
-    $table.append('<th style="text-align:right;">E<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
-    $table.append('<th style="text-align:right;">&lambda;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
-    $table.append('<th style="text-align:right;">&mu;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
-    $table.append('<th style="text-align:right;">K<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
-    $table.append('<th style="text-align:right;">M<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
+    $table.append('<th class="text-right" style="padding:0 8px 0 0;">Z<br /><span style="color:lightgrey; font-weight:normal;">Pa·s·m<sup>−1</sup></span></th>'); 
+    $table.append('<th style="text-align:right; padding:0 8px 0 0;">PR</th>'); 
+    $table.append('<th style="text-align:right; padding:0 8px 0 0;">E<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
+    $table.append('<th style="text-align:right; padding:0 8px 0 0;">&lambda;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
+    $table.append('<th style="text-align:right; padding:0 8px 0 0;">&mu;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
+    $table.append('<th style="text-align:right; padding:0 8px 0 0;">K<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
+    $table.append('<th style="text-align:right; padding:0 8px 0 0;">M<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
 
     // Build the body; start with tag, then append into it
     $table.append('<tbody></tbody>'); 
 
     for (rock in data['moduli']){
-      var row = $('<tr style="text-align:right;"></tr>');
+      var row = $('<tr class="text-right"></tr>');
       row.append('<td style="text-align:left;">' + rock + '</td>');
       row.append('<td>' + JSON.stringify(data['moduli'][rock]['imp']/1000000, replacer2) + '</td>');
       row.append('<td>' + JSON.stringify(data['moduli'][rock]['pr'], replacer4) + '</td>');
