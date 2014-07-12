@@ -113,3 +113,9 @@ class Rock(Item):
     vs_std = db.FloatProperty()
     rho_std = db.FloatProperty()
 
+class Server(db.Model):
+
+    host = db.StringProperty()
+
+    
+    

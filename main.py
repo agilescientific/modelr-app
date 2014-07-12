@@ -46,7 +46,7 @@ from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Forward2DModel, Issue, EarthModel
+     ImageModel, Forward2DModel, Issue, EarthModel, Server
 
 from lib import RGBToString, posterize
 
@@ -72,11 +72,6 @@ my_default_retry_params = gcs.RetryParams(initial_delay=0.2,
 # override retry_params here only for demo purposes.
 gcs.set_default_retry_params(my_default_retry_params)
 
-
-
-#=====================================================================
-# Define Global Variables
-#=====================================================================
 # Ancestor dB for all of modelr. Allows for strongly consistent
 # database queries. (all entities update together, so every page is
 # is sync)
@@ -84,6 +79,11 @@ ModelrRoot = ModelrParent.all().get()
 if ModelrRoot is None:
     ModelrRoot = ModelrParent()
     ModelrRoot.put()
+    
+# For the plot server
+server = Server.all().ancestor(ModelrRoot).get()
+if server is None:
+    server = Server(parent=ModelrRoot)
 
 # Check if we are running the dev server
 if os.environ.get('SERVER_SOFTWARE','').startswith('Development'):
@@ -92,6 +92,19 @@ if os.environ.get('SERVER_SOFTWARE','').startswith('Development'):
     stripe.verify_ssl_certs = False
 else:
     LOCAL = False
+
+if LOCAL is True:
+    server.host =  "http://127.0.0.1:8081"
+else:
+    server.host = "https://www.modelr.org"
+server.put()
+
+#=====================================================================
+# Define Global Variables
+#=====================================================================
+
+
+
 
 # Initialize the model served counter
 models_served = ModelServedCount.all().ancestor(ModelrRoot).get()
@@ -182,20 +195,12 @@ UR_STATUS_DICT = {'0': 'paused',
                  }
 
 
-
-
 class ModelrPageRequest(webapp2.RequestHandler):
     """
     Base class for modelr app pages. Allows commonly used functions
     to be inherited to other pages.
     """
-    
-    # For the plot server
-    # Ideally this should be settable by an admin_user console.
-    if LOCAL is True:
-        HOSTNAME = "http://127.0.0.1:8081"
-    else:
-        HOSTNAME = "https://www.modelr.org"
+
     
     def get_base_params(self, **kwargs):
         '''
@@ -209,13 +214,15 @@ class ModelrPageRequest(webapp2.RequestHandler):
         else:
             email_hash=''
 
+
+        hostname = Server.all().ancestor(ModelrRoot).get().host
         default_rock = dict(vp=0,vs=0, rho=0, vp_std=0,
                             rho_std=0, vs_std=0,
                             description='description',
                             name='name', group='public')
         
         params = dict(logout=users.create_logout_url(self.request.uri),
-                      HOSTNAME=self.HOSTNAME,
+                      HOSTNAME=hostname,
                       current_rock = default_rock,
                       email_hash=email_hash)
         
@@ -1707,6 +1714,7 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             ImageModel(parent=user,
                        user=user.user_id,
                        image=output_blob_key).put()
+            
             self.redirect('/model')
 
         except Exception as e:
@@ -2007,7 +2015,7 @@ class AdminHandler(ModelrPageRequest):
             self.redirect('/')
 
         template = env.get_template('admin_site.html')
-        html = template.render(user=user)
+        html = template.render(self.get_base_params(user=user))
         self.response.out.write(html)
         
     def post(self):
@@ -2019,33 +2027,57 @@ class AdminHandler(ModelrPageRequest):
 
         if not "admin" in user.group:
             self.redirect('/')
-            
+
+
+        template = env.get_template('admin_site.html')
+        
+        host = self.request.get('host')
+        if (len(host) > 0):
+            server = Server.all().ancestor(ModelrRoot).get()
+            server.host = self.request.get('host')
+            server.put()
+            html = template.render(
+                     self.get_base_params(success="Updated Host"))
+            self.response.write(html)
+            return
+
+        
         email = self.request.get('email')
         password = self.request.get('password')
         verify = self.request.get('verify')
 
-        if password != verify:
-            template = env.get_template('admin_site.html')
-            msg = "Password mismatch"
-            html = template.render(email=email,
+        if (len(email) > 0):
+            if password != verify:
+                template = env.get_template('admin_site.html')
+                msg = "Password mismatch"
+                html = template.render(email=email,
                                    error=msg)
+                self.response.out.write(html)
+                return
+            
+            else:
+                try:
+                    new_user = make_user(email=email,
+                                         password=password,
+                                         parent=ModelrRoot)
+                    template = env.get_template('admin_site.html')
+                    html = template.render(success="Added User",
+                                           email=email, user=user)
+                    self.response.out.write(html)
+                    return
+                
+                except AuthExcept as e:
+                    template = env.get_template('admin_site.html')
+                    html = template.render(error=e.msg, user=user,
+                                           email=email)
+                    self.response.out.write(html)
+                    return
+        
+        else:
+            template = env.get_template('admin_site.html')
+            html = template.render()
             self.response.out.write(html)
             
-        else:
-            try:
-                new_user = make_user(email=email, password=password,
-                                 parent=ModelrRoot)
-                template = env.get_template('admin_site.html')
-                html = template.render(success="Added User",
-                                       email=email, user=user)
-                self.response.out.write(html)
-                
-            except AuthExcept as e:
-                template = env.get_template('admin_site.html')
-                html = template.render(error=e.msg, user=user,
-                                       email=email)
-                self.response.out.write(html)
-
 
 class ServerError(ModelrPageRequest):
 
