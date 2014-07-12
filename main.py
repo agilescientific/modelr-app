@@ -48,6 +48,9 @@ from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
      ImageModel, Forward2DModel, Issue, EarthModel
 
+from lib import RGBToString, posterize
+
+
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
                                                'templates')))
@@ -178,14 +181,7 @@ UR_STATUS_DICT = {'0': 'paused',
                   '9': 'down'
                  }
 
-# Helper function
-def RGBToString(rgb_tuple):
-    """
-    Convert a color to a css readable string
-    """
-    
-    color = 'rgb(%s,%s,%s)'% rgb_tuple
-    return color
+
 
 
 class ModelrPageRequest(webapp2.RequestHandler):
@@ -1664,91 +1660,9 @@ class ManageGroup(ModelrPageRequest):
 class Upload(blobstore_handlers.BlobstoreUploadHandler,
              ModelrPageRequest):
     """
-    Handles uploads from users. Allows them to upload images to
+    Handles image uploads from users. Allows them to upload images to
     the blobstore
     """
-
-
-    def closest(self,x,y, pixels, offset):
-
-        if pixels[x,y] in self.best_colours:
-                return pixels[x,y]
-
-        x_low = np.amax((0,x - offset))
-        x_high = np.amin((x + offset, pixels.shape[0]-1))
-        y_low = np.amax((0,y - offset))
-        y_high = np.amin((y + offset, pixels.shape[1]-1))
-
-        x_index = np.concatenate((np.ones(y_high-y_low) * x_low,
-                                  np.arange(x_low, x_high),
-                                  np.ones(y_high-y_low) * x_high,
-                                  np.arange(x_low, x_high)))
-        
-        y_index = np.concatenate((np.arange(y_low,y_high,dtype='int'),
-                                  np.ones(x_high-x_low,dtype='int')*y_high,
-                                  np.arange(y_low,y_high,dtype='int'),
-                                  np.ones(x_high-x_low, dtype='int')*y_low))
-
-        
-        data = pixels[x_index.astype('int'),
-                      y_index.astype('int')].flatten()
-
-        counts = np.empty_like(self.best_colours)
-        for i, col in enumerate(self.best_colours):
-            counts[i] = (data==col).sum()
-
-        if (counts.sum()==0):
-            return self.closest(x, y, pixels, offset + 1)
-
-        return self.best_colours[np.argmax(counts)]
-    
-    def posterize(self,image):
-
-        self.x_iterate = -1
-        self.y_iterate = -1
-        # make a greyscaled version for histograms
-        g_im = image.convert('P', palette=Image.ADAPTIVE)
-        # Get as a numpy array
-        pixels = np.array(g_im)
-
-        count, colours = np.histogram(pixels,
-                                      pixels.max()-pixels.min() + 1)
-
-        colours = np.array(colours, dtype=int)
-        colours = colours[1:]
-        
-        # Take only colors that make up 1% of the image
-        self.best_colours = colours[count > (.01 * pixels.size)]
-
-        if ((self.best_colours.size < 2) or
-            (self.best_colours.size > 15)):
-            return g_im.convert('P',
-                                palette=Image.ADAPTIVE,
-                                colors=15)
-        
-        # find pixels that need adjusting
-        fix_index = np.zeros(pixels.shape, dtype=bool)
-        for colour in self.best_colours:
-            fix_index = np.logical_or(pixels==colour, fix_index)
-
-
-        fix_index = np.array((np.where(fix_index == False)))
-
-        
-        
-        for x,y in zip(fix_index[0], fix_index[1]):
-
-            point =  self.closest(x,y, pixels, 1)
-            pixels[x,y] =point
-        
-        g_im.paste(Image.fromarray(pixels))
-
-        n_colours = self.best_colours.size
-        if n_colours > 15: n_colours =15
-        return g_im.convert('P',
-                            palette=Image.ADAPTIVE,
-                            colors=n_colours)
-    
     def post(self):
 
         # Only registered users can do this
@@ -1771,7 +1685,7 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             im = Image.open(reader, 'r')
             im = im.convert('RGB').resize((350,350))
 
-            im = self.posterize(im)
+            im = posterize(im)
             
             output = StringIO.StringIO()
             im.save(output, format='PNG')
@@ -2064,38 +1978,6 @@ class EarthModelHandler(ModelrPageRequest):
         except Exception as e:
             print e
             self.response.out.write(json.dumps({'success':False}))
-        
-
-class Forward2DModelHandler(ModelrPageRequest):
-
-    def get(self):
-        user = self.verify()
-        if not user:
-            self.redirect("/signup")
-
-        model_name = self.request.get("name")
-            
-        # TODO Handle failure
-
-        model = \
-          Forward2DModel.all().ancestor(user).filter("name =",
-                                                     model_name).get()
-        if model is None:
-        # TODO
-            pass
-        key = model.input_model_key
-        data = {"input_image_key": str(key),
-                "output_image": images.get_serving_url(model.output_image,
-                                                       secure_url=True),
-                "data": model.data}
-        
-        self.response.write(json.dumps(data))
-
-        if user:
-            ActivityLog(user_id=user.user_id,
-                        activity='fetched_forward_model',
-                        parent=ModelrRoot).put()
-        return
 
     
 class NotFoundPageHandler(ModelrPageRequest):
