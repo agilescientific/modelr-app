@@ -48,6 +48,9 @@ from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
      ImageModel, Forward2DModel, Issue, EarthModel
 
+
+
+urlfetch.set_default_fetch_deadline(60)
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
                                                'templates')))
@@ -2177,8 +2180,8 @@ class ModelData(ModelrPageRequest):
     def get(self):
 
         model_name = self.request.get('model')
-        model = EarthModel.all().ancestor(ModelrRoot).fetch(1)
-        #model = model.filter("name =", model_name).fetch(1)
+        model = EarthModel.all()
+        model = model.filter("name =", model_name).fetch(1)
 
         
         url = self.HOSTNAME + '/model_data.json'
