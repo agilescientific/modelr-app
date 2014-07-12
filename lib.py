@@ -7,18 +7,18 @@ def RGBToString(rgb_tuple):
     color = 'rgb(%s,%s,%s)'% rgb_tuple
     return color
 
- def closest(x,y, pixels, offset, best_colours):
-     """
-     Recursively finds the nearest colour in an image
-     from a set of colours given a pixel.
+def closest(x,y, pixels, offset, best_colours):
+    """
+    Recursively finds the nearest colour in an image
+    from a set of colours given a pixel.
 
-     :param x: The x coordinate of the pixel.
-     :param y: The y coordinate of the pixel
-     :param offset: The offset to use to the search space.
-     :param best_colours: List/Tuple of allowable colours
+    :param x: The x coordinate of the pixel.
+    :param y: The y coordinate of the pixel
+    :param offset: The offset to use to the search space.
+    :param best_colours: List/Tuple of allowable colours
 
-     :returns: the nearest colour from the best colours set
-     """
+    :returns: the nearest colour from the best colours set
+    """
 
     if pixels[x,y] in best_colours:
         return pixels[x,y]
