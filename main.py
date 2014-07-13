@@ -17,18 +17,19 @@ from google.appengine.api import users
 # For image serving
 import cloudstorage as gcs
 
-from PIL import Image, ImageFilter
-import numpy as np
+from PIL import Image
 
+import urllib
+import urllib2
 from jinja2 import Environment, FileSystemLoader
+
+
 import time
 from os.path import join, dirname
 import os
 
 import hashlib
 import logging
-import urllib
-import urllib2
 
 import stripe
 
@@ -39,9 +40,10 @@ import StringIO
 
 from xml.etree import ElementTree
 
+# Local Imports
 from default_rocks import default_rocks
 from ModAuth import AuthExcept, get_cookie_string, signup, signin, \
-     verify, verify_signup, initialize_user, reset_password, \
+     verify, authenticate, verify_signup, initialize_user, reset_password, \
      forgot_password, send_message, make_user, cancel_subscription
      
 from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
@@ -528,18 +530,14 @@ class ScenarioHandler(ModelrPageRequest):
                         parent=ModelrRoot).put()
         
         self.response.out.write(html)
-              
+
+        
 class DashboardHandler(ModelrPageRequest):
     '''
     Display the dashboard page (uses dashboard.html template)
     '''
-
-    def get(self):
-
-        user = self.verify()
-        if user is None:
-            self.redirect('/signin')
-            return
+    @authenticate
+    def get(self, user):
         
         template_params = self.get_base_params(user=user)
         
@@ -624,11 +622,8 @@ class DashboardHandler(ModelrPageRequest):
                     parent=ModelrRoot).put()
         self.response.out.write(html)
 
-    def post(self):
-
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
+    @authenticate
+    def post(self, user):
         
         name = self.request.get('name')
         
@@ -761,9 +756,10 @@ class FeaturesHandler(ModelrPageRequest):
 
 
 class FeedbackHandler(ModelrPageRequest):
-    def get(self):
 
-        user = self.verify()
+    @authenticate
+    def get(self, user):
+
         template_params = self.get_base_params(user=user)
 
         # Get the list of issues from GitHub. 
@@ -831,17 +827,14 @@ class FeedbackHandler(ModelrPageRequest):
 
         template = env.get_template('feedback.html')
         html = template.render(template_params)
-        self.response.out.write(html)          
+        self.response.out.write(html)
 
 
-    def post(self):
+    @authenticate
+    def post(self, user):
 
         # This should never happen, because voting
         # links are disabled for non-logged-in users.
-        user = self.verify()
-        if not user:
-            print 'no user'
-            return
         
         # Get the data from the ajax call.
         issue_id = int(self.request.get('id'))
@@ -963,16 +956,10 @@ class PrivacyHandler(ModelrPageRequest):
                                     
           
 class ProfileHandler(ModelrPageRequest):
-    
-    def get(self):
 
-        # Check for user cookies
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def get(self, user):
 
-        print user.unsubscribed
         groups=[]
         for group in user.group:
             g = Group.all().ancestor(ModelrRoot).filter("name =",
@@ -1023,13 +1010,8 @@ class ProfileHandler(ModelrPageRequest):
                     parent=ModelrRoot).put()
         self.response.out.write(html)
 
-    def post(self):
-
-        # Check for a user
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def post(self, user):
 
         err_string = []
         # Join a group
@@ -1115,12 +1097,9 @@ class ProfileHandler(ModelrPageRequest):
                            
         
 class SettingsHandler(ModelrPageRequest):
-    
-    def get(self):
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
+
+    @authenticate
+    def get(self, user):
         
         template_params = self.get_base_params(user=user)
         template = env.get_template('settings.html')
@@ -1160,12 +1139,8 @@ class ResetHandler(ModelrPageRequest):
     Class for resetting passwords
     """
 
-    def post(self):
-
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def post(self,user):
 
         current_pword = self.request.get("current_pword")
         new_password = self.request.get("new_password")
@@ -1206,12 +1181,8 @@ class DeleteHandler(ModelrPageRequest):
 
     """
 
-    def post(self):
-
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def post(self, user):
 
         template = env.get_template('message.html')
         
@@ -1459,12 +1430,8 @@ class SignIn(webapp2.RequestHandler):
                                
 class SignOut(ModelrPageRequest):
 
-    def get(self):
-        
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def get(self, user):
 
         activity = "signout"
         ActivityLog(user_id=user.user_id,
@@ -1577,12 +1544,8 @@ class ManageGroup(ModelrPageRequest):
     Manages and administrates group permissions
     """
 
-    def get(self):
-        
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def get(self, user):
 
         group_name = self.request.get("selected_group")
 
@@ -1615,13 +1578,9 @@ class ManageGroup(ModelrPageRequest):
                         activity=activity,
                         parent=ModelrRoot).put()
         self.response.out.write(html)
-        
-    def post(self):
 
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def post(self, user):
 
         group_name = self.request.get("group")
         group = Group.all().ancestor(ModelrRoot)
@@ -1670,13 +1629,9 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
     Handles image uploads from users. Allows them to upload images to
     the blobstore
     """
-    def post(self):
 
-        # Only registered users can do this
-        user = ModelrPageRequest.verify(self)
-        if user is None:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def post(self, user):
 
         # Get the blob files
         upload_files = self.get_uploads()
@@ -1724,12 +1679,8 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
 
 class ModelBuilder(ModelrPageRequest):
 
-    def get(self):
-        
-        user = ModelrPageRequest.verify(self)
-        if user is None:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def get(self, user):
     
         params = self.get_base_params(user=user)
         template = env.get_template('model_builder.html')
@@ -1737,12 +1688,8 @@ class ModelBuilder(ModelrPageRequest):
         self.response.out.write(html)
         
 
-    def post(self):
-
-        user = ModelrPageRequest.verify(self)
-        if user is None:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def post(self, user):
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
@@ -1770,11 +1717,8 @@ class ModelBuilder(ModelrPageRequest):
 
 class ModelHandler(ModelrPageRequest):
 
-    def get(self):
-        user = ModelrPageRequest.verify(self)
-        if user is None:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def get(self, user):
 
         # Make the upload url
         upload_url = blobstore.create_upload_url('/upload')
@@ -1828,21 +1772,13 @@ class ModelHandler(ModelrPageRequest):
 
 class ImageModelHandler(ModelrPageRequest):
 
-    def get(self):
-
-        user = self.verify()
-        if not user:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def get(self, user):
         
         models = ImageModel.all().ancestor(user).fetch(1000)
-    
-    def delete(self):
 
-        user = self.verify()
-        if not user:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def delete(self):
 
         image_key = self.request.get("image_key")
 
@@ -1855,12 +1791,8 @@ class ImageModelHandler(ModelrPageRequest):
         
 class EarthModelHandler(ModelrPageRequest):
 
-    def get(self):
-
-        user = self.verify()
-        if not user:
-            self.redirect('/signup')
-            return
+    @authenticate
+    def get(self, user):
 
         try:
             # Get the root of the model
@@ -1921,11 +1853,8 @@ class EarthModelHandler(ModelrPageRequest):
             print e
             self.response.out.write(json.dumps({'failed':True}))
 
-    def post(self):
-
-        user = self.verify()
-        if not user:
-            return
+    @authenticate
+    def post(self, user):
 
         try:
             # Get the root of the model
@@ -1959,11 +1888,8 @@ class EarthModelHandler(ModelrPageRequest):
             # TODO Handle failure
             pass
 
-    def delete(self):
-
-        user = self.verify()
-        if not user:
-            self.redirect('/signup')
+    @authenticate
+    def delete(self, user):
 
         try:
             # Get the root of the model
@@ -2005,11 +1931,8 @@ class ModelServed(ModelrPageRequest):
 
 class AdminHandler(ModelrPageRequest):
 
-    def get(self):
-        user = self.verify()
-
-        if not user:
-            self.redirect('/')
+    @authenticate
+    def get(self, user):
             
         if not "admin" in user.group:
             self.redirect('/')
@@ -2017,13 +1940,9 @@ class AdminHandler(ModelrPageRequest):
         template = env.get_template('admin_site.html')
         html = template.render(self.get_base_params(user=user))
         self.response.out.write(html)
-        
-    def post(self):
 
-        user = self.verify()
-        
-        if not user:
-            self.redirect('/')
+    @authenticate
+    def post(self, user):
 
         if not "admin" in user.group:
             self.redirect('/')

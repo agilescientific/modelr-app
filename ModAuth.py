@@ -272,6 +272,20 @@ def verify(userid, password, ancestor):
         verified = False
 
 
+def authenticate(func):
+    """
+    Wrapper function for methods that require a logged in
+    user
+    """
+    def authenticate_and_call(self, *args, **kwargs):
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+        else:
+            return func(self, user,*args, **kwargs)
+    return authenticate_and_call
+
 def send_message(subject, message):
     """
     Sends us a message from a user or non-user.
