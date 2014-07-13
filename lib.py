@@ -1,4 +1,7 @@
-# Helper function
+from PIL import Image
+import numpy as np
+
+
 def RGBToString(rgb_tuple):
     """
     Convert a color to a css readable string
@@ -52,7 +55,7 @@ def closest(x,y, pixels, offset, best_colours):
 
     return best_colours[np.argmax(counts)]
     
-def posterize(self,image):
+def posterize(image):
     """
     Reduces the number of colours in an image the only the most
     prevalent colours (colours that cover more than 1% of the image).
@@ -87,7 +90,7 @@ def posterize(self,image):
 
     # Find pixels that aren't one of the best colours
     fix_index = np.zeros(pixels.shape, dtype=bool)
-    for colour in self.best_colours:
+    for colour in best_colours:
         fix_mask = np.logical_or(pixels==colour, fix_index)
 
     fix_index = np.array((np.where(fix_mask==False)))
