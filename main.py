@@ -268,194 +268,7 @@ class MainHandler(ModelrPageRequest):
         self.response.out.write(html)
 
 
-
-class RemoveScenarioHandler(ModelrPageRequest):
-    '''
-    remove a scenario from a users db
-    '''
-    
-    def post(self):
-
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-            
-        name = self.request.get('name')
-        
-        scenarios = Scenario.all()
-        scenarios.ancestor(user)
-        scenarios.filter("user =", user.user_id)
-        scenarios.filter("name =", name)
-        scenarios = scenarios.fetch(100)
-        
-        for scenario in scenarios:
-            scenario.delete()
-
-        activity = "removed_scenario"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
-        
-        self.redirect('/dashboard#scenarios')
-
-    
-class ModifyScenarioHandler(ModelrPageRequest):
-    '''
-    fetch or update a scenario.
-    '''
-    def get(self):
-
-        # Get the user but don't redirect. Guests can play with
-        # scenarios as well, they just can't post.
-        user = self.verify()
-        
-        self.response.headers['Content-Type'] = 'application/json'
-        name = self.request.get('name')
-
-        if user:
-            scenarios = Scenario.all()
-            scenarios.ancestor(user)
-            scenarios.filter("user =", user.user_id)
-            scenarios.filter("name =", name)
-            scenarios = scenarios.fetch(1)
-        else:
-            scenarios=[]
-
-        # Get Evan's default scenarios (created with the admin)
-        scen = Scenario.all().ancestor(ModelrRoot).filter("user_id =",
-                                                          admin_id)
-        scen = Scenario.all().filter("name =",name).fetch(100)
-        if scen:
-            scenarios += scen
-
-        if scenarios:
-            logging.info(scenarios[0])
-            logging.info(scenarios[0].data)
-        
-            scenario = scenarios[0]
-            self.response.out.write(scenario.data)
-        else:
-            self.response.out.write('null')
-
-        activity = "fetched_scenario"
-        if user:
-            ActivityLog(user_id=user.user_id,
-                        activity=activity,
-                        parent=ModelrRoot).put()
-        return 
-        
-    def post(self):
-
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-
-        # Output for successful post reception
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!')
-
-        name = self.request.get('name')
-        group = self.request.get('group')
-        
-        logging.info(('name', name))
-        data = self.request.get('json')
-
-        logging.info(data)
-        scenarios = Scenario.all()
-        scenarios.ancestor(user)
-        scenarios.filter("user =", user.user_id)
-        scenarios.filter("name =", name)
-        scenarios = scenarios.fetch(1)
-
-        # Rewrite if the name exists, create new one if it doesn't
-        if scenarios:
-            scenario = scenarios[0]
-        else:
-            scenario = Scenario(parent=user)
-            scenario.user = user.user_id
-            scenario.name = name
-            scenario.group = group
-
-        # Save in Db
-        scenario.data = data.encode()
-        scenario.put()
-
-        activity = "modified_scenario"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
-
-
-class AddRockHandler(ModelrPageRequest):
-    '''
-    add a rock 
-    '''
-    pass    
-
-class RemoveRockHandler(ModelrPageRequest):
-
-    def post(self):
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-            
-        selected_rock = Rock.all()
-        selected_rock.ancestor(user)
-        selected_rock.filter("user =", user.user_id)
-        selected_rock.filter("name =", self.request.get('name'))
-
-        activity = "removed_rock"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
-
-        # Delete the rock if it exists
-        try:
-            rock = selected_rock.fetch(1)[0]
-            rock.delete()
-            
-        except IndexError:
-            self.redirect('/dashboard#rocks')
-        else:
-            self.redirect('/dashboard#rocks')
- 
-                     
-class ModifyRockHandler(ModelrPageRequest):
-    '''
-     modify a rock it by name.
-    '''
-    def post(self):
-
-        user = self.verify()
-        if user is None:
-            self.redirect('/signup')
-            return
-
-        selected_rock = Rock.all()
-        selected_rock.ancestor(user)
-        selected_rock.filter("name =", self.request.get('name'))     
-      
-        current_rock = selected_rock.fetch(1)
-
-        activity = "modified_rock"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrRoot).put()
-
-        # reload the dashboard with the rock selected for editing
-        try:
-            rock = current_rock[0]
-            key = rock.key()
-            self.redirect('/dashboard?selected_rock=' +
-                          str(key.id()) + '#rocks')
-        except IndexError:
-            self.redirect('/dashboard#rocks')
-
-               
-class ScenarioHandler(ModelrPageRequest):
+class ScenarioPageHandler(ModelrPageRequest):
     '''
       Display the scenario page (uses scenario.html template)
     '''
@@ -530,6 +343,192 @@ class ScenarioHandler(ModelrPageRequest):
                         parent=ModelrRoot).put()
         
         self.response.out.write(html)
+
+class ScenarioHandler(ModelrPageRequest):
+    
+    def get(self):
+
+        # Get the user but don't redirect. Guests can play with
+        # scenarios as well, they just can't post.
+        user = self.verify()
+        
+        self.response.headers['Content-Type'] = 'application/json'
+        name = self.request.get('name')
+
+        if user:
+            scenarios = Scenario.all()
+            scenarios.ancestor(user)
+            scenarios.filter("user =", user.user_id)
+            scenarios.filter("name =", name)
+            scenarios = scenarios.fetch(1)
+        else:
+            scenarios=[]
+
+        # Get Evan's default scenarios (created with the admin)
+        scen = Scenario.all().ancestor(ModelrRoot).filter("user_id =",
+                                                          admin_id)
+        scen = Scenario.all().filter("name =",name).fetch(100)
+        if scen:
+            scenarios += scen
+
+        if scenarios:
+            logging.info(scenarios[0])
+            logging.info(scenarios[0].data)
+        
+            scenario = scenarios[0]
+            self.response.out.write(scenario.data)
+        else:
+            self.response.out.write('null')
+
+        activity = "fetched_scenario"
+        if user:
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrRoot).put()
+        return 
+
+    @authenticate
+    def delete(self, user):
+
+        print 'WTFFFFFFFFFFFFFFFFFFFFFFFFF'
+        name = self.request.get('name')
+
+        print "fksdjkljfskl", name
+        scenarios = Scenario.all()
+        scenarios.ancestor(user)
+        scenarios.filter("user =", user.user_id)
+        scenarios.filter("name =", name)
+        scenarios = scenarios.fetch(100)
+
+        
+        for scenario in scenarios:
+            scenario.delete()
+
+        activity = "removed_scenario"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
+
+        # Output for successful post reception
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!')
+        
+
+    @authenticate
+    def post(self, user):
+        
+        # Output for successful post reception
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!')
+
+        name = self.request.get('name')
+        group = self.request.get('group')
+        
+        logging.info(('name', name))
+        data = self.request.get('json')
+
+        logging.info(data)
+        scenarios = Scenario.all()
+        scenarios.ancestor(user)
+        scenarios.filter("user =", user.user_id)
+        scenarios.filter("name =", name)
+        scenarios = scenarios.fetch(1)
+
+        # Rewrite if the name exists, create new one if it doesn't
+        if scenarios:
+            scenario = scenarios[0]
+        else:
+            scenario = Scenario(parent=user)
+            scenario.user = user.user_id
+            scenario.name = name
+            scenario.group = group
+
+        # Save in Db
+        scenario.data = data.encode()
+        scenario.put()
+
+        activity = "modified_scenario"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
+
+        
+    
+class ModifyScenarioHandler(ModelrPageRequest):
+    '''
+    fetch or update a scenario.
+    '''
+   
+
+       
+class AddRockHandler(ModelrPageRequest):
+    '''
+    add a rock 
+    '''
+    pass    
+
+class RemoveRockHandler(ModelrPageRequest):
+
+    def post(self):
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+            
+        selected_rock = Rock.all()
+        selected_rock.ancestor(user)
+        selected_rock.filter("user =", user.user_id)
+        selected_rock.filter("name =", self.request.get('name'))
+
+        activity = "removed_rock"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
+
+        # Delete the rock if it exists
+        try:
+            rock = selected_rock.fetch(1)[0]
+            rock.delete()
+            
+        except IndexError:
+            self.redirect('/dashboard#rocks')
+        else:
+            self.redirect('/dashboard#rocks')
+ 
+                     
+class ModifyRockHandler(ModelrPageRequest):
+    '''
+     modify a rock it by name.
+    '''
+    def post(self):
+
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        selected_rock = Rock.all()
+        selected_rock.ancestor(user)
+        selected_rock.filter("name =", self.request.get('name'))     
+      
+        current_rock = selected_rock.fetch(1)
+
+        activity = "modified_rock"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrRoot).put()
+
+        # reload the dashboard with the rock selected for editing
+        try:
+            rock = current_rock[0]
+            key = rock.key()
+            self.redirect('/dashboard?selected_rock=' +
+                          str(key.id()) + '#rocks')
+        except IndexError:
+            self.redirect('/dashboard#rocks')
+
+               
+
 
         
 class DashboardHandler(ModelrPageRequest):
@@ -1639,7 +1638,6 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
         blob_info = upload_files[0]
 
         # All this is in a try incase the image format isn't accepted
-
         try:
             # Read the image file
             reader = blobstore.BlobReader(blob_info.key())
@@ -1778,7 +1776,7 @@ class ImageModelHandler(ModelrPageRequest):
         models = ImageModel.all().ancestor(user).fetch(1000)
 
     @authenticate
-    def delete(self):
+    def delete(self, user):
 
         image_key = self.request.get("image_key")
 
@@ -2009,13 +2007,8 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
                                ('/edit_rock', ModifyRockHandler),
                                ('/remove_rock', RemoveRockHandler),
-                               ('/scenario', ScenarioHandler),
-                               ('/save_scenario',
-                                  ModifyScenarioHandler),
-                               ('/edit_scenario',
-                                  ModifyScenarioHandler),
-                               ('/remove_scenario',
-                                  RemoveScenarioHandler),
+                               ('/scenario', ScenarioPageHandler),
+                               ('/scenario_db',ScenarioHandler),
                                ('/pricing', PricingHandler),
                                ('/profile', ProfileHandler),
                                ('/settings', SettingsHandler),

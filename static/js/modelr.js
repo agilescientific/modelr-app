@@ -136,7 +136,7 @@ PropertyMap.prototype.get_colours = function(){
 PropertyMap.prototype.n_maps = function(){
 
     return this.images.length;
-}
+};
 
 function ForwardModel(name,earth_struct, 
 		      seismic_model, plots) {
@@ -242,7 +242,7 @@ Scenario.prototype.put = function put() {
         console.log('post', textStatus)
     };
 
-    $.post('/save_scenario', {
+    $.post('/scenario_db', {
         'name' : this.name,
         'json' : data
     }, success, 'json');
@@ -264,7 +264,7 @@ Scenario.prototype.get = function get() {
         scenario.set_current_script(data.script, data.arguments);
     };
 
-    $.get('/save_scenario', {
+    $.get('/scenario_db', {
         'name' : this.name
     }, success, 'json');
 };

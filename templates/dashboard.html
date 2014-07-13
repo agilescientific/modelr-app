@@ -32,14 +32,12 @@
         <tbody>
 
           {% for scenario in scenarios %}
-          <tr>
-            <form class="form-horizontal" name="input" action="remove_scenario" method="post">
-              <input type="hidden" name="name" value="{{scenario.name}}" />
+            <tr id="{{scenario.name}}">
                 <td><strong><a href='/scenario#{{scenario.name}}'>{{scenario.name}}</a></strong></td>
                 <td>{{scenario.script}}</td>
-                <td> <a class="btn btn-success btn-xs" href="/scenario#{{scenario.name}}" > edit&nbsp;</a> &nbsp;&nbsp;<input class="btn btn-danger btn-xs" type="submit" value="remove" /></td>
-            </form>
-          </tr>
+                <td> <a class="btn btn-success btn-xs" href="/scenario#{{scenario.name}}" > edit&nbsp;</a> &nbsp;&nbsp;<button class="btn btn-danger btn-xs" type="button" onclick='delete_scenario("{{scenario.name}}")'>delete</button></td>
+		
+	    </tr>
           {% endfor %}
         </tbody>
       </table>
@@ -350,10 +348,21 @@ $('.tabbable .nav-tabs a').click(function (e) {
   });
   
 
+function delete_scenario(scenario){
+
+   cb = function(data){
+    var elem = document.getElementById(scenario);
+    elem.parentNode.removeChild(elem);
+   };
+
+   $.ajax('/scenario_db?name='+scenario, {type: "DELETE",
+					  success: cb});
+ };
 
 function delete_model(image_key, model_name, element){
 
    callback = function(data){
+
 
      if (JSON.parse(data)["success"]){
    element.parentNode.removeChild(element);
