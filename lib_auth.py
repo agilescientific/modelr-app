@@ -2,7 +2,7 @@
 Functions related user logins, signups, password authentications,
 logouts, etc ...
 """
-from ModelrDb import User, UserID, Group, VerifyUser
+from lib_db import User, UserID, Group, VerifyUser
 from google.appengine.api import mail
 import hashlib
 import random
