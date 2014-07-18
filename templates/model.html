@@ -126,20 +126,22 @@
    seismic_model.set_current_script = function(value,
 					       argumentss){
 
+     seismic_model.script = value;
      server.get_script_info(seismic_model.script, 'seismic',
 			    function(data){
 	 seismic_model.info = data;
 	 seismic_model.default_args(argumentss);
-	 
+	 seismic_model.display('div#seismic_place', {});
 	 console.log('div#seismic_place');
        });
 			    
-   update_em_list(property_map);
+      
    };
    
    earth_structure.script = "earth_model.py";
    earth_structure.set_current_script = function(value,
 						 argumentss){
+
 
      server.get_script_info(earth_structure.script, 'earth',
 			    function(data){
@@ -193,6 +195,9 @@
 
    // Populate the plot options
    populate_scripts(server, 'plots', 'select#select_plot', 'Plot type');
+   populate_scripts(server, 'seismic', 'select#select_seismic', 
+		    'Seismic');
+
 
    seismic_model.set_current_script(seismic_model.script, 
 				      seismic_model.arguments);
@@ -534,12 +539,14 @@ $(document).ready(function () {
       	    <div class="btn btn-info" id="upload_btn" onclick="$('#file').click()">
       		    Upload image
       	    </div> 
+
             <button type="button" class="btn btn-info" onclick="window.location.href='/model_builder'">
               Simple wedge
             </button>
             <button type="button" class="btn btn-info" onclick="window.location.href='/spectral_wedge'">
               Spectral wedge
             </button>
+
       	  </form>
 
 <div class="col-xs-offset-11">
@@ -664,6 +671,9 @@ $('#model_info').popover({
                 
 	        <div id="plot_place" style="margin-top:24px;"></div>
 	          <!-- This is where the survey parameters will be set -->
+		  <select class="form-control" id="select_seismic" 
+		      onchange="seismic_model.set_current_script($(this).val(), seismic_model.arguments)">
+              </select>
 	        <div style="margin-top:24px;" id="seismic_place"></div>
 
 	      </div>

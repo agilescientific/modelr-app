@@ -48,6 +48,9 @@ from ModelrDb import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
      ImageModel, Forward2DModel, Issue, EarthModel
 
+
+
+urlfetch.set_default_fetch_deadline(60)
 # Jinja2 environment to load templates
 env = Environment(loader=FileSystemLoader(join(dirname(__file__),
                                                'templates')))
@@ -199,7 +202,7 @@ class ModelrPageRequest(webapp2.RequestHandler):
     if LOCAL is True:
         HOSTNAME = "http://127.0.0.1:8081"
     else:
-        HOSTNAME = "https://www.modelr.org"
+        HOSTNAME = "https://www.modelr.org:8090"
     
     def get_base_params(self, **kwargs):
         '''
@@ -2217,6 +2220,29 @@ class ServerError(ModelrPageRequest):
         send_message("Server Down","Scripts did not populate")
         
 
+class ModelData(ModelrPageRequest):
+
+    def get(self):
+
+        model_name = self.request.get('model')
+        model = EarthModel.all()
+        model = model.filter("name =", model_name).fetch(1)
+
+        
+        url = self.HOSTNAME + '/model_data.json'
+        data = json.loads(model[0].data)
+        data["update_model"] = True
+        
+        req = \
+          urllib2.Request(url, json.dumps({"earth_model":data}))
+        f = urllib2.urlopen(req)
+        response = f.read()
+        f.close()
+
+        self.response.out.write(response)
+        
+        
+        
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
                                ('/edit_rock', ModifyRockHandler),
@@ -2256,6 +2282,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/model_served', ModelServed),
                                ('/admin_site', AdminHandler),
                                ('/server_error', ServerError),
+                               ('/model_data', ModelData),
                                ('/.*', NotFoundPageHandler)
                                ],
                               debug=False)
