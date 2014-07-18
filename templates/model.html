@@ -256,20 +256,20 @@ function display_metadata(data){
     // This styling should move to modelr.css
     $table.append('<thead><tr></tr></thead>'); 
     $table.append('<th></th>'); 
-    $table.append('<th class="text-right" style="padding:0 8px 0 0;">Z<br /><span style="color:lightgrey; font-weight:normal;">Pa·s·m<sup>−1</sup></span></th>'); 
-    $table.append('<th style="text-align:right; padding:0 8px 0 0;">PR</th>'); 
-    $table.append('<th style="text-align:right; padding:0 8px 0 0;">E<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
-    $table.append('<th style="text-align:right; padding:0 8px 0 0;">&lambda;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
-    $table.append('<th style="text-align:right; padding:0 8px 0 0;">&mu;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
-    $table.append('<th style="text-align:right; padding:0 8px 0 0;">K<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
-    $table.append('<th style="text-align:right; padding:0 8px 0 0;">M<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>'); 
+    $table.append('<th class="text-right" style="padding:0 8px 0 0; font-family:serif; font-size:120%;"><em>Z</em><br /><span style="color:lightgrey; font-weight:normal; font-family:sans-serif; font-size:83%;">Pa·s·m<sup>−1</sup></span></th>'); 
+    $table.append('<th style="text-align:right; padding:0 8px 0 0; font-family:serif; font-size:120%;"><em>&nu;</em></th>'); 
+    $table.append('<th style="text-align:right; padding:0 8px 0 0; font-family:serif; font-size:120%;"><em>E</em><br /><span style="color:lightgrey; font-weight:normal;font-family:sans-serif; font-size:83%;">GPa</span></th>'); 
+    $table.append('<th style="text-align:right; padding:0 8px 0 0; font-family:serif; font-size:120%;"><em>&lambda;</em><br /><span style="color:lightgrey; font-weight:normal;font-family:sans-serif; font-size:83%;">GPa</span></th>'); 
+    $table.append('<th style="text-align:right; padding:0 8px 0 0; font-family:serif; font-size:120%;"><em>&mu;</em><br /><span style="color:lightgrey; font-weight:normal;font-family:sans-serif; font-size:83%;">GPa</span></th>'); 
+    $table.append('<th style="text-align:right; padding:0 8px 0 0; font-family:serif; font-size:120%;"><em>K</em><br /><span style="color:lightgrey; font-weight:normal;font-family:sans-serif; font-size:83%;">GPa</span></th>'); 
+    $table.append('<th style="text-align:right; padding:0 8px 0 0; font-family:serif; font-size:120%;"><em>M</em><br /><span style="color:lightgrey; font-weight:normal;font-family:sans-serif; font-size:83%;">GPa</span></th>'); 
 
     // Build the body; start with tag, then append into it
     $table.append('<tbody></tbody>'); 
 
     for (rock in data['moduli']){
       var row = $('<tr class="text-right"></tr>');
-      row.append('<td style="text-align:left;">' + rock + '</td>');
+      row.append('<td style="text-align:left; font-weight:bold;">' + rock + '</td>');
       row.append('<td>' + JSON.stringify(data['moduli'][rock]['imp']/1000000, replacer2) + '</td>');
       row.append('<td>' + JSON.stringify(data['moduli'][rock]['pr'], replacer4) + '</td>');
       row.append('<td>' + JSON.stringify(data['moduli'][rock]['youngs']/1000000000, replacer2) + '</td>');
@@ -534,9 +534,12 @@ $(document).ready(function () {
       	    <div class="btn btn-info" id="upload_btn" onclick="$('#file').click()">
       		    Upload image
       	    </div> 
-      	    <button type="button" class="btn btn-info" onclick="window.location.href='/model_builder'">
-      		    Make a wedge
-      	    </button>
+            <button type="button" class="btn btn-info" onclick="window.location.href='/model_builder'">
+              Simple wedge
+            </button>
+            <button type="button" class="btn btn-info" onclick="window.location.href='/spectral_wedge'">
+              Spectral wedge
+            </button>
       	  </form>
 
 <div class="col-xs-offset-11">

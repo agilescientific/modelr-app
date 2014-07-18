@@ -1,6 +1,6 @@
 
 default_rocks = [ {'name':'Shale',
-                    'description': 'Grey 2001, AVO classes',
+                    'description': 'Gray 2001, AVO classes',
                     'vp': 3000, 'vs': 1600, 'rho': 2500,
                     'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
                     

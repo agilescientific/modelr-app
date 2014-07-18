@@ -1845,6 +1845,51 @@ class ModelBuilder(ModelrPageRequest):
                    image=blob_key).put()
         # TODO Logging
 
+class SpectralWedge(ModelrPageRequest):
+
+    def get(self):
+        
+        user = ModelrPageRequest.verify(self)
+        if user is None:
+            self.redirect('/signup')
+            return
+    
+        params = self.get_base_params(user=user)
+        template = env.get_template('spectral_wedge.html')
+        html = template.render(params)
+        self.response.out.write(html)
+        
+
+    def post(self):
+
+        user = ModelrPageRequest.verify(self)
+        if user is None:
+            self.redirect('/signup')
+            return
+
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!')
+        
+        bucket = '/modelr_live_bucket/'
+        filename = bucket + str(user.user_id) +'/' + str(time.time())
+
+        encoded_image = self.request.get('image').split(',')[1]
+        pic = base64.b64decode(encoded_image)
+        
+        gcsfile = gcs.open(filename, 'w')
+        gcsfile.write(pic)
+
+        gcsfile.close()
+
+        bs_file = '/gs' + filename
+
+        blob_key = blobstore.create_gs_key(bs_file)
+
+        ImageModel(parent=user,
+                   user=user.user_id,
+                   image=blob_key).put()
+        # TODO Logging
+
 
 class ModelHandler(ModelrPageRequest):
 
@@ -2198,6 +2243,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/manage_group', ManageGroup),
                                ('/upload', Upload),
                                ('/model_builder', ModelBuilder),
+                               ('/spectral_wedge', SpectralWedge),
                                ('/model', ModelHandler),
                                ('/image_model', ImageModelHandler),
                                ('/earth_model', EarthModelHandler),
