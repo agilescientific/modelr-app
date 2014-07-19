@@ -25,7 +25,7 @@
        modelbuilder.script = 'spectral_wedge.py';
        console.log('server.current_script');
 
-       server.get_script_info( value, 'spectral_wedge',
+       server.get_script_info( value, 'model_builder',
 		       function(data){
 	   
 	   modelbuilder.info = data;
@@ -59,7 +59,7 @@
      modelbuilder.on_change = function update_link(){
        
        var qs = modelbuilder.qs();
-       var url = server.hostname +'/plot.json' + qs + '&type=spectral_wedge';
+       var url = server.hostname +'/plot.json' + qs + '&type=model_builder';
        
        var p = $('p#image_link');
        p.text(url);
@@ -73,7 +73,7 @@
      server.update_image = function(modelbuilder){
        var qs = modelbuilder.qs();
        var url = server.hostname +'/plot.json' + qs;
-       $.get(url, {type:'spectral_wedge'},function(data){
+       $.get(url, {type:'model_builder'},function(data){
 	 $('img#plot_image').attr('src', 
 				  "data:image/png;base64, " + 
 				  data.data); });
@@ -99,7 +99,7 @@
 	
     	<div class="panel-body">
     	  <img class="img-thumbnail" id="example_image"
-    	       src="http://placehold.it/350x150">
+    	       src="http://placehold.it/500x250">
 
           <!-- Div to place the form into see builder.display and display_form functions-->
           <div style="margin:16px 0 16px 0;" id="builder_place">
