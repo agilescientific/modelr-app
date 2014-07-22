@@ -477,7 +477,7 @@ class EarthModelHandler(ModelrAPI):
                 earth_models = earth_models.filter("user =",
                                                   user.user_id)
                 def_models = def_models.filter("user =",
-                                                 admin_id)
+                                                admin_id)
                 earth_models.order('-date')
                 def_models.order('-date')
                 
@@ -553,7 +553,19 @@ class EarthModelHandler(ModelrAPI):
 
     
 
+class FluidHandler(ModelrAPI):
 
+
+    def get(self):
+        pass
+
+    @authenticate
+    def delete(self, user):
+        pass
+    
+    @authenticate
+    def post(self, user):
+        pass 
 
 class ModelServed(ModelrAPI):
 
