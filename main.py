@@ -1473,7 +1473,13 @@ class StripeHandler(ModelrPageRequest):
 
     '''
     def post(self):
-        
+
+        if LOCAL:
+            stripe.api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
+            
+        else:
+            stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
+
         event = json.loads(self.request.body)
 
         # Get the event id and retrieve it from Stripe
