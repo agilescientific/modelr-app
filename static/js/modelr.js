@@ -444,7 +444,7 @@ function display_form(sel, metadata) {
 	    }
 	    else {def = deflt;
 		  pos = deflt };//args[arg]['default']};
-	    current =  '<td><label id="'+name+'dis">'+(def|0) + '</label><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="'+pos+'"/>'
+	    current =  '<td><label id="'+name+'dis">'+def.toString().substring(0,4) + '</label><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="'+pos+'"/>'
 	    form_text += current;
 
 	    sliders.push(name);
@@ -490,7 +490,7 @@ function display_form(sel, metadata) {
 		value = scale[index]
 	    } else {value=ev.value}
 	    label = $('#'+ev.target.id +'dis');
-	    value = value | 0
+	    value = value.toString().substring(0,4)
 	    label.text(value);});
 	
 
