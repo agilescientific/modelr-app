@@ -1,3 +1,6 @@
+modelr 0.2.3 Aug 31 2014
+Rearranged main.py into pages and apis
+
 modelr 0.2.2.2 Jun 20
 updated default rocks, delete child models when parent image is deleted
 
