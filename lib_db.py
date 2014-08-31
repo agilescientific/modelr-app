@@ -1,5 +1,7 @@
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
+
+import json
 """
 Authentication and permissions will be structured similar to linux
 wuth groups and users. Group permissions can be added to an item to
@@ -113,3 +115,20 @@ class Rock(Item):
     vs_std = db.FloatProperty()
     rho_std = db.FloatProperty()
 
+    @property
+    def json(self):
+
+        return json.dumps({"vp": self.vp, "vs": self.vs,
+                           "rho": self.rho,
+                           "vp_std": self.vp_std,
+                           "vs_std": self.vs_std,
+                           "rho_std": self.rho_std,
+                           "description": self.description})
+
+
+class Server(db.Model):
+
+    host = db.StringProperty()
+
+    
+    

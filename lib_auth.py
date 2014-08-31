@@ -2,7 +2,7 @@
 Functions related user logins, signups, password authentications,
 logouts, etc ...
 """
-from ModelrDb import User, UserID, Group, VerifyUser
+from lib_db import User, UserID, Group, VerifyUser
 from google.appengine.api import mail
 import hashlib
 import random
@@ -271,6 +271,20 @@ def verify(userid, password, ancestor):
     except IndexError:
         verified = False
 
+
+def authenticate(func):
+    """
+    Wrapper function for methods that require a logged in
+    user
+    """
+    def authenticate_and_call(self, *args, **kwargs):
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+        else:
+            return func(self, user,*args, **kwargs)
+    return authenticate_and_call
 
 def send_message(subject, message):
     """
