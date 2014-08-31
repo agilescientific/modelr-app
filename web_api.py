@@ -552,12 +552,10 @@ class EarthModelHandler(ModelrAPI):
             self.response.out.write(json.dumps({'success':False}))
 
     
-
-
-
 class ModelServed(ModelrAPI):
 
     def post(self):
 
+        models_served = ModelServedCount.all().get()
         models_served.count += 1
         models_served.put()
