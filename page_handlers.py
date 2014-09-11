@@ -138,20 +138,20 @@ class ScenarioPageHandler(ModelrPageRequest):
           'X-Request, X-Requested-With'
 
         # Get the default rocks
-        default_rocks = Rock.all()
+        default_rocks = Rock.all().order('name')
         default_rocks.filter("user =", admin_id)
         default_rocks = default_rocks.fetch(100)
         
         # Get the user rocks
         if user:
-            rocks = Rock.all().ancestor(user).fetch(100)
+            rocks = Rock.all().order('name').ancestor(user).fetch(100)
 
             # Get the group rocks
             group_rocks = []
             for group in user.group:
             
                 g_rocks = \
-                  Rock.all().ancestor(ModelrParent.all().get()).filter("group =",
+                  Rock.all().order('name').ancestor(ModelrParent.all().get()).filter("group =",
                                                          group)
                 group_rocks.append({"name": group.capitalize(),
                                     "rocks": g_rocks.fetch(100)})
@@ -179,7 +179,7 @@ class ScenarioPageHandler(ModelrPageRequest):
 
         else:
             earth_models = []
-            
+        
         template_params = \
           self.get_base_params(user=user,rocks=rocks,
                                default_rocks=default_rocks,
