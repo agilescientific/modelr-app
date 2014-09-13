@@ -412,7 +412,6 @@ function load_earthmodel(image_key, name){
  
 // START OF DISPLAY METADATA *****
 function display_metadata(data){
-  // This function displays the elastic moduli for each model
 
   // Define a couple of helper functions
   // There may be a more elegant way to do this...
@@ -425,14 +424,25 @@ function display_metadata(data){
   }
 
   // We'll start a table, then append into it...
-  var $table = $('<table></table>').addClass('table table-striped');
+  var $table = $('<table id=model_metadata></table>').addClass('table table-striped');
+   $table.append('<thead><tr></tr></thead>'); 
+   $table.append('<th></th>'); 
 
-    // Build the head, with the column titles
-    // This styling should move to modelr.css
-   for (field in data){
-    $table.append('<thead><tr></tr></thead>'); 
-    $table.append('<th></th>'); 
-    $table.append('<th class="text-right" style="padding:0 8px 0 0;">' + field + '</th>'); 
+   // Build the body; start with tag, then append into it
+   $table.append('<tbody></tbody>'); 
+
+   sorted_keys = Object.keys(data).sort();
+   for (var i =0; i < sorted_keys.length; i++ ){
+     var row = $('<tr class="text-right">></tr>');
+
+     field = sorted_keys[i];
+     row.append('<td style="text-align:left;"><i>' + field + '</i></td>' + 
+		'<td>' + 
+		   JSON.stringify(data[field], 
+				  replacer2) + '</td>');
+
+
+     $table.append(row);
     };
 
 
