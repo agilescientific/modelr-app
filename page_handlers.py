@@ -37,7 +37,8 @@ import StringIO
 
 from xml.etree import ElementTree
 
-from constants import admin_id, env, LOCAL
+from constants import admin_id, env, LOCAL, PRICE, UR_STATUS_DICT, \
+     tax_dict
 
 from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      verify, authenticate, verify_signup, initialize_user,\
