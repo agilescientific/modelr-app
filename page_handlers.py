@@ -982,10 +982,10 @@ class EmailAuthentication(ModelrPageRequest):
                                               currency="usd",
                                               description="Canadian Taxes")
 
-                except Exception as e:
+            except:
 
-                    send_message(subject="taxation failed for %s" %customer.id)
-                else:
+                send_message(subject="taxation failed for %s" %customer.id)
+            
         else:
             tax_code = country
             tax = 0
