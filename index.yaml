@@ -52,6 +52,12 @@ indexes:
     direction: desc
 
 - kind: Rock
+  properties:
+  - name: user
+  - name: name
+    direction: desc
+
+- kind: Rock
   ancestor: yes
   properties:
   - name: user

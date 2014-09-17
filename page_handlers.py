@@ -960,27 +960,32 @@ class EmailAuthentication(ModelrPageRequest):
     
             headers = {"Accept": "application/vnd.cpc.postoffice+xml",
                        "Authorization": "Basic " + cp_key}
-            req = urllib2.Request(cp_url, headers=headers)
-            result = urllib2.urlopen(req).read()
-            xml_root = ElementTree.fromstring(result)
 
-            # This is super hacky, but the only way I could get the
-            # XML out
-            province = []
-            for i in xml_root.iter('{http://www.canadapost.ca/ws/'+
-                                   'postoffice}province'):
-                province.append(i.text)
-            tax_code = province[0]
+            try:
+                req = urllib2.Request(cp_url, headers=headers)
+                result = urllib2.urlopen(req).read()
+                xml_root = ElementTree.fromstring(result)
+
+                # This is super hacky, but the only way I could get the
+                # XML out
+                province = []
+                for i in xml_root.iter('{http://www.canadapost.ca/ws/'+
+                                       'postoffice}province'):
+                    province.append(i.text)
+                    tax_code = province[0]
+                    
+                tax = tax_dict.get(tax_code) * price
         
-            tax = tax_dict.get(tax_code) * price
-        
-            # Add the tax to the invoice
-            stripe.InvoiceItem.create(customer=customer.id,
-                                      amount = int(tax),
-                                      currency="usd",
-                                      description="Canadian Taxes")
-         
-                                          
+                # Add the tax to the invoice
+                stripe.InvoiceItem.create(customer=customer.id,
+                                              amount = int(tax),
+                                              currency="usd",
+                                              description="Canadian Taxes")
+
+                except Exception as e:
+
+                    send_message(subject="taxation failed for %s" %customer.id)
+                else:
         else:
             tax_code = country
             tax = 0
