@@ -38,7 +38,7 @@ import StringIO
 from xml.etree import ElementTree
 
 from constants import admin_id, env, LOCAL, PRICE, UR_STATUS_DICT, \
-     tax_dict, stripe_api_key
+     tax_dict, stripe_api_key, stripe_public_key
 
 from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      verify, authenticate, verify_signup, initialize_user,\
@@ -813,7 +813,7 @@ class DeleteHandler(ModelrPageRequest):
             
             
         try:
-            cancel_subscription(user, stripe_api_key) 
+            cancel_subscription(user) 
             msg = "Unsubscribed from Modelr"
             html = template.render(user=user, msg=msg)
             self.response.write(html)
@@ -894,7 +894,7 @@ class EmailAuthentication(ModelrPageRequest):
             
         msg = "Thank you for verifying your email address."
         params = self.get_base_params(user=user,
-                                      stripe_key=stripe_api_key)
+                                      stripe_key=stripe_public_key)
         template = env.get_template('checkout.html')
         html = template.render(params, success=msg)
         self.response.out.write(html)

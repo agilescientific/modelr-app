@@ -38,6 +38,8 @@ env = Environment(loader=FileSystemLoader(join(dirname(__file__),
 if os.environ.get('SERVER_SOFTWARE','').startswith('Development'):
     LOCAL = True
     stripe_api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
+    stripe_public_key = "pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
 else:
     LOCAL = False
     stripe_api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
+    stripe_public_key = "pk_live_5CZcduRr07BZPG2A5OAhisW9"
