@@ -39,7 +39,7 @@ from lib_db import Rock, Scenario, User, ModelrParent, Group, \
      ImageModel, Forward2DModel, Issue, EarthModel, Server
 
 
-from constants import admin_id, env, LOCAL
+from constants import admin_id, env, LOCAL, stripe_api_key
 
 # Retry can help overcome transient urlfetch or GCS issues,
 # such as timeouts.
@@ -77,6 +77,8 @@ if LOCAL is True:
 else:
     server.host = "https://www.modelr.org"
 server.put()
+
+stripe.api_key = stripe_api_key
 
 #=====================================================================
 # Define Global Variables

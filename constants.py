@@ -37,5 +37,7 @@ env = Environment(loader=FileSystemLoader(join(dirname(__file__),
 # Check if we are running the dev server
 if os.environ.get('SERVER_SOFTWARE','').startswith('Development'):
     LOCAL = True
+    stripe_api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
 else:
     LOCAL = False
+    stripe_api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"

@@ -38,7 +38,7 @@ import StringIO
 from xml.etree import ElementTree
 
 from constants import admin_id, env, LOCAL, PRICE, UR_STATUS_DICT, \
-     tax_dict
+     tax_dict, stripe_api_key
 
 from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      verify, authenticate, verify_signup, initialize_user,\
@@ -810,12 +810,7 @@ class DeleteHandler(ModelrPageRequest):
     def post(self, user):
 
         template = env.get_template('message.html')
-        
-        if LOCAL:
-            stripe_api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
             
-        else:
-            stripe_api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
             
         try:
             cancel_subscription(user, stripe_api_key) 
@@ -896,15 +891,10 @@ class EmailAuthentication(ModelrPageRequest):
         except AuthExcept as e:
             self.redirect('/signup?error=auth_failed')
             return
-
-        if LOCAL:
-            stripe_public_key = "pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
-        else:
-            stripe_public_key = "pk_live_5CZcduRr07BZPG2A5OAhisW9"
             
         msg = "Thank you for verifying your email address."
         params = self.get_base_params(user=user,
-                                      stripe_key=stripe_public_key)
+                                      stripe_key=stripe_api_key)
         template = env.get_template('checkout.html')
         html = template.render(params, success=msg)
         self.response.out.write(html)
@@ -915,12 +905,6 @@ class EmailAuthentication(ModelrPageRequest):
         """
         email = self.request.get('stripeEmail')
         price = PRICE # set at head of this file
-
-        if LOCAL:
-            stripe.api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
-            
-        else:
-            stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
             
 
         # Secret API key for Canada Post postal lookup
