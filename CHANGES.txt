@@ -1,3 +1,7 @@
+modelr 0.2.4.1 September 25 2014
+Made the whole billing process more robust, better error handling,
+put stripe api handling into constants file to avoid confusion
+
 modelr 0.2.4 September 16 2014
 added metadata to scenarios page, calling plot.json now.
 Fixed missing constants, which may have messed up subscriptions
