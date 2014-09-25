@@ -37,7 +37,8 @@ import StringIO
 
 from xml.etree import ElementTree
 
-from constants import admin_id, env, LOCAL
+from constants import admin_id, env, LOCAL, PRICE, UR_STATUS_DICT, \
+     tax_dict
 
 from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      verify, authenticate, verify_signup, initialize_user,\
@@ -138,20 +139,20 @@ class ScenarioPageHandler(ModelrPageRequest):
           'X-Request, X-Requested-With'
 
         # Get the default rocks
-        default_rocks = Rock.all()
+        default_rocks = Rock.all().order('name')
         default_rocks.filter("user =", admin_id)
         default_rocks = default_rocks.fetch(100)
         
         # Get the user rocks
         if user:
-            rocks = Rock.all().ancestor(user).fetch(100)
+            rocks = Rock.all().order('name').ancestor(user).fetch(100)
 
             # Get the group rocks
             group_rocks = []
             for group in user.group:
             
                 g_rocks = \
-                  Rock.all().ancestor(ModelrParent.all().get()).filter("group =",
+                  Rock.all().order('name').ancestor(ModelrParent.all().get()).filter("group =",
                                                          group)
                 group_rocks.append({"name": group.capitalize(),
                                     "rocks": g_rocks.fetch(100)})
@@ -179,7 +180,7 @@ class ScenarioPageHandler(ModelrPageRequest):
 
         else:
             earth_models = []
-            
+        
         template_params = \
           self.get_base_params(user=user,rocks=rocks,
                                default_rocks=default_rocks,
@@ -959,27 +960,32 @@ class EmailAuthentication(ModelrPageRequest):
     
             headers = {"Accept": "application/vnd.cpc.postoffice+xml",
                        "Authorization": "Basic " + cp_key}
-            req = urllib2.Request(cp_url, headers=headers)
-            result = urllib2.urlopen(req).read()
-            xml_root = ElementTree.fromstring(result)
 
-            # This is super hacky, but the only way I could get the
-            # XML out
-            province = []
-            for i in xml_root.iter('{http://www.canadapost.ca/ws/'+
-                                   'postoffice}province'):
-                province.append(i.text)
-            tax_code = province[0]
+            try:
+                req = urllib2.Request(cp_url, headers=headers)
+                result = urllib2.urlopen(req).read()
+                xml_root = ElementTree.fromstring(result)
+
+                # This is super hacky, but the only way I could get the
+                # XML out
+                province = []
+                for i in xml_root.iter('{http://www.canadapost.ca/ws/'+
+                                       'postoffice}province'):
+                    province.append(i.text)
+                    tax_code = province[0]
+                    
+                tax = tax_dict.get(tax_code) * price
         
-            tax = tax_dict.get(tax_code) * price
-        
-            # Add the tax to the invoice
-            stripe.InvoiceItem.create(customer=customer.id,
-                                      amount = int(tax),
-                                      currency="usd",
-                                      description="Canadian Taxes")
-         
-                                          
+                # Add the tax to the invoice
+                stripe.InvoiceItem.create(customer=customer.id,
+                                              amount = int(tax),
+                                              currency="usd",
+                                              description="Canadian Taxes")
+
+            except:
+
+                send_message(subject="taxation failed for %s" %customer.id)
+            
         else:
             tax_code = country
             tax = 0

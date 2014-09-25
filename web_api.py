@@ -24,7 +24,8 @@ import json
 import base64
 import StringIO
 
-from constants import admin_id, LOCAL
+from constants import admin_id, LOCAL, PRICE, UR_STATUS_DICT, \
+     tax_dict
 
 from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      verify, authenticate, verify_signup, initialize_user,\
