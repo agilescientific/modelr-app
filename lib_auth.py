@@ -2,7 +2,7 @@
 Functions related user logins, signups, password authentications,
 logouts, etc ...
 """
-from ModelrDb import User, UserID, Group, VerifyUser
+from lib_db import User, UserID, Group, VerifyUser
 from google.appengine.api import mail
 import hashlib
 import random
@@ -272,6 +272,20 @@ def verify(userid, password, ancestor):
         verified = False
 
 
+def authenticate(func):
+    """
+    Wrapper function for methods that require a logged in
+    user
+    """
+    def authenticate_and_call(self, *args, **kwargs):
+        user = self.verify()
+        if user is None:
+            self.redirect('/signup')
+            return
+        else:
+            return func(self, user,*args, **kwargs)
+    return authenticate_and_call
+
 def send_message(subject, message):
     """
     Sends us a message from a user or non-user.
@@ -352,14 +366,12 @@ def reset_password(user, current_pword, new_password,
     # Save it in the database
     user.put()
     
-def cancel_subscription(user,stripe_api_key):
+def cancel_subscription(user):
     """
     Delete the user. See notes in DeleteHandler() in main.py
     """
 
     try:
-
-        stripe.api_key = stripe_api_key
         stripe_customer = stripe.Customer.retrieve(user.stripe_id)
 
         sub_id = stripe_customer.subscriptions["data"][0]["id"]

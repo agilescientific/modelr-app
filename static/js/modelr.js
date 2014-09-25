@@ -28,7 +28,7 @@ function PlotServer(hostname, rocks, earth_models) {
 
     function failure(){
 	$.post('/server_error');
-	alert("Modelr is experience technical difficulties. Please check back soon.");
+	alert("Modelr is experiencing technical difficulties. Please check back soon.");
 	
     };
 
@@ -136,7 +136,7 @@ PropertyMap.prototype.get_colours = function(){
 PropertyMap.prototype.n_maps = function(){
 
     return this.images.length;
-}
+};
 
 function ForwardModel(name,earth_struct, 
 		      seismic_model, plots) {
@@ -242,7 +242,7 @@ Scenario.prototype.put = function put() {
         console.log('post', textStatus)
     };
 
-    $.post('/save_scenario', {
+    $.post('/scenario_db', {
         'name' : this.name,
         'json' : data
     }, success, 'json');
@@ -264,7 +264,7 @@ Scenario.prototype.get = function get() {
         scenario.set_current_script(data.script, data.arguments);
     };
 
-    $.get('/save_scenario', {
+    $.get('/scenario_db', {
         'name' : this.name
     }, success, 'json');
 };
@@ -339,7 +339,12 @@ Scenario.prototype.qs = function() {
  * @param selection: selection string or tag 'select' element.
  * 
  */
-function populate_scripts(server, type, selection) {
+function populate_scripts(server, type, selection, placeholder) {
+
+    // Broswer-tolerant way to assign default
+    //placeholder = (typeof placeholder !== 'undefined') ? placeholder = "Scripts";
+    // Not sure about syntax so I'll do it the simple way
+    placeholder = placeholder || "Scripts";
 
     console.log("populate_scripts!");
 
@@ -353,14 +358,14 @@ function populate_scripts(server, type, selection) {
         select_script = $(selection);
         select_script.find('option').remove();
 
-        select_script.append('<option value="" selected disabled hidden>Scripts </option>');
+        select_script.append('<option value="" selected disabled hidden>' + placeholder +' </option>');
 
         for ( var i = 0; i < data.length; i++) {
             var script_doc = data[i];
             var script = script_doc[0];
             var doc = script_doc[1];
             select_script.append('<option value=' + script + '>' + 
-				 script + ' --- ' + doc.slice(0, 20)+ 
+				 doc.slice(0, 50)+ 
 				 '</option>');
         };
 
@@ -439,7 +444,7 @@ function display_form(sel, metadata) {
 	    }
 	    else {def = deflt;
 		  pos = deflt };//args[arg]['default']};
-	    current =  '<td><label id="'+name+'dis">'+(def|0) + '</label><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="'+pos+'"/>'
+	    current =  '<td><label id="'+name+'dis">'+def.toString().substring(0,4) + '</label><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="'+pos+'"/>'
 	    form_text += current;
 
 	    sliders.push(name);
@@ -485,7 +490,7 @@ function display_form(sel, metadata) {
 		value = scale[index]
 	    } else {value=ev.value}
 	    label = $('#'+ev.target.id +'dis');
-	    value = value | 0
+	    value = value.toString().substring(0,4)
 	    label.text(value);});
 	
 
