@@ -923,7 +923,7 @@ class EmailAuthentication(ModelrPageRequest):
         except:
             # The card has been declined
             # Let the user know and DON'T UPGRADE USER
-            self.response.out.write("Payment failed. Credit card not accepted at this time")
+            self.redirect('/signin?verified=false')
             return
         
         # Check the country to see if we need to charge tax
@@ -969,6 +969,7 @@ class EmailAuthentication(ModelrPageRequest):
             except:
 
                 send_message(subject="taxation failed for %s" %customer.id)
+                tax = 0
             
         else:
             tax_code = country
@@ -981,7 +982,7 @@ class EmailAuthentication(ModelrPageRequest):
         except:
             # The card has been declined
             # Let the user know and DON'T UPGRADE USER
-            self.response.out.write("Payment failed")
+            self.redirect('/signin?verified=false')
             return
 
         # get the temp user from the database
@@ -995,8 +996,7 @@ class EmailAuthentication(ModelrPageRequest):
                          message=("Failed to register user %s to " +
                         "Modelr but was billed by Stripe. " +
                         "Customer ID: %s") %(email, customer.id))
-            self.response.write("Registration failed. Charges will "
-                                + "be cancelled")
+            self.redirect('/signin?verified=false')
             raise
         
         self.redirect('/signin?verified=true')
@@ -1012,12 +1012,19 @@ class SignIn(webapp2.RequestHandler):
         if status == "true":
             msg = ("Your account has been created and your card has "
                    "been charged. Welcome to Modelr!" )
+            error_msg = None
       
+        elif status == "false":
+            error_msg = ("Failed to create account. Your credit card will "
+                   "not be charged.")
+            msg = None
         else:
             msg = None
+            error_msg = None
 
         template = env.get_template('signin.html')
-        html = template.render(success=msg, redirect=redirect)
+        html = template.render(success=msg, error=error_msg,
+                               redirect=redirect)
         self.response.out.write(html)
 
     def post(self):
