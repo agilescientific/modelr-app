@@ -275,10 +275,24 @@ class DashboardHandler(ModelrPageRequest):
 
         # Check if a rock is being edited
         if self.request.get("selected_rock"):
+            print "WTF"
             rock_id = self.request.get("selected_rock")
             current_rock = Rock.get_by_id(int(rock_id),
                                           parent=user)
             template_params['current_rock'] = current_rock
+        else:
+            current_rock = Rock()
+            current_rock.name = "name"
+            current_rock.description = "description"
+            current_rock.vp = 3000.0
+            current_rock.vs = 2000.0
+            current_rock.rho = 1500.0
+            current_rock.vp_std = 50.0
+            current_rock.vs_std = 50.0
+            current_rock.rho_std = 50.0
+            
+            template_params['current_rock'] = current_rock
+        
 
         
         template = env.get_template('dashboard.html')

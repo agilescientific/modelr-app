@@ -164,6 +164,7 @@
               <td>{{rock.rho_std}}</td>
               <td><button class="btn btn-success btn-xs" 
 			  type="button" 
+			  id="edit-rock-button"
 			  onclick='edit_rock("{{rock.name}}")'>
 		edit
 	      </button>
@@ -271,9 +272,11 @@
       </div> <!-- end of panel -->
 
       <!-- ------ Add a rock ------- -->
-      <div class="panel panel-default">
+      <div class="panel panel-default" id="rock-form">
         <div class="panel-heading">
-          <h3 class="panel-title">Add rock</h3>
+          <h3 class="panel-title" id="rock-manager-header">
+	    Add rock
+	  </h3>
         </div>
         <div class="panel-body">
 
@@ -391,11 +394,16 @@
 		  Share</label>
                 <div class="col-sm-9">
                   <select class="form-control" name="group">
-                    <option value="private">Private</option>
+                    <option value="private" selected>
+		      Private
+		    </option>
                     {% for group in user.group %}
-                    <option value={{group}} 
-			    {% if group==current_rock.group %} 
-			    selected {% endif %}>
+		    {% if group==current_rock.group %}
+                    <option value={{group}} selected>
+		      {% else %}
+		      <option value=="{{group}}">
+			{% endif %}
+
 		      {{group.capitalize()}}</option>
                     {% endfor %}
                   </select>
@@ -406,10 +414,12 @@
             <div class="row"> <!-- BUTTON ROW -->
               <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-6">
-                  <button type="submit" class="btn btn-primary">
+                  <button type="submit" class="btn btn-primary"
+                          id="submit-rock-button">
 		    Add this rock
 		  </button>
-                  <button type="reset" class="btn btn-default">
+                  <button type="reset" class="btn btn-default"
+			  onclick="clear_rock_data()">
 		    Reset form
 		  </button>
                 </div>
@@ -438,8 +448,22 @@ $('.tabbable .nav-tabs a').click(function (e) {
   });
   
 
+function clear_rock_data(){
+   button = $("#submit-rock-button");
+   button.text("Add this rock");
+   $("#rock-manager-header").text("Add rock");
+
+ };
+ 
 function edit_rock(name){
 
+
+   button = $("#submit-rock-button");
+   button.text("Update rock");
+
+   $("#rock-manager-header").text("Manage rock");
+
+   $("html, body").scrollTop($("#rock-form").offset().top);
    cb = function(data){
 
      data = JSON.parse(data);
