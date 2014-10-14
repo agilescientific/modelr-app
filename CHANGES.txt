@@ -1,3 +1,6 @@
+modelr 0.2.4.2 October 13 2014
+hot fix, broken email on the help page
+
 modelr 0.2.4.1 September 25 2014
 Made the whole billing process more robust, better error handling,
 put stripe api handling into constants file to avoid confusion.
