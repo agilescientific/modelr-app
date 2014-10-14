@@ -523,11 +523,12 @@ class HelpHandler(ModelrPageRequest):
                         
         self.response.out.write(html)   
                
-    def post(self):
+    def post(self, subpage):
 
         email = self.request.get('email')
         message = self.request.get('message')
 
+        
         user = self.verify()
         
         try:
