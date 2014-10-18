@@ -289,7 +289,7 @@ class RockHandler(ModelrAPI):
             rock.group = self.request.get('group')
 
             rock.name = self.request.get('name')
-            print('DONE IT')
+         
             rock.put()
 
             self.response.headers['Content-Type'] = 'text/plain'

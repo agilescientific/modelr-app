@@ -305,23 +305,41 @@ Scenario.prototype.default_args = function default_args(argumentss) {
  */
 Scenario.prototype.qs = function() {
     var args = this.arguments;
-
     query_str = '?script=' + this.script;
 
     for (arg in this.info.arguments) {
 	argname=this.info.arguments[arg]['name'];
         if (this.info.arguments[arg]['type'] == 
 	    'rock_properties_type') {
-            var value = this.rocks[args[argname]];
+
+            var rock_name = this.rocks[args[argname]];
+	    if (rock_name){
+		cb = function(data){
+		    data = JSON.parse(data);
+		    //We should send the json object, but would
+		    //break other apps
+		    value = data.vp.toString() +','+ data.vs.toString() + 
+			','+data.rho.toString() + ','+ data.vp_std.toString() +
+			','+data.vs_std.toString() + 
+			','+data.rho_std.toString()
+		            
+		    query_str += '&' + argname + '=' + encodeURIComponent(value);
+		}
+		$.ajax("/rock?name="+rock_name,{success: cb, 
+						type: "GET",
+						async: false});
+	    }
+
         } else if(this.info.arguments[arg]['type'] == 
 		  'earth_model_type'){
 	    var value = JSON.stringify(this.models[args[argname]]);
+	    query_str += '&' + argname + '=' + encodeURIComponent(value);
 	}
 	else{
             var value = args[argname];
-
+	    query_str += '&' + argname + '=' + encodeURIComponent(value);
         };
-        query_str += '&' + argname + '=' + encodeURIComponent(value);
+        
     };
 
     return query_str;
@@ -506,10 +524,10 @@ function display_form(sel, metadata) {
 
     selectors = form.find('.rock_selector');
 
-    for (rname in server.rocks) {
-        rock_prop = server.rocks[rname];
+    for (rkey in server.rocks) {
+        rname = server.rocks[rkey];
 
-        selectors.append('<option value="' + rname + '">' + rname + 
+        selectors.append('<option value="' + rkey + '">' + rname + 
 			 '</option>');
     };
 
@@ -555,7 +573,7 @@ function get_rocks(datalist) {
         var name = $(list_of_rocks[index]).attr('data-name');
         var value = $(list_of_rocks[index]).attr('data-value');
 
-        rcks[name] = value;
+        rcks[value] = name;
     });
 
     return rcks;

@@ -27,8 +27,6 @@ import re
 from page_handlers import *
 from web_api import *
 
-# Local Imports
-from default_rocks import default_rocks
 from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      verify, authenticate, verify_signup, initialize_user,\
      reset_password, \
@@ -96,7 +94,7 @@ if models_served is None:
 # Put in the default rock database under the admin account.
 # The admin account is set up so every user can view our default
 # scenarios and rocks
-admin_id = 0
+
 admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
                                                     admin_id).get()
 # Create the admin account
@@ -120,35 +118,7 @@ if not public:
 
     
 # Populate the default rock database.
-## for i in default_rocks:
 
-##     rocks = Rock.all()
-##     rocks.filter("user =", admin_id)
-##     rocks.filter("name =",i['name'] )
-##     rocks = rocks.fetch(1)
-        
-##     if rocks:
-##         rock = rocks[0]
-##         rock.delete()
-##         rock.put()
-    
-##     rock = Rock(parent=admin_user)
-##     rock.user = admin_id
-##     rock.name = i['name']
-##     rock.group = 'public'
-            
-##     rock.description = i['description']
-
-##     rock.vp = float(i['vp'])
-##     rock.vs = float(i['vs'])
-##     rock.rho = float(i['rho'])
-
-##     rock.vp_std = float(i['vp_std'])
-##     rock.vs_std = float(i['vs_std'])
-##     rock.rho_std = float(i['rho_std'])
-
-##     rock.Parent = admin_user
-##     rock.put()
 
 
 #====================================================================
@@ -193,6 +163,8 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/model_served', ModelServed),
                                ('/admin_site', AdminHandler),
                                ('/server_error', ServerError),
+                               ('/fix_scenarios', FixScenarios),
+                               ('/fix_default_rocks', FixDefaultRocks),
                                ('/.*', NotFoundPageHandler)
                                ],
                               debug=False)
