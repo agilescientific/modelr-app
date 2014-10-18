@@ -281,7 +281,7 @@
         <div class="panel-body">
 
           <form class="form-horizontal" role="form" name="input" 
-		action="/rock" method="post">
+		 id="rock-input-form">
 
             <div class="row"> <!-- NAME -->
               <div class="form-group">
@@ -383,6 +383,8 @@
 			   value="{{current_rock.rho_std}}" />
                   </div>
                 </div>
+		<input name="db_key" id="edit-rock-key" type="hidden"
+		       value={current_rock.db_key}}>
 
               </div> <!-- /column -->
 
@@ -401,7 +403,7 @@
 		    {% if group==current_rock.group %}
                     <option value={{group}} selected>
 		      {% else %}
-		      <option value=="{{group}}">
+		      <option value="{{group}}">
 			{% endif %}
 
 		      {{group.capitalize()}}</option>
@@ -414,8 +416,9 @@
             <div class="row"> <!-- BUTTON ROW -->
               <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-6">
-                  <button type="submit" class="btn btn-primary"
-                          id="submit-rock-button">
+                  <button type="button" class="btn btn-primary"
+                          id="submit-rock-button"
+			  onclick="post_rock()">
 		    Add this rock
 		  </button>
                   <button type="reset" class="btn btn-default"
@@ -455,11 +458,40 @@ function clear_rock_data(){
 
  };
  
+function put_rock(){
+   // Modifies an existing rock in the database
+
+   formData = $('#rock-input-form').serialize();
+
+   cb = function(data){
+     location.reload(true); 
+   };
+
+   $.ajax('/rock?'+formData, {type:"PUT",
+			      success:cb});
+};
+
+function post_rock(){
+   // adds a rock in the database
+
+   form = $('#rock-input-form');
+   formData = form.serialize();
+
+
+   cb = function(data){
+     location.reload(true); 
+   };
+
+   $.ajax('/rock?'+formData, {type:"POST",
+			      success:cb});
+};
+
 function edit_rock(name){
 
-
+   document.getElementById("submit-rock-button").onclick = put_rock
    button = $("#submit-rock-button");
    button.text("Update rock");
+   
 
    $("#rock-manager-header").text("Manage rock");
 
@@ -475,6 +507,7 @@ function edit_rock(name){
      $("#edit-vp-std").attr("value",data["vp_std"]);
      $("#edit-vs-std").attr("value",data["vs_std"]);
      $("#edit-rho-std").attr("value",data["rho_std"]);
+     $("#edit-rock-key").attr("value", data["db_key"]);
    };
    $.ajax('/rock?name=' + name, 
 	  {type: "GET", success: cb});
@@ -484,12 +517,13 @@ function edit_rock(name){
 function delete_rock(name){
 
    cb = function(data){
-     var elem = document.getElementById(name);
-     elem.parentNode.removeChild(elem);
+      location.reload(true); 
    };
 
    $.ajax('/rock?name=' + name, {type: "DELETE",
 			    success: cb})
+
+ 
  };
 
 function delete_scenario(scenario){
@@ -535,10 +569,7 @@ function delete_image(image_key){
 
 <script>
  $(document).ready(function() {
-   
-
-   var activeTab = $('[href=' + location.hash + ']');
-   activeTab && activeTab.tab('show');
+  
 
 
    function toggleChevron(e) {

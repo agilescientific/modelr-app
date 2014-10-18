@@ -120,32 +120,35 @@ if not public:
 
     
 # Populate the default rock database.
-for i in default_rocks:
+## for i in default_rocks:
 
-    rocks = Rock.all()
-    rocks.filter("user =", admin_id)
-    rocks.filter("name =",i['name'] )
-    rocks = rocks.fetch(1)
+##     rocks = Rock.all()
+##     rocks.filter("user =", admin_id)
+##     rocks.filter("name =",i['name'] )
+##     rocks = rocks.fetch(1)
         
-    if rocks:
-        rock = rocks[0]
-    else:
-        rock = Rock()
-        rock.user = admin_id
-        rock.name = i['name']
-        rock.group = 'public'
+##     if rocks:
+##         rock = rocks[0]
+##         rock.delete()
+##         rock.put()
+    
+##     rock = Rock(parent=admin_user)
+##     rock.user = admin_id
+##     rock.name = i['name']
+##     rock.group = 'public'
             
-    rock.description = i['description']
+##     rock.description = i['description']
 
-    rock.vp = float(i['vp'])
-    rock.vs = float(i['vs'])
-    rock.rho = float(i['rho'])
+##     rock.vp = float(i['vp'])
+##     rock.vs = float(i['vs'])
+##     rock.rho = float(i['rho'])
 
-    rock.vp_std = float(i['vp_std'])
-    rock.vs_std = float(i['vs_std'])
-    rock.rho_std = float(i['rho_std'])
+##     rock.vp_std = float(i['vp_std'])
+##     rock.vs_std = float(i['vs_std'])
+##     rock.rho_std = float(i['rho_std'])
 
-    rock.put()
+##     rock.Parent = admin_user
+##     rock.put()
 
 
 #====================================================================

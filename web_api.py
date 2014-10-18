@@ -176,11 +176,12 @@ class RockHandler(ModelrAPI):
     @authenticate
     def get(self, user):
         """
-        Will the requested rock from the user's database
+        Get the requested rock from the user's database
         """
 
         name = self.request.get('name')
-        rock = Rock.all().ancestor(user).filter("name =", name).get()
+        rock = Rock.all().ancestor(user).filter("name =",
+                                                name).get()
 
         data = rock.json
         self.response.out.write(data)
@@ -205,6 +206,7 @@ class RockHandler(ModelrAPI):
         try:
             rock = selected_rock.fetch(1)[0]
             rock.delete()
+            print("DELEEETED")
         except:
             pass 
 
@@ -213,47 +215,94 @@ class RockHandler(ModelrAPI):
             
     @authenticate
     def post(self, user):
+        # Adds a rock to the database, will throw an error
+        # if the rock name already exists
         
-        name = self.request.get('name')
+        try:
+            
+            name = self.request.get("name")
         
-        rocks = Rock.all()
-        rocks.ancestor(user)
-        rocks.filter("user =", user.user_id)
-        rocks.filter("name =", name)
-        rocks = rocks.fetch(1)
+            rocks = Rock.all()
+            rocks.ancestor(user)
+            rocks.filter("user =", user.user_id)
+            rocks.filter("name =", name)
+            rocks = rocks.fetch(1)
 
-        # Rewrite if the rock exists
-        if rocks:
-            rock = rocks[0]
-        else:
-            rock = Rock(parent=user)
-            rock.user = user.user_id
+            # Rewrite if the rock exists
+            if rocks:
+                # write out error message
+                pass 
+            else:
+                rock = Rock(parent=user)
+                rock.user = user.user_id
 
-        # Populate the object
-        rock.vp = float(self.request.get('vp'))
-        rock.vs = float(self.request.get('vs'))
-        rock.rho = float(self.request.get('rho'))
+            # Populate the object
+            rock.vp = float(self.request.get('vp'))
+            rock.vs = float(self.request.get('vs'))
+            rock.rho = float(self.request.get('rho'))
 
-        rock.vp_std = float(self.request.get('vp_std'))
-        rock.vs_std = float(self.request.get('vs_std'))
-        rock.rho_std = float(self.request.get('rho_std'))
+            rock.vp_std = float(self.request.get('vp_std'))
+            rock.vs_std = float(self.request.get('vs_std'))
+            rock.rho_std = float(self.request.get('rho_std'))
 
-        rock.description = self.request.get('description')
-        rock.name = self.request.get('name')
-        rock.group = self.request.get('group')
+            rock.description = self.request.get('description')
+            rock.name = self.request.get('name')
+            rock.group = self.request.get('group')
 
-        # Save in the database
-        rock.put()
+            # Save in the database
+            rock.put()
 
-        activity = "added_rock"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrParent.all().get()).put()
+            activity = "added_rock"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrParent.all().get()).put()
+        except:
+            # send error
+            pass
+        
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!') 
 
-        # TODO Web API should not redirect
-        self.redirect('/dashboard#rocks')
-                     
+    @authenticate
+    def put(self, user):
+        # Updates a rock database object
 
+        # Get the database key from the request
+        try:
+
+            key = self.request.get("db_key")
+
+            rock = Rock.get_by_id(int(key), parent=user)
+
+            print(rock)
+            # Update the rock
+            rock.vp = float(self.request.get('vp'))
+            rock.vs = float(self.request.get('vs'))
+            rock.rho = float(self.request.get('rho'))
+
+            rock.vp_std = float(self.request.get('vp_std'))
+            rock.vs_std = float(self.request.get('vs_std'))
+            rock.rho_std = float(self.request.get('rho_std'))
+
+            rock.description = self.request.get('description')
+            rock.name = self.request.get('name')
+            rock.group = self.request.get('group')
+
+            rock.name = self.request.get('name')
+            print('DONE IT')
+            rock.put()
+
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.out.write('All OK!!')
+        except Exception as e:
+            # Write out error message
+            print e
+            pass 
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!') 
+        return
+
+        
 class StripeHandler(ModelrAPI):
     '''
     Handle webhook POSTs from Stripe

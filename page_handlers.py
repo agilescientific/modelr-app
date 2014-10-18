@@ -275,7 +275,6 @@ class DashboardHandler(ModelrPageRequest):
 
         # Check if a rock is being edited
         if self.request.get("selected_rock"):
-            print "WTF"
             rock_id = self.request.get("selected_rock")
             current_rock = Rock.get_by_id(int(rock_id),
                                           parent=user)

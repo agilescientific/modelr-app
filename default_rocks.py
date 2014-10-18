@@ -30,12 +30,12 @@ default_rocks = [ {'name':'Shale',
                    'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
 
                    {'name':'Hard Shale',
-                   'description': '',
+                   'description': 'none',
                    'vp': 5000, 'vs': 3165, 'rho': 2750,
                    'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
 
                    {'name':'10% Porosity Dolomite',
-                   'description': '',
+                   'description': 'none',
                    'vp': 5000, 'vs': 2970, 'rho': 2550,
                    'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
 
@@ -45,12 +45,12 @@ default_rocks = [ {'name':'Shale',
                    'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
 
                    {'name':'Tight Dolomite',
-                   'description': '',
+                   'description': 'none',
                    'vp': 6100, 'vs': 3480, 'rho': 2800,
                    'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
 
                    {'name':'Halite',
-                   'description': '',
+                   'description': 'none',
                    'vp': 4545, 'vs': 2627, 'rho': 2030,
                    'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
 
@@ -65,7 +65,7 @@ default_rocks = [ {'name':'Shale',
                    'vp_std': 50, 'vs_std': 50, 'rho_std':50 },
 
                    {'name':'Bitumen Sand',
-                   'description': '',
+                   'description': 'none',
                    'vp': 2375, 'vs': 1000, 'rho': 2075,
                    'vp_std': 50, 'vs_std': 50, 'rho_std':50 }
 
