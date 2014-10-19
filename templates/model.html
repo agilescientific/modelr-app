@@ -43,7 +43,9 @@
    var keys = Object.keys(rocks);
    key =  keys[Math.floor((Math.random()*keys.length))];
    rock = rocks[key];
-   mapping["{{color}}"] = {name:key, property: rock};
+     mapping["{{color}}"] = {key:key,
+			     name:rock, 
+			     property: {}};
    {% endfor %}
    maps.push(mapping);
    {% endfor %}
@@ -378,7 +380,7 @@ function Colors(increment){
    c = property_map.get_colours();
 
    update_map = function (input, colour){
-     property_map.update_mapping(colour, input, rocks[input]);
+     property_map.update_mapping(colour, rocks[input], input);
      forward_model.earth_struct.mapping = property_map.get_mapping();
    }; 
 
@@ -395,12 +397,12 @@ function Colors(increment){
      form_text += '<select id='+c[i]+' onchange="update_map(this.value, this.id)">'
      
      for (var j in rocks) {
-       selected = forward_model.earth_struct.mapping[c[i]].name;
+       selected = forward_model.earth_struct.mapping[c[i]].key;
        if (j == selected){
-	 form_text += '<option value="' + j +'" selected>'+j+'</option>' ;
+	 form_text += '<option value="' + j +'" selected>'+rocks[j]+'</option>' ;
        }
        else{
-	 form_text += '<option value="' + j +'">'+j+'</option>' ;
+	 form_text += '<option value="' + j +'">'+rocks[j]+'</option>' ;
        }
      }
      form_text += '</select></div>';
@@ -492,20 +494,19 @@ $(document).ready(function () {
   seen by the user -->
   <datalist id="list_of_rocks">
     {% for rock in rocks %}
-    <option data-value="{{rock.vp}},{{rock.vs}},{{rock.rho}},{{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+    <option data-value="{{rock.key().id()}}"
 	    data-name="{{rock.name}}">{{rock.name}}</option>
     {% endfor %}
   {% for group in group_rocks %}
   {% for rock in group.rocks %}
-  <option data-value="{{rock.vp}},{{rock.vs}},{{rock.rho}},
-	  {{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+  <option data-value="{{rock.key().id()}}"
 	  data-name="{{rock.name}}">
     {{rock.name}}
   </option>
   {% endfor %}
   {% endfor %}
     {% for rock in default_rocks %}
-    <option data-value="{{rock.vp}},{{rock.vs}},{{rock.rho}},{{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+    <option data-value="{{rock.key().id()}}"
 	    data-name="{{rock.name}}">{{rock.name}}</option>
     {% endfor %}
   </datalist>

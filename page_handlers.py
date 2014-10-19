@@ -1347,15 +1347,16 @@ class FixScenarios(ModelrPageRequest):
             args = data["arguments"]
 
             for key, value in args.iteritems():
-
-                print key, value
+            
                 if key.startswith("Rock"):
 
                     rocks = Rock.all().ancestor(
                         ModelrParent.all().get())
                     rock = rocks.filter("name =", value).get()
-
-                    args[key] = rock.key().id()
+                    if(rock):
+                        args[key] = rock.key().id()
+                    else:
+                        args[key] = None
 
             data["arguments"] = args
             s.data = json.dumps(data).encode()
