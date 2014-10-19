@@ -1363,6 +1363,35 @@ class FixScenarios(ModelrPageRequest):
             s.put()
                 
         self.response.out.write("oK")
+
+class FixModels(ModelrPageRequest):
+
+    def get(self):
+        
+        models = EarthModel.all().fetch(1000)
+
+        for m in models:
+
+            data = json.loads(m.data)
+            cmap = data["mapping"]
+
+            for color, rock_data in cmap.iteritems():
+
+                rock_name = rock_data["name"]
+
+                try:
+                    rocks = Rock.all().ancestor(
+                        ModelrParent.all().get())
+                    
+                    rock = rocks.filter("name =", rock_name).get()
+                    cmap[color]["key"] = rock.key().id()
+                except:
+                    pass
+            m.data = json.dumps(data).encode()
+        self.response.write("OK")
+
+                
+
         
 class FixDefaultRocks(ModelrPageRequest):
     def get(self):
