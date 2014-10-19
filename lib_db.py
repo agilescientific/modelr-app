@@ -123,7 +123,8 @@ class Rock(Item):
                            "vp_std": self.vp_std,
                            "vs_std": self.vs_std,
                            "rho_std": self.rho_std,
-                           "description": self.description})
+                           "description": self.description,
+                           "db_key": self.key().id()})
 
 
 class Server(db.Model):

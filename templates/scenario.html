@@ -269,6 +269,7 @@ $('#script_info').popover({
 
    }
    
+
    // This is specific to this display.
    server.update_img = function(scenario){
    
@@ -463,22 +464,19 @@ by the user -->
   <!--[if IE 9]><select disabled style="display:none"><![endif]-->
 
   {% for rock in rocks %}
-  <option data-value="{{rock.vp}},{{rock.vs}},{{rock.rho}},
-	  {{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+  <option data-value="{{rock.key().id()}}"
 	  data-name="{{rock.name}}">{{rock.name}}</option>
   {% endfor %}
   {% for group in group_rocks %}
   {% for rock in group.rocks %}
-  <option data-value="{{rock.vp}},{{rock.vs}},{{rock.rho}},
-	  {{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+  <option data-value="{{rock.key().id()}}"
 	  data-name="{{rock.name}}">
     {{rock.name}}
   </option>
   {% endfor %}
   {% endfor %}
   {% for rock in default_rocks %}
-  <option data-value="{{rock.vp}},{{rock.vs}},{{rock.rho}},
-	  {{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+  <option data-value="{{rock.key().id()}}"
 	  data-name="{{rock.name}}">{{rock.name}}
   </option>
   {% endfor %}

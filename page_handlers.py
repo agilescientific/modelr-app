@@ -172,6 +172,7 @@ class ScenarioPageHandler(ModelrPageRequest):
         if scen: 
             scenarios += scen
 
+        # Get the models from uploaded images
         if user:
             model_data = EarthModel.all().filter("user =",
                                              user.user_id).fetch(1000)
@@ -279,6 +280,19 @@ class DashboardHandler(ModelrPageRequest):
             current_rock = Rock.get_by_id(int(rock_id),
                                           parent=user)
             template_params['current_rock'] = current_rock
+        else:
+            current_rock = Rock()
+            current_rock.name = "name"
+            current_rock.description = "description"
+            current_rock.vp = 3000.0
+            current_rock.vs = 2000.0
+            current_rock.rho = 1500.0
+            current_rock.vp_std = 50.0
+            current_rock.vs_std = 50.0
+            current_rock.rho_std = 50.0
+            
+            template_params['current_rock'] = current_rock
+        
 
         
         template = env.get_template('dashboard.html')
@@ -523,11 +537,12 @@ class HelpHandler(ModelrPageRequest):
                         
         self.response.out.write(html)   
                
-    def post(self):
+    def post(self, subpage):
 
         email = self.request.get('email')
         message = self.request.get('message')
 
+        
         user = self.verify()
         
         try:
@@ -1317,6 +1332,73 @@ class AdminHandler(ModelrPageRequest):
             html = template.render()
             self.response.out.write(html)
             
+class FixScenarios(ModelrPageRequest):
+
+    def get(self):
+
+        scenarios = Scenario.all().fetch(1000)
+
+        rocks = Rock.all().ancestor(ModelrParent.all().get())
+
+        for s in scenarios:
+
+            data = json.loads(s.data)
+
+            args = data["arguments"]
+
+            for key, value in args.iteritems():
+
+                print key, value
+                if key.startswith("Rock"):
+
+                    rocks = Rock.all().ancestor(
+                        ModelrParent.all().get())
+                    rock = rocks.filter("name =", value).get()
+
+                    args[key] = rock.key().id()
+
+            data["arguments"] = args
+            s.data = json.dumps(data).encode()
+            s.put()
+                
+        self.response.out.write("oK")
+        
+class FixDefaultRocks(ModelrPageRequest):
+    def get(self):
+
+        from default_rocks import default_rocks
+        ModelrRoot = ModelrParent.all().get()
+        admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
+                                                            admin_id).get()
+        for i in default_rocks:
+
+            print i['name']
+            rocks = Rock.all()
+            rocks.filter("user =", admin_id)
+            rocks.filter("name =",i['name'] )
+            rocks = rocks.fetch(100)
+        
+            for r in rocks:
+                r.delete()
+    
+            rock = Rock(parent=admin_user)
+            rock.user = admin_id
+            rock.name = i['name']
+            rock.group = 'public'
+            
+            rock.description = i['description']
+
+            rock.vp = float(i['vp'])
+            rock.vs = float(i['vs'])
+            rock.rho = float(i['rho'])
+
+            rock.vp_std = float(i['vp_std'])
+            rock.vs_std = float(i['vs_std'])
+            rock.rho_std = float(i['rho_std'])
+
+            rock.Parent = admin_user
+            rock.put()
+        self.response.out.write("oK")
 
 class ServerError(ModelrPageRequest):
 
