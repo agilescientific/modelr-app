@@ -177,7 +177,7 @@ class ScenarioPageHandler(ModelrPageRequest):
             model_data = EarthModel.all().filter("user =",
                                              user.user_id).fetch(1000)
             earth_models = [{"image_key": str(i.parent_key()),
-                         "name": i.name} for i in model_data]
+                             "name": i.name} for i in model_data]
 
         else:
             earth_models = []
@@ -1401,8 +1401,7 @@ class FixDefaultRocks(ModelrPageRequest):
         admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
                                                             admin_id).get()
         for i in default_rocks:
-
-            print i['name']
+            
             rocks = Rock.all()
             rocks.filter("user =", admin_id)
             rocks.filter("name =",i['name'] )
