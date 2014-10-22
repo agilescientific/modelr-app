@@ -180,10 +180,18 @@ class RockHandler(ModelrAPI):
         """
 
         name = self.request.get('name')
-        rock = Rock.all().ancestor(user).filter("name =",
-                                                name).get()
+        key = self.request.get('key')
 
-        data = rock.json
+        if(name):
+            rock = Rock.all().ancestor(user).filter("name =",
+                                                    name).get()
+            data = rock.json
+        elif(key):
+            rock = Rock.get_by_id(int(key), parent=user)
+            data = rock.json
+        else:
+            raise Exception
+        
         self.response.out.write(data)
         
 
@@ -371,8 +379,8 @@ class StripeHandler(ModelrAPI):
             # This should never ever happen
             if not user:
                 message = ("Failed to find modelr user for stripe " +
-                           "user %s, but was invoiced by stripe " +
-                           "event" % (stripe_id))
+                           "user %s, but was invoiced by stripe " 
+                            % (stripe_id))
                 send_message(subject="Non-existent user canceled",
                              message=message)
 

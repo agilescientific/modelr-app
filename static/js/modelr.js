@@ -83,6 +83,27 @@ EarthStructure.prototype.update = function update(attr, value) {
     this.on_change();
 };
 
+EarthStructure.prototype.callback = function(data){
+    
+};
+
+EarthStructure.prototype.pull_rocks =function(){
+    // fill rock properties from the front-end server
+
+    cb = (function(data){
+	this.mapping[i].property = rock_to_string(JSON.parse(data));
+    }).bind(this)
+
+    for (var i in this.mapping){
+
+	rock_key = this.mapping[i].key
+	$.ajax("/rock?key="+rock_key, {type: "GET",
+				     async: false,
+				     success: cb})
+    };
+};
+
+
 function PropertyMap(images, colour_maps, keys, current_index){
     this.images = images;
     this.colour_maps = colour_maps;
@@ -104,10 +125,10 @@ PropertyMap.prototype.set_current_map = function(map){
 
 
 PropertyMap.prototype.update_mapping = function(colour, name,
-                                                property){
+                                                rock_key){
     
     this.colour_maps[this.current_index][colour].name = name;
-    this.colour_maps[this.current_index][colour].property = property;
+    this.colour_maps[this.current_index][colour].key = rock_key;
 }
 
 PropertyMap.prototype.get_key = function(){
@@ -186,6 +207,7 @@ ForwardModel.prototype.put = function put(input_image_key,
     
 ForwardModel.prototype.json_data = function json_data(){
 
+    this.earth_struct.pull_rocks();
     data = JSON.stringify({'earth_model':this.earth_struct,
 			   'seismic_model':{script:this.seismic_model.script, 
 					    args:this.seismic_model.arguments}, 
@@ -318,10 +340,7 @@ Scenario.prototype.qs = function() {
 		    data = JSON.parse(data);
 		    //We should send the json object, but would
 		    //break other apps
-		    value = data.vp.toString() +','+ data.vs.toString() + 
-			','+data.rho.toString() + ','+ data.vp_std.toString() +
-			','+data.vs_std.toString() + 
-			','+data.rho_std.toString()
+		    value = 
 		            
 		    query_str += '&' + argname + '=' + encodeURIComponent(value);
 		}
@@ -595,6 +614,16 @@ function get_models(datalist) {
     
     return models;
 };
+
+
+function rock_to_string(data){
+    return data.vp.toString() +','+ data.vs.toString() + 
+	','+data.rho.toString() + ','+ data.vp_std.toString() +
+	','+data.vs_std.toString() + 
+	','+data.rho_std.toString()
+}
+
+
 
 function save_scenario(scenario) {
 
