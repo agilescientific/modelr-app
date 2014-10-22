@@ -340,7 +340,7 @@ Scenario.prototype.qs = function() {
 		    data = JSON.parse(data);
 		    //We should send the json object, but would
 		    //break other apps
-		    value = 
+		    value = rock_to_string(data);
 		            
 		    query_str += '&' + argname + '=' + encodeURIComponent(value);
 		}
