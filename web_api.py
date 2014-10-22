@@ -24,7 +24,8 @@ import json
 import base64
 import StringIO
 
-from constants import admin_id, LOCAL
+from constants import admin_id, LOCAL, PRICE, UR_STATUS_DICT, \
+     tax_dict
 
 from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      verify, authenticate, verify_signup, initialize_user,\
@@ -172,16 +173,39 @@ class ScenarioHandler(ModelrAPI):
 class RockHandler(ModelrAPI):
 
 
-    @authenticate
-    def get(self, user):
+    def get(self):
         """
-        Will the requested rock from the user's database
+        Get the requested rock from the user's database
         """
 
         name = self.request.get('name')
-        rock = Rock.all().ancestor(user).filter("name =", name).get()
+        key = self.request.get('key')
 
-        data = rock.json
+        user = self.verify()
+
+        ModelrRoot = ModelrParent.all().get()
+        admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
+                                       admin_id).get()
+        
+        if(name):
+
+            rock = Rock.all().filter("name =", name).get()
+            if(user):
+                u_rock = Rock.all().ancestor(user).filter("name =",
+                                                        name).get()
+                if(u_rock): rock = u_rock
+            
+          
+            data = rock.json
+        elif(key):
+            rock = Rock.get_by_id(int(key), parent=admin_user)
+            
+            u_rock = Rock.get_by_id(int(key), parent=user)
+            if(u_rock): rock = u_rock
+            data = rock.json
+        else:
+            raise Exception
+        
         self.response.out.write(data)
         
 
@@ -212,47 +236,94 @@ class RockHandler(ModelrAPI):
             
     @authenticate
     def post(self, user):
+        # Adds a rock to the database, will throw an error
+        # if the rock name already exists
         
-        name = self.request.get('name')
+        try:
+            
+            name = self.request.get("name")
         
-        rocks = Rock.all()
-        rocks.ancestor(user)
-        rocks.filter("user =", user.user_id)
-        rocks.filter("name =", name)
-        rocks = rocks.fetch(1)
+            rocks = Rock.all()
+            rocks.ancestor(user)
+            rocks.filter("user =", user.user_id)
+            rocks.filter("name =", name)
+            rocks = rocks.fetch(1)
 
-        # Rewrite if the rock exists
-        if rocks:
-            rock = rocks[0]
-        else:
-            rock = Rock(parent=user)
-            rock.user = user.user_id
+            # Rewrite if the rock exists
+            if rocks:
+                # write out error message
+                pass 
+            else:
+                rock = Rock(parent=user)
+                rock.user = user.user_id
 
-        # Populate the object
-        rock.vp = float(self.request.get('vp'))
-        rock.vs = float(self.request.get('vs'))
-        rock.rho = float(self.request.get('rho'))
+            # Populate the object
+            rock.vp = float(self.request.get('vp'))
+            rock.vs = float(self.request.get('vs'))
+            rock.rho = float(self.request.get('rho'))
 
-        rock.vp_std = float(self.request.get('vp_std'))
-        rock.vs_std = float(self.request.get('vs_std'))
-        rock.rho_std = float(self.request.get('rho_std'))
+            rock.vp_std = float(self.request.get('vp_std'))
+            rock.vs_std = float(self.request.get('vs_std'))
+            rock.rho_std = float(self.request.get('rho_std'))
 
-        rock.description = self.request.get('description')
-        rock.name = self.request.get('name')
-        rock.group = self.request.get('group')
+            rock.description = self.request.get('description')
+            rock.name = self.request.get('name')
+            rock.group = self.request.get('group')
 
-        # Save in the database
-        rock.put()
+            # Save in the database
+            rock.put()
 
-        activity = "added_rock"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrParent.all().get()).put()
+            activity = "added_rock"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrParent.all().get()).put()
+        except:
+            # send error
+            pass
+        
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!') 
 
-        # TODO Web API should not redirect
-        self.redirect('/dashboard#rocks')
-                     
+    @authenticate
+    def put(self, user):
+        # Updates a rock database object
 
+        # Get the database key from the request
+        try:
+
+            key = self.request.get("db_key")
+
+            rock = Rock.get_by_id(int(key), parent=user)
+
+            print(rock)
+            # Update the rock
+            rock.vp = float(self.request.get('vp'))
+            rock.vs = float(self.request.get('vs'))
+            rock.rho = float(self.request.get('rho'))
+
+            rock.vp_std = float(self.request.get('vp_std'))
+            rock.vs_std = float(self.request.get('vs_std'))
+            rock.rho_std = float(self.request.get('rho_std'))
+
+            rock.description = self.request.get('description')
+            rock.name = self.request.get('name')
+            rock.group = self.request.get('group')
+
+            rock.name = self.request.get('name')
+         
+            rock.put()
+
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.out.write('All OK!!')
+        except Exception as e:
+            # Write out error message
+            print e
+            pass 
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!') 
+        return
+
+        
 class StripeHandler(ModelrAPI):
     '''
     Handle webhook POSTs from Stripe
@@ -286,8 +357,8 @@ class StripeHandler(ModelrAPI):
             # a clever way
             if not user:
                 message = ("Failed to find modelr user for stripe " +
-                           "user %s, but was invoiced by stripe " +
-                           "event %s" % (stripe_id,event_id))
+                           "user %s, but was invoiced by stripe "
+                            % (stripe_id))
                 send_message(subject="Non-existent user invoiced",
                              message=message)
                 
@@ -321,8 +392,8 @@ class StripeHandler(ModelrAPI):
             # This should never ever happen
             if not user:
                 message = ("Failed to find modelr user for stripe " +
-                           "user %s, but was invoiced by stripe " +
-                           "event %s" % (stripe_id,event_id))
+                           "user %s, but was invoiced by stripe " 
+                            % (stripe_id))
                 send_message(subject="Non-existent user canceled",
                              message=message)
 
@@ -477,7 +548,7 @@ class EarthModelHandler(ModelrAPI):
                 earth_models = earth_models.filter("user =",
                                                   user.user_id)
                 def_models = def_models.filter("user =",
-                                                admin_id)
+                                                 admin_id)
                 earth_models.order('-date')
                 def_models.order('-date')
                 
@@ -553,23 +624,12 @@ class EarthModelHandler(ModelrAPI):
 
     
 
-class FluidHandler(ModelrAPI):
 
-
-    def get(self):
-        pass
-
-    @authenticate
-    def delete(self, user):
-        pass
-    
-    @authenticate
-    def post(self, user):
-        pass 
 
 class ModelServed(ModelrAPI):
 
     def post(self):
 
+        models_served = ModelServedCount.all().get()
         models_served.count += 1
         models_served.put()

@@ -1,3 +1,34 @@
+modelr 0.2.4.5
+hot fix on rock queries for the model page
+
+modelr 0.2.4.4 October 21 2014
+quick fixes, removed the database modifying URLs
+
+
+modelr 0.2.4.4-temp October 21 2014
+changed all scenarios and models to use rock db ids instead of names.
+backed up GAE datastore before this point, and it changes existing
+models.
+
+modelr 0.2.4.3 October 14 2014
+reverted the case change on the default rock names
+
+modelr 0.2.4.2 October 13 2014
+hot fix, broken email on the help page
+
+modelr 0.2.4.1 September 25 2014
+Made the whole billing process more robust, better error handling,
+put stripe api handling into constants file to avoid confusion.
+Fixed some stripe callback errors
+
+modelr 0.2.4 September 16 2014
+added metadata to scenarios page, calling plot.json now.
+Fixed missing constants, which may have messed up subscriptions
+for two weeks.
+
+modelr 0.2.3 Aug 31 2014
+Rearranged main.py into pages and apis
+
 modelr 0.2.2.2 Jun 20
 updated default rocks, delete child models when parent image is deleted
 

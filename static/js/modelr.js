@@ -83,6 +83,27 @@ EarthStructure.prototype.update = function update(attr, value) {
     this.on_change();
 };
 
+EarthStructure.prototype.callback = function(data){
+    
+};
+
+EarthStructure.prototype.pull_rocks =function(){
+    // fill rock properties from the front-end server
+
+    cb = (function(data){
+	this.mapping[i].property = rock_to_string(JSON.parse(data));
+    }).bind(this)
+
+    for (var i in this.mapping){
+
+	rock_key = this.mapping[i].key
+	$.ajax("/rock?key="+rock_key, {type: "GET",
+				     async: false,
+				     success: cb})
+    };
+};
+
+
 function PropertyMap(images, colour_maps, keys, current_index){
     this.images = images;
     this.colour_maps = colour_maps;
@@ -104,10 +125,10 @@ PropertyMap.prototype.set_current_map = function(map){
 
 
 PropertyMap.prototype.update_mapping = function(colour, name,
-                                                property){
+                                                rock_key){
     
     this.colour_maps[this.current_index][colour].name = name;
-    this.colour_maps[this.current_index][colour].property = property;
+    this.colour_maps[this.current_index][colour].key = rock_key;
 }
 
 PropertyMap.prototype.get_key = function(){
@@ -186,6 +207,7 @@ ForwardModel.prototype.put = function put(input_image_key,
     
 ForwardModel.prototype.json_data = function json_data(){
 
+    this.earth_struct.pull_rocks();
     data = JSON.stringify({'earth_model':this.earth_struct,
 			   'seismic_model':{script:this.seismic_model.script, 
 					    args:this.seismic_model.arguments}, 
@@ -305,23 +327,38 @@ Scenario.prototype.default_args = function default_args(argumentss) {
  */
 Scenario.prototype.qs = function() {
     var args = this.arguments;
-
     query_str = '?script=' + this.script;
 
     for (arg in this.info.arguments) {
 	argname=this.info.arguments[arg]['name'];
         if (this.info.arguments[arg]['type'] == 
 	    'rock_properties_type') {
-            var value = this.rocks[args[argname]];
+
+            var rock_name = this.rocks[args[argname]];
+	    if (rock_name){
+		cb = function(data){
+		    data = JSON.parse(data);
+		    //We should send the json object, but would
+		    //break other apps
+		    value = rock_to_string(data);
+		            
+		    query_str += '&' + argname + '=' + encodeURIComponent(value);
+		}
+		$.ajax("/rock?name="+rock_name,{success: cb, 
+						type: "GET",
+						async: false});
+	    }
+
         } else if(this.info.arguments[arg]['type'] == 
 		  'earth_model_type'){
 	    var value = JSON.stringify(this.models[args[argname]]);
+	    query_str += '&' + argname + '=' + encodeURIComponent(value);
 	}
 	else{
             var value = args[argname];
-
+	    query_str += '&' + argname + '=' + encodeURIComponent(value);
         };
-        query_str += '&' + argname + '=' + encodeURIComponent(value);
+        
     };
 
     return query_str;
@@ -444,7 +481,7 @@ function display_form(sel, metadata) {
 	    }
 	    else {def = deflt;
 		  pos = deflt };//args[arg]['default']};
-	    current =  '<td><label id="'+name+'dis">'+(def|0) + '</label><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="'+pos+'"/>'
+	    current =  '<td><label id="'+name+'dis">'+def.toString().substring(0,4) + '</label><input id="'+ name +'" data-slider-id=type="text" data-slider-min="'+min+'" data-slider-max="'+max+'" data-slider-step="1" data-slider-value="'+pos+'"/>'
 	    form_text += current;
 
 	    sliders.push(name);
@@ -490,7 +527,7 @@ function display_form(sel, metadata) {
 		value = scale[index]
 	    } else {value=ev.value}
 	    label = $('#'+ev.target.id +'dis');
-	    value = value | 0
+	    value = value.toString().substring(0,4)
 	    label.text(value);});
 	
 
@@ -506,10 +543,10 @@ function display_form(sel, metadata) {
 
     selectors = form.find('.rock_selector');
 
-    for (rname in server.rocks) {
-        rock_prop = server.rocks[rname];
+    for (rkey in server.rocks) {
+        rname = server.rocks[rkey];
 
-        selectors.append('<option value="' + rname + '">' + rname + 
+        selectors.append('<option value="' + rkey + '">' + rname + 
 			 '</option>');
     };
 
@@ -555,7 +592,7 @@ function get_rocks(datalist) {
         var name = $(list_of_rocks[index]).attr('data-name');
         var value = $(list_of_rocks[index]).attr('data-value');
 
-        rcks[name] = value;
+        rcks[value] = name;
     });
 
     return rcks;
@@ -577,6 +614,16 @@ function get_models(datalist) {
     
     return models;
 };
+
+
+function rock_to_string(data){
+    return data.vp.toString() +','+ data.vs.toString() + 
+	','+data.rho.toString() + ','+ data.vp_std.toString() +
+	','+data.vs_std.toString() + 
+	','+data.rho_std.toString()
+}
+
+
 
 function save_scenario(scenario) {
 

@@ -27,8 +27,6 @@ import re
 from page_handlers import *
 from web_api import *
 
-# Local Imports
-from default_rocks import default_rocks
 from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      verify, authenticate, verify_signup, initialize_user,\
      reset_password, \
@@ -39,7 +37,7 @@ from lib_db import Rock, Scenario, User, ModelrParent, Group, \
      ImageModel, Forward2DModel, Issue, EarthModel, Server
 
 
-from constants import admin_id, env, LOCAL
+from constants import admin_id, env, LOCAL, stripe_api_key
 
 # Retry can help overcome transient urlfetch or GCS issues,
 # such as timeouts.
@@ -78,6 +76,8 @@ else:
     server.host = "https://www.modelr.org"
 server.put()
 
+stripe.api_key = stripe_api_key
+
 #=====================================================================
 # Define Global Variables
 #=====================================================================
@@ -94,7 +94,7 @@ if models_served is None:
 # Put in the default rock database under the admin account.
 # The admin account is set up so every user can view our default
 # scenarios and rocks
-admin_id = 0
+
 admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
                                                     admin_id).get()
 # Create the admin account
@@ -118,61 +118,13 @@ if not public:
 
     
 # Populate the default rock database.
-for i in default_rocks:
 
-    rocks = Rock.all()
-    rocks.filter("user =", admin_id)
-    rocks.filter("name =",i['name'] )
-    rocks = rocks.fetch(1)
-        
-    if rocks:
-        rock = rocks[0]
-    else:
-        rock = Rock()
-        rock.user = admin_id
-        rock.name = i['name']
-        rock.group = 'public'
-            
-    rock.description = i['description']
-
-    rock.vp = float(i['vp'])
-    rock.vs = float(i['vs'])
-    rock.rho = float(i['rho'])
-
-    rock.vp_std = float(i['vp_std'])
-    rock.vs_std = float(i['vs_std'])
-    rock.rho_std = float(i['rho_std'])
-
-    rock.put()
 
 
 #====================================================================
 # Global Variables
 #====================================================================
 # Secret API key from Stripe dashboard
-
-PRICE = 900
-tax_dict = {"AB":0.05,
-            "BC":0.05,
-            "MB":0.05,
-            "NB":0.13,
-            "NL":0.13,
-            "NT":0.05,
-            "NS":0.15,
-            "NU":0.05,
-            "ON":0.13,
-            "PE":0.14,
-            "QC":0.05,
-            "SK":0.05,
-            "YT":0.05}
-
-UR_STATUS_DICT = {'0': 'paused',
-                  '1': 'not checked yet',
-                  '2': 'up',
-                  '8': 'seems down',
-                  '9': 'down'
-                 }
-
 
 
 

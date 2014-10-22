@@ -366,14 +366,12 @@ def reset_password(user, current_pword, new_password,
     # Save it in the database
     user.put()
     
-def cancel_subscription(user,stripe_api_key):
+def cancel_subscription(user):
     """
     Delete the user. See notes in DeleteHandler() in main.py
     """
 
     try:
-
-        stripe.api_key = stripe_api_key
         stripe_customer = stripe.Customer.retrieve(user.stripe_id)
 
         sub_id = stripe_customer.subscriptions["data"][0]["id"]

@@ -111,10 +111,6 @@ class Rock(Item):
     vp = db.FloatProperty()
     vs = db.FloatProperty()
     rho = db.FloatProperty()
-
-    k_min = db.FloatProperty()
-    porosity = db.FloatProperty()
-    
     vp_std = db.FloatProperty()
     vs_std = db.FloatProperty()
     rho_std = db.FloatProperty()
@@ -122,15 +118,13 @@ class Rock(Item):
     @property
     def json(self):
 
-        return json.dumps({"vp": self.vp,
-                           "vs": self.vs,
+        return json.dumps({"vp": self.vp, "vs": self.vs,
                            "rho": self.rho,
                            "vp_std": self.vp_std,
                            "vs_std": self.vs_std,
                            "rho_std": self.rho_std,
-                           "k_min": self.k_min,
-                           "porosity": self.porosity,
-                           "description": self.description})
+                           "description": self.description,
+                           "db_key": self.key().id()})
 
 
 

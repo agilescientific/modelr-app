@@ -195,6 +195,16 @@ $('#script_info').popover({
           </div>
         </div> <!-- end of panel-body -->
       
+	<div class="panel panel-default">
+	  <div class="panel-heading">
+            <h3 class="panel-title">Metadata</h3>
+	  </div>
+	  <div class="panel-body" id="dvData">
+	    
+            <div id="model_metadata"></div>
+            
+	  </div> <!-- end of panel body -->
+	</div> <!-- end of panel -->
       </div> <!-- end of panel -->
 
     </div>  <!-- end of column div -->
@@ -259,6 +269,7 @@ $('#script_info').popover({
 
    }
    
+
    // This is specific to this display.
    server.update_img = function(scenario){
    
@@ -267,13 +278,19 @@ $('#script_info').popover({
      var img = $('img#plot_image');
      var loader = $('img#loader');
      var qs = scenario.qs();
-     var url = server.hostname +'/plot.jpeg' + qs + '&type=scenario';
+     var url = server.hostname +'/plot.json' + qs;
      
+     $.get(url, {type:'scenario'}, function(data){
+       img.attr('src',
+		"data:image/png;base64, " 
+		+ data.data).load(function(){ 
+	 loader.fadeOut();
+       })
+       display_metadata(data.metadata);
+     });
+
      //img.attr('src','');
      loader.show();
-     img.attr('src', url).load(function(){
-       loader.fadeOut();
-     });
 
      $.post('/model_served');
      
@@ -393,6 +410,48 @@ function load_earthmodel(image_key, name){
  };
 
  
+// START OF DISPLAY METADATA *****
+function display_metadata(data){
+
+  // Define a couple of helper functions
+  // There may be a more elegant way to do this...
+  var replacer2 = function(key, val) {
+    return val.toFixed ? Number(val.toFixed(2)) : val;
+  }
+
+  var replacer4 = function(key, val) {
+    return val.toFixed ? Number(val.toFixed(4)) : val;
+  }
+
+  // We'll start a table, then append into it...
+  var $table = $('<table id=model_metadata></table>').addClass('table table-striped');
+   $table.append('<thead><tr></tr></thead>'); 
+   $table.append('<th></th>'); 
+
+   // Build the body; start with tag, then append into it
+   $table.append('<tbody></tbody>'); 
+
+   sorted_keys = Object.keys(data).sort();
+   for (var i =0; i < sorted_keys.length; i++ ){
+     var row = $('<tr class="text-right">></tr>');
+
+     field = sorted_keys[i];
+     row.append('<td style="text-align:left;"><i>' + field + '</i></td>' + 
+		'<td>' + 
+		   JSON.stringify(data[field], 
+				  replacer2) + '</td>');
+
+
+     $table.append(row);
+    };
+
+
+    // Finally replace the div with the table
+    $('#model_metadata').replaceWith($table);
+
+};
+// END OF DISPLAY METADATA *****
+
 </script>
 
 
@@ -405,22 +464,19 @@ by the user -->
   <!--[if IE 9]><select disabled style="display:none"><![endif]-->
 
   {% for rock in rocks %}
-  <option data-value="{{rock.vp}},{{rock.vs}},{{rock.rho}},
-	  {{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+  <option data-value="{{rock.key().id()}}"
 	  data-name="{{rock.name}}">{{rock.name}}</option>
   {% endfor %}
   {% for group in group_rocks %}
   {% for rock in group.rocks %}
-  <option data-value="{{rock.vp}},{{rock.vs}},{{rock.rho}},
-	  {{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+  <option data-value="{{rock.key().id()}}"
 	  data-name="{{rock.name}}">
     {{rock.name}}
   </option>
   {% endfor %}
   {% endfor %}
   {% for rock in default_rocks %}
-  <option data-value="{{rock.vp}},{{rock.vs}},{{rock.rho}},
-	  {{rock.vp_std}}, {{rock.vs_std}}, {{rock.rho_std}}"
+  <option data-value="{{rock.key().id()}}"
 	  data-name="{{rock.name}}">{{rock.name}}
   </option>
   {% endfor %}

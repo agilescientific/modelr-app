@@ -37,7 +37,8 @@ import StringIO
 
 from xml.etree import ElementTree
 
-from constants import admin_id, env, LOCAL
+from constants import admin_id, env, LOCAL, PRICE, UR_STATUS_DICT, \
+     tax_dict, stripe_api_key, stripe_public_key
 
 from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      verify, authenticate, verify_signup, initialize_user,\
@@ -138,20 +139,20 @@ class ScenarioPageHandler(ModelrPageRequest):
           'X-Request, X-Requested-With'
 
         # Get the default rocks
-        default_rocks = Rock.all()
+        default_rocks = Rock.all().order('name')
         default_rocks.filter("user =", admin_id)
         default_rocks = default_rocks.fetch(100)
         
         # Get the user rocks
         if user:
-            rocks = Rock.all().ancestor(user).fetch(100)
+            rocks = Rock.all().order('name').ancestor(user).fetch(100)
 
             # Get the group rocks
             group_rocks = []
             for group in user.group:
             
                 g_rocks = \
-                  Rock.all().ancestor(ModelrParent.all().get()).filter("group =",
+                  Rock.all().order('name').ancestor(ModelrParent.all().get()).filter("group =",
                                                          group)
                 group_rocks.append({"name": group.capitalize(),
                                     "rocks": g_rocks.fetch(100)})
@@ -171,15 +172,16 @@ class ScenarioPageHandler(ModelrPageRequest):
         if scen: 
             scenarios += scen
 
+        # Get the models from uploaded images
         if user:
             model_data = EarthModel.all().filter("user =",
                                              user.user_id).fetch(1000)
             earth_models = [{"image_key": str(i.parent_key()),
-                         "name": i.name} for i in model_data]
+                             "name": i.name} for i in model_data]
 
         else:
             earth_models = []
-            
+        
         template_params = \
           self.get_base_params(user=user,rocks=rocks,
                                default_rocks=default_rocks,
@@ -278,6 +280,19 @@ class DashboardHandler(ModelrPageRequest):
             current_rock = Rock.get_by_id(int(rock_id),
                                           parent=user)
             template_params['current_rock'] = current_rock
+        else:
+            current_rock = Rock()
+            current_rock.name = "name"
+            current_rock.description = "description"
+            current_rock.vp = 3000.0
+            current_rock.vs = 2000.0
+            current_rock.rho = 1500.0
+            current_rock.vp_std = 50.0
+            current_rock.vs_std = 50.0
+            current_rock.rho_std = 50.0
+            
+            template_params['current_rock'] = current_rock
+        
 
         
         template = env.get_template('dashboard.html')
@@ -522,11 +537,12 @@ class HelpHandler(ModelrPageRequest):
                         
         self.response.out.write(html)   
                
-    def post(self):
+    def post(self, subpage):
 
         email = self.request.get('email')
         message = self.request.get('message')
 
+        
         user = self.verify()
         
         try:
@@ -809,15 +825,10 @@ class DeleteHandler(ModelrPageRequest):
     def post(self, user):
 
         template = env.get_template('message.html')
-        
-        if LOCAL:
-            stripe_api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
             
-        else:
-            stripe_api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
             
         try:
-            cancel_subscription(user, stripe_api_key) 
+            cancel_subscription(user) 
             msg = "Unsubscribed from Modelr"
             html = template.render(user=user, msg=msg)
             self.response.write(html)
@@ -895,11 +906,6 @@ class EmailAuthentication(ModelrPageRequest):
         except AuthExcept as e:
             self.redirect('/signup?error=auth_failed')
             return
-
-        if LOCAL:
-            stripe_public_key = "pk_test_prdjLqGi2IsaxLrFHQM9F7X4"
-        else:
-            stripe_public_key = "pk_live_5CZcduRr07BZPG2A5OAhisW9"
             
         msg = "Thank you for verifying your email address."
         params = self.get_base_params(user=user,
@@ -914,12 +920,6 @@ class EmailAuthentication(ModelrPageRequest):
         """
         email = self.request.get('stripeEmail')
         price = PRICE # set at head of this file
-
-        if LOCAL:
-            stripe.api_key = "sk_test_RL004upcEo38AaDKIefMGhKF"
-            
-        else:
-            stripe.api_key = "sk_live_e1fBcKwSV6TfDrMqmCQBMWTP"
             
 
         # Secret API key for Canada Post postal lookup
@@ -938,7 +938,7 @@ class EmailAuthentication(ModelrPageRequest):
         except:
             # The card has been declined
             # Let the user know and DON'T UPGRADE USER
-            self.response.out.write("Payment failed. Credit card not accepted at this time")
+            self.redirect('/signin?verified=false')
             return
         
         # Check the country to see if we need to charge tax
@@ -959,27 +959,33 @@ class EmailAuthentication(ModelrPageRequest):
     
             headers = {"Accept": "application/vnd.cpc.postoffice+xml",
                        "Authorization": "Basic " + cp_key}
-            req = urllib2.Request(cp_url, headers=headers)
-            result = urllib2.urlopen(req).read()
-            xml_root = ElementTree.fromstring(result)
 
-            # This is super hacky, but the only way I could get the
-            # XML out
-            province = []
-            for i in xml_root.iter('{http://www.canadapost.ca/ws/'+
-                                   'postoffice}province'):
-                province.append(i.text)
-            tax_code = province[0]
+            try:
+                req = urllib2.Request(cp_url, headers=headers)
+                result = urllib2.urlopen(req).read()
+                xml_root = ElementTree.fromstring(result)
+
+                # This is super hacky, but the only way I could get the
+                # XML out
+                province = []
+                for i in xml_root.iter('{http://www.canadapost.ca/ws/'+
+                                       'postoffice}province'):
+                    province.append(i.text)
+                    tax_code = province[0]
+                    
+                tax = tax_dict.get(tax_code) * price
         
-            tax = tax_dict.get(tax_code) * price
-        
-            # Add the tax to the invoice
-            stripe.InvoiceItem.create(customer=customer.id,
-                                      amount = int(tax),
-                                      currency="usd",
-                                      description="Canadian Taxes")
-         
-                                          
+                # Add the tax to the invoice
+                stripe.InvoiceItem.create(customer=customer.id,
+                                              amount = int(tax),
+                                              currency="usd",
+                                              description="Canadian Taxes")
+
+            except:
+
+                send_message(subject="taxation failed for %s" %customer.id)
+                tax = 0
+            
         else:
             tax_code = country
             tax = 0
@@ -991,7 +997,7 @@ class EmailAuthentication(ModelrPageRequest):
         except:
             # The card has been declined
             # Let the user know and DON'T UPGRADE USER
-            self.response.out.write("Payment failed")
+            self.redirect('/signin?verified=false')
             return
 
         # get the temp user from the database
@@ -1005,8 +1011,7 @@ class EmailAuthentication(ModelrPageRequest):
                          message=("Failed to register user %s to " +
                         "Modelr but was billed by Stripe. " +
                         "Customer ID: %s") %(email, customer.id))
-            self.response.write("Registration failed. Charges will "
-                                + "be cancelled")
+            self.redirect('/signin?verified=false')
             raise
         
         self.redirect('/signin?verified=true')
@@ -1022,12 +1027,19 @@ class SignIn(webapp2.RequestHandler):
         if status == "true":
             msg = ("Your account has been created and your card has "
                    "been charged. Welcome to Modelr!" )
+            error_msg = None
       
+        elif status == "false":
+            error_msg = ("Failed to create account. Your credit card will "
+                   "not be charged.")
+            msg = None
         else:
             msg = None
+            error_msg = None
 
         template = env.get_template('signin.html')
-        html = template.render(success=msg, redirect=redirect)
+        html = template.render(success=msg, error=error_msg,
+                               redirect=redirect)
         self.response.out.write(html)
 
     def post(self):
@@ -1320,6 +1332,102 @@ class AdminHandler(ModelrPageRequest):
             html = template.render()
             self.response.out.write(html)
             
+class FixScenarios(ModelrPageRequest):
+
+    def get(self):
+
+        scenarios = Scenario.all().fetch(1000)
+
+        rocks = Rock.all().ancestor(ModelrParent.all().get())
+
+        for s in scenarios:
+
+            data = json.loads(s.data)
+
+            args = data["arguments"]
+
+            for key, value in args.iteritems():
+            
+                if key.startswith("Rock"):
+
+                    rocks = Rock.all().ancestor(
+                        ModelrParent.all().get())
+                    rock = rocks.filter("name =", value).get()
+                    if(rock):
+                        args[key] = rock.key().id()
+                    else:
+                        args[key] = None
+
+            data["arguments"] = args
+            s.data = json.dumps(data).encode()
+            s.put()
+                
+        self.response.out.write("oK")
+
+class FixModels(ModelrPageRequest):
+
+    def get(self):
+        
+        models = EarthModel.all().fetch(1000)
+
+        for m in models:
+
+            data = json.loads(m.data)
+            cmap = data["mapping"]
+
+            for color, rock_data in cmap.iteritems():
+
+                rock_name = rock_data["name"]
+
+                try:
+                    rocks = Rock.all().ancestor(
+                        ModelrParent.all().get())
+                    
+                    rock = rocks.filter("name =", rock_name).get()
+                    cmap[color]["key"] = rock.key().id()
+                except:
+                    pass
+            m.data = json.dumps(data).encode()
+        self.response.write("OK")
+
+                
+
+        
+class FixDefaultRocks(ModelrPageRequest):
+    def get(self):
+
+        from default_rocks import default_rocks
+        ModelrRoot = ModelrParent.all().get()
+        admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
+                                                            admin_id).get()
+        for i in default_rocks:
+            
+            rocks = Rock.all()
+            rocks.filter("user =", admin_id)
+            rocks.filter("name =",i['name'] )
+            rocks = rocks.fetch(100)
+        
+            for r in rocks:
+                r.delete()
+    
+            rock = Rock(parent=admin_user)
+            rock.user = admin_id
+            rock.name = i['name']
+            rock.group = 'public'
+            
+            rock.description = i['description']
+
+            rock.vp = float(i['vp'])
+            rock.vs = float(i['vs'])
+            rock.rho = float(i['rho'])
+
+            rock.vp_std = float(i['vp_std'])
+            rock.vs_std = float(i['vs_std'])
+            rock.rho_std = float(i['rho_std'])
+
+            rock.Parent = admin_user
+            rock.put()
+        self.response.out.write("oK")
 
 class ServerError(ModelrPageRequest):
 
