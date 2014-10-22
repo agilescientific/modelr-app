@@ -177,7 +177,7 @@ class ScenarioPageHandler(ModelrPageRequest):
             model_data = EarthModel.all().filter("user =",
                                              user.user_id).fetch(1000)
             earth_models = [{"image_key": str(i.parent_key()),
-                         "name": i.name} for i in model_data]
+                             "name": i.name} for i in model_data]
 
         else:
             earth_models = []
@@ -1347,21 +1347,51 @@ class FixScenarios(ModelrPageRequest):
             args = data["arguments"]
 
             for key, value in args.iteritems():
-
-                print key, value
+            
                 if key.startswith("Rock"):
 
                     rocks = Rock.all().ancestor(
                         ModelrParent.all().get())
                     rock = rocks.filter("name =", value).get()
-
-                    args[key] = rock.key().id()
+                    if(rock):
+                        args[key] = rock.key().id()
+                    else:
+                        args[key] = None
 
             data["arguments"] = args
             s.data = json.dumps(data).encode()
             s.put()
                 
         self.response.out.write("oK")
+
+class FixModels(ModelrPageRequest):
+
+    def get(self):
+        
+        models = EarthModel.all().fetch(1000)
+
+        for m in models:
+
+            data = json.loads(m.data)
+            cmap = data["mapping"]
+
+            for color, rock_data in cmap.iteritems():
+
+                rock_name = rock_data["name"]
+
+                try:
+                    rocks = Rock.all().ancestor(
+                        ModelrParent.all().get())
+                    
+                    rock = rocks.filter("name =", rock_name).get()
+                    cmap[color]["key"] = rock.key().id()
+                except:
+                    pass
+            m.data = json.dumps(data).encode()
+        self.response.write("OK")
+
+                
+
         
 class FixDefaultRocks(ModelrPageRequest):
     def get(self):
@@ -1371,8 +1401,7 @@ class FixDefaultRocks(ModelrPageRequest):
         admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
                                                             admin_id).get()
         for i in default_rocks:
-
-            print i['name']
+            
             rocks = Rock.all()
             rocks.filter("user =", admin_id)
             rocks.filter("name =",i['name'] )
