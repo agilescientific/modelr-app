@@ -1,0 +1,161 @@
+{% extends "base_template.html" %} 
+{% block title %}Modelr &middot; Section model{% endblock %} 
+
+{% block content %}
+
+<!-- style for the color boxes  -->
+<head>
+  <style>
+   .foo {   
+     float: left;
+     width: 20px;
+     height: 20px;     
+     margin: 2px 2px 2px 2px;
+     border-width: 1px;
+     border-style: solid;
+     border-color: rgba(0,0,0,.2);
+   }
+  </style>
+  <link rel="stylesheet" href="static/css/slider.css">
+</head>
+
+
+<!-- JAVASCRIPT and DATA
+================================================================ -->
+<script src="static/js/bootstrap-slider.js"></script>
+
+
+<script>
+  
+  $(document).ready(function() {
+
+   var rock_maps = [];
+   var fluid_maps = [];
+
+   var rocks = get_rocks("#list_of_rocks");
+   var fluids = get_fluids("#list_of_fluids");
+
+  // We need to make colour mappings for each rock model
+  {% for rm in rock_models %}
+  var mapping = {};
+  {% for colour in rm %}
+
+   // Initialize the model with random rocks
+   var keys = Object.keys(rocks);
+   key =  keys[Math.floor((Math.random()*keys.length))];
+
+   // set the colour mapping, property will get filled in later
+   mapping["{{color}}"] = {key:key,
+			   name:rock, 
+			   property: {}};
+   {% endfor %}
+   rock_maps.push(mapping);
+   {% endfor %}
+
+   // load the images
+   var rock_images = [];
+   var images = [];
+   {% for image in rock_images %}
+   images.push("{{image}}");
+   {% endfor %}
+   
+   // and the corresponding image keys
+   var rock_image_keys = [];
+   {% for key in rock_keys %}
+   rock_image_keys.push("{{key}}");
+   {% endfor %}
+
+
+   // ----------------------------------------------- //
+   
+   // We need to make colour mappings for each fluid model
+  {% for fl in fluid_models %}
+  var mapping = {};
+  {% for colour in fl %}
+
+   // Initialize the model with random rocks
+   var keys = Object.keys(fluids);
+   key =  keys[Math.floor((Math.random()*keys.length))];
+
+   // set the colour mapping, property will get filled in later
+   mapping["{{color}}"] = {key:key,
+			   name:fluid, 
+			   property: {}};
+   {% endfor %}
+   fluid_maps.push(mapping);
+   {% endfor %}
+
+   // load the images
+   var fluid_images = [];
+   {% for image in fluid_images %}
+   images.push("{{image}}");
+   {% endfor %}
+   
+   // and the corresponding image keys
+   var fluid_image_keys = [];
+   {% for key in rock_keys %}
+   fluid_image_keys.push("{{key}}");
+   {% endfor %}
+
+   // Initialize the rock property rock
+   rock_property_map = new PropertyMap(rock_images, rock_maps, 
+				       rock_image_keys, 0);
+   fluid_property_map = new PropertyMap(fluid_images, fluid_maps,
+					fluid_image_keys);
+
+   // Make the core objects for server interactions
+   server = new PlotServer(host, null, null);
+
+   earth_structure = new EarthStructure(null, property_map.get_mapping(),
+					{{user.user_id}} + '.hf5',
+					fluid_property_map.get_mapping());
+
+
+   seismic_model = new Scenario(null, null, {},
+				null);
+   
+   seismic_model.on_change = param_changed;
+
+plot_container = new Scenario(null, null, {},
+				 null);
+   plot_container.on_change = param_changed;
+
+   forward_model = new ForwardModel(null,earth_structure, 
+				    seismic_model, plot_container);
+
+   plot_container.display = display_form;
+   seismic_model.display = display_form;
+   earth_structure.display = display_form;
+
+   plot_container.script = "cross_sections.py";
+   
+   plot_container.set_current_script = function(value, argumentss,
+						plot){
+
+     // Not certain this is a safe way to set default
+     // typeof might be better
+     plot = plot || true;
+     
+     plot_container.script=value;
+     server.get_script_info(plot_container.script, 'plots',
+			    function(data){
+	 plot_container.info = data;
+	 plot_container.default_args(argumentss);
+	 
+	 console.log('div#plot_place');
+
+	 cb = function(data){
+	   plot_container.display('div#plot_place', data.metadata);
+	   plot_container.on_change();
+	   update_image(data);
+	 }
+
+	 if(plot){
+	   $('#loader').show();
+	   forward_model.post(server, cb, update=false);
+	 };
+	 
+ 
+}
+</script>
+{% endblock %}
