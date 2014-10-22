@@ -173,8 +173,7 @@ class ScenarioHandler(ModelrAPI):
 class RockHandler(ModelrAPI):
 
 
-    @authenticate
-    def get(self, user):
+    def get(self):
         """
         Get the requested rock from the user's database
         """
@@ -182,9 +181,17 @@ class RockHandler(ModelrAPI):
         name = self.request.get('name')
         key = self.request.get('key')
 
+        user = self.verify()
+        
         if(name):
-            rock = Rock.all().ancestor(user).filter("name =",
-                                                    name).get()
+
+            rock = Rock.all().filter("name =", name).get()
+            if(user):
+                u_rock = Rock.all().ancestor(user).filter("name =",
+                                                        name).get()
+                if(u_rock): rock = u_rock
+            
+          
             data = rock.json
         elif(key):
             rock = Rock.get_by_id(int(key), parent=user)
