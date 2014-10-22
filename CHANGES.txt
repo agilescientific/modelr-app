@@ -1,4 +1,8 @@
-modelr 0.2.3.4-temp October 21 2014
+modelr 0.2.4.4
+quick fixes, removed the database modifying URLs
+
+
+modelr 0.2.4.4-temp October 21 2014
 changed all scenarios and models to use rock db ids instead of names.
 backed up GAE datastore before this point, and it changes existing
 models.
