@@ -1,4 +1,7 @@
-modelr 0.2.4.4
+modelr 0.2.4.5
+hot fix on rock queries for the model page
+
+modelr 0.2.4.4 October 21 2014
 quick fixes, removed the database modifying URLs
 
 

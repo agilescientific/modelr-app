@@ -182,6 +182,10 @@ class RockHandler(ModelrAPI):
         key = self.request.get('key')
 
         user = self.verify()
+
+        ModelrRoot = ModelrParent.all().get()
+        admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
+                                       admin_id).get()
         
         if(name):
 
@@ -194,7 +198,10 @@ class RockHandler(ModelrAPI):
           
             data = rock.json
         elif(key):
-            rock = Rock.get_by_id(int(key), parent=user)
+            rock = Rock.get_by_id(int(key), parent=admin_user)
+            
+            u_rock = Rock.get_by_id(int(key), parent=user)
+            if(u_rock): rock = u_rock
             data = rock.json
         else:
             raise Exception
