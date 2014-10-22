@@ -372,7 +372,7 @@ class StripeHandler(ModelrAPI):
             if not user:
                 message = ("Failed to find modelr user for stripe " +
                            "user %s, but was invoiced by stripe " +
-                           "event %s" % (stripe_id,event_id))
+                           "event" % (stripe_id))
                 send_message(subject="Non-existent user canceled",
                              message=message)
 
