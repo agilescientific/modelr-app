@@ -110,3 +110,26 @@ def posterize(image):
     return g_im.convert('P',
                         palette=Image.ADAPTIVE,
                         colors=n_colours)
+
+def overlay_images(background, foreground):
+    """
+    Combines two images by setting a transparency on the foreground
+
+    :param background: A PIL image object
+    :param foreground: A PIL image object
+
+    :returns a PIL image object of the combined images
+    """
+
+    background = background.resize((350,350),
+                                    Image.ANTIALIAS).convert("RGB")
+    foreground = foreground.convert('RGBA').resize((350,350),
+                                           Image.ANTIALIAS).convert("RGB")
+    foreground.putalpha(150)
+
+    background.paste(foreground, (0,0), foreground)
+
+    return background
+
+
+

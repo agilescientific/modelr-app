@@ -49,7 +49,7 @@ from lib_db import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
      ImageModel, Issue, EarthModel, Server
 
-from lib_util import RGBToString
+from lib_util import RGBToString, overlay_images
 
 
 class ModelrPageRequest(webapp2.RequestHandler):
@@ -1163,10 +1163,58 @@ class ManageGroup(ModelrPageRequest):
                         parent=ModelrParent.all().get()).put()
             self.redirect('/profile')
             return
+
+class FluidModelBuilder(ModelrPageRequest):
+
+    @authenticate
+    def get(self, user):
+
+        # Check if we are blending images or loading the page
+        if self.request.get("blend"):
+            try:
+                rock_image_key = self.request.get("rock_image_key")
+                model = ImageModel.get(rock_image_key)
+                
+                rock_image_reader = \
+                  blobstore.BlobReader(model.image.key())
+                rock_image = Image.open(rock_image_reader)
+
+                fluid_image_b64 = self.request.get("image")
+                fi_buffer = StringIO.StringIO()
+                fi_buffer.write(base64.b64decode(fluid_image_b64))
+                fi_buffer.seek(0)
+                
+                fluid_image = Image.open(fi_buffer)
+                
+                blended_image = overlay_images(rock_image,
+                                               fluid_image)
+
+                output = StringIO.StringIO()
+                blended_image.save(output, format="PNG")
+                contents = output.getvalue()
+                output.close()
+                self.response.write(base64.b64encode(contents))
+                return
+                
+            except Exception as e:
+                print e
+                return
+            
+        
+        rock_image_key = self.request.get("rock_image_key")
+        
+        params = self.get_base_params(user=user,
+                                      rock_image_key=rock_image_key)
+        
+        template = env.get_template('fluid_sub.html')
+        html = template.render(params)
+        self.response.out.write(html)
+        
 class ModelBuilder(ModelrPageRequest):
 
     @authenticate
     def get(self, user):
+
     
         params = self.get_base_params(user=user)
         template = env.get_template('model_builder.html')
@@ -1331,103 +1379,7 @@ class AdminHandler(ModelrPageRequest):
             template = env.get_template('admin_site.html')
             html = template.render()
             self.response.out.write(html)
-            
-class FixScenarios(ModelrPageRequest):
 
-    def get(self):
-
-        scenarios = Scenario.all().fetch(1000)
-
-        rocks = Rock.all().ancestor(ModelrParent.all().get())
-
-        for s in scenarios:
-
-            data = json.loads(s.data)
-
-            args = data["arguments"]
-
-            for key, value in args.iteritems():
-            
-                if key.startswith("Rock"):
-
-                    rocks = Rock.all().ancestor(
-                        ModelrParent.all().get())
-                    rock = rocks.filter("name =", value).get()
-                    if(rock):
-                        args[key] = rock.key().id()
-                    else:
-                        args[key] = None
-
-            data["arguments"] = args
-            s.data = json.dumps(data).encode()
-            s.put()
-                
-        self.response.out.write("oK")
-
-class FixModels(ModelrPageRequest):
-
-    def get(self):
-        
-        models = EarthModel.all().fetch(1000)
-
-        for m in models:
-
-            data = json.loads(m.data)
-            cmap = data["mapping"]
-
-            for color, rock_data in cmap.iteritems():
-
-                rock_name = rock_data["name"]
-
-                try:
-                    rocks = Rock.all().ancestor(
-                        ModelrParent.all().get())
-                    
-                    rock = rocks.filter("name =", rock_name).get()
-                    cmap[color]["key"] = rock.key().id()
-                except:
-                    pass
-            m.data = json.dumps(data).encode()
-        self.response.write("OK")
-
-                
-
-        
-class FixDefaultRocks(ModelrPageRequest):
-    def get(self):
-
-        from default_rocks import default_rocks
-        ModelrRoot = ModelrParent.all().get()
-        admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
-                                                            admin_id).get()
-        for i in default_rocks:
-            
-            rocks = Rock.all()
-            rocks.filter("user =", admin_id)
-            rocks.filter("name =",i['name'] )
-            rocks = rocks.fetch(100)
-        
-            for r in rocks:
-                r.delete()
-    
-            rock = Rock(parent=admin_user)
-            rock.user = admin_id
-            rock.name = i['name']
-            rock.group = 'public'
-            
-            rock.description = i['description']
-
-            rock.vp = float(i['vp'])
-            rock.vs = float(i['vs'])
-            rock.rho = float(i['rho'])
-
-            rock.vp_std = float(i['vp_std'])
-            rock.vs_std = float(i['vs_std'])
-            rock.rho_std = float(i['rho_std'])
-
-            rock.Parent = admin_user
-            rock.put()
-        self.response.out.write("oK")
 
 class ServerError(ModelrPageRequest):
 

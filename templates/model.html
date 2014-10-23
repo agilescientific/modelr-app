@@ -223,6 +223,15 @@ function update_em_list(property_map){
   });
 };
 
+function fluid_model_redirect(){
+
+  rock_image_key = property_map.get_key()
+  window.location.href='/fluid_model?rock_image_key=' + 
+		       rock_image_key;
+};
+
+
+
 function update_image(data){
   $('img#plot_image').attr('src', 
 			    "data:image/png;base64, " + 
@@ -539,6 +548,9 @@ $(document).ready(function () {
       	    <button type="button" class="btn btn-info" onclick="window.location.href='/model_builder'">
       		    Make a wedge
       	    </button>
+	    <button type="button" class="btn btn-info" onclick="fluid_model_redirect()">
+	      Make a fluid model
+	    </button>
       	  </form>
 
 <div class="col-xs-offset-11">
