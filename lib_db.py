@@ -82,9 +82,11 @@ class ImageModel(Item):
     image = blobstore.BlobReferenceProperty()
 
 # sub class for the fluid model
-class FluidModel(ImageModel):
-    pass 
-    
+class FluidModel(Item):
+    image = blobstore.BlobReferenceProperty()
+    name = db.StringProperty(multiline=False)
+
+        
     
 class EarthModel(Item):
 

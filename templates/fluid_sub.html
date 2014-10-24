@@ -79,7 +79,7 @@
 	 
 	 image = data.data
 	 // use the GAE server to blend the images
-	 $.get("/fluid_model?blend=1", 
+	 $.get("/fluid_builder?blend=1", 
 	       {image: image, 
 		rock_image_key: "{{rock_image_key}}"},
 	       function(data){
@@ -87,9 +87,12 @@
 					"data:image/png;base64, " 
 					+ data); 
 	       });
+       
+         $('#fluid_image').attr('value', image);
        });
 
-       $('#URL').attr('value', url);
+      
+   
        
      }
      
@@ -133,21 +136,30 @@
 
     <div class="col-md-6">
       <div class="panel panel-default">
-	      <div class="panel-heading">
+	<div class="panel-heading">
           <h3 class="panel-title">Result</h3>
-	      </div>
-
-	      <div class="panel-body">
+	</div>
+	<div class="panel-body">
           <!-- Updated by the  create_image button above-->
           <img class="img-thumbnail" id="plot_image" 
                alt="Placeholder" 
 src="/static/img/placeholder_model_image.png" />
 
           <div style="margin-top:16px;" class="form-group">
-            <form action="/fluid_model" method="post">
+            <form action="/fluid_builder" method="post">
               <input type="hidden" id="URL" name="URL">
-              <button class="btn btn-default" type="button"
-                      onclick="modelbuilder.save_model()">
+	      <input type="hidden" id="fluid_image" 
+		     name="fluid_image">
+	      <input type="hidden" name="rock_image_key"
+		     id="rock_image_key" value="{{rock_image_key}}">
+	      <div class=col-xs-10>
+		<input placeholder="Fluid model name" 
+		       class="form-control"
+		       maxlength="20"
+		       id="fluid_model_name"
+		       name="fluid_model_name">
+	      </div>
+	      <button class="btn btn-default" type="submit">
                 Save
               </button>
             </form>
@@ -158,23 +170,6 @@ src="/static/img/placeholder_model_image.png" />
 
   </div> <!-- end of row -->
 
-  <!-- URL PANEL
-  ================================================================ -->
-
-  <div class="row">
-    <div class="col-md-12">
-      <div class="panel panel-default">
-	<div class="panel-heading">
-          <h3 class="panel-title">URL</h3>
-	</div>
-	<div class="panel-body">
-          <!-- Create and display the image / see the user defined 
-	  server.update_img -->
-          <p id="image_link" style="font-size: 10px;">URL</p>
-	</div>
-      </div>
-    </div>
-  </div>
-
+ 
   {% endblock %}
 

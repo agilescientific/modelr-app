@@ -34,7 +34,7 @@ from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      
 from lib_db import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Issue, EarthModel, Server
+     ImageModel, Issue, EarthModel, Server, FluidModel
 
 from lib_util import posterize
 
@@ -497,6 +497,22 @@ class ImageModelHandler(ModelrAPI):
         
         image.delete()
 
+
+class FluidModelHandler(ModelrAPI):
+
+    @authenticate
+    def get(self, user):
+
+        rock_image_key = self.request.get("rock_image_key")
+        parent = ImageModel.get(str(rock_image_key))
+        
+        fluids = FluidModel.all().ancestor(parent).fetch(100)
+
+        json_data = json.dumps([i.name for i in fluids])
+
+        self.response.write(json_data)
+
+        
         
 class EarthModelHandler(ModelrAPI):
 

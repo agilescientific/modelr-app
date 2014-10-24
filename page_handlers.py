@@ -47,7 +47,7 @@ from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      
 from lib_db import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Issue, EarthModel, Server
+     ImageModel, Issue, EarthModel, Server, FluidModel
 
 from lib_util import RGBToString, overlay_images
 
@@ -1172,6 +1172,7 @@ class FluidModelBuilder(ModelrPageRequest):
         # Check if we are blending images or loading the page
         if self.request.get("blend"):
             try:
+                
                 rock_image_key = self.request.get("rock_image_key")
                 model = ImageModel.get(rock_image_key)
                 
@@ -1179,12 +1180,26 @@ class FluidModelBuilder(ModelrPageRequest):
                   blobstore.BlobReader(model.image.key())
                 rock_image = Image.open(rock_image_reader)
 
-                fluid_image_b64 = self.request.get("image")
-                fi_buffer = StringIO.StringIO()
-                fi_buffer.write(base64.b64decode(fluid_image_b64))
-                fi_buffer.seek(0)
+                fluid_name = self.request.get("fluid_model_name")
+                if fluid_name:
+
+                    name = self.request.get("fluid_model_name")
+                    fluid_image_model = FluidModel.all().ancestor(model)
+                    fluid_image_model = \
+                      fluid_image_model.filter("name =", fluid_name)
+                    fluid_image_model = fluid_image_model.get()
+                    
+                    fluid_image_reader = \
+                      blobstore.BlobReader(fluid_image_model.image.key())
+                    fluid_image = Image.open(fluid_image_reader)
+
+                else:
+                    fluid_image_b64 = self.request.get("image")
+                    fi_buffer = StringIO.StringIO()
+                    fi_buffer.write(base64.b64decode(fluid_image_b64))
+                    fi_buffer.seek(0)
                 
-                fluid_image = Image.open(fi_buffer)
+                    fluid_image = Image.open(fi_buffer)
                 
                 blended_image = overlay_images(rock_image,
                                                fluid_image)
@@ -1209,6 +1224,36 @@ class FluidModelBuilder(ModelrPageRequest):
         template = env.get_template('fluid_sub.html')
         html = template.render(params)
         self.response.out.write(html)
+
+    @authenticate
+    def post(self, user):
+
+
+        name = self.request.get("fluid_model_name")
+        fluid_image = self.request.get("fluid_image")
+        rock_image_key = self.request.get("rock_image_key")
+        
+        bucket = '/modelr_live_bucket/'
+        filename = bucket + str(user.user_id) +'/' + str(time.time())
+
+        pic = base64.b64decode(fluid_image)
+        
+        gcsfile = gcs.open(filename, 'w')
+        gcsfile.write(pic)
+
+        gcsfile.close()
+
+        bs_file = '/gs' + filename
+
+        blob_key = blobstore.create_gs_key(bs_file)
+
+        
+        FluidModel(parent=ImageModel.get(str(rock_image_key)),
+                   user=user.user_id,
+                   name=name,
+                   image=blob_key).put()
+        self.redirect("/model")
+        
         
 class ModelBuilder(ModelrPageRequest):
 
@@ -1291,7 +1336,7 @@ class ModelHandler(ModelrPageRequest):
         params = self.get_base_params(user=user,
                                       images=imgs,
                                       colors=colors,
-                                      keys = keys,
+                                      keys=keys,
                                       rocks=rocks.fetch(100),
                             default_rocks=default_rocks.fetch(100),
                                       upload_url=upload_url)

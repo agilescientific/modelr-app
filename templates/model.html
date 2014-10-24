@@ -191,6 +191,7 @@
 
    // Update the available saved earth models
    update_em_list(property_map);
+   update_fluid_list(property_map);
 
    // Populate the plot options
    populate_scripts(server, 'plots', 'select#select_plot', 'Plot type');
@@ -206,6 +207,43 @@
 </script>
 
 <script>
+
+function update_fluid_list(property_map){
+
+  $.get('/fluid_model', {rock_image_key: property_map.get_key()},
+	function (data){
+
+	  select = $('#fluid_loader');
+	  select.children().remove();
+
+	  select.append('<option value="null" selected hidden disabled>Load fluid model</option>')
+	  data = JSON.parse(data);
+	  for (i=0; i< data.length; i++){
+	    select.append('<option value=' + data[i] +'>' + data[i]
+			  +'</option>')
+          };
+	}
+  );
+ };
+
+function set_fluid_model(fluid_model_name, property_map, forward_model){
+
+  key = property_map.get_key();
+  $.get('/fluid_builder',{blend: true, 
+			  fluid_model_name:fluid_model_name,
+			  rock_image_key: key},
+	function success(data){
+	  img_field = $("img#"+key);
+	  img_field.attr("src", "data:image/png;base64, " +
+			 data);
+	}
+  );
+ };
+
+
+
+
+
 function update_em_list(property_map){
 
   $.get('/earth_model', {image_key: property_map.get_key()},
@@ -226,7 +264,7 @@ function update_em_list(property_map){
 function fluid_model_redirect(){
 
   rock_image_key = property_map.get_key()
-  window.location.href='/fluid_model?rock_image_key=' + 
+  window.location.href='/fluid_builder?rock_image_key=' + 
 		       rock_image_key;
 };
 
@@ -393,6 +431,7 @@ function Colors(increment){
 
    if( increment != 0 ){
      update_em_list(property_map);
+     update_fluid_list(property_map);
    };
 
    for (var i=0; i < c.length; i++){
@@ -549,7 +588,7 @@ $(document).ready(function () {
       		    Make a wedge
       	    </button>
 	    <button type="button" class="btn btn-info" onclick="fluid_model_redirect()">
-	      Make a fluid model
+		    Add a fluid model
 	    </button>
       	  </form>
 
@@ -575,7 +614,7 @@ $('#model_info').popover({
         		    <div {% if i==0 %} class="active item" {% else %} 
         		      class="item" {% endif %}>
         		      <div class="thumbnail">
-        			      <img src={{images[i]}} alt="" >
+        			      <img src={{images[i]}} id={{keys[i]}} alt="" >
         		      </div>
         		    </div>	
         		    {% endfor %}
@@ -602,7 +641,10 @@ $('#model_info').popover({
         ==============================-->
         <div class="col-md-4">
 
-        <div style="margin-top:48px;" class="well well-sm"><strong>Assign rocks to the model framework</strong></div>
+        <div style="margin-top:48px;"
+	     class="well well-sm">
+	  <strong>Assign rocks to the model framework
+	  </strong></div>
 
           <!-- Earth Model Properties -->
       		<select class="form-control" id="earth_loader"
@@ -611,11 +653,17 @@ $('#model_info').popover({
       		    <option value=""></option>
       		</select>
 
+
       		<div style="margin:14px 0 14px 12px;" id="color_map"></div>
 
+		<select class="form-control" id="fluid_loader"
+      			placeholder="Fluid models"
+			onchange="set_fluid_model(this.value, property_map, forward_model)">
+      		    <option value="None"></option>
+      		</select>
           <!-- Earth Model Properties -->
           <div style="margin:36px 0 16px 0;" id="earth_properties"></div>
-
+	
             <fieldset{% if not user %} disabled{% endif %}>
             <form class="form-horizontal">
             <div class="form-group">
