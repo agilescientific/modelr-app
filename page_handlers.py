@@ -47,7 +47,7 @@ from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      
 from lib_db import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Issue, EarthModel, Server, FluidModel
+     ImageModel, Issue, EarthModel, Server, FluidModel,Fluid
 
 from lib_util import RGBToString, overlay_images
 
@@ -229,6 +229,23 @@ class DashboardHandler(ModelrPageRequest):
                                                     name).fetch(100)}
             rock_groups.append(dic)
 
+        # Get all the fluids
+        fluids = Fluid.all()
+        fluids.ancestor(user)
+        fluids.filter("user =", user.user_id)
+        fluids.order("-date")
+
+        default_fluids = Fluid.all()
+        default_fluids.filter("user =", admin_id)
+
+        fluid_groups = []
+        for name in user.group:
+            dic = {'name': name.capitalize(),
+                   'fluids':
+                    Fluid.all().ancestor(ModelrParent.all().get()).filter("group =",
+                                                    name).fetch(100)}
+            fluid_groups.append(dic)
+
         # Get all the user scenarios
         scenarios = Scenario.all()
         if not user.user_id == admin_id:
@@ -272,6 +289,9 @@ class DashboardHandler(ModelrPageRequest):
                                scenarios=scenarios.fetch(100),
                                default_rocks=default_rocks.fetch(100),
                                rock_groups=rock_groups,
+                               fluids=fluids.fetch(100),
+                               default_fluids=default_fluids.fetch(100),
+                               fluid_groups=fluid_groups,
                                models=models)
 
         # Check if a rock is being edited
@@ -294,7 +314,20 @@ class DashboardHandler(ModelrPageRequest):
             template_params['current_rock'] = current_rock
         
 
-        
+         # Check if a fluid is being edited
+        if self.request.get("selected_fluid"):
+            fluid_id = self.request.get("selected_fluid")
+            current_fluid = Fluid.get_by_id(int(fluid_id),
+                                          parent=user)
+            template_params['current_fluid'] = current_fluid
+        else:
+            current_fluid = Fluid()
+            current_fluid.name = "name"
+            current_fluid.description = "description"
+            current_fluid.porosity = 100.0
+            current_fluid.k = 200.0
+            
+        template_params['current_fluid'] = current_fluid
         template = env.get_template('dashboard.html')
         html = template.render(template_params)
 

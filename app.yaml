@@ -9,13 +9,15 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
+- url: .*
+  script: main.app
+  secure: always
+
 - url: /static
   static_dir: static
   secure: always
 
-- url: .*
-  script: main.app
-  secure: always
+
 
 libraries:
 - name: webapp2

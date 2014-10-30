@@ -138,7 +138,7 @@ class Rock(Item):
 class Fluid(Item):
 
     k = db.FloatProperty()
-    rho = db.FloatProperty()
+    porosity = db.FloatProperty()
 
     name = db.StringProperty(multiline=False)
     description = db.StringProperty(multiline=True)
