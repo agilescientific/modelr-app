@@ -373,12 +373,24 @@ def cancel_subscription(user):
 
     try:
         stripe_customer = stripe.Customer.retrieve(user.stripe_id)
+        # Check for extra invoices, ie Taxes, that also need
+        # to be cancelled.
+        invoice_items = stripe.InvoiceItem.all(customer=stripe_customer)
+
+        print len(invoice_items.data)
+        for invoice in invoice_items.data:
+            invoice_id = invoice["id"]
+
+            # get the invoice and delete it
+            invoice_obj = stripe.InvoiceItem.retrieve(invoice_id)
+            invoice_obj.delete()
 
         sub_id = stripe_customer.subscriptions["data"][0]["id"]
 
         stripe_customer.subscriptions.retrieve(sub_id).delete(at_period_end=True)
         
-        
+  
+            
         user.unsubscribed = True
         user.put()
 
