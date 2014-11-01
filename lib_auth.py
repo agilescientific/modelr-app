@@ -375,17 +375,22 @@ def cancel_subscription(user):
         stripe_customer = stripe.Customer.retrieve(user.stripe_id)
         # Check for extra invoices, ie Taxes, that also need
         # to be cancelled.
-        invoice_items = stripe.InvoiceItem.all(customer=stripe_customer)
+        invoice_items = \
+          stripe.InvoiceItem.all(customer=stripe_customer)
 
         for invoice in invoice_items.data:
             invoice_id = invoice["id"]
 
-            # get the invoice and delete it
+            # get the invoice and delete it if we can
             invoice_obj = stripe.InvoiceItem.retrieve(invoice_id)
             try:
                 invoice_obj.delete()
             except:
-                pass
+                msg = """
+                invoice # {0} not deleted from stripe id {1}
+                """.format(invoice_id, user.stripe_id)
+                send_message("invoice not deleted",
+                            invoice # %s not deleted.")
             
         sub_id = stripe_customer.subscriptions["data"][0]["id"]
 
