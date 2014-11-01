@@ -390,7 +390,7 @@ def cancel_subscription(user):
                 invoice # {0} not deleted from stripe id {1}
                 """.format(invoice_id, user.stripe_id)
                 send_message("invoice not deleted",
-                            invoice # %s not deleted.")
+                             msg)
             
         sub_id = stripe_customer.subscriptions["data"][0]["id"]
 
