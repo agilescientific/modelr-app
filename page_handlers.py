@@ -172,15 +172,22 @@ class ScenarioPageHandler(ModelrPageRequest):
         if scen: 
             scenarios += scen
 
+
+        model_data = earth_models = EarthModel.all().filter("user =",
+                                            admin_id).fetch(1000)
         # Get the models from uploaded images
         if user:
-            model_data = EarthModel.all().filter("user =",
+            user_data = EarthModel.all().filter("user =",
                                              user.user_id).fetch(1000)
-            earth_models = [{"image_key": str(i.parent_key()),
-                             "name": i.name} for i in model_data]
+            
+            model_data = model_data + user_data
+            
+        earth_models = [{"image_key": str(i.parent_key()),
+                         "name": i.name} for i in model_data]
 
-        else:
-            earth_models = []
+            
+        
+            
         
         template_params = \
           self.get_base_params(user=user,rocks=rocks,

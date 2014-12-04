@@ -295,8 +295,7 @@ class RockHandler(ModelrAPI):
             key = self.request.get("db_key")
 
             rock = Rock.get_by_id(int(key), parent=user)
-
-            print(rock)
+        
             # Update the rock
             rock.vp = float(self.request.get('vp'))
             rock.vs = float(self.request.get('vs'))
@@ -501,10 +500,14 @@ class ImageModelHandler(ModelrAPI):
         
 class EarthModelHandler(ModelrAPI):
 
-    @authenticate
-    def get(self, user):
+    
+    def get(self):
 
+
+        user = self.verify()
+        
         try:
+            
             # Get the root of the model
             input_model_key = self.request.get('image_key')
             input_model = ImageModel.get(str(input_model_key))
@@ -518,14 +521,17 @@ class EarthModelHandler(ModelrAPI):
 
                 earth_model = EarthModel.all().ancestor(input_model)
 
+                if user:
                 # Check first for a user model with the right name
-                earth_model = earth_model.filter("user =",
-                                                 user.user_id)
-                
-                earth_model = earth_model.filter("name =",
+                    earth_model = earth_model.filter("user =",
+                                                     user.user_id)
+                    earth_model = earth_model.filter("name =",
                                                  name)
 
-                earth_model = earth_model.get()
+                    earth_model = earth_model.get()
+                else:
+                    earth_model = None
+
 
                 if not earth_model:
                     # Check in the defaults
@@ -537,6 +543,7 @@ class EarthModelHandler(ModelrAPI):
                     earth_model = earth_model.filter("name =",
                                                        name).get()
 
+                    
                 self.response.out.write(earth_model.data)
 
             else:
