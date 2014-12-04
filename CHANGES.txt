@@ -1,3 +1,6 @@
+modelr 0.2.4.7 December 3rd
+Fixed scenarios so non-users can see image models of the admin
+
 modelr 0.2.4.6 Nov 1st 2014
 Fixes to metadata table and deletes the leftover tax invoice
 when canadians unsubscribe
