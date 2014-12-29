@@ -8,7 +8,7 @@ setup1D = function(div){
     var color_index = 0;
     var layer = 1;
     var rocks = [];
-    
+    var rock_names = ['test','test2','test3'];
     var colors=['#CCAA99','#BBAADD',"#AACCDD", "#CC99AA", "#AAAACC"];
     var offset = 25;
     
@@ -55,8 +55,8 @@ setup1D = function(div){
     var drag = d3.behavior.drag().on("drag", dragResize); 
 
     // Add the default first layers
-    add_rock(0,0);
-    add_rock(0,0);
+    add_rock(0);
+    add_rock(1);
 
 
     // Resize call back
@@ -116,6 +116,42 @@ setup1D = function(div){
 
 	interfaceLine.exit().remove();
 
+	//update the table
+	var colour_col = d3.select("#colour-entry").selectAll(".row")
+                                                   .data(rocks);
+
+	colour_col.html(colour_block);
+
+	colour_col.enter().append("div").attr("class", "row")
+	                                .html(colour_block);
+	colour_col.exit().remove();
+
+	var depth_col = d3.select("#depth-entry").selectAll(".row")
+	    .data(rocks);
+	depth_col.text(function(d){return d.depth.toFixed(2)});
+
+	depth_col.enter().append("div").attr("class","row")
+	                 .text(function(d){return d.depth.toFixed(2)});
+	depth_col.exit().remove();
+
+	var thickness_col = d3.select("#thickness-entry")
+	    .selectAll(".row")
+	    .data(rocks);
+	thickness_col.text(function(d){return d.thickness.toFixed(2)});
+
+	thickness_col.enter().append("div").attr("class","row")
+	                 .text(function(d){return d.thickness.toFixed(2)});
+	thickness_col.exit().remove();
+
+	var rock_col = d3.select("#rock-entry").selectAll(".row")
+                         .data(rocks);
+	var row = rock_col.enter().append("div").attr("class","row");
+
+	var select = row.append("select");
+	var option = select.selectAll("option").data(rock_names);
+	option.enter().append("option")
+	    .text(function(d){return d});
+
     };
 
     function update_scale(){
@@ -161,7 +197,9 @@ setup1D = function(div){
 	return yscale(d.depth);
     }
     
-
+    function colour_block(d,i){
+	return '<div class="cblock" style="margin0 6px 0 0; background-color:' +d.color+'; display:inline-block"></div>'
+    }
 
     function add_top(d,i){
 	// adds an interface top at the mouse click position
