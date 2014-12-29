@@ -166,7 +166,7 @@ setup1D = function(div){
     function add_top(d,i){
 	// adds an interface top at the mouse click position
 	
-	d.thickness = yscale.invert(d3.mouse(this)[1]);
+	d.thickness = yscale.invert(d3.mouse(this)[1]) - d.depth;
 
 	add_rock(i);
     }
