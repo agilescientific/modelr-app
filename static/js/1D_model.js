@@ -93,7 +93,7 @@ setup1D = function(div){
 		  {return d.color})
 	    .attr("height", update_thickness)
 	    .attr("width", rock_width)
-	    .on("click", add_rock)
+	    .on("click", add_top)
 	    .on("contextmenu", delete_rock);
 	
 	rect.exit().remove();
@@ -163,7 +163,15 @@ setup1D = function(div){
     
 
 
-    function add_rock(d,i){
+    function add_top(d,i){
+	// adds an interface top at the mouse click position
+	
+	d.thickness = yscale.invert(d3.mouse(this)[1]);
+
+	add_rock(i);
+    }
+	
+    function add_rock(i){
 	// adds a rock to the model at position i + 1
 
 	var rock = {thickness: 50,
