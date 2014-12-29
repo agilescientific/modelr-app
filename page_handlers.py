@@ -1401,6 +1401,7 @@ class FixModels(ModelrPageRequest):
 
         
 class FixDefaultRocks(ModelrPageRequest):
+    ## Used to fix rocks in the database
     def get(self):
 
         from default_rocks import default_rocks
@@ -1441,3 +1442,18 @@ class ServerError(ModelrPageRequest):
     def post(self):
 
         send_message("Server Down","Scripts did not populate")
+
+class Model1DHandler(ModelrPageRequest):
+
+    @authenticate
+    def get(self, user):
+
+        params = self.get_base_params(user=user)
+
+        template = env.get_template('1D_model.html')
+
+        html = template.render(params)
+        self.response.write(html)
+
+
+        
