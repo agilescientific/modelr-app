@@ -13,6 +13,7 @@ from google.appengine.ext import db
 import cloudstorage as gcs
 
 from PIL import Image
+import numpy as np
 
 import time
 
@@ -477,7 +478,50 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
 
 
 
+class ModelData1DHandler(ModelrAPI):
 
+    @authenticate
+    def get(self, user):
+
+
+        admin_user = User.all()\
+                         .filter("user_id =", admin_id).get()
+                         
+        dz = 1.0
+        dt = 0.1
+
+        data = json.loads(self.request.get('data'))
+        depth = data[-1]["depth"] + data[-1]["thickness"]
+
+        vp = np.zeros(depth/dz)
+        vs = np.zeros(depth/dz)
+        rho = np.zeros(depth/dz)
+        z = np.arange(0, rho.size)*dz
+
+        for layer in data:
+
+            rock = Rock.get_by_id(int(layer["db_key"]),
+                                  parent=admin_user)
+            
+            u_rock = Rock.get_by_id(int(layer["db_key"]),
+                                    parent=user)
+            if(u_rock): rock = u_rock
+
+            start_index = int(layer["depth"]/dz)
+            end_index = start_index + int(layer["thickness"]/dz)
+
+            vp[start_index:end_index] = rock.vp + \
+              np.random.randn(end_index-start_index)*rock.vp_std
+            vs[start_index:end_index] = rock.vs + \
+              np.random.randn(end_index-start_index)*rock.vs_std
+            rho[start_index:end_index] = rock.rho + \
+              np.random.randn(end_index-start_index)*rock.rho_std
+
+        output = {"vp":tuple(vp), "vs":tuple(vs),
+                  "rho":tuple(rho), "z":tuple(z)}
+
+        self.response.write(json.dumps(output))
+        
 
 class ImageModelHandler(ModelrAPI):
 

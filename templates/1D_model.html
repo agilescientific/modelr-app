@@ -15,7 +15,7 @@
      db_rocks[i] = JSON.parse(db_rocks[i]);
    };
 
-   setup1D("#model-container", db_rocks);
+   setup1D("#model-container", "#plot-container", db_rocks);
  }
  )
 </script>
@@ -84,6 +84,9 @@
       <div class="col-md-3" id="thickness-entry">
       </div>
     </div>
+  </div>
+
+  <div class="col-md-3" id="plot-container">
   </div>
 
 </div>
