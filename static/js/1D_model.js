@@ -1,4 +1,4 @@
-setup1D = function(div){ 
+setup1D = function(div, db_rocks){ 
 
     // Define the constants
     var image_height = 350;
@@ -8,7 +8,7 @@ setup1D = function(div){
     var color_index = 0;
     var layer = 1;
     var rocks = [];
-    var rock_names = ['test','test2','test3'];
+    var rock_names = db_rocks;
     var colors=['#CCAA99','#BBAADD',"#AACCDD", "#CC99AA", "#AAAACC"];
     var offset = 25;
     
@@ -148,9 +148,9 @@ setup1D = function(div){
 	var row = rock_col.enter().append("div").attr("class","row");
 
 	var select = row.append("select");
-	var option = select.selectAll("option").data(rock_names);
+	var option = select.selectAll("option").data(db_rocks);
 	option.enter().append("option")
-	    .text(function(d){return d});
+	    .text(function(d){return d.name});
 
     };
 

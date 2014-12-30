@@ -124,6 +124,7 @@ class Rock(Item):
                            "vs_std": self.vs_std,
                            "rho_std": self.rho_std,
                            "description": self.description,
+                           "name": self.name,
                            "db_key": self.key().id()})
 
 

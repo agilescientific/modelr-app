@@ -1,0 +1,92 @@
+{% extends "base_template.html" %}
+
+{% block title %}Modelr &middot; 1D Model{% endblock %}
+{% block content %}
+
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="/static/js/1D_model.js"></script>
+
+<script>
+ $(document).ready(function(){
+
+   var db_rocks = {{db_rocks}};
+
+   for (var i in db_rocks){
+     db_rocks[i] = JSON.parse(db_rocks[i]);
+   };
+
+   setup1D("#model-container", db_rocks);
+ }
+ )
+</script>
+
+
+<style>
+ .domain { 
+   fill: none; 
+   stroke: #000; 
+   stroke-width: 1px; 
+   shape-rendering: crispEdges;
+ } 
+ 
+ text {
+   font: 12px sans-serif;
+ }
+ 
+ .y-label {
+   font: 16px sans-serif;
+ }
+
+ p {
+   font: 16px sans-serif;
+ }
+
+ .cblock {   
+   float: left;
+   width: 20px;
+   height: 20px;     
+   margin: 2px 2px 2px 2px;
+   border-width: 1px;
+   border-style: solid;
+   border-color: rgba(0,0,0,.2);
+ }
+</style>
+<div class="container">
+  <div class="row">
+    <div class="col-med-3">
+      <p>
+	Left click to add a layers, right click to delete,  
+	drag the interfaces to change interval thickness.
+      </p>
+    </div>
+  </div>
+  <div class="col-md-3">
+
+    <div class="row" id="model-container">
+    </div>
+  </div>
+  
+  <div class="col-md-3" id="property-table">
+    <div class="row">
+      <div class="col-md-3"></div>
+      <div class="col-md-3">rock</div>
+      <div class="col-md-3">depth</div>
+      <div class="col-md-3">thickness</div>
+    </div>
+    <div class="row">
+      <div class="col-md-3" id="colour-entry">
+	
+      </div>
+      <div class="col-md-3" id="rock-entry">
+      </div>
+      <div class="col-md-3" id="depth-entry">
+      </div>
+      <div class="col-md-3" id="thickness-entry">
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+
