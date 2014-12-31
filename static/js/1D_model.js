@@ -4,6 +4,8 @@ setup1D = function(model_div, plot_div, db_rocks){
     var image_height = 350;
     var height = 300;
     var width = 170;
+    var plot_height = 350;
+    var plot_width = 300;
     var rock_width = 60;
     var color_index = 0;
     var layer = 1;
@@ -17,7 +19,14 @@ setup1D = function(model_div, plot_div, db_rocks){
     var yscale = d3.scale.linear()
 	.domain([0,500]) 
 	.range([offset, height]);
-
+    var vsScale = d3.scale.linear() 
+	.range([0,75]);
+    var vpScale = d3.scale.linear()
+	.range([80, 155]);
+    var rhoScale = d3.scale.linear()
+	.range([160, 235]);
+    var zScale = d3.scale.linear()
+	.range([0, height]);
     
     // Make some objects
     var layer_svg = d3.select(model_div).append("svg")
@@ -37,13 +46,24 @@ setup1D = function(model_div, plot_div, db_rocks){
 	.attr("x", -50)
 	.attr("dy", ".75em")
 	.attr("transform", "rotate(-90)")
-	.text("depth [m]")
+	.text("depth [m]");
     
-    // Make an axis
+    // Make some axes
     var yAxis = d3.svg.axis()
 	.scale(yscale)
 	.orient("right")
-	.ticks(5)
+	.ticks(5);
+
+    var rhoAxis = d3.svg.axis()
+	.orient("bottom")
+	.ticks(5);
+    var vsAxis = d3.svg.axis()
+	.orient("bottom")
+	.ticks(5);
+    var vpAxis = d3.svg.axis()
+	.orient("top")
+	.ticks(5);
+
     //add it to the main plot		  
     layer_group.call(yAxis);
     
@@ -60,9 +80,30 @@ setup1D = function(model_div, plot_div, db_rocks){
 
     // Setup the plot
     plot_svg = d3.select(plot_div).append("svg")
-	         .attr("height", 400)
-	         .attr("width", 100);
+	         .attr("height", plot_height)
+	         .attr("width", plot_width);
 
+    var vpFunc = d3.svg.line()
+	.x(function(d) {
+	    return vpScale(d.vp);
+	})
+	.y(function(d) {
+	    return zScale(d.z);
+	});
+    var vsFunc = d3.svg.line()
+	.x(function(d) {
+	    return vsScale(d.vs);
+	})
+	.y(function(d) {
+	    return zScale(d.z);
+	});
+    var rhoFunc = d3.svg.line()
+	.x(function(d) {
+	    return rhoScale(d.rho);
+	})
+	.y(function(d) {
+	    return zScale(d.z);
+	});
 
     // Resize call back
     function dragResize(d){
@@ -177,8 +218,38 @@ setup1D = function(model_div, plot_div, db_rocks){
 
     function update_plot(data){
 
-	var a  = JSON.parse(data);
+	var data  = JSON.parse(data);
+	var paired_data = [];
+	for(var i=0; i < data.vp.length; i++){
+	    paired_data[i] = {vp:data.vp[i], vs:data.vs[i],
+			      rho:data.rho[i], z:data.z[i]};
+	};
 
+
+	rhoScale.domain([Math.min.apply(Math,data.rho), 
+			 Math.max.apply(Math,data.rho)]);
+	vpScale.domain([Math.min.apply(Math,data.vp), 
+			Math.max.apply(Math,data.vp)]);
+	vsScale.domain([Math.min.apply(Math,data.vs), 
+			Math.max.apply(Math,data.vs)]);
+	zScale.domain([data.z[0], data.z[data.z.length-1]]);
+
+	d3.selectAll("path").remove();
+	plot_svg.append("path")
+                .attr("d", rhoFunc(paired_data))
+	        .attr('stroke', 'blue')
+	        .attr('stroke-width', 2)
+	        .attr('fill', 'none');;
+	plot_svg.append("path")
+                .attr("d", vsFunc(paired_data))
+	        .attr('stroke', 'green')
+	        .attr('stroke-width', 2)
+	        .attr('fill', 'none');;
+	plot_svg.append("path")
+                .attr("d", vpFunc(paired_data))
+	        .attr('stroke', 'red')
+	        .attr('stroke-width', 2)
+	        .attr('fill', 'none');;
     };
 
     function update_data(){
@@ -193,6 +264,8 @@ setup1D = function(model_div, plot_div, db_rocks){
 	// updates rock layer and sends data to server
 	d.db_key = this.value;
 	d.name = this[this.selectedIndex].text;
+
+	update_data();
     }
 
     function update_scale(){
