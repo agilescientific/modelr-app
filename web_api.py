@@ -498,6 +498,7 @@ class ModelData1DHandler(ModelrAPI):
         rho = np.zeros(depth/dz)
         z = np.arange(0, rho.size)*dz
 
+        end_index = 0
         for layer in data:
 
             rock = Rock.get_by_id(int(layer["db_key"]),
@@ -507,8 +508,11 @@ class ModelData1DHandler(ModelrAPI):
                                     parent=user)
             if(u_rock): rock = u_rock
 
-            start_index = int(layer["depth"]/dz)
-            end_index = start_index + int(layer["thickness"]/dz)
+            start_index = end_index
+            end_index = start_index + np.ceil(layer["thickness"]/dz)
+            if end_index > rho.size:
+                end_index = rho.size
+            
 
             vp[start_index:end_index] = rock.vp + \
               np.random.randn(end_index-start_index)*rock.vp_std

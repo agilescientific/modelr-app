@@ -57,13 +57,13 @@ setup1D = function(model_div, plot_div, db_rocks){
 
     var rhoAxis = d3.svg.axis()
 	.orient("top")
-	.ticks(2);
+	.ticks(1);
     var vsAxis = d3.svg.axis()
 	.orient("top")
-	.ticks(2);
+	.ticks(1);
     var vpAxis = d3.svg.axis()
 	.orient("top")
-	.ticks(2);
+	.ticks(1);
     var zAxis = d3.svg.axis()
 	.orient("left")
 	.ticks(5);
@@ -76,8 +76,8 @@ setup1D = function(model_div, plot_div, db_rocks){
     var lines = layer_group.append("g").attr("id", "lines");
   
     // Resize drag behaviour
-    var drag = d3.behavior.drag().on("drag", dragResize); 
-
+    var drag = d3.behavior.drag().on("drag", dragResize)
+	                         .on("dragend", update_data);
     // Add the default first layers
     add_rock(0);
     add_rock(1);
@@ -94,6 +94,27 @@ setup1D = function(model_div, plot_div, db_rocks){
 	.attr("transform", "translate(100,0)")
     var vp_g = log_group.append("g")
 	.attr("transform", "translate(200,0)")
+
+    // Axis labels
+    rho_g.append("text")
+	.attr("class", "y-label")
+	.attr("text-anchor", "end")
+	.attr("y", -25)
+	.attr("x", 20)
+	.text("rho");
+    vp_g.append("text")
+	.attr("class", "y-label")
+	.attr("text-anchor", "end")
+	.attr("y", -25)
+	.attr("x", 20)
+	.text("vp");
+    vs_g.append("text")
+	.attr("class", "y-label")
+	.attr("text-anchor", "end")
+	.attr("y",-25)
+	.attr("x", 20)
+	.text("vs");
+
 
     var vpFunc = d3.svg.line()
 	.x(function(d) {
@@ -224,8 +245,6 @@ setup1D = function(model_div, plot_div, db_rocks){
 	// Delete left over elements
 	rock_col.exit().remove();
 
-	//Update the log plots
-	update_data();
     };
 
     function update_plot(data){
@@ -306,6 +325,7 @@ setup1D = function(model_div, plot_div, db_rocks){
 
 
 	    updateRocks();
+	    update_data();
 	};
     }
 
@@ -364,6 +384,8 @@ setup1D = function(model_div, plot_div, db_rocks){
 	rocks.splice(i+1,0,rock);
 
 	updateRocks();
+	update_data();
+
 	color_index++;
 	color_index = color_index % colors.length;
 	layer++;
