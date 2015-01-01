@@ -13,7 +13,7 @@ setup1D = function(model_div, plot_div, db_rocks){
     var rock_names = db_rocks;
     var colors=['#CCAA99','#BBAADD',"#AACCDD", "#CC99AA", "#AAAACC"];
     var offset = 25;
-    var select, option
+
     
     // Make the scale
     var yscale = d3.scale.linear()
@@ -196,39 +196,18 @@ setup1D = function(model_div, plot_div, db_rocks){
 	interfaceLine.exit().remove();
 
 	//update the table
-	var colour_col = d3.select("#colour-entry").selectAll(".row")
+	var colour_map = d3.select("#colour-map").selectAll(".row")
                                                    .data(rocks);
+	var select = colour_map.html(colour_block).append("select")
+	    .on("change", update_rock);
 
-	colour_col.html(colour_block);
 
-	colour_col.enter().append("div").attr("class", "row")
-	                                .html(colour_block);
-	colour_col.exit().remove();
-
-	var depth_col = d3.select("#depth-entry").selectAll(".row")
-	    .data(rocks);
-	depth_col.text(function(d){return d.depth.toFixed(2)});
-
-	depth_col.enter().append("div").attr("class","row")
-	                 .text(function(d){return d.depth.toFixed(2)});
-	depth_col.exit().remove();
-
-	var thickness_col = d3.select("#thickness-entry")
-	    .selectAll(".row")
-	    .data(rocks);
-	thickness_col.text(function(d){return d.thickness.toFixed(2)});
-
-	thickness_col.enter().append("div").attr("class","row")
-	                 .text(function(d){return d.thickness.toFixed(2)});
-	thickness_col.exit().remove();
-
-	var rock_col = d3.select("#rock-entry").selectAll(".row")
-                         .data(rocks);
-	var row = rock_col.enter().append("div").attr("class","row");
-
-	var select = row.append("select")
-	                .on("change", update_rock)
+	colour_map.enter().append("div").attr("class", 
+					      "row")
+	    .html(colour_block)
+	    .append("select").on("change", update_rock);
 	
+	select = colour_map.selectAll("select");
 
 	var option = select.selectAll("option").data(db_rocks);
 	option.enter().append("option")
@@ -243,7 +222,7 @@ setup1D = function(model_div, plot_div, db_rocks){
 	    });
 
 	// Delete left over elements
-	rock_col.exit().remove();
+	colour_map.exit().remove();
 
     };
 
