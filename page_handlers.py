@@ -1449,9 +1449,9 @@ class Model1DHandler(ModelrPageRequest):
     def get(self, user):
 
 
-        default_rocks = Rock.all().order("name").filter("user =",
+        admin_rocks = Rock.all().order("name").filter("user =",
                                                         admin_id)
-        default_rocks = default_rocks.fetch(100)
+        admin_rocks = admin_rocks.fetch(100)
 
         user_rocks = Rock.all().order("name").ancestor(user)
         user_rocks = user_rocks.fetch(100)
@@ -1461,10 +1461,9 @@ class Model1DHandler(ModelrPageRequest):
             g_rocks = \
             Rock.all().order('name').ancestor(ModelrParent.all().get()).filter("group =",
                                                          group)
-            group_rocks.append({"name": group.capitalize(),
-                                "rocks": g_rocks.fetch(100)})
+            group_rocks = group_rocks + g_rocks.fetch(100)
 
-        all_rocks = user_rocks + group_rocks + default_rocks
+        all_rocks = user_rocks + group_rocks + admin_rocks
         rock_json = [rock.json for rock in all_rocks]
         
         params = self.get_base_params(user=user,
