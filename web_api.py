@@ -502,11 +502,17 @@ class ModelData1DHandler(ModelrAPI):
         for layer in data:
 
             rock = Rock.get_by_id(int(layer["db_key"]),
-                                  parent=admin_user)
+                                  parent=user)
+            if not rock:
+                rock = Rock.get_by_id(int(layer["db_key"]),
+                                      parent=admin_user)
+            if not rock:
+                rock = Rock.all().filter("name =",
+                                         layer["name"]).get()
+                if not (rock.group in user.group) or (not rock):
+                    raise Exception
             
-            u_rock = Rock.get_by_id(int(layer["db_key"]),
-                                    parent=user)
-            if(u_rock): rock = u_rock
+                    
 
             start_index = end_index
             end_index = start_index + np.ceil(layer["thickness"]/dz)
