@@ -125,7 +125,7 @@ def depth2time(z, vp, vs, rho, dt):
     new_vs = np.interp(new_t, t, vs)
     new_rho = np.interp(new_t, t, rho)
     
-    return new_vp, new_vs, new_rho, new_t*1000 #ms
+    return new_vp, new_vs, new_rho, new_t
         
 
 def akirichards(vp1, vs1, rho1, vp2, vs2, rho2, theta1):

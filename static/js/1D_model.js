@@ -109,7 +109,7 @@ setup1D = function(model_div, plot_div, db_rocks){
 	.attr("x", -50)
 	.attr("dy", ".75em")
 	.attr("transform", "rotate(-90)")
-	.text("time [ms]");
+	.text("time [s]");
 
 
     var rho_g = log_group.append("g")
@@ -239,9 +239,6 @@ setup1D = function(model_div, plot_div, db_rocks){
 	}
 
 	var scale_factor = total_depth / old_depth;
-
-	if(d3.event.dy>0){scale_factor*=1.01}
-
 
 	rocks[0].thickness *= scale_factor;
 	for(var i=1; i < rocks.length; i++){
