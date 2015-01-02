@@ -1,5 +1,7 @@
 from PIL import Image
 import numpy as np
+from numpy import log, tan, sin, cos, arcsin, arccosh, radians, \
+                  degrees
 
 
 def RGBToString(rgb_tuple):
@@ -110,3 +112,109 @@ def posterize(image):
     return g_im.convert('P',
                         palette=Image.ADAPTIVE,
                         colors=n_colours)
+
+
+def depth2time(z, vp, vs, rho, dt):
+
+    v_avg = np.cumsum(vp) / np.arange(z.size)
+    t = 2 * z / v_avg  
+
+    new_t = np.arange(t[0],t[-1],dt)
+
+    new_vp = np.interp(new_t, t, vp)
+    new_vs = np.interp(new_t, t, vs)
+    new_rho = np.interp(new_t, t, rho)
+    
+    return new_vp, new_vs, new_rho, new_t*1000 #ms
+        
+
+def akirichards(vp1, vs1, rho1, vp2, vs2, rho2, theta1):
+    """
+    This is the formulation from Avseth et al.,
+    Quantitative seismic interpretation,
+    Cambridge University Press, 2006. Adapted for a 4-term formula. 
+    See http://subsurfwiki.org/wiki/Aki-Richards_equation
+
+    :param vp1: The p-wave velocity of the upper medium.
+    :param vs1: The s-wave velocity of the upper medium.
+    :param rho1: The density of the upper medium.
+
+    :param vp2: The p-wave velocity of the lower medium.
+    :param vs2: The s-wave velocity of the lower medium.
+    :param rho2: The density of the lower medium.
+    
+    :param theta1: An array of incident angles to use for reflectivity
+                   calculation [degrees].
+
+    :returns: a vector of len(theta1) containing the reflectivity
+             value corresponding to each angle.
+    
+    """
+
+    # We are not using this for anything, but will
+    # critical_angle = arcsin(vp1/vp2)
+    
+    # Do we need to ensure that we get floats out before
+    # computing sines?
+    #vp1 = float(vp1)
+
+    theta2 = degrees(arcsin(vp2/vp1*sin(radians(theta1))))
+
+    # Compute the various parameters
+    drho = rho2-rho1
+    dvp = vp2-vp1
+    dvs = vs2-vs1
+    meantheta = (theta1+theta2)/2.0
+    rho = (rho1+rho2)/2.0
+    vp = (vp1+vp2)/2.0
+    vs = (vs1+vs2)/2.0
+
+    # Compute the coefficients 
+    w = 0.5 * drho/rho
+    x = 2 * (vs/vp1)**2 * drho/rho
+    y = 0.5 * (dvp/vp)
+    z = 4 * (vs/vp1)**2 * (dvs/vs)
+
+    # Compute the terms
+    term1 = w
+    term2 = -1 * x * sin(radians(theta1))**2
+    term3 = y / cos(radians(meantheta))**2
+    term4 = -1 * z * sin(radians(theta1))**2
+    
+    return (term1 + term2 + term3 + term4)
+    
+def ricker(duration, dt, f):
+    """
+    Also known as the mexican hat wavelet, models the function:
+    A =  (1-2 \pi^2 f^2 t^2) e^{-\pi^2 f^2 t^2}
+
+    :param duration: The length in seconds of the wavelet.
+    :param dt: is the sample interval in seconds (usually 0.001,
+               0.002, 0.004)
+    :params f: Center frequency of the wavelet (in Hz). If a list or tuple is
+               passed, the first element will be used.
+
+    :returns: ricker wavelets with center frequency f sampled at t.
+    """
+
+
+    freq = np.array(f)
+     
+    t = np.arange(-duration/2, duration/2 , dt)
+
+    output = np.zeros((t.size, freq.size))
+        
+    for i in range(freq.size):
+        pi2 = (np.pi ** 2.0)
+        if ( freq.size == 1 ):
+            fsqr = freq ** 2.0
+        else:
+            fsqr =  freq[i] ** 2.0
+        tsqr = t ** 2.0
+        pft = pi2 * fsqr * tsqr
+        A = (1 - (2 * pft)) * np.exp(-pft)
+        output[:,i] = A
+
+    if freq.size == 1: output = output.flatten()
+        
+    return output / np.amax(output)

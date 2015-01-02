@@ -37,7 +37,8 @@ from lib_db import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
      ImageModel, Issue, EarthModel, Server
 
-from lib_util import posterize
+from lib_util import posterize, depth2time, akirichards, ricker
+
 
 class ModelrAPI(webapp2.RequestHandler):
     """
@@ -487,8 +488,8 @@ class ModelData1DHandler(ModelrAPI):
         admin_user = User.all()\
                          .filter("user_id =", admin_id).get()
                          
-        dz = 1.0
-        dt = 0.1
+        dt = 0.004
+        dz = 1
 
         data = json.loads(self.request.get('data'))
         min_depth = data[0]["depth"]
@@ -529,8 +530,22 @@ class ModelData1DHandler(ModelrAPI):
             rho[start_index:end_index] = rock.rho + \
               np.random.randn(end_index-start_index)*rock.rho_std
 
-        output = {"vp":tuple(vp), "vs":tuple(vs),
-                  "rho":tuple(rho), "z":tuple(z)}
+
+        vp, vs, rho, t = depth2time(z, vp, vs, rho, dt)
+        scale = int(self.request.get("height")) * t / np.amax(t)
+
+        ref = akirichards(vp[0:-1], vs[0:-1], rho[0:-1],
+                          vp[1:], vs[1:], rho[1:], 0)
+
+        wavelet = ricker(0.1, dt, 10.0)
+
+        synth = np.convolve(ref,wavelet, mode="same")
+        
+        output = {"vp": tuple(vp), "vs": tuple(vs),
+                  "rho": tuple(rho), "t": tuple(t),
+                  "scale": tuple(scale),
+                  "reflectivity": tuple(ref),
+                  "synthetic": tuple(synth)}
 
         self.response.write(json.dumps(output))
         

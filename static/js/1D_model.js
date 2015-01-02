@@ -14,6 +14,7 @@ setup1D = function(model_div, plot_div, db_rocks){
     var colors=['#CCAA99','#BBAADD',"#AACCDD", "#CC99AA", "#AAAACC"];
     var offset = 25;
     var total_depth = 1000;
+    var max_depth = 10000;
 
     
     // Make the scale
@@ -21,15 +22,21 @@ setup1D = function(model_div, plot_div, db_rocks){
 	.domain([0,500]) 
 	.range([0, height]);
     var vsScale = d3.scale.linear() 
-	.range([0,75]);
+	.range([0,50]);
     var vpScale = d3.scale.linear()
-	.range([0, 75]);
+	.range([0, 50]);
     var rhoScale = d3.scale.linear()
-	.range([0, 75]);
-    var zScale = d3.scale.linear()
+	.range([0, 50]);
+    var refScale = d3.scale.linear()
+	.range([0, 50]);
+    var synthScale = d3.scale.linear()
+	.range([0, 50]);
+    var tScale = d3.scale.linear()
 	.range([0, height])
+    var totalScale = d3.scale.linear()
+	.domain([0, max_depth])
+	.range([0, height]);
 	
-    
     // Make some objects
     var layer_svg = d3.select(model_div).append("svg")
         .attr("width", width)
@@ -78,7 +85,9 @@ setup1D = function(model_div, plot_div, db_rocks){
 	         .attr("width", plot_width);
     var log_group = plot_svg.append("g").attr("id", "log-group")
 	                    .attr("transform", "translate(40,40)");
-    var rhoAxis = d3.svg.axis()
+    
+    /*
+      var rhoAxis = d3.svg.axis()
 	.orient("top")
 	.ticks(1);
     var vsAxis = d3.svg.axis()
@@ -87,7 +96,9 @@ setup1D = function(model_div, plot_div, db_rocks){
     var vpAxis = d3.svg.axis()
 	.orient("top")
 	.ticks(1);
-    var zAxis = d3.svg.axis()
+    */
+
+    var tAxis = d3.svg.axis()
 	.orient("right")
 	.ticks(5);
    // Axis label (done horizontally then rotated)
@@ -104,9 +115,13 @@ setup1D = function(model_div, plot_div, db_rocks){
     var rho_g = log_group.append("g")
 	        .attr("transform", "translate(40,0)")
     var vs_g = log_group.append("g")
-	.attr("transform", "translate(140,0)")
+	.attr("transform", "translate(100,0)")
     var vp_g = log_group.append("g")
-	.attr("transform", "translate(240,0)")
+	.attr("transform", "translate(160,0)")
+    var ref_g = log_group.append("g")
+	.attr("transform", "translate(220,0)")
+    var synth_g = log_group.append("g")
+	.attr("transform", "translate(280,0)")
 
     // Axis labels
     rho_g.append("text")
@@ -127,29 +142,55 @@ setup1D = function(model_div, plot_div, db_rocks){
 	.attr("y",-25)
 	.attr("x", 20)
 	.text("vs");
+    ref_g.append("text")
+	.attr("class", "y-label")
+	.attr("text-anchor", "end")
+	.attr("y",-25)
+	.attr("x", 20)
+	.text("ref");
+    synth_g.append("text")
+	.attr("class", "y-label")
+	.attr("text-anchor", "end")
+	.attr("y",-25)
+	.attr("x", 20)
+	.text("synth");
 
-    //log_group.call(zAxis);
+    //log_group.call(tScale);
 
     var vpFunc = d3.svg.line()
 	.x(function(d) {
 	    return vpScale(d.vp);
 	})
 	.y(function(d) {
-	    return zScale(d.z);
+	    return tScale(d.t);
 	});
     var vsFunc = d3.svg.line()
 	.x(function(d) {
 	    return vsScale(d.vs);
 	})
 	.y(function(d) {
-	    return zScale(d.z);
+	    return tScale(d.t);
 	});
     var rhoFunc = d3.svg.line()
 	.x(function(d) {
 	    return rhoScale(d.rho);
 	})
 	.y(function(d) {
-	    return zScale(d.z);
+	    return tScale(d.t);
+	});
+    var refFunc = d3.svg.line()
+	.x(function(d) {
+	    return refScale(d.reflectivity);
+	})
+	.y(function(d) {
+	    return tScale(d.t);
+	});
+    var synthFunc = d3.svg.line()
+	.x(function(d) {
+	    return synthScale(d.synthetic);
+	})
+	.y(function(d) {
+	    return tScale(d.t);
 	});
 
     // Add the default first layers
@@ -187,7 +228,17 @@ setup1D = function(model_div, plot_div, db_rocks){
     
     function scaleDrag(){
 
-	var scale_factor = d3.event.y / (d3.event.y-d3.event.dy);
+	var old_depth = total_depth;
+	// update it
+	total_depth = totalScale.invert(d3.event.y);
+	if(total_depth > max_depth){
+	    total_depth = max_depth;
+	}
+	if(total_depth < 1){
+	    total_depth=1;
+	}
+
+	var scale_factor = total_depth / old_depth;
 
 	if(d3.event.dy>0){scale_factor*=1.01}
 
@@ -198,14 +249,14 @@ setup1D = function(model_div, plot_div, db_rocks){
 	    rocks[i].thickness *= scale_factor;
 	};
 
-	//if(d3.event.dy < 0){
-	//    updateRocks();
-	//} else{
-	    var scale_max = yscale.domain()[1] * scale_factor;
-	    yscale.domain([0, scale_max]);
-	    yAxis.scale(yscale);
-	    layer_group.call(yAxis);
-	//};
+
+	var scale_max = yscale.domain()[1] * scale_factor;
+	yscale.domain([0, scale_max]);
+	yAxis.scale(yscale);
+	layer_group.call(yAxis);
+
+	slideScale();
+	
     }
 
     function rescale(){
@@ -260,20 +311,6 @@ setup1D = function(model_div, plot_div, db_rocks){
 	    .call(drag);
 
 	interfaceLine.exit().remove();
-	
-	var scale_circle = circle.selectAll("circle")
-	    .data([rocks[rocks.length-1]]);
-	scale_circle.attr("cy", update_bottom)
-
-	scale_circle.enter().append("circle")
-	    .attr("cx",0)
-	    .attr("cy", update_bottom)
-	    .attr("r", "5")
-	    .attr("stroke","black")
-	    .attr("stroke-width","3")
-	    .attr("fill","red") 
-	    .attr("cursor", "ns-resize")
-	    .call(scale_drag);
 
 	
 	//update the table
@@ -305,6 +342,24 @@ setup1D = function(model_div, plot_div, db_rocks){
 	// Delete left over elements
 	colour_map.exit().remove();
 
+	slideScale();
+
+    };
+
+    function slideScale(){
+	var scale_circle = circle.selectAll("circle")
+	    .data([total_depth]);
+	scale_circle.attr("cy",function(d){return totalScale(d);});
+
+	scale_circle.enter().append("circle")
+	    .attr("cx",0)
+	    .attr("cy", function(d){return totalScale(d);})
+	    .attr("r", "5")
+	    .attr("stroke","black")
+	    .attr("stroke-width","3")
+	    .attr("fill","red") 
+	    .attr("cursor", "ns-resize")
+	    .call(scale_drag);
     };
 
     function update_plot(data){
@@ -313,7 +368,10 @@ setup1D = function(model_div, plot_div, db_rocks){
 	var paired_data = [];
 	for(var i=0; i < data.vp.length; i++){
 	    paired_data[i] = {vp:data.vp[i], vs:data.vs[i],
-			      rho:data.rho[i], z:data.z[i]};
+			      rho:data.rho[i], 
+			      reflectivity:data.reflectivity[i],
+			      synthetic:data.synthetic[i],
+			      t:data.t[i]};
 	};
 
 
@@ -323,35 +381,53 @@ setup1D = function(model_div, plot_div, db_rocks){
 			Math.max.apply(Math,data.vp)]);
 	vsScale.domain([Math.min.apply(Math,data.vs), 
 			Math.max.apply(Math,data.vs)]);
-	zScale.domain(yscale.domain());
+	synthScale.domain([Math.min.apply(Math,data.synthetic), 
+			Math.max.apply(Math,data.synthetic)]);
+	refScale.domain([Math.min.apply(Math,data.reflectivity), 
+			Math.max.apply(Math,data.reflectivity)]);
 
-	zAxis.scale(zScale);
-	log_group.call(zAxis);
+	tScale.domain(data.t);
+	tScale.range(data.scale);
+
+
+	tAxis.scale(tScale);
+	log_group.call(tAxis);
 	
+	/*
 	rhoAxis.scale(rhoScale);
 	rho_g.call(rhoAxis);
 	vsAxis.scale(vsScale);
 	vs_g.call(vsAxis);
 	vpAxis.scale(vpScale);
 	vp_g.call(vpAxis);
+	*/
 
 	d3.selectAll("path").remove();
 	rho_g.append("path")
                 .attr("d", rhoFunc(paired_data))
 		      .attr('stroke', 'blue')
-	              .attr('stroke-width', 2)
+	              .attr('stroke-width', 1)
 	              .attr('fill', 'none');
 	vs_g.append("path")
                 .attr("d", vsFunc(paired_data))
 	        .attr('stroke', 'green')
-	        .attr('stroke-width', 2)
+	        .attr('stroke-width', 1)
 	        .attr('fill', 'none');
 	vp_g.append("path")
                 .attr("d", vpFunc(paired_data))
 	        .attr('stroke', 'red')
-	        .attr('stroke-width', 2)
+	        .attr('stroke-width', 1)
 	        .attr('fill', 'none');
-
+	ref_g.append("path")
+                .attr("d", refFunc(paired_data))
+	        .attr('stroke', 'black')
+	        .attr('stroke-width', 1)
+	        .attr('fill', 'none');
+	synth_g.append("path")
+                .attr("d", synthFunc(paired_data))
+	        .attr('stroke', 'black')
+	        .attr('stroke-width', 1)
+	        .attr('fill', 'none');
 
 	layer_group.call(yAxis);
 
@@ -359,7 +435,8 @@ setup1D = function(model_div, plot_div, db_rocks){
 
     function update_data(){
 
-	$.get("/1D_model_data",{data:JSON.stringify(rocks)}, 
+	$.get("/1D_model_data",{data:JSON.stringify(rocks),
+				height: height}, 
 	      update_plot);
 
 
