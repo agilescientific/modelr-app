@@ -491,12 +491,14 @@ class ModelData1DHandler(ModelrAPI):
         dt = 0.1
 
         data = json.loads(self.request.get('data'))
-        depth = data[-1]["depth"] + data[-1]["thickness"]
+        min_depth = data[0]["depth"]
+        max_depth = data[-1]["depth"] + data[-1]["thickness"]
 
-        vp = np.zeros(depth/dz)
-        vs = np.zeros(depth/dz)
-        rho = np.zeros(depth/dz)
-        z = np.arange(0, rho.size)*dz
+        z = np.arange(min_depth, max_depth, dz)
+        vp = np.zeros(z.size)
+        vs = np.zeros(z.size)
+        rho = np.zeros(z.size)
+        
 
         end_index = 0
         for layer in data:

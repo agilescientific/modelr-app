@@ -1,24 +1,25 @@
 setup1D = function(model_div, plot_div, db_rocks){ 
 
     // Define the constants
-    var image_height = 350;
-    var height = 300;
+    var image_height = 500;
+    var height = 450;
     var width = 170;
-    var plot_height = 350;
+    var plot_height = 500;
     var plot_width = 400;
-    var rock_width = 60;
+    var rock_width = 150;
     var color_index = 0;
     var layer = 1;
     var rocks = [];
     var rock_names = db_rocks;
     var colors=['#CCAA99','#BBAADD',"#AACCDD", "#CC99AA", "#AAAACC"];
     var offset = 25;
+    var total_depth = 1000;
 
     
     // Make the scale
     var yscale = d3.scale.linear()
 	.domain([0,500]) 
-	.range([offset, height]);
+	.range([0, height]);
     var vsScale = d3.scale.linear() 
 	.range([0,75]);
     var vpScale = d3.scale.linear()
@@ -26,7 +27,8 @@ setup1D = function(model_div, plot_div, db_rocks){
     var rhoScale = d3.scale.linear()
 	.range([0, 75]);
     var zScale = d3.scale.linear()
-	.range([0, height]);
+	.range([0, height])
+	
     
     // Make some objects
     var layer_svg = d3.select(model_div).append("svg")
@@ -36,7 +38,7 @@ setup1D = function(model_div, plot_div, db_rocks){
     // Main image group, translated so we have space for an axis	
     var layer_group = layer_svg.append("g")
 	.attr("id", "layer-group")
-	.attr("transform","translate(40,0)");
+	.attr("transform","translate(40,40)");
 
 
     // Axis label (done horizontally then rotated)
@@ -55,6 +57,27 @@ setup1D = function(model_div, plot_div, db_rocks){
 	.orient("right")
 	.ticks(5);
 
+    //add it to the main plot		  
+    layer_group.call(yAxis);
+    
+    // These groups are made in this order for specifically for layering
+    var rects = layer_group.append("g").attr("id", "rects");
+    var lines = layer_group.append("g").attr("id", "lines");
+    var circle = layer_group.append("g").attr("id", "circle");
+  
+    // Resize drag behaviour
+    var drag = d3.behavior.drag().on("drag", dragResize)
+	                         .on("dragend", update_data);
+    var scale_drag = d3.behavior.drag().on("drag", scaleDrag)
+	                               .on("dragend", rescale);
+
+
+    // Setup the plot
+    var plot_svg = d3.select(plot_div).append("svg")
+	         .attr("height", plot_height)
+	         .attr("width", plot_width);
+    var log_group = plot_svg.append("g").attr("id", "log-group")
+	                    .attr("transform", "translate(40,40)");
     var rhoAxis = d3.svg.axis()
 	.orient("top")
 	.ticks(1);
@@ -65,35 +88,25 @@ setup1D = function(model_div, plot_div, db_rocks){
 	.orient("top")
 	.ticks(1);
     var zAxis = d3.svg.axis()
-	.orient("left")
+	.orient("right")
 	.ticks(5);
+   // Axis label (done horizontally then rotated)
+    plot_svg.append("text")
+	.attr("class", "y-label")
+	.attr("text-anchor", "end")
+	.attr("y", 6)
+	.attr("x", -50)
+	.attr("dy", ".75em")
+	.attr("transform", "rotate(-90)")
+	.text("time [ms]");
 
-    //add it to the main plot		  
-    layer_group.call(yAxis);
-    
-    // These groups are made in this order for specifically for layering
-    var rects = layer_group.append("g").attr("id", "rects");
-    var lines = layer_group.append("g").attr("id", "lines");
-  
-    // Resize drag behaviour
-    var drag = d3.behavior.drag().on("drag", dragResize)
-	                         .on("dragend", update_data);
-    // Add the default first layers
-    add_rock(0);
-    add_rock(1);
 
-    // Setup the plot
-    var plot_svg = d3.select(plot_div).append("svg")
-	         .attr("height", plot_height)
-	         .attr("width", plot_width);
-    var log_group = plot_svg.append("g").attr("id", "log-group")
-	                    .attr("transform", "translate(40,40)");
     var rho_g = log_group.append("g")
-	        .attr("transform", "translate(0,0)")
+	        .attr("transform", "translate(40,0)")
     var vs_g = log_group.append("g")
-	.attr("transform", "translate(100,0)")
+	.attr("transform", "translate(140,0)")
     var vp_g = log_group.append("g")
-	.attr("transform", "translate(200,0)")
+	.attr("transform", "translate(240,0)")
 
     // Axis labels
     rho_g.append("text")
@@ -115,6 +128,7 @@ setup1D = function(model_div, plot_div, db_rocks){
 	.attr("x", 20)
 	.text("vs");
 
+    //log_group.call(zAxis);
 
     var vpFunc = d3.svg.line()
 	.x(function(d) {
@@ -138,23 +152,75 @@ setup1D = function(model_div, plot_div, db_rocks){
 	    return zScale(d.z);
 	});
 
-    // Resize call back
-    function dragResize(d){
-	var event  = d3.event;
-	d.thickness = yscale.invert(event.y) - d.depth;
-	
+    // Add the default first layers
+    add_rock(0, 0, total_depth);
+    add_rock(1, total_depth/2, total_depth/2);
 
-	if (d.thickness < 0){d.thickness=0};
+
+
+    // Resize call back
+    function dragResize(d,i){
+
+	var event  = d3.event;
+	var end_point = d.depth + d.thickness;
+
+	d.depth = yscale.invert(event.y);
+	
+	if(d.depth > end_point){d.depth=end_point};
+	
+	if(i > 0){
+	    var start_point = rocks[i-1].depth;
+	} else{ var start_point = 0};
+
+	if(d.depth < start_point){
+	    d.depth = start_point;
+	};
+ 
+	if(i < rocks.length-1){
+	    rocks[i+1].depth = end_point;
+	} else{
+	    d.thickness = end_point - d.depth;
+	};
+
 	updateRocks();
     };
     
+    function scaleDrag(){
+
+	var scale_factor = d3.event.y / (d3.event.y-d3.event.dy);
+
+	if(d3.event.dy>0){scale_factor*=1.01}
+
+
+	rocks[0].thickness *= scale_factor;
+	for(var i=1; i < rocks.length; i++){
+	    rocks[i].depth = rocks[i-1].depth + rocks[i-1].thickness; 
+	    rocks[i].thickness *= scale_factor;
+	};
+
+	//if(d3.event.dy < 0){
+	//    updateRocks();
+	//} else{
+	    var scale_max = yscale.domain()[1] * scale_factor;
+	    yscale.domain([0, scale_max]);
+	    yAxis.scale(yscale);
+	    layer_group.call(yAxis);
+	//};
+    }
+
+    function rescale(){
+	update_scale();
+	updateRocks();
+	update_data();
+	
+    }
+
     // Updates the data and redraws
     function updateRocks(){
 
-	// Calculate the depths for each rock
-	update_depths();
-	// Update the scale
-	update_scale();
+	// Update the interval thickness
+	calculate_thickness();
+
 
 	// Do the main rectangles first
 	var rect = rects.selectAll("rect").data(rocks);
@@ -181,20 +247,35 @@ setup1D = function(model_div, plot_div, db_rocks){
 	var interfaceLine = lines.selectAll("line").data(rocks);
 	
 	// existing
-	interfaceLine.attr("y1", update_offset_bottom)
-	    .attr("y2", update_offset_bottom);
+	interfaceLine.attr("y1", update_depth)
+	    .attr("y2", update_depth);
 
 	//for the new elements
 	interfaceLine.enter().append("line")
 	    .attr("x1", 60).attr("x2", 60 + rock_width)
-	    .attr("y1", update_offset_bottom)
-	    .attr("y2", update_offset_bottom)
+	    .attr("y1", update_depth)
+	    .attr("y2", update_depth)
 	    .attr("style","stroke:rgb(0,0,0);stroke-width:2")
 	    .attr("cursor", "ns-resize")
 	    .call(drag);
 
 	interfaceLine.exit().remove();
+	
+	var scale_circle = circle.selectAll("circle")
+	    .data([rocks[rocks.length-1]]);
+	scale_circle.attr("cy", update_bottom)
 
+	scale_circle.enter().append("circle")
+	    .attr("cx",0)
+	    .attr("cy", update_bottom)
+	    .attr("r", "5")
+	    .attr("stroke","black")
+	    .attr("stroke-width","3")
+	    .attr("fill","red") 
+	    .attr("cursor", "ns-resize")
+	    .call(scale_drag);
+
+	
 	//update the table
 	var colour_map = d3.select("#colour-map").selectAll(".row")
                                                    .data(rocks);
@@ -242,10 +323,11 @@ setup1D = function(model_div, plot_div, db_rocks){
 			Math.max.apply(Math,data.vp)]);
 	vsScale.domain([Math.min.apply(Math,data.vs), 
 			Math.max.apply(Math,data.vs)]);
-	zScale.domain([data.z[0], data.z[data.z.length-1]]);
+	zScale.domain(yscale.domain());
 
 	zAxis.scale(zScale);
 	log_group.call(zAxis);
+	
 	rhoAxis.scale(rhoScale);
 	rho_g.call(rhoAxis);
 	vsAxis.scale(vsScale);
@@ -269,12 +351,18 @@ setup1D = function(model_div, plot_div, db_rocks){
 	        .attr('stroke', 'red')
 	        .attr('stroke-width', 2)
 	        .attr('fill', 'none');
+
+
+	layer_group.call(yAxis);
+
     };
 
     function update_data(){
 
 	$.get("/1D_model_data",{data:JSON.stringify(rocks)}, 
 	      update_plot);
+
+
     };
 
 
@@ -289,77 +377,98 @@ setup1D = function(model_div, plot_div, db_rocks){
 
     function update_scale(){
 	// Updates the axis scaling
-	var total = rocks[rocks.length -1].depth + rocks[rocks.length-1].thickness;
-	yscale.domain([0, total*1.2]);
+	var total = rocks[rocks.length -1].depth + 
+	    rocks[rocks.length-1].thickness;
 
+	/*
+	if(yscale.domain()[1] < 1.2*total){
+	    yscale.domain([0, total*1.2]);
+	};
+
+	if(yscale.domain()[1] > 2*total){
+	    yscale.domain([0, 1.2*total]);
+	};
+	*/
+	yscale.domain([0,total]);
 	yAxis = yAxis.scale(yscale);
 	layer_group.call(yAxis);
+	
 
     }
 
     function delete_rock(d,i){
 	d3.event.preventDefault();
 	if (rocks.length > 1){
-	    rocks.splice(i,1);
 
+	    if(i == (rocks.length-1)){
+		rocks[i-1].thickness = d.thickness + d.depth -
+		    rocks[i-1].depth;
+	    };
+
+	    rocks.splice(i,1);
 
 	    updateRocks();
 	    update_data();
 	};
     }
 
-    function update_depths(){
-	// Updates the depth of each layer
-	
-	rocks[0].depth = 0;
-	for (var i =1; i< rocks.length; i++){
-	    rocks[i].depth = rocks[i-1].depth + rocks[i-1].thickness;
+
+    function calculate_thickness(){
+
+	var end_point = rocks[rocks.length-1].depth +
+	    rocks[rocks.length-1].thickness;
+
+	for(var i=0; i<rocks.length-1; i++){
+	    
+	    rocks[i].thickness = rocks[i+1].depth - rocks[i].depth;
 	};
-    };
-    
+	rocks[rocks.length-1].thickness = end_point - 
+	    rocks[rocks.length-1].depth;
+    }
 
     // FUnctions for D3 callbacks
     function update_thickness(d){
-	return yscale(d.thickness) -offset;
+	return yscale(d.thickness);
     }
 
-    function update_offset_bottom(d){
-	return yscale(d.depth + d.thickness);
-
-    };
-    function  update_depth(d){
+    function update_depth(d){
 	return yscale(d.depth);
     }
     
+    function update_bottom(d){
+	return yscale(d.depth + 
+		      d.thickness);
+    }
+
     function colour_block(d,i){
 	return '<div class="cblock" style="margin0 6px 0 0; background-color:' +d.color+'; display:inline-block"></div>'
     }
 
     function add_top(d,i){
 	// adds an interface top at the mouse click position
-	
+	var bottom = d.depth + d.thickness;
 	d.thickness = yscale.invert(d3.mouse(this)[1]) - d.depth;
 
-	add_rock(i);
+	var depth = d.depth + d.thickness;
+	var thickness = bottom - depth;
+
+	add_rock(i, depth, thickness);
     }
 	
-    function add_rock(i){
+    function add_rock(i, depth, thickness){
 	// adds a rock to the model at position i + 1
 
 	var name_index = Math.floor(Math.random()*db_rocks.length);
 
-	var rock = {thickness: 50,
+	var rock = {depth:depth,
 		    color: colors[color_index],
                     name: db_rocks[name_index].name,
 		    db_key: db_rocks[name_index].db_key};
 
-	if (rocks.length == 0){
-	    rock.depth = 0
-	} else {
-	    rock.depth = rocks[rocks.length - 1].depth +
-		rocks[rocks.length-1].thickness};
+	if(typeof thickness !== 'undefined'){
+	    rock.thickness = thickness;
+	};
 
-	
 	rocks.splice(i+1,0,rock);
 
 	updateRocks();
@@ -368,6 +477,7 @@ setup1D = function(model_div, plot_div, db_rocks){
 	color_index++;
 	color_index = color_index % colors.length;
 	layer++;
+	update_scale();
 
     };
 };
