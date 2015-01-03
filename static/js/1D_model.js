@@ -212,21 +212,21 @@ setup1D = function(model_div, plot_div, db_rocks){
 
 	var event  = d3.event;
 	var end_point = d.depth + d.thickness;
-
+	
 	d.depth = yscale.invert(event.y);
 	
 	if(d.depth > end_point){d.depth=end_point};
-	
-	if(i > 0){
-	    var start_point = rocks[i-1].depth;
-	} else{ var start_point = 0};
+	    
 
+	var start_point = rocks[i].depth;
+	 
+	
 	if(d.depth < start_point){
 	    d.depth = start_point;
 	};
- 
-	if(i < rocks.length-1){
-	    rocks[i+1].depth = end_point;
+	
+	if(i < rocks.length-2){
+	    rocks[i+2].depth = end_point;
 	} else{
 	    d.thickness = end_point - d.depth;
 	};
@@ -294,26 +294,31 @@ setup1D = function(model_div, plot_div, db_rocks){
 		  {return d.color})
 	    .attr("height", update_thickness)
 	    .attr("width", rock_width)
+	    .attr("cursor","crosshair")
 	    .on("click", add_top)
 	    .on("contextmenu", delete_rock);
 	
 	rect.exit().remove();
 
 	// Interface lines
-	var interfaceLine = lines.selectAll("line").data(rocks);
+	var interfaceLine = lines.selectAll("line")
+	    .data(rocks.slice(1, rocks.length));
 	
 	// existing
 	interfaceLine.attr("y1", update_depth)
 	    .attr("y2", update_depth);
 
 	//for the new elements
-	interfaceLine.enter().append("line")
+	interfaceLine.enter()
+	    .append("line")
 	    .attr("x1", 60).attr("x2", 60 + rock_width)
 	    .attr("y1", update_depth)
 	    .attr("y2", update_depth)
 	    .attr("style","stroke:rgb(0,0,0);stroke-width:2")
 	    .attr("cursor", "ns-resize")
+	    .on("contextmenu", delete_top)
 	    .call(drag);
+
 
 	interfaceLine.exit().remove();
 
@@ -490,10 +495,20 @@ setup1D = function(model_div, plot_div, db_rocks){
 	
 
     }
+    
+    function delete_top(d,i){
+
+	d3.event.preventDefault();
+
+	// first rock does not have a top
+	delete_rock(rocks[i+1],i+1);
+    };
 
     function delete_rock(d,i){
 	d3.event.preventDefault();
-	if (rocks.length > 1){
+
+	// always keep 2 layers
+	if (rocks.length > 2 & (i > 0)){
 
 	    if(i == (rocks.length-1)){
 		rocks[i-1].thickness = d.thickness + d.depth -
