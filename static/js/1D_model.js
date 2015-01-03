@@ -186,13 +186,9 @@ setup1D = function(model_div, plot_div, db_rocks){
 	    return tScale(d.t);
 	});
 	var synthFill = d3.svg.area()
-	.x0(25)
-	.x1(function(d) {
-		if (d.synthetic > 0){
-	        return synthScale(d.synthetic);
-	    } else {
-	        return 25
-	    }
+	.x0(0)
+    .x1(function(d) {
+	    return synthScale(d.synthetic);
 	})
 	.y(function(d) {
 	    return tScale(d.t);
@@ -435,10 +431,22 @@ setup1D = function(model_div, plot_div, db_rocks){
 	        .attr('stroke', 'black')
 	        .attr('stroke-width', 1)
 	        .attr('fill', 'none');
-	synth_g.append("path")
+    synth_g.append("path")
             .attr("class", 'wiggle-fill')
             .attr("d", synthFill(paired_data));
-	synth_g.append("path")
+
+    // Rather than slapping a rect on top
+    // I think it would be better to use a clipPath
+    // but first I want to get the flipping fill shape done
+    synth_g.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", synthScale(0))
+            .attr("height", height)
+            .attr("opacity", '0.7')
+            .attr("fill", 'white');
+
+    synth_g.append("path")
 	        .attr("class", 'wiggle-line')
             .attr("d", synthFunc(paired_data));
 
