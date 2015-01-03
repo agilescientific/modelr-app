@@ -185,6 +185,14 @@ setup1D = function(model_div, plot_div, db_rocks){
 	.y(function(d) {
 	    return tScale(d.t);
 	});
+	var synthFill = d3.svg.area()
+	.x0(0)
+    .x1(function(d) {
+	    return synthScale(d.synthetic);
+	})
+	.y(function(d) {
+	    return tScale(d.t);
+	});
     var synthFunc = d3.svg.line()
 	.x(function(d) {
 	    return synthScale(d.synthetic);
@@ -401,30 +409,43 @@ setup1D = function(model_div, plot_div, db_rocks){
 
 	d3.selectAll("path").remove();
 	rho_g.append("path")
-                .attr("d", rhoFunc(paired_data))
-		      .attr('stroke', 'blue')
-	              .attr('stroke-width', 1)
-	              .attr('fill', 'none');
+            .attr("d", rhoFunc(paired_data))
+		    .attr('stroke', 'blue')
+	        .attr('stroke-width', 1)
+	        .attr('fill', 'none');
 	vs_g.append("path")
-                .attr("d", vsFunc(paired_data))
+            .attr("d", vsFunc(paired_data))
 	        .attr('stroke', 'green')
 	        .attr('stroke-width', 1)
 	        .attr('fill', 'none');
 	vp_g.append("path")
-                .attr("d", vpFunc(paired_data))
+            .attr("d", vpFunc(paired_data))
 	        .attr('stroke', 'red')
 	        .attr('stroke-width', 1)
 	        .attr('fill', 'none');
 	ref_g.append("path")
-                .attr("d", refFunc(paired_data))
+            .attr("d", refFunc(paired_data))
 	        .attr('stroke', 'black')
 	        .attr('stroke-width', 1)
 	        .attr('fill', 'none');
-	synth_g.append("path")
-                .attr("d", synthFunc(paired_data))
-	        .attr('stroke', 'black')
-	        .attr('stroke-width', 1)
-	        .attr('fill', 'none');
+    synth_g.append("path")
+            .attr("class", 'wiggle-fill')
+            .attr("d", synthFill(paired_data));
+
+    // Rather than slapping a rect on top
+    // I think it would be better to use a clipPath
+    // but first I want to get the flipping fill shape done
+    synth_g.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", synthScale(0))
+            .attr("height", height)
+            .attr("opacity", '0.7')
+            .attr("fill", 'white');
+
+    synth_g.append("path")
+	        .attr("class", 'wiggle-line')
+            .attr("d", synthFunc(paired_data));
 
 	layer_group.call(yAxis);
 
