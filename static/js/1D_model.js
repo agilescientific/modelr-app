@@ -1,4 +1,5 @@
-setup1D = function(model_div, plot_div, db_rocks){ 
+setup1D = function(model_div, plot_div, db_rocks, 
+		   colour_map, rock_menu){ 
 
     // Define the constants
     var image_height = 500;
@@ -205,7 +206,9 @@ setup1D = function(model_div, plot_div, db_rocks){
     add_rock(0, 0, total_depth);
     add_rock(1, total_depth/2, total_depth/2);
 
+    $("#rock-select-div").hide();
 
+    $("#rock-select-div").on("change", function(){$("#rock-select-div").dialog("close");});
 
     // Resize call back
     function dragResize(d,i){
@@ -321,7 +324,6 @@ setup1D = function(model_div, plot_div, db_rocks){
 
 
 	interfaceLine.exit().remove();
-
 	
 	//update the table
 	var colour_map = d3.select("#colour-map").selectAll(".row")
@@ -562,13 +564,17 @@ setup1D = function(model_div, plot_div, db_rocks){
 	var depth = d.depth + d.thickness;
 	var thickness = bottom - depth;
 
+	$("#rock-select-div").show();
+	$("#rock-select-div").dialog();
 	add_rock(i, depth, thickness);
     }
 	
     function add_rock(i, depth, thickness){
 	// adds a rock to the model at position i + 1
 
+
 	var name_index = Math.floor(Math.random()*db_rocks.length);
+
 
 	var rock = {depth:depth,
 		    color: colors[color_index],

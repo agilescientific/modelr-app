@@ -38,7 +38,7 @@ import StringIO
 from xml.etree import ElementTree
 
 from constants import admin_id, env, LOCAL, PRICE, UR_STATUS_DICT, \
-     tax_dict, stripe_api_key, stripe_public_key
+     tax_dict, stripe_api_key, stripe_public_key, usgs_colours
 
 from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      verify, authenticate, verify_signup, initialize_user,\
@@ -1464,10 +1464,20 @@ class Model1DHandler(ModelrPageRequest):
             group_rocks = group_rocks + g_rocks.fetch(100)
 
         all_rocks = user_rocks + group_rocks + admin_rocks
-        rock_json = [rock.json for rock in all_rocks]
         
+        rock_json = []
+        colour_map = {}
+        test=[]
+        for i, rock in enumerate(all_rocks):
+            rock_json.append(rock.json)
+            colour_map[rock.name] = usgs_colours[i]
+            test.append({"name":rock.name,
+                         "db_key": rock.key().id()})
+        colour_map = json.dumps(colour_map)
         params = self.get_base_params(user=user,
-                                      db_rocks=rock_json)
+                                      db_rocks=rock_json,
+                                      test=test,
+                                      colour_map=colour_map)
         template = env.get_template('1D_model.html')
 
         html = template.render(params)

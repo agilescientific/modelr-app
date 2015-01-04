@@ -49,23 +49,35 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"
 	charset="utf-8"></script>
+
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css" />
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+
 <script src="/static/js/1D_model.js"></script>
 
 <script>
  $(document).ready(function(){
 
    var db_rocks = {{db_rocks}};
+   var colour_map={{colour_map}};
 
    for (var i in db_rocks){
      db_rocks[i] = JSON.parse(db_rocks[i]);
    };
 
-   setup1D("#model-container", "#plot-container", db_rocks);
+   setup1D("#model-container", "#plot-container", db_rocks, 
+	   colour_map, "#rock-select");
  }
  )
 </script>
 
-
+<div id="rock-select-div" title="Select rock">
+  <select>
+    {% for rock in test %}
+    <option value={{rock["db_key"]}}>{{rock["name"]}}</option>
+    {% endfor %}
+  </select>
+</div>
 
 <div class="container">
 
