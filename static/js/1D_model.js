@@ -403,7 +403,7 @@ setup1D = function(model_div, plot_div, db_rocks,
   	log_group.call(tAxis);
   	
     d3.selectAll("path").remove();
-    d3.selectAll("rect").remove();
+    d3.selectAll("rect.rc-stick").remove();
 
     vp_g.append("path")
             .attr("d", vpFunc(paired_data))
@@ -428,6 +428,7 @@ setup1D = function(model_div, plot_div, db_rocks,
             .data(data.reflectivity)
             .enter()
             .append("rect")
+            .attr("class", "rc-stick")
             .attr("x", function(d) {
                if (d > 0) {
                 return refScale(0);
