@@ -386,10 +386,11 @@ setup1D = function(model_div, plot_div, db_rocks,
 	var data  = JSON.parse(data);
 	var paired_data = [];
 	for(var i=0; i < data.vp.length; i++){
-	    paired_data[i] = {vp:data.vp[i], vs:data.vs[i],
-			      rho:data.rho[i], 
-			      reflectivity:data.reflectivity[i],
-			      synthetic:data.synthetic[i],
+	    paired_data[i] = {vp:data.vp[i]||0,
+            vs:data.vs[i]||0,
+			      rho:data.rho[i]||0, 
+			      reflectivity:data.reflectivity[i]||0,
+			      synthetic:data.synthetic[i]||0,
 			      t:data.t[i]};
 	};
 
@@ -454,7 +455,6 @@ setup1D = function(model_div, plot_div, db_rocks,
             .attr("y", 0)
             .attr("width", synthScale(0))
             .attr("height", height)
-            .attr("opacity", '0.7')
             .attr("fill", 'white');
 
     synth_g.append("path")
