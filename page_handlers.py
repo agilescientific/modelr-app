@@ -1470,7 +1470,7 @@ class Model1DHandler(ModelrPageRequest):
         test=[]
         for i, rock in enumerate(all_rocks):
             rock_json.append(rock.json)
-            colour_map[rock.name] = usgs_colours[i]
+            colour_map[rock.name] = RGBToString(usgs_colours[i])
             test.append({"name":rock.name,
                          "db_key": rock.key().id()})
         colour_map = json.dumps(colour_map)

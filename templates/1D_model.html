@@ -65,19 +65,13 @@
      db_rocks[i] = JSON.parse(db_rocks[i]);
    };
 
-   setup1D("#model-container", "#plot-container", db_rocks, 
-	   colour_map, "#rock-select");
+   setup1D("#model-container", "#plot-container", db_rocks,
+	   colour_map);
  }
  )
 </script>
 
-<div id="rock-select-div" title="Select rock">
-  <select>
-    {% for rock in test %}
-    <option value={{rock["db_key"]}}>{{rock["name"]}}</option>
-    {% endfor %}
-  </select>
-</div>
+
 
 <div class="container">
 
@@ -99,6 +93,9 @@
     </div> <!-- End of panel body -->
   </div> <!-- End of panel -->
 
+<div id="rock-select-div">
+
+</div>
 </div> <!-- End of container -->
 
 

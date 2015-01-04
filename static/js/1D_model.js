@@ -280,6 +280,17 @@ setup1D = function(model_div, plot_div, db_rocks,
 	// Update the interval thickness
 	calculate_thickness();
 
+	var cmap = d3.select("#colour-map").selectAll(".row")
+	    .data(rocks)
+
+
+	cmap.enter().append("div").attr("class", "row")
+	    .html(colour_block)
+	    .append("p", function(d){return d.name});
+
+	
+
+	cmap.exit().remove();
 
 	// Do the main rectangles first
 	var rect = rects.selectAll("rect").data(rocks);
@@ -299,7 +310,7 @@ setup1D = function(model_div, plot_div, db_rocks,
 	    .attr("width", rock_width)
 	    .attr("cursor","crosshair")
 	    .on("click", add_top)
-	    .on("contextmenu", delete_rock);
+	    .on("contextmenu", showSelect);
 	
 	rect.exit().remove();
 
@@ -325,37 +336,33 @@ setup1D = function(model_div, plot_div, db_rocks,
 
 	interfaceLine.exit().remove();
 	
-	//update the table
-	var colour_map = d3.select("#colour-map").selectAll(".row")
-                                                   .data(rocks);
-	var select = colour_map.html(colour_block).append("select")
-	    .on("change", update_rock);
+	var selector = d3.select("#rock-select-div").selectAll("div")
+	    .data(rocks);
+
+	var pop_up = selector.enter().append("div")
+	    .attr("title", "Set rock")
+	    .attr("id", function(d,i){return i.toString()})
+
+	pop_up.append("select")
+	    .on("change", update_rock)
+	    .selectAll("option").data(db_rocks)
+	    .enter().append("option")
+	    .attr("value", function(d){return d.db_key})
+	    .text(function(d){return d.name})
+
+	selector.exit().remove();
 
 
-	colour_map.enter().append("div").attr("class", 
-					      "row")
-	    .html(colour_block)
-	    .append("select").on("change", update_rock);
-	
-	select = colour_map.selectAll("select");
-
-	var option = select.selectAll("option").data(db_rocks);
-	option.enter().append("option")
-	    .text(function(d){return d.name;})
-	    .attr("value",function(d)
-		  {return d.db_key;})
-	    .property("selected", function(){
-		var key = d3.select(this.parentNode).datum().db_key;
-		if(key == this.value){
-		    return true} else{
-			return false}
-	    });
-
-	// Delete left over elements
-	colour_map.exit().remove();
 
 	slideScale();
 
+    };
+
+    function showSelect(d,i){
+
+	d3.event.preventDefault();
+	$("#"+i.toString()).show();
+	$("#"+i.toString()).dialog()
     };
 
     function slideScale(){
@@ -473,7 +480,9 @@ setup1D = function(model_div, plot_div, db_rocks,
 	// updates rock layer and sends data to server
 	d.db_key = this.value;
 	d.name = this[this.selectedIndex].text;
+	d.color = colour_map[d.name];
 
+	updateRocks();
 	update_data();
     }
 
@@ -564,8 +573,9 @@ setup1D = function(model_div, plot_div, db_rocks,
 	var depth = d.depth + d.thickness;
 	var thickness = bottom - depth;
 
-	$("#rock-select-div").show();
-	$("#rock-select-div").dialog();
+
+	$("#"+i.toString()).show();
+	$("#"+i.toString()).dialog()
 	add_rock(i, depth, thickness);
     }
 	
@@ -577,9 +587,9 @@ setup1D = function(model_div, plot_div, db_rocks,
 
 
 	var rock = {depth:depth,
-		    color: colors[color_index],
                     name: db_rocks[name_index].name,
 		    db_key: db_rocks[name_index].db_key};
+	rock.color = colour_map[rock.name];
 
 	if(typeof thickness !== 'undefined'){
 	    rock.thickness = thickness;
