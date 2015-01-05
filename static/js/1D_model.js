@@ -377,14 +377,14 @@ setup1D = function(model_div, plot_div, db_rocks,
 	  d3.event.preventDefault();
 	  $("#rock-select-div").show();
 	  $("#rock-select-div").dialog()
-      };
+      }
 
       function showSeismicMenu(){
 	  
 	  d3.event.preventDefault();
 	  $("#seismic-menu").show();
 	  $("#seismic-menu").dialog()
-      };
+      }
       
       
       function slideScale(){
