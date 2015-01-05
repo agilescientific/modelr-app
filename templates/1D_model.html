@@ -17,6 +17,10 @@
    font: 16px sans-serif;
  }
 
+ .menu-label {
+  font: 16px sans-serif;
+ }
+
  .wiggle-fill {
     fill: grey;
     stroke-width: 0;
@@ -83,17 +87,31 @@
     <div class="panel-body">
       <p class="lead"> Drag tops to move them. Left-click layers to insert new tops. Right-click layers to delete them.</p>
       <div class="model-plot"> <!-- Helps with CSS -->
-        <div class="col-md-4" id="model-container">
+        <div class="col-md-3" id="model-container">
         </div>
-        <div class="col-md-8" id="plot-container">
+        <div class="col-md-9" id="plot-container">
         </div>
       </div> <!-- End of model-plot -->
     </div> <!-- End of panel body -->
   </div> <!-- End of panel -->
 
 <div id="rock-select-div" title="Rock menu">
-
 </div>
+
+<div id="seismic-menu" title="Seismic menu">
+  <div class="row">
+    <label>Frequency</label>
+    <input type="range" min="5" max="100"
+	   id="frequency-slide">
+  </div>
+  <div class="row">
+
+      <label>Offset</label>
+
+
+      <input type="range" min="0" max="45" id="offset-slide">
+
+  </div>
 </div> <!-- End of container -->
 
 

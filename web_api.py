@@ -499,6 +499,9 @@ class ModelData1DHandler(ModelrAPI):
         vp = np.zeros(z.size)
         vs = np.zeros(z.size)
         rho = np.zeros(z.size)
+
+        offset = float(self.request.get("offset"))
+        frequency = float(self.request.get("frequency"))
         
 
         end_index = 0
@@ -534,10 +537,11 @@ class ModelData1DHandler(ModelrAPI):
         vp, vs, rho, t = depth2time(z, vp, vs, rho, dt)
         scale = int(self.request.get("height")) * t / np.amax(t)
 
-        ref = akirichards(vp[0:-1], vs[0:-1], rho[0:-1],
-                          vp[1:], vs[1:], rho[1:], 0)
+        ref = np.nan_to_num(akirichards(vp[0:-1], vs[0:-1], rho[0:-1],
+                                        vp[1:], vs[1:], rho[1:],
+                                        offset))
 
-        wavelet = ricker(0.1, dt, 10.0)
+        wavelet = ricker(0.1, dt, frequency)
 
         synth = np.convolve(ref,wavelet, mode="same")
         
@@ -707,5 +711,4 @@ class ModelServed(ModelrAPI):
     def post(self):
 
         models_served = ModelServedCount.all().get()
-        models_served.count += 1
-        models_served.put()
+        models_served.count += models_served.put()
