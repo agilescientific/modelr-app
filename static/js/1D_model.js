@@ -18,10 +18,7 @@ setup1D = function(model_div, plot_div, db_rocks,
     max_depth = 10000;
 
     
-    // Make the scale
-    var yscale = d3.scale.linear()
-        .domain([0,500]) 
-        .range([0, height]);
+
     var vsScale = d3.scale.linear() 
         .range([0,50]);
     var vpScale = d3.scale.linear()
@@ -34,62 +31,12 @@ setup1D = function(model_div, plot_div, db_rocks,
         .range([0, 50]);
     var tScale = d3.scale.linear()
         .range([0, height])
-    var totalScale = d3.scale.linear()
-        .domain([0, max_depth])
-        .range([0, height]);
+
     
-    // Make some objects
-    var layer_svg = d3.select(model_div)
-        .append("svg")
-        .attr("width", width)
-        .attr("height", image_height);
-
-    // Main image group, translated so we have space for an axis  
-    var layer_group = layer_svg.append("g")
-        .attr("id", "layer-group")
-        .attr("transform","translate(40,40)");
-
-    layer_group.append("text")
-        .attr("class", "menu-label")
-	.attr("style", "color:blue")
-        .attr("text-anchor", "middle")
-        .attr("y", -25)
-        .attr("x", 25)
-        .text("Model")
-	.attr("cursor", "pointer")
-	.on("click", showRockSelect);
 
 
 
-    // Axis label (done horizontally then rotated)
-    layer_svg.append("text")
-        .attr("class", "y-label")
-        .attr("text-anchor", "end")
-        .attr("y", 6)
-        .attr("x", -50)
-        .attr("dy", ".75em")
-        .attr("transform", "rotate(-90)")
-        .text("depth [m]");
-    
-    // Make some axes
-    var yAxis = d3.svg.axis()
-        .scale(yscale)
-        .orient("right")
-        .ticks(5);
 
-    //add it to the main plot     
-    layer_group.call(yAxis);
-    
-    // These groups are made in this order for specifically for layering
-    var rects = layer_group.append("g").attr("id", "rects");
-    var lines = layer_group.append("g").attr("id", "lines");
-    var circle = layer_group.append("g").attr("id", "circle");
-    
-    // Resize drag behaviour
-    var drag = d3.behavior.drag().on("drag", dragResize)
-        .on("dragend", update_data);
-    var scale_drag = d3.behavior.drag().on("drag", scaleDrag)
-        .on("dragend", rescale);
 
 
     // Setup the plot
@@ -291,93 +238,7 @@ setup1D = function(model_div, plot_div, db_rocks,
 	  updateRocks();
 	  update_data();
       }
-
-      // Updates the data and redraws
-      function updateRocks(){
-
-	  // Update the interval thickness
-	  calculate_thickness();
-
-	  // Do the main rectangles first
-	  var rect = rects.selectAll("rect").data(rocks);
-	  
-	  // This updates the existing rectangles
-	  rect.attr("height", update_thickness)
-              .attr("y", update_depth)
-              .attr("fill", function(d){return d.color});
-
-	  // The enter function allows us to add elements for extra data
-	  rect.enter().append("rect")
-              .attr("y", update_depth)
-              .attr("x",60)
-              .attr("fill", function(d)
-		    {return d.color})
-              .attr("height", update_thickness)
-              .attr("width", rock_width)
-              .attr("cursor","crosshair")
-              .on("click", add_top)
-              .on("contextmenu", delete_rock);
-	  
-	  rect.exit().remove();
-
-	  // Interface lines
-	  var interfaceLine = lines.selectAll("line")
-              .data(rocks.slice(1, rocks.length));
-	  
-	  // existing
-	  interfaceLine.attr("y1", update_depth)
-              .attr("y2", update_depth);
-
-	  //for the new elements
-	  interfaceLine.enter()
-              .append("line")
-              .attr("x1", 60).attr("x2", 60 + rock_width)
-              .attr("y1", update_depth)
-              .attr("y2", update_depth)
-              .attr("style","stroke:rgb(0,0,0);stroke-width:2")
-              .attr("cursor", "ns-resize")
-              .on("contextmenu", delete_top)
-              .call(drag);
-
-	  interfaceLine.exit().remove();
-	  
-	  var colour_map = d3.select("#rock-select-div").selectAll(".row")
-              .data(rocks);
-	  
-	  var select = colour_map.html(colour_block).append("select")
-	      .on("change", update_rock);
-	  colour_map.enter().append("div").attr("class",
-						"row")
-	      .html(colour_block)
-	      .append("select").on("change", update_rock);
-	  select = colour_map.selectAll("select");
-	  var option = select.selectAll("option").data(db_rocks);
-	  option.enter().append("option")
-	      .text(function(d){return d.name;})
-	      .attr("value",function(d)
-		    {return d.db_key;})
-	      .property("selected", function(){
-		  var key = d3.select(this.parentNode).datum().db_key;
-		  if(key == this.value){
-		      return true} else{
-			  return false}
-	      });
-
-	  // Delete left over elements
-	  colour_map.exit().remove();
-
-
-	  
-	  slideScale();
-	  
-      } // end of function updateRocks
       
-      function showRockSelect(){
-	  
-	  d3.event.preventDefault();
-	  $("#rock-select-div").show();
-	  $("#rock-select-div").dialog()
-      }
 
       function showSeismicMenu(){
 	  
@@ -387,22 +248,6 @@ setup1D = function(model_div, plot_div, db_rocks,
       }
       
       
-      function slideScale(){
-	  var scale_circle = circle.selectAll("circle")
-              .data([total_depth]);
-	  scale_circle.attr("cy",function(d){return totalScale(d);});
-
-	  scale_circle.enter().append("circle")
-              .attr("cx",0)
-              .attr("cy", function(d){return totalScale(d);})
-              .attr("r", "5")
-              .attr("stroke","black")
-              .attr("stroke-width","3")
-              .attr("fill","red") 
-              .attr("cursor", "ns-resize")
-              .call(scale_drag);
-      } // end of function showSelect
-
       function update_plot(data){
 
   	  var data  = JSON.parse(data);
@@ -519,116 +364,9 @@ setup1D = function(model_div, plot_div, db_rocks,
 		update_plot);
       } // end of function update_data
 
-      function update_rock(d){
-	  // updates rock layer and sends data to server
-	  d.db_key = this.value;
-	  d.name = this[this.selectedIndex].text;
-	  d.color = colour_map[d.name];
 
-	  updateRocks();
-	  update_data();
-      } // end of function update_rocl
 
-      function update_scale(){
-	  // Updates the axis scaling
-	  var total = rocks[rocks.length -1].depth + 
-              rocks[rocks.length-1].thickness;
 
-	  /*
-	    if(yscale.domain()[1] < 1.2*total){
-            yscale.domain([0, total*1.2]);
-	    };
 
-	    if(yscale.domain()[1] > 2*total){
-            yscale.domain([0, 1.2*total]);
-	    };
-	  */
-	  yscale.domain([0,total]);
-	  yAxis = yAxis.scale(yscale);
-	  layer_group.call(yAxis);
-	  
-      } // end of function update_scale
-      
-      function delete_top(d,i){
-	  d3.event.preventDefault();
-	  // first rock does not have a top
-	  delete_rock(rocks[i+1],i+1);
-      }
 
-      function delete_rock(d,i){
-	  d3.event.preventDefault();
-	  // always keep 2 layers
-	  if (rocks.length > 2 & (i > 0)) {
-	      if (i == (rocks.length-1)) {
-		  rocks[i-1].thickness = d.thickness + d.depth - rocks[i-1].depth;
-	      } // end of inner if
-	      rocks.splice(i,1);
-	      updateRocks();
-	      update_data();
-	  } // end of outer if
-      } // end of function delete_rock
 
-      function calculate_thickness(){
-	  var end_point = rocks[rocks.length-1].depth +
-              rocks[rocks.length-1].thickness;
-	  for (var i=0; i<rocks.length-1; i++) {    
-              rocks[i].thickness = rocks[i+1].depth - rocks[i].depth;
-	  }
-
-	  rocks[rocks.length-1].thickness = end_point - 
-              rocks[rocks.length-1].depth;
-      }
-
-      // Functions for D3 callbacks
-      function update_thickness(d){
-	  return yscale(d.thickness);
-      }
-
-      function update_depth(d){
-	  return yscale(d.depth);
-      }
-      
-      function update_bottom(d){
-	  return yscale(d.depth + 
-			d.thickness);
-      }
-
-      function colour_block(d,i){
-	  return '<div class="cblock" style="margin0 6px 0 0; background-color:' +d.color+'; display:inline-block"></div>'
-      }
-
-      function add_top(d,i){
-	  // adds an interface top at the mouse click position
-	  var bottom = d.depth + d.thickness;
-	  d.thickness = yscale.invert(d3.mouse(this)[1]) - d.depth;
-
-	  var depth = d.depth + d.thickness;
-	  var thickness = bottom - depth;
-	  add_rock(i, depth, thickness);
-      }
-
-      function add_rock(i, depth, thickness){
-	  // adds a rock to the model at position i + 1
-	  var name_index = Math.floor(Math.random()*db_rocks.length);
-	  var rock = {depth:depth,
-                      name: db_rocks[name_index].name,
-		      db_key: db_rocks[name_index].db_key};
-	  rock.color = colour_map[rock.name];
-
-	  if(typeof thickness !== 'undefined'){
-              rock.thickness = thickness;
-	  }
-
-	  rocks.splice(i+1,0,rock);
-
-	  updateRocks();
-	  update_data();
-
-	  color_index++;
-	  color_index = color_index % colors.length;
-	  layer++;
-	  update_scale();
-
-      } // end of function add_rock
-
-     }; // end of function statement
