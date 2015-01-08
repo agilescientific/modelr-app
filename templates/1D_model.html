@@ -57,6 +57,7 @@
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css" />
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
 
+<script src="/static/js/core.js"></script>
 <script src="/static/js/1D_model.js"></script>
 
 <script>
@@ -69,8 +70,8 @@
      db_rocks[i] = JSON.parse(db_rocks[i]);
    };
 
-   setup1D("#model-container", "#plot-container", db_rocks,
-	   colour_map);
+   setup1D("#model-container",500,200,db_rocks, colour_map, 10000,
+   "#rock-menu");
  }
  )
 </script>
@@ -95,7 +96,7 @@
     </div> <!-- End of panel body -->
   </div> <!-- End of panel -->
 
-<div id="rock-select-div" title="Rock menu">
+<div id="rock-menu" title="Rock menu">
 </div>
 
 <div id="seismic-menu" title="Seismic menu">

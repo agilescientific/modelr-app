@@ -2,34 +2,51 @@
 Class for interactive core plots
 */
 
-function Core(div, image_height, image_width, material, intervals,
-	      colour_map, max_depth, title){
+function Core(div, image_height, image_width, material,
+	      colour_map, max_depth, title, menu){
+    /*
+      param div: div object that will hold the core plot
+      param image_height: Height in pixels of the core image
+      param image_width: The width in pixels of the image
+      param material: List of core materials to use for interval 
+                      building.
+      param colour_map: Dict mapping material names to colours
+      param max_depth: Maximum allowed depth of the core plot.
+      param title: Title for the plot
+      param menu: div object for the menu gui.
+    */
 
-    this.material = rocks;
-    this.intervals = intervals;
+    this.material = material;
+    this.intervals = [];
     this.menu = menu;
     this.colour_map = colour_map;
-    this.scale = scale;
     this.interval_width = 150;
+    this.max_depth = max_depth;
+    this.title = title;
+    this.total_depth = max_depth/10.
 
+    this.onchange = function(){return};
     // 10 % pad
     var height = image_height-(.1*image_height);
 
     // Make the scale
-    this.scale = d3.scale.linear()
+    var scale = d3.scale.linear()
         .domain([0,500]) 
         .range([0, height]);
 
-    this.max_scale = d3.scale.linear()
+    this.scale = scale; 
+    var max_scale = d3.scale.linear()
         .domain([0, max_depth])
         .range([0, height]);
 
+    this.max_scale = max_scale;
+
     this.canvas = d3.select(div)
 	.append("svg")
-	.attr("width", width)
-	.attr("height", height);
+	.attr("width", image_width)
+	.attr("height", image_height);
 
-    this.core_group = this.canvas.append("g");
+    this.core_group = this.canvas.append("g")
 	.attr("transform","translate(40,40)");
 
     this.core_group.append("text")
@@ -51,11 +68,9 @@ function Core(div, image_height, image_width, material, intervals,
         .text("depth [m]");
 
     this.yAxis = d3.svg.axis()
-        .scale(yscale)
+        .scale(this.scale)
         .orient("right")
         .ticks(5);
-
-    // this.core_group.call(this.yAxis);
 
     // These groups are made in this order for specifically for layering
     this.rects = this.core_group.append("g")
@@ -63,16 +78,20 @@ function Core(div, image_height, image_width, material, intervals,
     this.circle = this.core_group.append("g")
     
     // Resize drag behaviour
-    this.drag = d3.behavior.drag().on("drag", dragResize)
+    this.drag = d3.behavior.drag().on("drag", this.dragResize)
         .on("dragend", this.onchange);
-    this.scale_drag = d3.behavior.drag().on("drag", scaleDrag)
+    this.scale_drag = d3.behavior.drag().on("drag", this.scaleDrag)
         .on("dragend", this.rescale);
+
+    this.add_interval(0,0,this.total_depth);
+    this.add_interval(1, this.total_depth/2,this.total_depth/2);
 };
 
-Core.prototype.show_menu(){
-    this.menu.show();
-    this.menu.dialog();
+Core.prototype.show_menu = function(){
+    $(this.menu).show();
+    $(this.menu).dialog();
 };
+
 
 
 Core.prototype.add_interval = function(i, depth, thickness){
@@ -104,7 +123,7 @@ Core.prototype.add_interval = function(i, depth, thickness){
 
 };
 
-Core.prototype.calculate_thickness(){
+Core.prototype.calculate_thickness = function(){
     // updates the thickness values of each layer
 
     var end_point = this.intervals[this.intervals.length-1].depth +
@@ -118,7 +137,7 @@ Core.prototype.calculate_thickness(){
         this.intervals[this.intervals.length-1].depth;
 };
 
-Core.prototype.slide_scale(){
+Core.prototype.slide_scale = function(){
     
     var scale_circle = this.circle.selectAll("circle")
         .data([this.total_depth]);
@@ -136,65 +155,106 @@ Core.prototype.slide_scale(){
         .call(this.scale_drag);
 };
 
+Core.prototype.scaleDrag = function(){
+    
+    var old_depth = total_depth;
+    // update it
+    this.total_depth = this.max_scale.invert(d3.event.y);
+    if(this.total_depth > this.max_depth){
+        this.total_depth = this.max_depth;
+	  }
+	  if(this.total_depth < 1){
+              this.total_depth=1;
+	  }
+    
+    var scale_factor = this.total_depth / old_depth;
+    
+    this.intervals[0].thickness *= scale_factor;
+    for(var i=1; i < this.intervals.length; i++){
+        this.intervals[i].depth = this.intervals[i-1].depth + this.intervals[i-1].thickness; 
+        this.intervals[i].thickness *= scale_factor;
+    }
+    
+    var scale_max = this.scale.domain()[1] * scale_factor;
+    this.scale.domain([0, scale_max]);
+    this.yAxis.scale(this.scale);
+    this.core_group.call(this.yAxis);
+
+    //slideScale();
+} // end of function
+
+
 Core.prototype.update_scale = function(){
     
     // Updates the axis scaling
     var total = this.intervals[this.intervals.length -1].depth + 
         this.intervals[this.intervals.length-1].thickness;
     
-    this.yscale.domain([0,total]);
-    this.yAxis = yAxis.scale(yscale);
+    this.scale.domain([0,total]);
+    this.yAxis = yAxis.scale(this.scale);
     this.core_group.call(yAxis);
 };
 
-Core.prototype.update(){
+Core.prototype.update = function(){
+
+    //stupid JS
+    var that = this;
 
     // update the data
-    var interval = this.rects.selectAll("rect").data(rocks);
+    var interval = this.rects.selectAll("rect").data(this.intervals);
 
     // This updates the existing rectangles
-    interval.attr("height", this.update_thickness)
-        .attr("y", this.update_depth)
+    interval.attr("height", function(d)
+		  {return that.update_thickness(d)})
+        .attr("y", function(d){
+	    return that.update_depth(d)})
         .attr("fill", function(d){return d.color});
 
     // The enter function allows us to add elements for extra data
     interval.enter().append("rect")
-        .attr("y", this.update_depth)
+        .attr("y", function(d){
+	    return that.update_depth(d)})
         .attr("x",60)
               .attr("fill", function(d)
 		    {return d.color})
-        .attr("height", this.update_thickness)
+        .attr("height", function(d){
+	    return that.update_thickness(d)})
         .attr("width", this.interval_width)
         .attr("cursor","crosshair")
         .on("click", this.add_top)
-        .on("contextmenu", this.delete_interval);
+        .on("contextmenu", function(d,i){
+	    that.delete_interval(d,i)});
 
     // remove unused layers
     interval.exit().remove();
     	  
     // Tops
     var top = this.lines.selectAll("line")
-        .data(this.intervals.slice(1, rocks.length));
+        .data(this.intervals.slice(1, this.intervals.length));
     
     // existing
-    top.attr("y1", this.update_depth)
-        .attr("y2", this.update_depth);
+    top.attr("y1", function(d){
+	return that.update_depth(d)})
+        .attr("y2", function(d){
+	return that.update_depth(d)});
     
     //for the new elements
     top.enter()
         .append("line")
         .attr("x1", 60).attr("x2", 60 + this.interval_width)
-        .attr("y1", this.update_depth)
-        .attr("y2", this.update_depth)
+        .attr("y1", function(d){
+	    return that.update_depth(d)})
+        .attr("y2", function(d){
+	    return that.update_depth(d)})
         .attr("style","stroke:rgb(0,0,0);stroke-width:2")
         .attr("cursor", "ns-resize")
-        .on("contextmenu", this.delete_top)
+        .on("contextmenu", function(d,i){that.delete_top(d,i)})
         .call(this.drag);
     
     top.exit().remove();
     
     // Do the rock menu updates
-    var colour_map = this.menu.selectAll(".row")
+    var colour_map = d3.select(this.menu).selectAll(".row")
         .data(this.intervals);
 	  
     var select = colour_map.html(this.colour_block).append("select")
@@ -202,8 +262,8 @@ Core.prototype.update(){
 
     // add a menu row for every interval
     colour_map.enter().append("div").attr("class","row")
-	.html(colour_block)
-	.append("select").on("change", update_rock);
+	.html(this.colour_block)
+	.append("select").on("change", this.update_rock);
 
     select = colour_map.selectAll("select");
     var option = select.selectAll("option").data(this.material);
@@ -229,20 +289,19 @@ Core.prototype.update(){
 
 
 // Functions for D3 callbacks
-function update_thickness(d){
-    return yscale(d.thickness);
+Core.prototype.update_thickness = function(d){
+    return this.scale(d.thickness);
 };
 
-function update_depth(d){
-    return yscale(d.depth);
+Core.prototype.update_depth = function(d){
+    return this.scale(d.depth);
 };
 
-function update_bottom(d){
-    return yscale(d.depth + 
-		  d.thickness);
+Core.prototype.update_bottom = function(d) {
+    return this.scale(d.depth + d.thickness);
 };
 
-Core.prototype.delete_interval(d,i){
+Core.prototype.delete_interval = function(d,i){
     // deletes interval d from the ith layer
     
     d3.event.preventDefault();
@@ -273,7 +332,7 @@ Core.prototype.add_top = function(d,i){
     */
 
     var bottom = d.depth + d.thickness;
-    d.thickness = yscale.invert(d3.mouse(this)[1]) - d.depth;
+    d.thickness = this.scale.invert(d3.mouse(this)[1]) - d.depth;
     
     var depth = d.depth + d.thickness;
     var thickness = bottom - depth;
@@ -285,12 +344,31 @@ Core.prototype.colour_block = function(d,i){
     return '<div class="cblock" style="margin0 6px 0 0; background-color:' +d.color+'; display:inline-block"></div>'
 }
 
+ // Resize call back
+Core.prototype.dragResize = function(d,i){
+    var event = d3.event;
+    var end_point = d.depth + d.thickness;
+    d.depth = this.scale.invert(event.y);
+    if(d.depth > end_point){
+	d.depth=end_point
+    }
+    var start_point = this.intervals[i].depth;
+    if(d.depth < start_point){
+	d.depth = start_point;
+    }
+    if(i < this.intervals.length-2){
+	this.intervals[i+2].depth = end_point;
+    } else{
+	d.thickness = end_point - d.depth;
+    }
+    this.update();
 
-Core.prototype.udpate_rock = function(d){
+} // end of this.dragResize
+Core.prototype.update_rock = function(d){
     // updates rock layer and sends data to server
     d.db_key = this.value;
     d.name = this[this.selectedIndex].text;
-    d.color = colour_map[d.name];
+    d.color = this.colour_map[d.name];
     
     this.update();
 } // end of function update_rocl
