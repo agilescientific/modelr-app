@@ -32,7 +32,7 @@ function Core(div, image_height, image_width, material,
 
     // Make the scale
     var scale = d3.scale.linear()
-        .domain([0,500]) 
+        .domain([0,total_depth]) 
         .range([0, height]);
 
     
@@ -62,7 +62,7 @@ function Core(div, image_height, image_width, material,
     core_group.append("text")
         .attr("class", "y-label")
         .attr("text-anchor", "end")
-        .attr("y", 6)
+        .attr("y", -25)
         .attr("x", -50)
         .attr("dy", ".75em")
         .attr("transform", "rotate(-90)")
@@ -72,6 +72,8 @@ function Core(div, image_height, image_width, material,
         .scale(scale)
         .orient("right")
         .ticks(5);
+    core_group.call(yAxis);
+
 
     // These groups are made in this order for specifically for layering
     var rects = core_group.append("g")
@@ -86,6 +88,8 @@ function Core(div, image_height, image_width, material,
 
     add_interval(0,0,total_depth);
     add_interval(1, total_depth/2,total_depth/2);
+
+    show_menu();
 
     function show_menu(){
 	$(menu).show();
@@ -102,7 +106,7 @@ function Core(div, image_height, image_width, material,
 	// adds an interval of depth and thickness under the ith top
 	
 	// Choose a random material for initialization
-	var name_index = Math.floor(Math.random()*intervals.length);
+	var name_index = i % material.length
 	
 	// Define a new interval
 	var interval = {depth:depth,
@@ -122,6 +126,7 @@ function Core(div, image_height, image_width, material,
 	// update the interval thickness
 	calculate_thickness();
 
+	slide_scale();
 	// update the core plot
 	update();
 
@@ -184,7 +189,7 @@ function Core(div, image_height, image_width, material,
 	yAxis.scale(scale);
 	core_group.call(yAxis);
 
-	//slideScale();
+	slide_scale();
     } // end of function
 
 
@@ -209,14 +214,14 @@ function Core(div, image_height, image_width, material,
 	// This updates the existing rectangles
 	interval.attr("height", update_thickness)
             .attr("y", update_depth)
-            .attr("fill", function(d){return d.color});
+            .attr("fill", function(d){return d.colour});
 
 	// The enter function allows us to add elements for extra data
 	interval.enter().append("rect")
             .attr("y", update_depth)
             .attr("x",60)
             .attr("fill", function(d)
-		  {return d.color})
+		  {return d.colour})
             .attr("height",update_thickness)
             .attr("width", interval_width)
             .attr("cursor","crosshair")
@@ -335,7 +340,7 @@ function Core(div, image_height, image_width, material,
     };
 
     function colour_block(d,i){
-	return '<div class="cblock" style="margin0 6px 0 0; background-color:' +d.color+'; display:inline-block"></div>'
+	return '<div class="cblock" style="margin0 6px 0 0; background-color:' +d.colour+'; display:inline-block"></div>'
     }
 
     // Resize call back
@@ -355,6 +360,8 @@ function Core(div, image_height, image_width, material,
 	} else{
 	    d.thickness = end_point - d.depth;
 	}
+
+	calculate_thickness();
 	update();
 
     } // end of dragResize
@@ -362,7 +369,7 @@ function Core(div, image_height, image_width, material,
 	// updates rock layer and sends data to server
 	d.db_key = this.value;
 	d.name = this[this.selectedIndex].text;
-	d.color = colour_map[d.name];
+	d.colour = colour_map[d.name];
 	
 	update();
     } // end of function update_rocl
