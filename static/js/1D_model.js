@@ -1,7 +1,7 @@
 setup1D = function(rock_div, rock_image_height, rock_image_width,
 		   rocks, rock_colour_map, max_depth,
 		   rock_menu_div, fluid_div, fluid_menu_div,
-		   plot_div){
+		   plot_div, data_div, ref_menu_div){
 
     var rock_title = "Rock core";
     var fluid_title = "Fluid core";
@@ -51,6 +51,10 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
     vsPlot = new logPlot(log_group, "vs", "Vs",100, "red");
     rhoPlot = new logPlot(log_group, "rho","Rho", 160, "blue");
 
+  
+    var reflectPlot = new refPlot(log_group, "reflectivity", "Ref",
+			      220, "black", ref_menu_div);
+
     update_data();
     function update_data(){
 	
@@ -71,13 +75,14 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
 		  vpPlot.update_plot(data);
 		  vsPlot.update_plot(data);
 		  rhoPlot.update_plot(data);
+		  reflectPlot.update_plot(data, .9*rock_image_height);
 		  
 		  tScale.domain(data.t);
 		  tScale.range(data.scale);
 		  tAxis.scale(tScale);
 		  log_group.call(tAxis);
 	      }
-	      );
+	     );
     }; // end of function update_data
 };
 
