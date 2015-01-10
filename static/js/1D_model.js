@@ -7,18 +7,16 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
     var fluid_title = "Fluid core";
 
 
-
-
-
     // Rock core
-    rock_core = new Core(rock_div, rock_image_height, 
+    var rock_core = new Core(rock_div, rock_image_height, 
 			 rock_image_width,
 			 rocks, rock_colour_map, max_depth, 
 			 rock_title,
 			 rock_menu_div, true,update_data);
 
+
     // Fluid core
-    fluid_core = new Core(fluid_div, rock_image_height, 
+    var fluid_core = new Core(fluid_div, rock_image_height, 
 			  rock_image_width,
 			  rocks, rock_colour_map, max_depth, 
 			  fluid_title,
@@ -31,6 +29,9 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
 	.attr("width", 400);
     var log_group = plot_svg.append("g").attr("id", "log-group")
 	.attr("transform", "translate(40,40)");
+
+    var tScale = d3.scale.linear()
+	.range(0, .9*rock_image_height);
 
     var tAxis = d3.svg.axis()
 	.orient("right")
@@ -50,20 +51,31 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
     vsPlot = new logPlot(log_group, "vs", "Vs",100, "red");
     rhoPlot = new logPlot(log_group, "rho","Rho", 160, "blue");
 
-    function update_data(intervals){
+    update_data();
+    function update_data(){
 	
 	var offset = $("#offset-slide").val();
 	var frequency = $("#frequency-slide").val();
 
-	$.get("/1D_model_data",{data:JSON.stringify(intervals),
+	var rock_intervals = rock_core.intervals;
+	var fluid_intervals = fluid_core.intervals;
+
+	$.get("/1D_model_data",{rock_data:JSON.stringify(rock_intervals),
+				fluid_data:JSON.stringify(fluid_intervals),
 				height: rock_image_height*.9,
 				offset: offset,
 				frequency: frequency},
 	      function(data){
 
+		  data = JSON.parse(data);
 		  vpPlot.update_plot(data);
 		  vsPlot.update_plot(data);
 		  rhoPlot.update_plot(data);
+		  
+		  tScale.domain(data.t);
+		  tScale.range(data.scale);
+		  tAxis.scale(tScale);
+		  log_group.call(tAxis);
 	      }
 	      );
     }; // end of function update_data

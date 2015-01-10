@@ -29,7 +29,8 @@ function Core(div, image_height, image_width, material,
     var total_depth = max_depth/10.
     var axis = axis;
 
-   
+    this.intervals = intervals;
+
     // 10 % pad
     var height = image_height-(.1*image_height);
 
@@ -107,8 +108,11 @@ function Core(div, image_height, image_width, material,
     var scale_drag = d3.behavior.drag().on("drag", scaleDrag)
         .on("dragend", rescale);
 
+
+    
     add_interval(0,0,total_depth);
     add_interval(1, total_depth/2,total_depth/2);
+
 
     if(axis){
 	slide_scale();
@@ -124,6 +128,7 @@ function Core(div, image_height, image_width, material,
 
     function rescale(){
 	calculate_thickness();
+	onchange(intervals);
 	update();
     };
 
@@ -151,7 +156,6 @@ function Core(div, image_height, image_width, material,
 	// update the interval thickness
 	calculate_thickness();
 
-	onchange(intervals);
 	// update the core plot
 	update();
 
@@ -366,6 +370,7 @@ function Core(div, image_height, image_width, material,
 	var thickness = bottom - depth;
 	
 	add_interval(i, depth, thickness);
+	onchange(intervals);
     };
 
     function colour_block(d,i){
@@ -401,5 +406,7 @@ function Core(div, image_height, image_width, material,
 	d.colour = colour_map[d.name];
 	onchange(intervals);
 	update();
-    } // end of function update_rocl
+    }; // end of function update_rock
+
+ 
 };

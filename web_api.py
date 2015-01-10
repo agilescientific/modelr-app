@@ -491,9 +491,12 @@ class ModelData1DHandler(ModelrAPI):
         dt = 0.004
         dz = 1
 
-        data = json.loads(self.request.get('data'))
-        min_depth = data[0]["depth"]
-        max_depth = data[-1]["depth"] + data[-1]["thickness"]
+        rock_data = json.loads(self.request.get('rock_data'))
+        fluid_data = json.loads(self.request.get('fluid_data'))
+        # all the workings for fluid sub
+        
+        min_depth = rock_data[0]["depth"]
+        max_depth = rock_data[-1]["depth"] + rock_data[-1]["thickness"]
 
         z = np.arange(min_depth, max_depth, dz)
         vp = np.zeros(z.size)
@@ -505,7 +508,7 @@ class ModelData1DHandler(ModelrAPI):
         
 
         end_index = 0
-        for layer in data:
+        for layer in rock_data:
 
             rock = Rock.get_by_id(int(layer["db_key"]),
                                   parent=user)

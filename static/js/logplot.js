@@ -30,7 +30,7 @@ function logPlot(log_group,property,label,offset, colour){
 
     this.update_plot = function update_plot(data){
 	
-	var data  = JSON.parse(data);
+
 
 
 	var paired_data = [];
