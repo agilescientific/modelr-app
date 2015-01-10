@@ -343,6 +343,7 @@ function Core(div, image_height, image_width, material,
 		    d.thickness + d.depth - intervals[i-1].depth;
 	    } // end of inner if
 	    intervals.splice(i,1);
+	    calculate_thickness();
 	    update();
 	    onchange(intervals);
 	} // end of outer if
