@@ -3,7 +3,8 @@
 */
 
 function Core(div, image_height, image_width, material,
-	      colour_map, max_depth, title, menu){
+	      colour_map, max_depth, title, menu,
+	      axis, onchange){
     /*
       param div: div object that will hold the core plot
       param image_height: Height in pixels of the core image
@@ -14,19 +15,21 @@ function Core(div, image_height, image_width, material,
       param max_depth: Maximum allowed depth of the core plot.
       param title: Title for the plot
       param menu: div object for the menu gui.
+      param axis: bool specifying whether to put an axis
     */
 
     var material = material;
     var intervals = [];
+
     var menu = menu;
     var colour_map = colour_map;
-    var interval_width = 150;
+    var interval_width = 100;
     var max_depth = max_depth;
     var title = title;
     var total_depth = max_depth/10.
+    var axis = axis;
 
-    function onchange(){return};
-
+   
     // 10 % pad
     var height = image_height-(.1*image_height);
 
@@ -47,47 +50,69 @@ function Core(div, image_height, image_width, material,
 	.attr("width", image_width)
 	.attr("height", image_height);
 
-    var core_group = canvas.append("g")
-	.attr("transform","translate(40,40)");
+
+
+    var core_group = canvas.append("g");
+    if(axis){
+	    core_group.attr("transform","translate(40,40)");
+	var x_offset = 60;
+    } else{
+	core_group.attr("transform","translate(0,40)");
+	var x_offset = 0;
+    };
 
     core_group.append("text")
         .attr("class", "menu-label")
 	.attr("style", "color:blue")
-        .attr("text-anchor", "middle")
+        .attr("text-anchor", "beginning")
         .attr("y", -25) 
         .attr("x", 25)
         .text(title)
-	.attr("cursor", "pointer");
-
-    core_group.append("text")
-        .attr("class", "y-label")
-        .attr("text-anchor", "end")
-        .attr("y", -25)
-        .attr("x", -50)
-        .attr("dy", ".75em")
-        .attr("transform", "rotate(-90)")
-        .text("depth [m]");
-
-    var yAxis = d3.svg.axis()
-        .scale(scale)
-        .orient("right")
-        .ticks(5);
-    core_group.call(yAxis);
+	.attr("cursor", "pointer")
+	.on("click", show_menu);
 
 
     // These groups are made in this order for specifically for layering
-    var rects = core_group.append("g")
-    var lines = core_group.append("g")
-    var circle = core_group.append("g")
+    var rects = core_group.append("g");
+    var lines = core_group.append("g");
+
+    if(axis){
+	core_group.append("text")
+            .attr("class", "y-label")
+            .attr("text-anchor", "end")
+            .attr("y", -25)
+            .attr("x", -50)
+            .attr("dy", ".75em")
+            .attr("transform", "rotate(-90)")
+            .text("depth [m]");
+
+  
+	var yAxis = d3.svg.axis()
+            .scale(scale)
+            .orient("right")
+            .ticks(5);
+	core_group.call(yAxis);
+	var circle = core_group.append("g")
+
+    };
+
+
+
     
     // Resize drag behaviour
+
     var drag = d3.behavior.drag().on("drag", dragResize)
-        .on("dragend", onchange);
+        .on("dragend", function(){
+	    onchange(intervals);});
     var scale_drag = d3.behavior.drag().on("drag", scaleDrag)
         .on("dragend", rescale);
 
     add_interval(0,0,total_depth);
     add_interval(1, total_depth/2,total_depth/2);
+
+    if(axis){
+	slide_scale();
+    };
 
     show_menu();
 
@@ -126,7 +151,7 @@ function Core(div, image_height, image_width, material,
 	// update the interval thickness
 	calculate_thickness();
 
-	slide_scale();
+	onchange(intervals);
 	// update the core plot
 	update();
 
@@ -186,10 +211,12 @@ function Core(div, image_height, image_width, material,
 	
 	var scale_max = scale.domain()[1] * scale_factor;
 	scale.domain([0, scale_max]);
-	yAxis.scale(scale);
-	core_group.call(yAxis);
+	if(axis){
+	    yAxis.scale(scale);
+	    core_group.call(yAxis);
 
-	slide_scale();
+	    slide_scale();
+	};
     } // end of function
 
 
@@ -200,8 +227,10 @@ function Core(div, image_height, image_width, material,
             intervals[intervals.length-1].thickness;
 	
 	scale.domain([0,total]);
-	yAxis = yAxis.scale(scale);
-	core_group.call(yAxis);
+	if(axis){
+	    yAxis = yAxis.scale(scale);
+	    core_group.call(yAxis);
+	};
     };
 
     function update(){
@@ -219,7 +248,7 @@ function Core(div, image_height, image_width, material,
 	// The enter function allows us to add elements for extra data
 	interval.enter().append("rect")
             .attr("y", update_depth)
-            .attr("x",60)
+            .attr("x",x_offset)
             .attr("fill", function(d)
 		  {return d.colour})
             .attr("height",update_thickness)
@@ -242,7 +271,8 @@ function Core(div, image_height, image_width, material,
 	//for the new elements
 	top.enter()
             .append("line")
-            .attr("x1", 60).attr("x2", 60 + interval_width)
+            .attr("x1", x_offset).attr("x2", x_offset + 
+				       interval_width)
             .attr("y1", update_depth)
             .attr("y2", update_depth)
             .attr("style","stroke:rgb(0,0,0);stroke-width:2")
@@ -282,8 +312,6 @@ function Core(div, image_height, image_width, material,
 	// Delete left over elements
 	colour_map.exit().remove();
 
-	// send out the call backs
-	onchange();
     };
 
 
@@ -312,6 +340,7 @@ function Core(div, image_height, image_width, material,
 	    } // end of inner if
 	    intervals.splice(i,1);
 	    update();
+	    onchange(intervals);
 	} // end of outer if
     } // end of function delete_intercall
 
@@ -370,7 +399,7 @@ function Core(div, image_height, image_width, material,
 	d.db_key = this.value;
 	d.name = this[this.selectedIndex].text;
 	d.colour = colour_map[d.name];
-	
+	onchange(intervals);
 	update();
     } // end of function update_rocl
 };
