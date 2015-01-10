@@ -1,12 +1,19 @@
 setup1D = function(rock_div, rock_image_height, rock_image_width,
 		   rocks, rock_colour_map, max_depth,
 		   rock_menu_div, fluid_div, fluid_menu_div,
-		   plot_div, data_div, ref_menu_div){
+		   plot_div, ref_menu_div, seismic_menu_div){
 
     var rock_title = "Rock core";
     var fluid_title = "Fluid core";
 
 
+    // This should be in the seismic plot. Soon.
+    $("#frequency-slide").val(10);
+    $("#frequency-slide").on("change",
+			 update_data);
+    $("#offset-slide").val(0);
+    $("#offset-slide").on("change",
+		      update_data);
     // Rock core
     var rock_core = new Core(rock_div, rock_image_height, 
 			 rock_image_width,
@@ -47,14 +54,16 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
 	.attr("transform", "rotate(-90)")
 	.text("time [s]");
 
-    vpPlot = new logPlot(log_group, "vp", "Vp",40, "black");
-    vsPlot = new logPlot(log_group, "vs", "Vs",100, "red");
-    rhoPlot = new logPlot(log_group, "rho","Rho", 160, "blue");
+    var vpPlot = new logPlot(log_group, "vp", "Vp",40, "black");
+    var vsPlot = new logPlot(log_group, "vs", "Vs",100, "red");
+    var rhoPlot = new logPlot(log_group, "rho","Rho", 160, "blue");
 
   
     var reflectPlot = new refPlot(log_group, "reflectivity", "Ref",
 			      220, "black", ref_menu_div);
-
+    var seismicPlot = new tracePlot(log_group, "synthetic", "Syn",
+				280, "black", seismic_menu_div);
+    
     update_data();
     function update_data(){
 	
@@ -76,7 +85,8 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
 		  vsPlot.update_plot(data);
 		  rhoPlot.update_plot(data);
 		  reflectPlot.update_plot(data, .9*rock_image_height);
-		  
+		  seismicPlot.update_plot(data,.9*rock_image_height);
+
 		  tScale.domain(data.t);
 		  tScale.range(data.scale);
 		  tAxis.scale(tScale);

@@ -1,8 +1,8 @@
-function refPlot(log_group,property,label,offset, colour,
-		 ref_menu){
+function tracePlot(log_group,property,label,offset, colour,
+		   seis_menu){
 
    
-    $(ref_menu).hide();
+    $(seis_menu).hide();
 
     var propScale = d3.scale.linear() 
 	.range([0,50]);
@@ -12,6 +12,22 @@ function refPlot(log_group,property,label,offset, colour,
 
     var plot = log_group.append("g")
 	.attr("transform", "translate("+offset.toString()+",0)");
+
+    var synthFill = d3.svg.area()
+	.x0(0)
+	.x1(function(d) {
+	    return propScale(d.synthetic);
+	})
+	.y(function(d) {
+	    return tScale(d.t);
+	});
+    var lineFunc = d3.svg.line()
+	.x(function(d) {
+	    return propScale(d[property]);
+	})
+	.y(function(d) {
+	    return tScale(d.t);
+	});
 
     // Axis labels
     plot.append("text")
@@ -26,8 +42,6 @@ function refPlot(log_group,property,label,offset, colour,
 
     this.update_plot = function update_plot(data, height){
 	
-
-
 
 	var paired_data = [];
 
@@ -45,34 +59,28 @@ function refPlot(log_group,property,label,offset, colour,
 	tScale.domain(data.t);
 	tScale.range(data.scale);
 	
-	plot.selectAll("rect.rc-stick").remove();
+	plot.selectAll("path").remove();
 
-	// Draw sticks for the reflectivities, instead of a line
-	plot.selectAll("rect")
-	    .data(data.reflectivity)
-	    .enter()
-	    .append("rect")
-	    .attr("class", "rc-stick")
-	    .attr("x", function(d) {
-		if (d > 0) {
-		    return propScale(0);
-		} else {
-		    return propScale(0) + d*100; // -ve d
-		}
-	    })
-	    .attr("y", function(d, i) {
-		return i * (height / data.reflectivity.length);
-	    })
-	    .attr("width", function(d) {
-		return Math.abs(d*100);
-	    })
-	    .attr("height", height / (1.2*data.reflectivity.length));
-	
+	plot.append("path")
+	    .attr("class", 'wiggle-fill')
+	    .attr("d", synthFill(paired_data));
+	// Rather than slapping a rect on top
+	// I think it would be better to use a clipPath
+	plot.append("rect")
+	    .attr("x", 0)
+	    .attr("y", 0)
+	    .attr("width", propScale(0))
+	    .attr("height", height)
+	    .attr("fill", 'white');
+	plot.append("path")
+	    .attr("class", 'wiggle-line')
+	    .attr("d", lineFunc(paired_data));
     }; // end of function update_plot
-
+    
+    
     function show_menu(){
-	$(ref_menu).show();
-	$(ref_menu).dialog();
+	$(seis_menu).show();
+	$(seis_menu).dialog();
     };
 };
 
