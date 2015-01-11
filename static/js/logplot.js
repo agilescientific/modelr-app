@@ -3,10 +3,10 @@ function logPlot(log_group,property,label,offset, colour){
    
 
     var propScale = d3.scale.linear() 
-	.range([0,50]);
+	.range([0,20]);
  
     var tScale = d3.scale.linear()
-	.range([0, 50]);
+	.range([0, 20]);
 
     var plot = log_group.append("g")
 	.attr("transform", "translate("+offset.toString()+",0)");

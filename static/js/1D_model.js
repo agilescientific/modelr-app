@@ -1,5 +1,5 @@
 setup1D = function(rock_div, rock_image_height, rock_image_width,
-		   rocks, rock_colour_map, max_depth,
+		   rocks, fluids, rock_colour_map, max_depth,
 		   rock_menu_div, fluid_div, fluid_menu_div,
 		   plot_div, ref_menu_div, seismic_menu_div){
 
@@ -25,7 +25,7 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
     // Fluid core
     var fluid_core = new Core(fluid_div, rock_image_height, 
 			  rock_image_width,
-			  rocks, rock_colour_map, max_depth, 
+			  fluids, rock_colour_map, max_depth, 
 			  fluid_title,
 			  fluid_menu_div, false,
 			  update_data);
@@ -55,12 +55,12 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
 	.text("time [s]");
 
     var vpPlot = new logPlot(log_group, "vp", "Vp",40, "black");
-    var vsPlot = new logPlot(log_group, "vs", "Vs",100, "red");
-    var rhoPlot = new logPlot(log_group, "rho","Rho", 160, "blue");
-
+    var vsPlot = new logPlot(log_group, "vs", "Vs",80, "red");
+    var rhoPlot = new logPlot(log_group, "rho","Rho", 120, "blue");
+    var kPlot = new logPlot(log_group, "K","K", 160, "green");
   
     var reflectPlot = new refPlot(log_group, "reflectivity", "Ref",
-			      220, "black", ref_menu_div);
+			      200, "black", ref_menu_div);
     var seismicPlot = new tracePlot(log_group, "synthetic", "Syn",
 				280, "black", seismic_menu_div);
     
@@ -86,6 +86,8 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
 		  rhoPlot.update_plot(data);
 		  reflectPlot.update_plot(data, .9*rock_image_height);
 		  seismicPlot.update_plot(data,.9*rock_image_height);
+
+		  kPlot.update_plot(data, .9*rock_image_height);
 
 		  tScale.domain(data.t);
 		  tScale.range(data.scale);

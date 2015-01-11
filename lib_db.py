@@ -65,7 +65,7 @@ class Item(db.Model):
     group = db.StringProperty()
     date = db.DateTimeProperty(auto_now_add=True)
 
-
+    
 class Group(db.Model):
 
     name = db.StringProperty()
@@ -81,6 +81,13 @@ class ImageModel(Item):
     
     image = blobstore.BlobReferenceProperty()
 
+# sub class for the fluid model
+class FluidModel(Item):
+    image = blobstore.BlobReferenceProperty()
+    name = db.StringProperty(multiline=False)
+
+        
+    
 class EarthModel(Item):
 
     name = db.StringProperty(multiline=False)
@@ -111,6 +118,12 @@ class Rock(Item):
     vp = db.FloatProperty()
     vs = db.FloatProperty()
     rho = db.FloatProperty()
+    porosity = db.FloatProperty()
+    K_rock = db.FloatProperty()
+    K_mineral = db.FloatProperty()
+    
+    
+    
     vp_std = db.FloatProperty()
     vs_std = db.FloatProperty()
     rho_std = db.FloatProperty()
@@ -127,7 +140,49 @@ class Rock(Item):
                            "name": self.name,
                            "db_key": self.key().id()})
 
+    @property
+    def mu(self):
+        """
+        Calculates and returns the shear modulus mu
+        """
+        return (self.rho * self.vs^2.0)
 
+    @property
+    def M(self):
+        """
+        Compression modulus
+        """
+
+        return (self.rho * self.vp^2.0)
+    
+
+    @property
+    def K(self):
+        """
+        Calculates and returns the bulk modulus
+        """
+        return (self.M - (4.0/3)*self.mu)
+        
+
+
+class Fluid(Item):
+
+    K = db.FloatProperty()
+    vp = db.FloatProperty()
+
+    name = db.StringProperty(multiline=False)
+    description = db.StringProperty(multiline=True)
+
+    @property
+    def json(self):
+        return json.dumps({"K": self.K,
+                          "vp": self.vp,
+                          "name": self.name,
+                          "description": self.description,
+                          "db_key": self.key().id()})
+    
+
+    
 class Server(db.Model):
 
     host = db.StringProperty()

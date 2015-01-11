@@ -134,6 +134,7 @@ if not public:
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
                                ('/rock', RockHandler),
+                               ('/fluid', FluidHandler), 
                                ('/scenario', ScenarioPageHandler),
                                ('/scenario_db',ScenarioHandler),
                                ('/pricing', PricingHandler),

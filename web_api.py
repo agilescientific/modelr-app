@@ -35,7 +35,7 @@ from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      
 from lib_db import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Issue, EarthModel, Server
+     ImageModel, Issue, EarthModel, Server, Fluid
 
 from lib_util import posterize, depth2time, akirichards, ricker
 
@@ -502,6 +502,8 @@ class ModelData1DHandler(ModelrAPI):
         vp = np.zeros(z.size)
         vs = np.zeros(z.size)
         rho = np.zeros(z.size)
+        K = np.zeros(z.size)
+        
 
         offset = float(self.request.get("offset"))
         frequency = float(self.request.get("frequency"))
@@ -537,7 +539,34 @@ class ModelData1DHandler(ModelrAPI):
               np.random.randn(end_index-start_index)*rock.rho_std
 
 
-        vp, vs, rho, t = depth2time(z, vp, vs, rho, dt)
+        # Do the fluids
+        end_index = 0
+        for layer in fluid_data:
+
+            fluid = Fluid.get_by_id(int(layer["db_key"]),
+                                  parent=user)
+            if not fluid:
+                fluid = Fluid.get_by_id(int(layer["db_key"]),
+                                      parent=admin_user)
+            if not fluid:
+                fluid = Fluid.all().filter("name =",
+                                         layer["name"]).get()
+                if not (fluid.group in user.group) or (not fluid):
+                    raise Exception
+            
+                    
+
+            start_index = end_index
+            end_index = start_index + np.ceil(layer["thickness"]/dz)
+            if end_index > z.size:
+                end_index = z.size
+            
+
+            K[start_index:end_index] = fluid.K 
+            
+
+              
+        vp, vs, rho,K, t = depth2time(z, vp, vs, rho,K, dt)
         scale = int(self.request.get("height")) * t / np.amax(t)
 
         ref = np.nan_to_num(akirichards(vp[0:-1], vs[0:-1], rho[0:-1],
@@ -551,6 +580,7 @@ class ModelData1DHandler(ModelrAPI):
         output = {"vp": tuple(vp), "vs": tuple(vs),
                   "rho": tuple(rho), "t": tuple(t),
                   "scale": tuple(scale),
+                  "K": tuple(K),
                   "reflectivity": tuple(ref),
                   "synthetic": tuple(synth)}
 
@@ -575,6 +605,119 @@ class ImageModelHandler(ModelrAPI):
         
         image.delete()
 
+
+class FluidHandler(ModelrAPI):
+
+    @authenticate
+    def get(self, user):
+
+        ModelrRoot = ModelrParent.all().get()
+        admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
+                                       admin_id).get()
+
+        key = self.request.get('key')
+              
+        fluid = Fluid.get_by_id(int(key), parent=admin_user)
+            
+        u_fluid = Fluid.get_by_id(int(key), parent=user)
+        if(u_fluid): fluid = u_fluid
+
+        data = fluid.json
+
+        self.response.out.write(data)
+        
+    @authenticate
+    def post(self, user):
+
+        try:
+            name = self.request.get("name")
+
+            fluids = Fluid.all()
+            fluids.ancestor(user)
+            fluids.filter("user =", user.user_id)
+            fluids.filter("name =", name)
+            fluids = fluids.fetch(1)
+
+            # Rewrite if the rock exists
+            if fluids:
+                # write out error message
+                pass 
+            else:
+                fluid = Fluid(parent=user)
+                fluid.user = user.user_id
+
+            fluid.vp = float(self.request.get('vp'))
+            fluid.K = float(self.request.get('k'))
+            fluid.name = name
+            fluid.description = self.request.get("description")
+            fluid.group = self.request.get("group")
+            fluid.put()
+            
+            activity = "added_fluid"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrParent.all().get()).put()
+
+        except Exception as e:
+            # Handle error
+            print e
+            self.error(500)
+
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!')
+
+    @authenticate
+    def put(self, user):
+
+          # Get the database key from the request
+        try:
+
+            key = self.request.get("db_key")
+
+            fluid = Fluid.get_by_id(int(key), parent=user)
+        
+            # Update the fluid
+            fluid.vp = float(self.request.get('vp'))
+            fluid.K = float(self.request.get('k'))
+          
+            fluid.description = self.request.get('description')
+            fluid.name = self.request.get('name')
+            fluid.group = self.request.get('group')
+
+            fluid.name = self.request.get('name')
+         
+            fluid.put()
+
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.out.write('All OK!!')
+            
+        except Exception as e:
+            # Write out error message
+            print e
+            pass 
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!') 
+        return
+
+    @authenticate
+    def delete(self,user):
+      
+        key = int(self.request.get("key"))
+        selected_fluid = Fluid.get_by_id(key, parent=user)
+
+        try:
+            selected_fluid.delete()
+        except:
+            pass
+        
+        activity = "removed_fluid"
+        ActivityLog(user_id=user.user_id,
+                    activity=activity,
+                    parent=ModelrParent.all().get()).put()
+
+
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!')
         
 class EarthModelHandler(ModelrAPI):
 

@@ -47,7 +47,7 @@ from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      
 from lib_db import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Issue, EarthModel, Server
+     ImageModel, Issue, EarthModel, Server, Fluid
 
 from lib_util import RGBToString
 
@@ -236,6 +236,23 @@ class DashboardHandler(ModelrPageRequest):
                                                     name).fetch(100)}
             rock_groups.append(dic)
 
+        # Get all the fluids
+        fluids = Fluid.all()
+        fluids.ancestor(user)
+        fluids.filter("user =", user.user_id)
+        fluids.order("-date")
+
+        default_fluids = Fluid.all()
+        default_fluids.filter("user =", admin_id)
+
+        fluid_groups = []
+        for name in user.group:
+            dic = {'name': name.capitalize(),
+                   'fluids':
+                    Fluid.all().ancestor(ModelrParent.all().get()).filter("group =",
+                                                    name).fetch(100)}
+            fluid_groups.append(dic)
+
         # Get all the user scenarios
         scenarios = Scenario.all()
         if not user.user_id == admin_id:
@@ -279,6 +296,9 @@ class DashboardHandler(ModelrPageRequest):
                                scenarios=scenarios.fetch(100),
                                default_rocks=default_rocks.fetch(100),
                                rock_groups=rock_groups,
+                               fluids=fluids.fetch(100),
+                               default_fluids=default_fluids.fetch(100),
+                               fluid_groups=fluid_groups,
                                models=models)
 
         # Check if a rock is being edited
@@ -301,7 +321,20 @@ class DashboardHandler(ModelrPageRequest):
             template_params['current_rock'] = current_rock
         
 
-        
+         # Check if a fluid is being edited
+        if self.request.get("selected_fluid"):
+            fluid_id = self.request.get("selected_fluid")
+            current_fluid = Fluid.get_by_id(int(fluid_id),
+                                          parent=user)
+            template_params['current_fluid'] = current_fluid
+        else:
+            current_fluid = Fluid()
+            current_fluid.name = "name"
+            current_fluid.description = "description"
+            current_fluid.vp = 3000.0
+            current_fluid.K = 200.0
+            
+        template_params['current_fluid'] = current_fluid
         template = env.get_template('dashboard.html')
         html = template.render(template_params)
 
@@ -311,6 +344,86 @@ class DashboardHandler(ModelrPageRequest):
                     parent=ModelrParent.all().get()).put()
         self.response.out.write(html)
         
+class AboutHandler(ModelrPageRequest):
+    def get(self):
+
+        # Uptime robot API key for modelr.io
+        #ur_api_key_modelr_io = 'm775980219-706fc15f12e5b88e4e886992'
+        # Uptime Robot API key for modelr.org REL
+        #ur_api_key_modelr_org = 'm775980224-e2303a724f89ef0ab886558a'
+        # Uptime Robot API key for modelr.org DEV
+        #ur_api_key_modelr_org = 'm776083114-e34c154f2239e7c273a04dd4'
+
+        ur_api_key = 'u108622-bd0a3d1e36a1bf3698514173'
+
+        # Uptime Robot IDs
+        ur_modelr_io = '775980219'
+        ur_modelr_org = '775980224'  # REL, usually
+
+        # Uptime Robot URL
+        ur_url = 'http://api.uptimerobot.com/getMonitors'
+
+        params = {'apiKey': ur_api_key,
+          'monitors': ur_modelr_io + '-' + ur_modelr_org,
+          'customuptimeratio': '30',
+          'format': 'json',
+          'nojsoncallback':'1',
+          'responseTimes':'1'
+         }
+
+        # A dict is easily converted to an HTTP-safe query string.
+        ur_query = urllib.urlencode(params)
+
+        # Opened URLs are file-like.
+        full_url = '{0}?{1}'.format(ur_url, ur_query)
+        try:
+            f = urllib2.urlopen(full_url)
+            raw_json = f.read()
+
+        except Exception as e:
+            print "Failed to retrieve stats.",
+            print "Uptime Robot may be down:", e
+
+        user = self.verify()
+        models_served = ModelServedCount.all().get()
+
+        try:
+            j = json.loads(raw_json)
+            
+            ur_ratio = j['monitors']['monitor'][0]['customuptimeratio']
+            ur_server_ratio = j['monitors']['monitor'][1]['customuptimeratio']
+            ur_server_status_code = j['monitors']['monitor'][1]['status']
+            ur_last_response_time = j['monitors']['monitor'][0]['responsetime'][-1]['value']
+            ur_last_server_response_time = j['monitors']['monitor'][1]['responsetime'][-1]['value']
+            
+            ur_server_status = UR_STATUS_DICT[ur_server_status_code].upper()
+            
+            template_params = \
+            self.get_base_params(user=user,
+                                 ur_ratio=ur_ratio,
+                                 ur_response_time=ur_last_response_time,
+                                 ur_server_ratio=ur_server_ratio,
+                                 ur_server_status=ur_server_status,
+                                 ur_server_response_time=ur_last_server_response_time,
+                                 models_served=models_served.count
+                                 )
+        except:
+
+            template_params = \
+            self.get_base_params(user=user,
+                                 ur_ratio=None,
+                                 ur_response_time=None,
+                                 ur_server_ratio=None,
+                                 ur_server_status="Unknown",
+                                 ur_server_response_time=None,
+                                 models_served=models_served.count
+                                 )
+
+        
+        template = env.get_template('about.html')
+        html = template.render(template_params)
+        self.response.out.write(html)          
+     
 class AboutHandler(ModelrPageRequest):
     def get(self):
 
@@ -1473,11 +1586,41 @@ class Model1DHandler(ModelrPageRequest):
             colour_map[rock.name] = RGBToString(usgs_colours[i])
             test.append({"name":rock.name,
                          "db_key": rock.key().id()})
+
+
+        # Fluids. This should be refactored into a function
+        admin_fluids = Fluid.all().order("name").filter("user =",
+                                                      admin_id)
+        admin_fluids = admin_fluids.fetch(100)
+
+        user_fluids = Fluid.all().order("name").ancestor(user)
+        user_fluids = user_fluids.fetch(100)
+        
+        group_fluids = []
+        for group in user.group:
+            g_fluids = \
+            Fluid.all().order('name').ancestor(ModelrParent.all().get()).filter("group =",
+                                                         group)
+            group_fluids = group_fluids + g_fluids.fetch(100)
+
+        all_fluids = user_fluids + group_fluids + admin_fluids
+        
+        fluid_json = []
+        test=[]
+        for i, fluid in enumerate(all_fluids):
+            fluid_json.append(fluid.json)
+            colour_map[fluid.name] = RGBToString(usgs_colours[-i])
+            test.append({"name":fluid.name,
+                         "db_key": fluid.key().id()})
+
+            
         colour_map = json.dumps(colour_map)
         params = self.get_base_params(user=user,
                                       db_rocks=rock_json,
+                                      db_fluids=fluid_json,
                                       test=test,
                                       colour_map=colour_map)
+        
         template = env.get_template('1D_model.html')
 
         html = template.render(params)
