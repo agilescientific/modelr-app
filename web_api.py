@@ -272,6 +272,7 @@ class RockHandler(ModelrAPI):
             rock.description = self.request.get('description')
             rock.name = self.request.get('name')
             rock.group = self.request.get('group')
+            rock.fluid_key = self.request.get("rock-fluid")
 
             # Save in the database
             rock.put()
@@ -310,7 +311,8 @@ class RockHandler(ModelrAPI):
             rock.description = self.request.get('description')
             rock.name = self.request.get('name')
             rock.group = self.request.get('group')
-
+            rock.fluid_key = self.request.get('rock-fluid')
+            
             rock.name = self.request.get('name')
          
             rock.put()
@@ -502,7 +504,7 @@ class ModelData1DHandler(ModelrAPI):
         vp = np.zeros(z.size)
         vs = np.zeros(z.size)
         rho = np.zeros(z.size)
-        K = np.zeros(z.size)
+        sw = np.zeros(z.size)
         
 
         offset = float(self.request.get("offset"))
@@ -562,11 +564,11 @@ class ModelData1DHandler(ModelrAPI):
                 end_index = z.size
             
 
-            K[start_index:end_index] = fluid.K 
+            sw[start_index:end_index] = fluid.sw
             
 
               
-        vp, vs, rho,K, t = depth2time(z, vp, vs, rho,K, dt)
+        vp, vs, rho,sw, t = depth2time(z, vp, vs, rho,sw, dt)
         scale = int(self.request.get("height")) * t / np.amax(t)
 
         ref = np.nan_to_num(akirichards(vp[0:-1], vs[0:-1], rho[0:-1],
@@ -580,7 +582,7 @@ class ModelData1DHandler(ModelrAPI):
         output = {"vp": tuple(vp), "vs": tuple(vs),
                   "rho": tuple(rho), "t": tuple(t),
                   "scale": tuple(scale),
-                  "K": tuple(K),
+                  "sw": tuple(sw),
                   "reflectivity": tuple(ref),
                   "synthetic": tuple(synth)}
 
@@ -641,13 +643,19 @@ class FluidHandler(ModelrAPI):
             # Rewrite if the rock exists
             if fluids:
                 # write out error message
-                pass 
+                return
             else:
                 fluid = Fluid(parent=user)
                 fluid.user = user.user_id
 
-            fluid.vp = float(self.request.get('vp'))
-            fluid.K = float(self.request.get('k'))
+            fluid.rho_w = float(self.request.get('rho_w'))
+            fluid.rho_hc = float(self.request.get('rho_hc'))
+
+            fluid.kw = float(self.request.get('kw'))
+            fluid.khc = float(self.request.get('khc'))
+
+            fluid.sw = float(self.request.get('sw'))
+            
             fluid.name = name
             fluid.description = self.request.get("description")
             fluid.group = self.request.get("group")
@@ -677,8 +685,13 @@ class FluidHandler(ModelrAPI):
             fluid = Fluid.get_by_id(int(key), parent=user)
         
             # Update the fluid
-            fluid.vp = float(self.request.get('vp'))
-            fluid.K = float(self.request.get('k'))
+            fluid.rho_w = float(self.request.get('rho_w'))
+            fluid.rho_hc = float(self.request.get('rho_hc'))
+
+            fluid.kw = float(self.request.get('kw'))
+            fluid.khc = float(self.request.get('khc'))
+
+            fluid.sw = float(self.request.get('sw'))
           
             fluid.description = self.request.get('description')
             fluid.name = self.request.get('name')

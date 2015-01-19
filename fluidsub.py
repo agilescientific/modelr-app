@@ -213,7 +213,12 @@ def smith_fluidsub(vp, vs, rho, phi, rhow, rhohc,
         vs_brine = 1416.1
         rho_brine = 2210.
 
-        Vp, Vs, rho = smith_fluidsub(vp=vp_gas, vs=vs_gas, rho=rho_gas, phi=phi, rhohc=rhohc, rhow=rhow, sw=sw, swnew=swnew, khc=khc, kw=kw, kclay=kclay, kqtz=kqtz, vclay=vclay)        
+        Vp, Vs, rho = smith_fluidsub(vp=vp_gas, vs=vs_gas,
+                                     rho=rho_gas, phi=phi,
+                                     rhohc=rhohc, rhow=rhow, sw=sw,
+                                     swnew=swnew, khc=khc, kw=kw,
+                                     kclay=kclay, kqtz=kqtz,
+                                     vclay=vclay)        
 
     Returns Vp, Vs, and rho for the substituted case.
     """

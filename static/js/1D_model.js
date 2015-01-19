@@ -57,7 +57,7 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
     var vpPlot = new logPlot(log_group, "vp", "Vp",40, "black");
     var vsPlot = new logPlot(log_group, "vs", "Vs",80, "red");
     var rhoPlot = new logPlot(log_group, "rho","Rho", 120, "blue");
-    var kPlot = new logPlot(log_group, "K","K", 160, "green");
+    var kPlot = new logPlot(log_group, "sw","Sw", 160, "green");
   
     var reflectPlot = new refPlot(log_group, "reflectivity", "Ref",
 			      200, "black", ref_menu_div);

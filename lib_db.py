@@ -118,25 +118,37 @@ class Rock(Item):
     vp = db.FloatProperty()
     vs = db.FloatProperty()
     rho = db.FloatProperty()
-    porosity = db.FloatProperty()
-    K_rock = db.FloatProperty()
-    K_mineral = db.FloatProperty()
     
-    
+    porosity = db.FloatProperty(default=500.0)
+    vclay = db.FloatProperty(default=500.0)
     
     vp_std = db.FloatProperty()
     vs_std = db.FloatProperty()
     rho_std = db.FloatProperty()
 
+    fluid_key = db.ReferenceProperty()
+
+    fluid = db.StringProperty(default="tst")
+
+    @property
+    def fluid(self):
+
+        if self.fluid_key
+            return Fluid.get_by_id(self.fluid_key.id()).name
+        else:
+            return ''
     @property
     def json(self):
 
         return json.dumps({"vp": self.vp, "vs": self.vs,
                            "rho": self.rho,
+                           "porosity": self.porosity,
+                           "vclay": self.vclay,
                            "vp_std": self.vp_std,
                            "vs_std": self.vs_std,
                            "rho_std": self.rho_std,
                            "description": self.description,
+                           "fluid": self.fluid,
                            "name": self.name,
                            "db_key": self.key().id()})
 
@@ -167,19 +179,30 @@ class Rock(Item):
 
 class Fluid(Item):
 
-    K = db.FloatProperty()
-    vp = db.FloatProperty()
 
     name = db.StringProperty(multiline=False)
     description = db.StringProperty(multiline=True)
 
+    rho_hc = db.FloatProperty(default=500.)
+    rho_w = db.FloatProperty(default=500.)
+
+    khc = db.FloatProperty(default=500.)
+    kw = db.FloatProperty(default=500.)
+
+    sw = db.FloatProperty(default=500.)
+    
+    
+
     @property
     def json(self):
-        return json.dumps({"K": self.K,
-                          "vp": self.vp,
-                          "name": self.name,
-                          "description": self.description,
-                          "db_key": self.key().id()})
+        return json.dumps({"k_hc": self.khc,
+                           "k_w": self.kw,
+                           "rho_hc": self.rho_hc,
+                           "rho_w": self.rho_w,
+                           "sw": self.sw,
+                           "name": self.name,
+                           "description": self.description,
+                           "db_key": self.key().id()})
     
 
     
