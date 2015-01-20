@@ -119,8 +119,8 @@ class Rock(Item):
     vs = db.FloatProperty()
     rho = db.FloatProperty()
     
-    porosity = db.FloatProperty(default=500.0)
-    vclay = db.FloatProperty(default=500.0)
+    porosity = db.FloatProperty(default=0.5)
+    vclay = db.FloatProperty(default=2500.0)
     
     vp_std = db.FloatProperty()
     vs_std = db.FloatProperty()
@@ -133,7 +133,7 @@ class Rock(Item):
     @property
     def fluid(self):
 
-        if self.fluid_key
+        if self.fluid_key:
             return Fluid.get_by_id(self.fluid_key.id()).name
         else:
             return ''

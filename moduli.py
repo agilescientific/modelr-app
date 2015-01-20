@@ -77,7 +77,8 @@ def bulk(vp=None, vs=None, rho=None, mu=None, lam=None, youngs=None, pr=None, pm
 
     '''
 
-    if vp and vs and rho:
+    if(('vp' in locals()) and ('vs' in locals()) and
+       ('rho' in locals())):
         return rho * (vp**2 - (4./3.)*(vs**2))
 
     elif mu and lam:
@@ -117,7 +118,8 @@ def pr(vp=None, vs=None, rho=None, mu=None, lam=None, youngs=None, bulk=None, pm
     '''
 
 
-    if vp and vs and rho:
+    if(('vp' in locals()) and ('vs' in locals()) and
+       ('rho' in locals())):
         return (vp**2. - 2.*vs**2) / (2. * (vp**2 - vs**2))
 
     elif mu and lam:
@@ -157,7 +159,7 @@ def mu(vp=None, vs=None, rho=None, pr=None, lam=None, youngs=None, bulk=None, pm
     '''
 
 
-    if vs and rho:
+    if ('vs' in locals()) and ('rho' in locals()):
         return rho * vs**2
 
     elif bulk and lam:
@@ -289,22 +291,22 @@ def vp(youngs=None, vs=None, rho=None, mu=None, lam=None, bulk=None, pr=None, pm
 
     '''
 
-    if mu and lam and rho:
+    if not (mu is None or lam is None or rho is None):
         return sqrt( (lam + 2.*mu) / rho )
 
-    elif youngs and mu and rho:
+    elif not( youngs is None or mu is None or rho is None):
         return sqrt( mu * (youngs - 4.*mu) / (rho * (youngs - 3.*mu)) )
 
-    elif youngs and pr and rho:
+    elif not(youngs is None or pr is None or rho is None):
         return sqrt( youngs * (1 - pr) / (rho * (1+pr)* (1 - 2.*pr)) )
 
-    elif bulk and lam and rho:
+    elif not (bulk is None or lam is None or rho is None):
         return sqrt( (9.*bulk - 2.*lam) / rho )
 
-    elif bulk and mu and rho:
+    elif not (bulk is None or mu is None or rho is None):
         return sqrt( (bulk + 4.*mu/3. ) / rho)
 
-    elif lam and pr and rho:
+    elif not (lam is None or pr is None or rho is None):
         return sqrt( lam * (1. - pr) / (pr*rho))
 
     else:
@@ -326,7 +328,7 @@ def vs(youngs=None, vp=None, rho=None, mu=None, lam=None, bulk=None, pr=None, pm
 
     '''
 
-    if mu and rho:
+    if not( mu is None  or rho is None):
         return sqrt( mu / rho )
 
     else:

@@ -39,6 +39,7 @@ from lib_db import Rock, Scenario, User, ModelrParent, Group, \
 
 from lib_util import posterize, depth2time, akirichards, ricker
 
+from fluidsub import smith_fluidsub
 
 class ModelrAPI(webapp2.RequestHandler):
     """
@@ -230,7 +231,6 @@ class RockHandler(ModelrAPI):
         try:
             rock = selected_rock.fetch(1)[0]
             rock.delete()
-            print("DELEEETED")
         except:
             pass 
 
@@ -498,22 +498,41 @@ class ModelData1DHandler(ModelrAPI):
         # all the workings for fluid sub
         
         min_depth = rock_data[0]["depth"]
-        max_depth = rock_data[-1]["depth"] + rock_data[-1]["thickness"]
+        max_depth = rock_data[-1]["depth"] + \
+          rock_data[-1]["thickness"]
 
+        # Get the well log properties for the rock
         z = np.arange(min_depth, max_depth, dz)
         vp = np.zeros(z.size)
         vs = np.zeros(z.size)
         rho = np.zeros(z.size)
-        sw = np.zeros(z.size)
-        
+        phi = np.zeros(z.size)
+        vclay = np.zeros(z.size)
 
+        # Initial fluid properties
+        sw0 = np.zeros(z.size)
+        rhow0 = np.zeros(z.size)
+        rhohc0 = np.zeros(z.size)
+        kw0 = np.zeros(z.size)
+        khc0 = np.zeros(z.size)
+
+        # New fluid properties
+        swnew = np.zeros(z.size)
+        rhownew = np.zeros(z.size)
+        rhohcnew = np.zeros(z.size)
+        kwnew = np.zeros(z.size)
+        khcnew = np.zeros(z.size)
+        
+        # Seismic properties
         offset = float(self.request.get("offset"))
         frequency = float(self.request.get("frequency"))
         
-
+        # Loop through each rock layer
         end_index = 0
         for layer in rock_data:
 
+            # A little messy, we should abstract this query at
+            # some point
             rock = Rock.get_by_id(int(layer["db_key"]),
                                   parent=user)
             if not rock:
@@ -539,12 +558,27 @@ class ModelData1DHandler(ModelrAPI):
               np.random.randn(end_index-start_index)*rock.vs_std
             rho[start_index:end_index] = rock.rho + \
               np.random.randn(end_index-start_index)*rock.rho_std
+            phi[start_index:end_index] = rock.porosity
+            vclay[start_index:end_index] = rock.vclay
 
-
-        # Do the fluids
+            # Set the initial fluid
+            try:
+                rock_fluid = Fluid.get_by_id(rock.fluid_key.id())
+            
+                sw0[start_index:end_index] = rock_fluid.sw
+                rhow0[start_index:end_index] = rock_fluid.rho_w
+                rhohc0[start_index:end_index] = rock_fluid.rho_hc
+                kw0[start_index:end_index] = rock_fluid.kw
+                khc0[start_index:end_index] = rock_fluid.khc
+            except:
+                # Handle rocks without fluids
+                pass
+            
+        # Do the new fluids
         end_index = 0
         for layer in fluid_data:
 
+            # Again we should abstract this at some point
             fluid = Fluid.get_by_id(int(layer["db_key"]),
                                   parent=user)
             if not fluid:
@@ -556,19 +590,28 @@ class ModelData1DHandler(ModelrAPI):
                 if not (fluid.group in user.group) or (not fluid):
                     raise Exception
             
-                    
-
             start_index = end_index
             end_index = start_index + np.ceil(layer["thickness"]/dz)
             if end_index > z.size:
                 end_index = z.size
             
 
-            sw[start_index:end_index] = fluid.sw
+            swnew[start_index:end_index] = fluid.sw
+            rhownew[start_index:end_index] = fluid.rho_w
+            rhohcnew[start_index:end_index] = fluid.rho_hc
+            kwnew[start_index:end_index] = fluid.kw
+            khcnew[start_index:end_index] = fluid.khc
+            
             
 
+        # Fluid substitution (broken)
+        #vp,vs,rho = smith_fluidsub(vp, vs, rho, phi, rhow0,rhohc0,
+        #                           sw0, swnew, kw0, khc0, 1000.0,
+        #                           1000.0, vclay, rhownew, rhohcnew,
+        #                           kwnew, khcnew)
+                                   
               
-        vp, vs, rho,sw, t = depth2time(z, vp, vs, rho,sw, dt)
+        vp, vs, rho,sw, t = depth2time(z, vp, vs, rho,sw0, dt)
         scale = int(self.request.get("height")) * t / np.amax(t)
 
         ref = np.nan_to_num(akirichards(vp[0:-1], vs[0:-1], rho[0:-1],

@@ -250,13 +250,13 @@ def smith_fluidsub(vp, vs, rho, phi, rhow, rhohc,
 
     # Step 8: Calculate new fluid properties (K and ρ) at the desired Sw
     # First set the new fluid properties, in case they are unchanged
-    if not kwnew:
+    if not 'kwnew' in locals():
         kwnew = kw
-    if not rhownew:
+    if not 'rhownew' in locals():
         rhownew = rhow
-    if not khcnew:
+    if not 'khcnew' in locals():
         khcnew = khc
-    if not rhohcnew:
+    if not 'rhohcnew' in locals():
         rhohcnew = rhohc
     # Now calculate the new fluid properties
     kfl2 = 1 / (swnew/kwnew + (1-swnew)/khcnew)
