@@ -410,7 +410,8 @@
 	    <label for="rock-fluid" class="col-sm-2 control-label">
 	      Fluid</label>
 	    <div class="col-sm-9">
-	      <select class="form-control" name="rock-fluid">
+	      <select class="form-control" name="rock-fluid"
+		      id="edit-rock-fluid">
                 {% for fluid in fluids + default_fluids %}
 		{% if current_rock.fluid_key  and 
 		(fluid.key().id() == current_rock.fluid_key.id()) %}
@@ -916,6 +917,8 @@
      $("#edit-vs-std").attr("value",data["vs_std"]);
      $("#edit-rho-std").attr("value",data["rho_std"]);
      $("#edit-rock-key").attr("value", data["db_key"]);
+
+     $("#edit-rock-fluid").val(data["fluid_id"]);
    };
    $.ajax('/rock?name=' + name,
 	  {type: "GET", success: cb});

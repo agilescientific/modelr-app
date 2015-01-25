@@ -121,6 +121,9 @@ class Rock(Item):
     
     porosity = db.FloatProperty(default=0.5)
     vclay = db.FloatProperty(default=2500.0)
+
+    kclay = db.FloatProperty(default=25000000000.)
+    kqtz = db.FloatProperty(default=37000000000.)
     
     vp_std = db.FloatProperty()
     vs_std = db.FloatProperty()
@@ -128,15 +131,16 @@ class Rock(Item):
 
     fluid_key = db.ReferenceProperty()
 
-    fluid = db.StringProperty(default="tst")
 
     @property
     def fluid(self):
 
-        if self.fluid_key:
-            return Fluid.get_by_id(self.fluid_key.id()).name
-        else:
-            return ''
+        try:
+            name = self.fluid_key.name
+            return name
+        except Exception as e:
+            print e
+            return ""
     @property
     def json(self):
 
@@ -149,6 +153,7 @@ class Rock(Item):
                            "rho_std": self.rho_std,
                            "description": self.description,
                            "fluid": self.fluid,
+                           "fluid_id": self.fluid_key.key().id(),
                            "name": self.name,
                            "db_key": self.key().id()})
 
@@ -183,13 +188,13 @@ class Fluid(Item):
     name = db.StringProperty(multiline=False)
     description = db.StringProperty(multiline=True)
 
-    rho_hc = db.FloatProperty(default=500.)
-    rho_w = db.FloatProperty(default=500.)
+    rho_hc = db.FloatProperty(default=250.)
+    rho_w = db.FloatProperty(default=1040.)
 
-    khc = db.FloatProperty(default=500.)
-    kw = db.FloatProperty(default=500.)
+    khc = db.FloatProperty(default=207000000.)
+    kw = db.FloatProperty(default=2950000000.)
 
-    sw = db.FloatProperty(default=500.)
+    sw = db.FloatProperty(default=0.4)
     
     
 

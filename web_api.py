@@ -255,7 +255,7 @@ class RockHandler(ModelrAPI):
             # Rewrite if the rock exists
             if rocks:
                 # write out error message
-                pass 
+                raise
             else:
                 rock = Rock(parent=user)
                 rock.user = user.user_id
@@ -272,7 +272,15 @@ class RockHandler(ModelrAPI):
             rock.description = self.request.get('description')
             rock.name = self.request.get('name')
             rock.group = self.request.get('group')
-            rock.fluid_key = self.request.get("rock-fluid")
+
+            try:
+                fluid_id = self.request.get("rock-fluid")
+        
+                fluid = Fluid.get_by_id(int(fluid_id),
+                                        parent=user)
+                rock.fluid_key = fluid.key()
+            except Exception as e:
+                print e
 
             # Save in the database
             rock.put()
@@ -281,9 +289,9 @@ class RockHandler(ModelrAPI):
             ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
-        except:
+        except Exception as e:
             # send error
-            pass
+            print e
         
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!') 
@@ -311,7 +319,14 @@ class RockHandler(ModelrAPI):
             rock.description = self.request.get('description')
             rock.name = self.request.get('name')
             rock.group = self.request.get('group')
-            rock.fluid_key = self.request.get('rock-fluid')
+         
+            try:
+                fluid_id = self.request.get("rock-fluid")
+                fluid = Fluid.get_by_id(int(fluid_id),
+                                        parent=user).key()
+                rock.fluid_key = fluid
+            except:
+                pass
             
             rock.name = self.request.get('name')
          
@@ -508,6 +523,8 @@ class ModelData1DHandler(ModelrAPI):
         rho = np.zeros(z.size)
         phi = np.zeros(z.size)
         vclay = np.zeros(z.size)
+        kclay = np.zeros(z.size)
+        kqtz  = np.zeros(z.size)
 
         # Initial fluid properties
         sw0 = np.zeros(z.size)
@@ -560,19 +577,21 @@ class ModelData1DHandler(ModelrAPI):
               np.random.randn(end_index-start_index)*rock.rho_std
             phi[start_index:end_index] = rock.porosity
             vclay[start_index:end_index] = rock.vclay
+            kqtz[start_index:end_index] = rock.kqtz
+            kclay[start_index:end_index] = rock.kclay
 
             # Set the initial fluid
             try:
-                rock_fluid = Fluid.get_by_id(rock.fluid_key.id())
+                rock_fluid = rock.fluid_key
             
                 sw0[start_index:end_index] = rock_fluid.sw
                 rhow0[start_index:end_index] = rock_fluid.rho_w
                 rhohc0[start_index:end_index] = rock_fluid.rho_hc
                 kw0[start_index:end_index] = rock_fluid.kw
                 khc0[start_index:end_index] = rock_fluid.khc
-            except:
+            except Exception as e:
                 # Handle rocks without fluids
-                pass
+                print e
             
         # Do the new fluids
         end_index = 0
@@ -604,13 +623,19 @@ class ModelData1DHandler(ModelrAPI):
             
             
 
-        # Fluid substitution (broken)
-        #vp,vs,rho = smith_fluidsub(vp, vs, rho, phi, rhow0,rhohc0,
-        #                           sw0, swnew, kw0, khc0, 1000.0,
-        #                           1000.0, vclay, rhownew, rhohcnew,
-        #                           kwnew, khcnew)
+        # Fluid substitution 
+        ## print(np.mean(vs), np.mean(vp), np.mean(rho),
+        ##       np.mean(phi), np.mean(rhow0), np.mean(rhohc0),
+        ##       np.mean(sw0), np.mean(swnew), np.mean(kw0),
+        ##       np.mean(khc0), np.mean(kclay), np.mean(kqtz),
+        ##       np.mean(vclay), np.mean(rhownew), np.mean(rhohcnew),
+        ##       np.mean(kwnew), np.mean(khcnew))
+        vp,vs,rho = smith_fluidsub(vp, vs, rho, phi, rhow0,rhohc0,
+                                   sw0, swnew, kw0, khc0, kclay,
+                                   kqtz, vclay, rhownew, rhohcnew,
+                                   kwnew, khcnew)
                                    
-              
+        
         vp, vs, rho,sw, t = depth2time(z, vp, vs, rho,sw0, dt)
         scale = int(self.request.get("height")) * t / np.amax(t)
 
