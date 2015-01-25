@@ -141,6 +141,15 @@ class Rock(Item):
         except Exception as e:
             print e
             return ""
+
+    @property
+    def fluid_id(self):
+        try:
+            fid = self.fluid.key().id()
+            return fid
+        except:
+            return None
+            
     @property
     def json(self):
 
@@ -153,7 +162,7 @@ class Rock(Item):
                            "rho_std": self.rho_std,
                            "description": self.description,
                            "fluid": self.fluid,
-                           "fluid_id": self.fluid_key.key().id(),
+                           "fluid_id": self.fluid_id,
                            "name": self.name,
                            "db_key": self.key().id()})
 

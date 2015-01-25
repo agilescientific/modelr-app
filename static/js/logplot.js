@@ -14,9 +14,9 @@ function logPlot(log_group,property,label,offset, colour){
     // Axis labels
     plot.append("text")
 	.attr("class", "y-label")
-	.attr("text-anchor", "middle")
+	.attr("text-anchor", "start")
 	.attr("y", -25)
-	.attr("x", 25)
+	.attr("x", 0)
 	.text(label);
 
 

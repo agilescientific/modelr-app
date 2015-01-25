@@ -589,9 +589,13 @@ class ModelData1DHandler(ModelrAPI):
                 rhohc0[start_index:end_index] = rock_fluid.rho_hc
                 kw0[start_index:end_index] = rock_fluid.kw
                 khc0[start_index:end_index] = rock_fluid.khc
-            except Exception as e:
-                # Handle rocks without fluids
-                print e
+            except:
+                sw0[start_index:end_index] = np.nan
+                rhow0[start_index:end_index] = np.nan
+                rhohc0[start_index:end_index] = np.nan
+                kw0[start_index:end_index] = np.nan
+                khc0[start_index:end_index] = np.nan
+        
             
         # Do the new fluids
         end_index = 0
@@ -623,20 +627,35 @@ class ModelData1DHandler(ModelrAPI):
             
             
 
-        # Fluid substitution 
-        ## print(np.mean(vs), np.mean(vp), np.mean(rho),
-        ##       np.mean(phi), np.mean(rhow0), np.mean(rhohc0),
-        ##       np.mean(sw0), np.mean(swnew), np.mean(kw0),
-        ##       np.mean(khc0), np.mean(kclay), np.mean(kqtz),
-        ##       np.mean(vclay), np.mean(rhownew), np.mean(rhohcnew),
-        ##       np.mean(kwnew), np.mean(khcnew))
+
+        # Fix the NAN (undefined rock fluids) so they are the same
+        nan_ind = np.isnan(sw0)
+        sw0[nan_ind] = swnew[nan_ind]
+        rhow0[nan_ind] = rhownew[nan_ind]
+        rhohc0[nan_ind] = rhownew[nan_ind]
+        kw0[nan_ind] = kwnew[nan_ind]
+        khc0[nan_ind] = khcnew[nan_ind]
+
+
+        print np.mean(vs)
+        # Fluid subs
         vp,vs,rho = smith_fluidsub(vp, vs, rho, phi, rhow0,rhohc0,
                                    sw0, swnew, kw0, khc0, kclay,
                                    kqtz, vclay, rhownew, rhohcnew,
                                    kwnew, khcnew)
                                    
+
+        print np.mean(vp)
+        print np.mean(vs)
+        print np.mean(rho)
+        print(np.mean(vs), np.mean(vp), np.mean(rho),
+        np.mean(phi), np.mean(rhow0), np.mean(rhohc0),
+        np.mean(sw0), np.mean(swnew), np.mean(kw0),
+        np.mean(khc0), np.mean(kclay), np.mean(kqtz),
+        np.mean(vclay), np.mean(rhownew), np.mean(rhohcnew),
+        np.mean(kwnew), np.mean(khcnew))
         
-        vp, vs, rho,sw, t = depth2time(z, vp, vs, rho,sw0, dt)
+        vp, vs, rho,sw, t = depth2time(z, vp, vs, rho,swnew, dt)
         scale = int(self.request.get("height")) * t / np.amax(t)
 
         ref = np.nan_to_num(akirichards(vp[0:-1], vs[0:-1], rho[0:-1],

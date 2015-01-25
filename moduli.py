@@ -141,7 +141,8 @@ def pr(vp=None, vs=None, rho=None, mu=None, lam=None, youngs=None, bulk=None, pm
         return None
 
 
-def mu(vp=None, vs=None, rho=None, pr=None, lam=None, youngs=None, bulk=None, pmod=None):
+def mu(vp=None, vs=None, rho=None, pr=None,
+       lam=None, youngs=None, bulk=None, pmod=None):
     '''
     Computes shear modulus given either Vp, Vs, and rho, or
     any two elastic moduli (e.g. lambda and bulk, or Young's
@@ -313,7 +314,8 @@ def vp(youngs=None, vs=None, rho=None, mu=None, lam=None, bulk=None, pr=None, pm
         return None
 
 
-def vs(youngs=None, vp=None, rho=None, mu=None, lam=None, bulk=None, pr=None, pmod=None):
+def vs(youngs=None, vp=None, rho=None, mu=None, lam=None,
+       bulk=None, pr=None, pmod=None):
     '''
     Computes Vs given bulk density and shear modulus.
 

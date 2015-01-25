@@ -101,7 +101,6 @@ function Core(div, image_height, image_width, material,
 
     
     // Resize drag behaviour
-
     var drag = d3.behavior.drag().on("drag", dragResize)
         .on("dragend", function(){
 	    onchange(intervals);});
