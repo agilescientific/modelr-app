@@ -401,35 +401,36 @@
 	    </div>
 	    <input name="db_key" id="edit-rock-key" type="hidden"
 		   value={{current_rock.db_key}}>
-
-          </div> <!-- /column -->
-
         </div> <!-- /row -->
+
         <div class="row"> <!-- FLUID ROW -->
           <div class="form-group">
-	    <label for="rock-fluid" class="col-sm-2 control-label">
-	      Fluid</label>
-	    <div class="col-sm-9">
-	      <select class="form-control" name="rock-fluid"
-		      id="edit-rock-fluid">
-                {% for fluid in fluids + default_fluids %}
-		{% if current_rock.fluid_key  and 
-		(fluid.key().id() == current_rock.fluid_key.id()) %}
-                <option value="{{current_rock.fluid}}" selected>
-		  {% else %}
-		  <option value="{{fluid.key().id()}}">
-		    {% endif %}
+		    <label for="rock-fluid" class="col-sm-2 control-label">
+		      Fluid
+		    </label>
+		    <div class="col-sm-9">
+		      <select class="form-control" name="rock-fluid"
+			      id="edit-rock-fluid">
+	                {% for fluid in fluids + default_fluids %}
+			{% if current_rock.fluid_key  and 
+			(fluid.key().id() == current_rock.fluid_key.id()) %}
+	                <option value="{{current_rock.fluid}}" selected>
+			  {% else %}
+			  <option value="{{fluid.key().id()}}">
+			    {% endif %}
 
-		    {{fluid.name}}</option>
-                  {% endfor %}
-	      </select>
+			    {{fluid.name}}</option>
+	                  {% endfor %}
+		      </select>
 	    </div>
-          </div>
+          </div> <!-- end of form group -->
+          </div> <!-- end of fluid row -->
 
           <div class="row"> <!-- SHARE ROW -->
 	    <div class="form-group">
 	      <label for="sharing" class="col-sm-2 control-label">
-		Share</label>
+		    Share
+		  </label>
 	      <div class="col-sm-9">
 		<select class="form-control" name="group">
                   <option value="private" selected>
@@ -447,7 +448,7 @@
 		</select>
 	      </div>
 	    </div>
-          </div> <!-- /row -->
+          </div> <!-- end of share row -->
 
 
 	  
@@ -649,11 +650,9 @@
 		   class="col-sm-2 control-label">
 	      Description</label>
 	    <div class="col-sm-9">
-              <textarea class="form-control" rows="2"
+          <textarea class="form-control" rows="2"
 			name="description"
-			id="edit-fluid-desc">
-		    {{ current_fluid.description }}
-	      </textarea>
+			id="edit-fluid-desc">{{ current_fluid.description }}</textarea>
 	    </div>
 	  </div>
 	</div> <!-- /row -->
