@@ -269,6 +269,9 @@ class RockHandler(ModelrAPI):
             rock.vs_std = float(self.request.get('vs_std'))
             rock.rho_std = float(self.request.get('rho_std'))
 
+            rock.porosity = float(self.request.get('porosity'))
+            rock.vclay = float(self.request.get('vclay'))
+
             rock.description = self.request.get('description')
             rock.name = self.request.get('name')
             rock.group = self.request.get('group')
@@ -316,6 +319,9 @@ class RockHandler(ModelrAPI):
             rock.vs_std = float(self.request.get('vs_std'))
             rock.rho_std = float(self.request.get('rho_std'))
 
+            rock.porosity = float(self.request.get('porosity'))
+            rock.vclay = float(self.request.get('vclay'))
+            
             rock.description = self.request.get('description')
             rock.name = self.request.get('name')
             rock.group = self.request.get('group')
