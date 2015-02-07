@@ -32,6 +32,10 @@ function FluidSub(image_div, image_height, image_width,
 	.attr("width", image_width)
 	.attr("height", image_height);
 
+    var drag = d3.behavior.drag().on("drag", dragResize);
+
+    var fluidtop_drag = d3.behavior.drag().on("drag", fluidDrag);
+
     //------ Main canvas -------------------------//    
     canvas.append("text")
         .attr("class", "y-label")
@@ -54,7 +58,8 @@ function FluidSub(image_div, image_height, image_width,
     // Make the rock element grouping
     var y_offset = y_offset;
     var rgroup = canvas.append("g")
-	.attr("transform", "translate(" + x_offset.toString() + ",0)");
+	.attr("transform", "translate(" + 
+	      x_offset.toString() + ",0)");
 
     // Title/plot label
     rgroup.append("text")
@@ -79,7 +84,7 @@ function FluidSub(image_div, image_height, image_width,
 	.attr("transform", "translate("+rock_offset.toString() +",0)");
     var rock_tops = rgroup.append("g")
 	.attr("transform", "translate("+rock_offset.toString() +",0)"); 
-
+  
     // Load up to intervals
     add_interval(0,0,total_depth);
     add_interval(1, total_depth/2,total_depth/2);
@@ -90,7 +95,7 @@ function FluidSub(image_div, image_height, image_width,
 	// adds an interval with depth and thickness at the ith layer
 	
 	// Initialize with a rock
-	var rock_ind = i % rocks.length;
+	var rock_ind = Math.floor(Math.random()*50.0) % rocks.length;
 	
 	var interval = {depth: depth,
 			rock: rocks[rock_ind]};
@@ -101,15 +106,18 @@ function FluidSub(image_div, image_height, image_width,
             interval.thickness = thickness;
 	};
 	
-	if(typeof interval.rock.fluid !== 'undefined'){
+	if(interval.rock.fluid != ""){
 	    interval.fluid_colour = fluid_cmap[interval.rock.fluid];
 
 	    var fluid_ind = i % fluids.length;
-	    interval.subfluids = {depth: depth,
+	    var subfluid = {depth: depth,
 			      fluid: fluids[fluid_ind],
 			      thickness: interval.thickness}
-	    interval.subfluids.colour = 
-		fluid_cmap[interval.subfluids.fluid.name];
+	    subfluid.colour = 
+		fluid_cmap[subfluid.fluid.name];
+	    interval.subfluids = [subfluid];
+	} else{
+	    interval.subfluids = [];
 	};
 
 	// Add to the interval data list
@@ -133,11 +141,42 @@ function FluidSub(image_div, image_height, image_width,
 	for (var i=0; i<intervals.length-1; i++) {    
             intervals[i].thickness = 
 		intervals[i+1].depth - intervals[i].depth;
+
+	    if (intervals[i].subfluids.length > 0){
+
+		for (var j=0; j< intervals[i].subfluids.length-1; j++){
+		    intervals[i].subfluids[j].thickness = 
+			intervals[i].subfluids[j+1].depth - 
+			intervals[i].subfluids[j].depth;
+		}
+
+		intervals[i]
+		    .subfluids[intervals[i]
+			       .subfluids.length-1].thickness = 
+		    intervals[i].depth + intervals[i].thickness -
+		    intervals[i].subfluids[intervals[i].subfluids.length-1].depth;
+	    };
 	};
 	
 	// Update the last layer
 	intervals[intervals.length-1].thickness = end_point - 
             intervals[intervals.length-1].depth;
+
+	var last_interval = intervals[intervals.length-1]
+	if (last_interval.subfluids.length > 0){
+	    for( var j=0; j<last_interval.subfluids.length-1; j++){
+		last_interval.subfluids[j].thickness = 
+		    last_interval.subfluids[j+1].depth - 
+		    last_interval.subfluids[j].depth;
+	    };
+	    last_interval
+		.subfluids[last_interval.subfluids.length-1]
+		.thickness = end_point - 
+		last_interval
+		.subfluids[last_interval.subfluids.length-1].depth;
+		
+	};
+
     };
 
 
@@ -149,23 +188,98 @@ function FluidSub(image_div, image_height, image_width,
 	var interval = rock_intervals.selectAll("g")
 	    .data(intervals);
 
-	var interval_group = interval.enter().append("g")
-
-	interval_group.append("rect")
-	    .attr("y", update_depth)
-            .attr("fill", function(d)
+	// update the existing graphic blocks
+	interval.selectAll("#rock")
+	    .data(function(d)
+		  {return([d])})
+	    .attr("fill", function(d)
 		  {return d.colour})
-            .attr("height",update_thickness)
-            .attr("width", rock_width)
-            .attr("cursor","crosshair")
-	    .on("click", add_top)
-            .on("contextmenu", delete_interval);
+	    .attr("y", update_depth)
+            .attr("height",update_thickness);
 
-	    
-	var rock_fluid = interval_group.selectAll("#rock_fluid")
+	var rock_fluid = interval.selectAll("#rock_fluid")
 	    .data(function(d){
 		if (d.rock.fluid){
 		    return [d]} else return []})
+
+	rock_fluid.attr("y", update_depth)
+            .attr("fill", function(d)
+		  {return d.fluid_colour})
+            .attr("height",update_thickness);
+
+	rock_fluid.enter().append("rect")
+	    .attr("id","rock_fluid")
+	    .attr("y", update_depth)
+	    .attr("x", "45")
+            .attr("width", "10")
+            .attr("fill", function(d)
+		  {return d.fluid_colour})
+            .attr("height",update_thickness)
+
+	rock_fluid.exit().remove()
+	    
+	var fluidsub = interval.selectAll("#subfluid")
+	    .data(function(d){ if(d.subfluids){
+		return d.subfluids} else{return []}})
+
+	fluidsub.attr("fill", function(d)
+		  {return d.colour})
+	    .attr("y", update_depth)
+            .attr("height",update_thickness);
+	
+	fluidsub.enter().append("rect")
+	    .attr("id", "subfluid")
+	    .attr("fill", function(d)
+		  {return d.colour})
+	    .attr("y", update_depth)
+            .attr("height",update_thickness)
+	    .attr("x", "60")
+            .attr("width", "10")
+            .attr("cursor","crosshair")
+	    .on("click", add_fluidsub_top);
+
+
+	
+	fluidsub.exit().remove();
+
+	// fluid sub tops
+	var fluid_tops = interval.selectAll("#fluidtop")
+	    .data(function(d)
+		  {return d.subfluids.slice(1,d.subfluids.length)})
+	fluid_tops.attr("y1", update_depth)
+	    .attr("y2", update_depth);
+
+	fluid_tops.enter()
+	    .append("line")
+	    .attr("x1",60).attr("x2", 70)
+            .attr("y1", update_depth)
+            .attr("y2", update_depth)
+	    .attr("id", "fluidtop")
+            .attr("cursor", "ns-resize")
+	    .attr("style","stroke:rgb(0,0,0);stroke-width:2")
+	    .call(fluidtop_drag);
+
+
+
+
+	// New Arrivals
+	var new_interval = interval.enter().append("g");
+
+	new_interval.append("rect")
+            .attr("width", rock_width)
+            .attr("cursor","crosshair")
+	    .attr("id", "rock")
+	    .attr("fill", function(d)
+		  {return d.colour})
+	    .attr("y", update_depth)
+            .attr("height",update_thickness)
+	    .on("click", add_top)
+            .on("contextmenu", delete_interval);
+	
+
+	new_interval.selectAll("#rock_fluid")
+	    .data(function(d){ if(d.rock.fluid){
+		return [d]} else{return []}})
 	    .enter().append("rect")
 	    .attr("id", "rock_fluid")
 	    .attr("y", update_depth)
@@ -174,26 +288,60 @@ function FluidSub(image_div, image_height, image_width,
             .attr("height",update_thickness)
 	    .attr("x", "45")
             .attr("width", "10")
-            .attr("cursor","crosshair")
-
-	var fluidsub_group = interval_group.selectAll("#subfluid")
-	    .data(function(d){ return [d.subfluids]})
+	
+	new_interval.selectAll("#subfluid")
+	    .data(function(d){return d.subfluids})
 	    .enter().append("rect")
 	    .attr("id", "subfluid")
-	    .attr("fill", function(d)
-		  {return d.colour})
 	    .attr("y", update_depth)
+            .attr("fill", function(d)
+		  {return d.colour})
             .attr("height",update_thickness)
-            .attr("width", "10")
 	    .attr("x", "60")
+            .attr("width", "10")
             .attr("cursor","crosshair")
+	    .on("click", add_fluidsub_top);
 
-	var a =1;
+	new_interval.selectAll("#fluidtop")
+	    .data(function(d)
+		  {return d.subfluids.slice(1,d.subfluids.length)})
+	    .enter()
+	    .append("line")
+	    .attr("x1",60).attr("x2", 70)
+            .attr("y1", update_depth)
+            .attr("y2", update_depth)
+	    .attr("id", "fluidtop")
+            .attr("cursor", "ns-resize")
+	    .attr("style","stroke:rgb(0,0,0);stroke-width:2")
+	    .call(fluidtop_drag);
 
 
+	interval.exit().remove();
 
 
+	// Rock Tops
+	var top = rock_tops.selectAll("line")
+            .data(intervals.slice(1, intervals.length));
+	
+	// existing
+	top.attr("y1", update_depth)
+            .attr("y2",update_depth);
+	
+	//for the new elements
+	top.enter()
+            .append("line")
+            .attr("x1", 0).attr("x2", rock_width + 30)
+            .attr("y1", update_depth)
+            .attr("y2", update_depth)
+            .attr("style","stroke:rgb(0,0,0);stroke-width:2")
+            .attr("cursor", "ns-resize")
+	    .call(drag);
+	
+	top.exit().remove();
 
+	interval.exit().remove()
+
+	
     };
 
     // Functions for D3 callbacks
@@ -210,7 +358,115 @@ function FluidSub(image_div, image_height, image_width,
     };
 
 
-    function add_top(d,i){
+    function fluidDrag(d,i){
+	
+	var event = d3.event;
+	var end_point = d.depth + d.thickness;
+
+	d.depth = scale.invert(event.y);
+	if(d.depth > end_point){
+	    d.depth=end_point
+	}
+
+	var subfluids = this.parentNode.__data__.subfluids
+
+	var start_point = subfluids[i].depth;
+	if(d.depth < start_point){
+	    d.depth = start_point;
+	}
+	if(i < subfluids.length-2){
+	    subfluids[i+2].depth = end_point;
+	} else{
+	    d.thickness = end_point - d.depth;
+	}
+
+	calculate_thickness();
+	draw();
+    };
+
+  // Resize call back
+    function dragResize(d,i){
+	var event = d3.event;
+
+	var shift = d.depth - scale.invert(event.y);
+	var squish = (d.thickness + shift) / d.thickness;
+ 
+	var end_point = d.depth + d.thickness;
+
+	d.depth = scale.invert(event.y);
+	if(d.depth > end_point){
+	    d.depth=end_point
+	}
+	var start_point = intervals[i].depth;
+	if(d.depth < start_point){
+	    d.depth = start_point;
+	}
+	if(i < intervals.length-2){
+	    intervals[i+2].depth = end_point;
+	} else{
+	    d.thickness = end_point - d.depth;
+	}
+
+	if(d.subfluids.length > 0){
+	    d.subfluids[0].depth = d.depth;
+	    d.subfluids[0].thickness = 
+		d.subfluids[0].thickness * squish;
+	    for(j=1;j<d.subfluids.length; j++){
+		d.subfluids[j].depth = d.subfluids[j-1].depth + 
+		    d.subfluids[j-1].thickness;
+		d.subfluids[j].thickness = 
+		    d.subfluids[j].thickness * squish;
+	    };
+	};
+
+
+	if((intervals[i].subfluids.length > 0)){
+
+	    squish = (intervals[i].thickness - shift) / 
+		intervals[i].thickness;
+	    var upper_fluids = intervals[i].subfluids;
+	    upper_fluids[0].thickness = 
+		upper_fluids[0].thickness * squish;
+
+	    for(var j=1; j<upper_fluids.length; j++){
+		upper_fluids[j].depth = upper_fluids[j-1].depth + 
+		    upper_fluids[j-1].thickness;
+		upper_fluids[j].thickness = 
+		    upper_fluids[j].thickness * squish;
+	    };
+	};
+	calculate_thickness();
+	draw();
+
+    } // end of dragResize
+
+    function add_fluidsub_top(d,i){
+
+	var bottom = d.depth + d.thickness;
+
+	// update current fluid
+	d.thickness = scale.invert(d3.mouse(this)[1]) - d.depth;
+	
+	// adda new fluid
+	var depth = d.depth + d.thickness;
+	var thickness = bottom - depth;
+
+	var subfluids = this.parentNode.__data__.subfluids;
+	var fluid_ind = i % fluids.length;
+	var subfluid = {depth: depth,
+			fluid: fluids[fluid_ind],
+			thickness: thickness}
+	subfluid.colour = 
+		fluid_cmap[subfluid.fluid.name];
+	
+	subfluids.splice(i+1,0, subfluid);
+
+	// redraw
+	draw();
+    };
+
+   
+    function add_top(d,i,j){
 	/*
 	  adds a top to the core at the ith interval
 	  param d: core rock attached to the ith interval
