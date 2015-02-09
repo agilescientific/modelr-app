@@ -388,18 +388,16 @@ function FluidSub(image_div, image_height, image_width,
     function dragResize(d,i){
 	var event = d3.event;
 
-	var shift = d.depth - scale.invert(event.y);
-	var squish = (d.thickness + shift) / d.thickness;
- 
+	var thickness0 = d.thickness;
 	var end_point = d.depth + d.thickness;
 
 	d.depth = scale.invert(event.y);
-	if(d.depth > end_point){
-	    d.depth=end_point
+	if(d.depth >= end_point){
+	    d.depth=end_point-1
 	}
 	var start_point = intervals[i].depth;
-	if(d.depth < start_point){
-	    d.depth = start_point;
+	if(d.depth <= start_point){
+	    d.depth = start_point +1;
 	}
 	if(i < intervals.length-2){
 	    intervals[i+2].depth = end_point;
@@ -407,24 +405,30 @@ function FluidSub(image_div, image_height, image_width,
 	    d.thickness = end_point - d.depth;
 	}
 
+
+	// current interval
+	var squish = (end_point - d.depth)/thickness0;
+
 	if(d.subfluids.length > 0){
 	    d.subfluids[0].depth = d.depth;
-	    d.subfluids[0].thickness = 
-		d.subfluids[0].thickness * squish;
-	    for(j=1;j<d.subfluids.length; j++){
-		d.subfluids[j].depth = d.subfluids[j-1].depth + 
-		    d.subfluids[j-1].thickness;
-		d.subfluids[j].thickness = 
-		    d.subfluids[j].thickness * squish;
-	    };
+	    rescale_subfluids(d, squish);
 	};
+	
+	if(intervals[i].subfluids.length > 0){
+	    squish = (d.depth -intervals[i].depth) / intervals[i].thickness;
+	    rescale_subfluids(intervals[i], squish);
+	};
+	calculate_thickness();
+	draw();
+
+    } // end of dragResize
 
 
-	if((intervals[i].subfluids.length > 0)){
+    function rescale_subfluids(interval, squish){
 
-	    squish = (intervals[i].thickness - shift) / 
-		intervals[i].thickness;
-	    var upper_fluids = intervals[i].subfluids;
+	if((interval.subfluids.length > 0)){
+
+	    var upper_fluids = interval.subfluids;
 	    upper_fluids[0].thickness = 
 		upper_fluids[0].thickness * squish;
 
@@ -435,10 +439,7 @@ function FluidSub(image_div, image_height, image_width,
 		    upper_fluids[j].thickness * squish;
 	    };
 	};
-	calculate_thickness();
-	draw();
-
-    } // end of dragResize
+    };
 
     function add_fluidsub_top(d,i){
 
@@ -474,11 +475,15 @@ function FluidSub(image_div, image_height, image_width,
 	*/
 
 	var bottom = d.depth + d.thickness;
+	thickness0 = d.thickness;
 	d.thickness = scale.invert(d3.mouse(this)[1]) - d.depth;
 	
 	var depth = d.depth + d.thickness;
 	var thickness = bottom - depth;
-	
+
+	var squish = (thickness0 - thickness) / thickness0;
+
+	rescale_subfluids(d, squish);
 	add_interval(i, depth, thickness);
 
     };
