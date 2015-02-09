@@ -236,7 +236,8 @@ function FluidSub(image_div, image_height, image_width,
 	    .attr("x", "60")
             .attr("width", "10")
             .attr("cursor","crosshair")
-	    .on("click", add_fluidsub_top);
+	    .on("click", add_fluidsub_top)
+	    .on("contextmenu", delete_subfluid);
 
 
 	
@@ -259,7 +260,7 @@ function FluidSub(image_div, image_height, image_width,
 	    .attr("style","stroke:rgb(0,0,0);stroke-width:2")
 	    .call(fluidtop_drag);
 
-
+	fluid_tops.exit().remove()
 
 
 	// New Arrivals
@@ -300,7 +301,8 @@ function FluidSub(image_div, image_height, image_width,
 	    .attr("x", "60")
             .attr("width", "10")
             .attr("cursor","crosshair")
-	    .on("click", add_fluidsub_top);
+	    .on("click", add_fluidsub_top)
+	    .on("contextmenu", delete_subfluid);
 
 	new_interval.selectAll("#fluidtop")
 	    .data(function(d)
@@ -495,14 +497,40 @@ function FluidSub(image_div, image_height, image_width,
 	// always keep 2 layers
 	if (intervals.length > 2 & (i > 0)) {
 	    if (i == (intervals.length-1)) {
+		var thickness0 = intervals[i-1].thickness;
+		
 		intervals[i-1].thickness = 
 		    d.thickness + d.depth - intervals[i-1].depth;
-	    } // end of inner if
+		var squish = intervals[i-1].thickness/ thickness0;
+		rescale_subfluids(intervals[i-1],squish);
+
+	    } else{
+		var thickness0 = intervals[i-1].thickness;
+		var new_thickness = d.depth + d.thickness - 
+		    intervals[i-1].depth;
+		var squish = new_thickness / thickness0;
+
+		rescale_subfluids(intervals[i-1], squish);
+	    };
+ 
 	    intervals.splice(i,1);
 	    calculate_thickness();
 	    draw();
 	} // end of outer if
     } // end of function delete_intercall
 
+    function delete_subfluid(d,i){
+
+	d3.event.preventDefault();
+    
+	// always keep one layer
+	if(i > 0){
+	
+	    interval = this.parentNode.__data__
+	    interval.subfluids.splice(i,1);
+	    calculate_thickness();
+	    draw();
+	};
+    };
 };
 
