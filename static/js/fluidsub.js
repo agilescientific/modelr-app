@@ -1,5 +1,6 @@
 function FluidSub(image_div, image_height, image_width,
-		  rocks, fluids, rock_cmap, fluid_cmap){
+		  rocks, fluids, rock_cmap, fluid_cmap,
+		  onchange){
 
 
     var max_depth = 10000.0;
@@ -32,9 +33,11 @@ function FluidSub(image_div, image_height, image_width,
 	.attr("width", image_width)
 	.attr("height", image_height);
 
-    var drag = d3.behavior.drag().on("drag", dragResize);
+    var drag = d3.behavior.drag().on("drag", dragResize)
+	.on("dragend", onchange);
 
-    var fluidtop_drag = d3.behavior.drag().on("drag", fluidDrag);
+    var fluidtop_drag = d3.behavior.drag().on("drag", fluidDrag)
+	.on("dragend", onchange);
 
     //------ Main canvas -------------------------//    
     canvas.append("text")
@@ -59,7 +62,7 @@ function FluidSub(image_div, image_height, image_width,
     var y_offset = y_offset;
     var rgroup = canvas.append("g")
 	.attr("transform", "translate(" + 
-	      x_offset.toString() + ",0)");
+	      x_offset.toString() + ",30)");
 
     // Title/plot label
     rgroup.append("text")
@@ -67,8 +70,24 @@ function FluidSub(image_div, image_height, image_width,
 	.attr("style", "color:blue")
         .attr("text-anchor", "beginning")
         .attr("y", 0) 
-        .attr("x", 25)
+        .attr("x", 40)
         .text("Rocks")
+	.attr("cursor", "pointer");
+    rgroup.append("text")
+        .attr("class", "menu-label")
+	.attr("style", "color:blue")
+        .attr("text-anchor", "beginning")
+        .attr("y", 0) 
+        .attr("x", 90)
+        .text("F0")
+	.attr("cursor", "pointer");
+    rgroup.append("text")
+        .attr("class", "menu-label")
+	.attr("style", "color:blue")
+        .attr("text-anchor", "beginning")
+        .attr("y", 0) 
+        .attr("x", 110)
+        .text("Fsub")
 	.attr("cursor", "pointer");
 
     var yAxis = d3.svg.axis()
@@ -128,6 +147,7 @@ function FluidSub(image_div, image_height, image_width,
 	
 	// update the core plot
 	draw();
+
     };
 
     function calculate_thickness(){
@@ -343,7 +363,6 @@ function FluidSub(image_div, image_height, image_width,
 
 	interval.exit().remove()
 
-	
     };
 
     // Functions for D3 callbacks
@@ -466,6 +485,8 @@ function FluidSub(image_div, image_height, image_width,
 
 	// redraw
 	draw();
+
+	onchange();
     };
 
    
@@ -487,6 +508,8 @@ function FluidSub(image_div, image_height, image_width,
 
 	rescale_subfluids(d, squish);
 	add_interval(i, depth, thickness);
+
+	onchange();
 
     };
 
@@ -516,6 +539,8 @@ function FluidSub(image_div, image_height, image_width,
 	    intervals.splice(i,1);
 	    calculate_thickness();
 	    draw();
+
+	    onchange();
 	} // end of outer if
     } // end of function delete_intercall
 
@@ -530,7 +555,11 @@ function FluidSub(image_div, image_height, image_width,
 	    interval.subfluids.splice(i,1);
 	    calculate_thickness();
 	    draw();
+
+	    onchange();
 	};
     };
+
+    return {intervals:intervals}
 };
 

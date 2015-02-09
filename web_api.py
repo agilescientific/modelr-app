@@ -515,7 +515,7 @@ class ModelData1DHandler(ModelrAPI):
         dz = 1
 
         rock_data = json.loads(self.request.get('rock_data'))
-        fluid_data = json.loads(self.request.get('fluid_data'))
+  
         # all the workings for fluid sub
         
         min_depth = rock_data[0]["depth"]
@@ -556,14 +556,14 @@ class ModelData1DHandler(ModelrAPI):
 
             # A little messy, we should abstract this query at
             # some point
-            rock = Rock.get_by_id(int(layer["db_key"]),
+            rock = Rock.get_by_id(int(layer["rock"]["db_key"]),
                                   parent=user)
             if not rock:
-                rock = Rock.get_by_id(int(layer["db_key"]),
+                rock = Rock.get_by_id(int(layer["rock"]["db_key"]),
                                       parent=admin_user)
             if not rock:
                 rock = Rock.all().filter("name =",
-                                         layer["name"]).get()
+                                         layer["rock"]["name"]).get()
                 if not (rock.group in user.group) or (not rock):
                     raise Exception
             
@@ -603,65 +603,9 @@ class ModelData1DHandler(ModelrAPI):
                 khc0[start_index:end_index] = np.nan
         
             
-        # Do the new fluids
-        end_index = 0
-        for layer in fluid_data:
 
-            # Again we should abstract this at some point
-            fluid = Fluid.get_by_id(int(layer["db_key"]),
-                                  parent=user)
-            if not fluid:
-                fluid = Fluid.get_by_id(int(layer["db_key"]),
-                                      parent=admin_user)
-            if not fluid:
-                fluid = Fluid.all().filter("name =",
-                                         layer["name"]).get()
-                if not (fluid.group in user.group) or (not fluid):
-                    raise Exception
-            
-            start_index = end_index
-            end_index = start_index + np.ceil(layer["thickness"]/dz)
-            if end_index > z.size:
-                end_index = z.size
-            
-
-            swnew[start_index:end_index] = fluid.sw
-            rhownew[start_index:end_index] = fluid.rho_w
-            rhohcnew[start_index:end_index] = fluid.rho_hc
-            kwnew[start_index:end_index] = fluid.kw
-            khcnew[start_index:end_index] = fluid.khc
-            
-            
-
-
-        # Fix the NAN (undefined rock fluids) so they are the same
-        nan_ind = np.isnan(sw0)
-        sw0[nan_ind] = swnew[nan_ind]
-        rhow0[nan_ind] = rhownew[nan_ind]
-        rhohc0[nan_ind] = rhownew[nan_ind]
-        kw0[nan_ind] = kwnew[nan_ind]
-        khc0[nan_ind] = khcnew[nan_ind]
-
-
-        print np.mean(vs)
-        # Fluid subs
-        vp,vs,rho = smith_fluidsub(vp, vs, rho, phi, rhow0,rhohc0,
-                                   sw0, swnew, kw0, khc0, kclay,
-                                   kqtz, vclay, rhownew, rhohcnew,
-                                   kwnew, khcnew)
-                                   
-
-        print np.mean(vp)
-        print np.mean(vs)
-        print np.mean(rho)
-        print(np.mean(vs), np.mean(vp), np.mean(rho),
-        np.mean(phi), np.mean(rhow0), np.mean(rhohc0),
-        np.mean(sw0), np.mean(swnew), np.mean(kw0),
-        np.mean(khc0), np.mean(kclay), np.mean(kqtz),
-        np.mean(vclay), np.mean(rhownew), np.mean(rhohcnew),
-        np.mean(kwnew), np.mean(khcnew))
         
-        vp, vs, rho,sw, t = depth2time(z, vp, vs, rho,swnew, dt)
+        vp, vs, rho,sw, t = depth2time(z, vp, vs, rho,sw0, dt)
         scale = int(self.request.get("height")) * t / np.amax(t)
 
         ref = np.nan_to_num(akirichards(vp[0:-1], vs[0:-1], rho[0:-1],
@@ -675,7 +619,7 @@ class ModelData1DHandler(ModelrAPI):
         output = {"vp": tuple(vp), "vs": tuple(vs),
                   "rho": tuple(rho), "t": tuple(t),
                   "scale": tuple(scale),
-                  "sw": tuple(sw),
+                  "sw": tuple(np.nan_to_num(sw)),
                   "reflectivity": tuple(ref),
                   "synthetic": tuple(synth)}
 
