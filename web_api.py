@@ -567,8 +567,6 @@ class ModelData1DHandler(ModelrAPI):
                 if not (rock.group in user.group) or (not rock):
                     raise Exception
             
-                    
-
             start_index = end_index
             end_index = start_index + np.ceil(layer["thickness"]/dz)
             if end_index > rho.size:
@@ -596,16 +594,45 @@ class ModelData1DHandler(ModelrAPI):
                 kw0[start_index:end_index] = rock_fluid.kw
                 khc0[start_index:end_index] = rock_fluid.khc
             except:
-                sw0[start_index:end_index] = np.nan
-                rhow0[start_index:end_index] = np.nan
-                rhohc0[start_index:end_index] = np.nan
-                kw0[start_index:end_index] = np.nan
-                khc0[start_index:end_index] = np.nan
-        
+                sw0[start_index:end_index] = 1
+                rhow0[start_index:end_index] = 1
+                rhohc0[start_index:end_index] = 1
+                kw0[start_index:end_index] = 1
+                khc0[start_index:end_index] = 1
+                swnew[start_index:end_index] = 1
+                rhownew[start_index:end_index] = 1
+                rhohcnew[start_index:end_index] = 1
+                kwnew[start_index:end_index] = 1
+                khcnew[start_index:end_index] = 1
+
+            fluid_end = start_index
+            for subfluid in layer['subfluids']:
+
+                fluid_start = fluid_end
+
+                fluid_end = fluid_start + \
+                  np.ceil(subfluid["thickness"]/dz)
+
+                fluid = subfluid["fluid"]
+                
+                swnew[fluid_start:fluid_end] = fluid["sw"]
+                rhownew[fluid_start:fluid_end] = fluid["rho_w"]
+                rhohcnew[fluid_start:fluid_end] = fluid["rho_hc"]
+                kwnew[fluid_start:fluid_end] = fluid["k_w"]
+                khcnew[fluid_start:fluid_end] = fluid["k_hc"]
             
 
+
+   
         
-        vp, vs, rho,sw, t = depth2time(z, vp, vs, rho,sw0, dt)
+        vp,vs,rho = smith_fluidsub(vp, vs, rho, phi, rhow0,rhohc0,
+                                   sw0, swnew, kw0, khc0, kclay,
+                                   kqtz, vclay, rhownew, rhohcnew,
+                                   kwnew, khcnew)
+
+        vp, vs, rho,sw, t = depth2time(z, vp, vs, rho,swnew, dt)
+
+    
         scale = int(self.request.get("height")) * t / np.amax(t)
 
         ref = np.nan_to_num(akirichards(vp[0:-1], vs[0:-1], rho[0:-1],
@@ -619,7 +646,7 @@ class ModelData1DHandler(ModelrAPI):
         output = {"vp": tuple(vp), "vs": tuple(vs),
                   "rho": tuple(rho), "t": tuple(t),
                   "scale": tuple(scale),
-                  "sw": tuple(np.nan_to_num(sw)),
+                  "sw": tuple(sw),
                   "reflectivity": tuple(ref),
                   "synthetic": tuple(synth)}
 
