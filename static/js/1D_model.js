@@ -11,6 +11,7 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
 				 rock_image_width,
 				 rocks, fluids,
 				 rock_colour_map,rock_colour_map,
+				 rock_menu_div,
 				 onchange=update_data);
 
     // Setup the log plots

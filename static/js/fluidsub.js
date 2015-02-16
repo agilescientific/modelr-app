@@ -1,5 +1,6 @@
 function FluidSub(image_div, image_height, image_width,
 		  rocks, fluids, rock_cmap, fluid_cmap,
+		  menu_div,
 		  onchange){
 
 
@@ -108,6 +109,8 @@ function FluidSub(image_div, image_height, image_width,
     add_interval(0,0,total_depth);
     add_interval(1, total_depth/2,total_depth/2);
 
+    create_menu();
+
     // --------------- end of init --------------------------- //
 
     function add_interval(i, depth, thickness){
@@ -206,7 +209,15 @@ function FluidSub(image_div, image_height, image_width,
 	// -------------------- Rock Graphics --------------//
 
 	var interval = rock_intervals.selectAll("g")
-	    .data(intervals);
+	    .data(intervals)
+	    .on("click", function(d,i){
+		if(d3.event.ctrlKey){
+		    interval_menu(d, i);
+		    $(menu_div).show();
+		    $(menu_div).dialog();
+		} else{}
+		  })
+
 
 	// update the existing graphic blocks
 	interval.selectAll("#rock")
@@ -239,7 +250,7 @@ function FluidSub(image_div, image_height, image_width,
 	rock_fluid.exit().remove()
 	    
 	var fluidsub = interval.selectAll("#subfluid")
-	    .data(function(d){ if(d.subfluids){
+	    .data(function(d){ if(d.rock.fluid){
 		return d.subfluids} else{return []}})
 
 	fluidsub.attr("fill", function(d)
@@ -265,8 +276,10 @@ function FluidSub(image_div, image_height, image_width,
 
 	// fluid sub tops
 	var fluid_tops = interval.selectAll("#fluidtop")
-	    .data(function(d)
-		  {return d.subfluids.slice(1,d.subfluids.length)})
+	    .data(function(d){
+		  if(d.rock.fluid)
+		  {return d.subfluids.slice(1,d.subfluids.length)}
+		  else{return []}})
 	fluid_tops.attr("y1", update_depth)
 	    .attr("y2", update_depth);
 
@@ -464,6 +477,9 @@ function FluidSub(image_div, image_height, image_width,
 
     function add_fluidsub_top(d,i){
 
+	if(d3.event.ctrlKey){
+	    return };
+
 	var bottom = d.depth + d.thickness;
 
 	// update current fluid
@@ -496,6 +512,9 @@ function FluidSub(image_div, image_height, image_width,
 	  param d: core rock attached to the ith interval
 	  param i: interval to place top
 	*/
+
+	if(d3.event.ctrlKey){
+	    return};
 
 	var bottom = d.depth + d.thickness;
 	thickness0 = d.thickness;
@@ -559,6 +578,116 @@ function FluidSub(image_div, image_height, image_width,
 	    onchange();
 	};
     };
+
+
+    function create_menu(){
+
+	var div = d3.select(menu_div).append("div")
+	    .attr("class","row");
+
+
+	var rock_div = div.append("div").attr("class", "col-sm-5")
+	    .attr("id", "rock_select_div");
+
+
+	rock_div.append("div").attr("class", "cblock")
+	    .attr("id", "rock_colour");
+
+	var select = rock_div.append("select")
+	    .on("change", update_rock);
+
+
+	select.selectAll("option").data(rocks)
+	    .enter().append("option")
+	    .attr("value", function(d,i){ return i})
+	    .text(function(d){return d.name});
+
+	var fluid_div = div.append("div").attr("class", "col-sm-2")
+	    .attr("id", "rock_fluid_div")
+
+
+	var fluidsub_div = div.append("div").attr("class", 
+						  "col-sm-5")
+	    .attr("id", "fluidsub_div");
+
+	
+    };
+	
+    function update_rock(){
+
+	var rock = rocks[this.value];
+	var interval = d3.select(this.parentNode);
+	var d = interval.datum();
+
+	d.rock = rock;
+	d.colour = rock_cmap[rock.name];
+	    
+	interval_menu(d);
+
+	draw();
+
+    };
+
+    function update_fluid(d){
+    }; 
+
+    function interval_menu(interval,i){
+
+	// get the menu
+	var div = d3.select(menu_div);
+
+	// update the rock menu
+	var rock_div =  div.select("#rock_select_div");
+	rock_div.data([interval]);
+
+	// colour indicator
+	var rock_colour = rock_div.select("#rock_colour");
+
+	rock_colour.attr("style", "margin0 6px 0 0; background-color:" +
+			 interval.colour+ "; display:inline-block");
+	
+	// drop down select
+	var select = rock_div.selectAll("select");
+	select.property("value", i);
+	
+	// Fluid indicator
+	var fluid_div = div.select("#rock_fluid_div");
+	if(interval.rock.fluid){
+	    fluid_div.html(interval.rock.fluid)
+	} else {
+	    fluid_div.html("N/A");
+	};
+
+	// fluid sub-drop down
+	var fluidsub_div = div.select("#fluidsub_div");
+	fluidsub_div.html("");
+
+
+	var fluidsub_row = fluidsub_div.selectAll(".row")
+	    .data(function(){
+		if(interval.rock.fluid){
+		    return interval.subfluids} else{
+		    return []}}).enter().append("div")
+	    .attr("class","row");
+
+	fluidsub_row.append("div").attr("class", "cblock")
+	    .attr("style",function(d){
+		return "margin0 6px 0 0; background-color:" +
+		 d.colour + "; display:inline-block"} );
+
+	var fluidsub_select = fluidsub_row.append("select");
+
+	var option = fluidsub_select.selectAll("option")
+	    .data(fluids).enter().append("option")
+	    .text(function(d){return d.name})
+	    .attr("value", function(d)
+		  {return d})
+	    .property("selected", function(d){
+		if(this.parentNode.__data__.fluid.name == 
+		   d.name){
+		    return true} else{return false}});
+    }
+
 
     return {intervals:intervals}
 };

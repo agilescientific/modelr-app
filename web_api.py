@@ -564,7 +564,7 @@ class ModelData1DHandler(ModelrAPI):
             if not rock:
                 rock = Rock.all().filter("name =",
                                          layer["rock"]["name"]).get()
-                if not (rock.group in user.group) or (not rock):
+                if (not rock) or not (rock.group in user.group):
                     raise Exception
             
             start_index = end_index
