@@ -602,12 +602,12 @@ function FluidSub(image_div, image_height, image_width,
 	    .attr("value", function(d,i){ return i})
 	    .text(function(d){return d.name});
 
-	var fluid_div = div.append("div").attr("class", "col-sm-2")
+	var fluid_div = div.append("div").attr("class", "col-sm-3")
 	    .attr("id", "rock_fluid_div")
 
 
 	var fluidsub_div = div.append("div").attr("class", 
-						  "col-sm-5")
+						  "col-sm-4")
 	    .attr("id", "fluidsub_div");
 
 	
@@ -628,7 +628,21 @@ function FluidSub(image_div, image_height, image_width,
 
     };
 
-    function update_fluid(d){
+    function update_fluid(d, i){
+
+	var fluid = fluids[this.value];
+
+	d.fluid = fluid;
+
+	d.colour = fluid_cmap[fluid.name];
+
+	var fluidsub_div = d3.select("#fluidsub_div");
+	var cblock = d3.select(fluidsub_div
+			       .selectAll(".cblock")[0][i]);
+	cblock.attr("style", "margin0 6px 0 0; background-color:" +
+		      d.colour + "; display:inline-block");
+
+	draw();
     }; 
 
     function interval_menu(interval,i){
@@ -653,9 +667,11 @@ function FluidSub(image_div, image_height, image_width,
 	// Fluid indicator
 	var fluid_div = div.select("#rock_fluid_div");
 	if(interval.rock.fluid){
-	    fluid_div.html(interval.rock.fluid)
+	    fluid_div.html('<div class="row"> <div class="cblock" style="margin0 6px 0 0; background-color:' 
+			   + fluid_cmap[interval.rock.fluid] +'; display:inline-block"></div>' +
+			  interval.rock.fluid + "</div>")
 	} else {
-	    fluid_div.html("N/A");
+	    fluid_div.html("");
 	};
 
 	// fluid sub-drop down
@@ -675,13 +691,14 @@ function FluidSub(image_div, image_height, image_width,
 		return "margin0 6px 0 0; background-color:" +
 		 d.colour + "; display:inline-block"} );
 
-	var fluidsub_select = fluidsub_row.append("select");
+	var fluidsub_select = fluidsub_row.append("select")
+	    .on("change", update_fluid);
 
 	var option = fluidsub_select.selectAll("option")
 	    .data(fluids).enter().append("option")
 	    .text(function(d){return d.name})
-	    .attr("value", function(d)
-		  {return d})
+	    .attr("value", function(d,i)
+		  {return i})
 	    .property("selected", function(d){
 		if(this.parentNode.__data__.fluid.name == 
 		   d.name){
