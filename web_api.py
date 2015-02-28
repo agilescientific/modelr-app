@@ -625,30 +625,49 @@ class ModelData1DHandler(ModelrAPI):
 
    
         
-        vp,vs,rho = smith_fluidsub(vp, vs, rho, phi, rhow0,rhohc0,
-                                   sw0, swnew, kw0, khc0, kclay,
-                                   kqtz, vclay, rhownew, rhohcnew,
-                                   kwnew, khcnew)
+        vp_sub,vs_sub,rho_sub = smith_fluidsub(vp, vs, rho, phi,
+                                               rhow0,rhohc0,
+                                               sw0, swnew, kw0,
+                                               khc0, kclay,
+                                               kqtz, vclay,
+                                               rhownew, rhohcnew,
+                                               kwnew, khcnew)
 
-        vp, vs, rho,sw, t = depth2time(z, vp, vs, rho,swnew, dt)
+        vp, vs, rho,sw0, t = depth2time(z, vp, vs, rho,sw0,dt)
+        vp_sub, vs_sub, rho_sub, sw_sub, t = \
+          depth2time(z, vp_sub, vs_sub, rho_sub,swnew,dt)
+          
 
     
         scale = int(self.request.get("height")) * t / np.amax(t)
 
+        offset = 30
         ref = np.nan_to_num(akirichards(vp[0:-1], vs[0:-1], rho[0:-1],
                                         vp[1:], vs[1:], rho[1:],
                                         offset))
+        ref_sub = np.nan_to_num(akirichards(vp_sub[0:-1],
+                                            vs_sub[0:-1],
+                                            rho_sub[0:-1],vp_sub[1:],
+                                            vs_sub[1:],
+                                            rho_sub[1:],offset))
 
         wavelet = ricker(0.1, dt, frequency)
 
         synth = np.convolve(ref,wavelet, mode="same")
+        synth_sub = np.convolve(ref_sub,wavelet, mode="same")
         
         output = {"vp": tuple(vp), "vs": tuple(vs),
                   "rho": tuple(rho), "t": tuple(t),
+                  "sw": tuple(sw0),
                   "scale": tuple(scale),
-                  "sw": tuple(sw),
+                  "vp_sub": tuple(vp_sub),
+                  "vs_sub": tuple(vs_sub),
+                  "rho_sub": tuple(rho_sub),
                   "reflectivity": tuple(ref),
-                  "synthetic": tuple(synth)}
+                  "reflectivity_sub": tuple(ref_sub),
+                  "sw_sub": tuple(sw_sub),
+                  "synthetic": tuple(synth),
+                  "synthetic_sub": tuple(synth_sub)}
 
         self.response.write(json.dumps(output))
         

@@ -109,6 +109,7 @@ function FluidSub(image_div, image_height, image_width,
     add_interval(0,0,total_depth);
     add_interval(1, total_depth/2,total_depth/2);
 
+    $(menu_div).hide()
     create_menu();
 
     // --------------- end of init --------------------------- //
