@@ -115,7 +115,7 @@ def posterize(image):
 
 
 # should refactored to not use all the values at once
-def depth2time(z, vp, vs, rho,k, dt):
+def depth2time(z, vp, vs, rho,k1, dt):
 
     v_avg = np.cumsum(vp) / np.arange(z.size)
     t = 2 * z / v_avg  
@@ -125,8 +125,9 @@ def depth2time(z, vp, vs, rho,k, dt):
     new_vp = np.interp(new_t, t, vp)
     new_vs = np.interp(new_t, t, vs)
     new_rho = np.interp(new_t, t, rho)
-    new_k = np.interp(new_t, t, k)
-    return new_vp, new_vs, new_rho, new_k,new_t
+    new_k1 = np.interp(new_t, t, k1)
+ 
+    return new_vp, new_vs, new_rho, new_k1, new_t
         
 
 def akirichards(vp1, vs1, rho1, vp2, vs2, rho2, theta1):

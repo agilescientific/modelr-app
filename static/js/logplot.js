@@ -1,4 +1,5 @@
-function logPlot(log_group,property,label,offset, colour){
+function logPlot(log_group,property,label,offset, colour,
+		 dash){
 
    
 
@@ -52,12 +53,14 @@ function logPlot(log_group,property,label,offset, colour){
 
 	plot.selectAll("path").remove();
 
-	plot.append("path")
+	var line = plot.append("path")
             .attr("d", lineFunc(paired_data))
             .attr('stroke', colour)
             .attr('stroke-width', 1)
             .attr('fill', 'none');
-
+	if(dash){
+	    line.style("stroke-dasharray", ("3, 3"));
+	};
     }; // end of function update_plot
 };
 

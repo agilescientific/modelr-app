@@ -269,6 +269,9 @@ class RockHandler(ModelrAPI):
             rock.vs_std = float(self.request.get('vs_std'))
             rock.rho_std = float(self.request.get('rho_std'))
 
+            rock.porosity = float(self.request.get('porosity'))
+            rock.vclay = float(self.request.get('vclay'))
+
             rock.description = self.request.get('description')
             rock.name = self.request.get('name')
             rock.group = self.request.get('group')
@@ -316,6 +319,9 @@ class RockHandler(ModelrAPI):
             rock.vs_std = float(self.request.get('vs_std'))
             rock.rho_std = float(self.request.get('rho_std'))
 
+            rock.porosity = float(self.request.get('porosity'))
+            rock.vclay = float(self.request.get('vclay'))
+            
             rock.description = self.request.get('description')
             rock.name = self.request.get('name')
             rock.group = self.request.get('group')
@@ -509,7 +515,7 @@ class ModelData1DHandler(ModelrAPI):
         dz = 1
 
         rock_data = json.loads(self.request.get('rock_data'))
-        fluid_data = json.loads(self.request.get('fluid_data'))
+  
         # all the workings for fluid sub
         
         min_depth = rock_data[0]["depth"]
@@ -550,19 +556,17 @@ class ModelData1DHandler(ModelrAPI):
 
             # A little messy, we should abstract this query at
             # some point
-            rock = Rock.get_by_id(int(layer["db_key"]),
+            rock = Rock.get_by_id(int(layer["rock"]["db_key"]),
                                   parent=user)
             if not rock:
-                rock = Rock.get_by_id(int(layer["db_key"]),
+                rock = Rock.get_by_id(int(layer["rock"]["db_key"]),
                                       parent=admin_user)
             if not rock:
                 rock = Rock.all().filter("name =",
-                                         layer["name"]).get()
-                if not (rock.group in user.group) or (not rock):
+                                         layer["rock"]["name"]).get()
+                if (not rock) or not (rock.group in user.group):
                     raise Exception
             
-                    
-
             start_index = end_index
             end_index = start_index + np.ceil(layer["thickness"]/dz)
             if end_index > rho.size:
@@ -590,88 +594,80 @@ class ModelData1DHandler(ModelrAPI):
                 kw0[start_index:end_index] = rock_fluid.kw
                 khc0[start_index:end_index] = rock_fluid.khc
             except:
-                sw0[start_index:end_index] = np.nan
-                rhow0[start_index:end_index] = np.nan
-                rhohc0[start_index:end_index] = np.nan
-                kw0[start_index:end_index] = np.nan
-                khc0[start_index:end_index] = np.nan
+                sw0[start_index:end_index] = 1
+                rhow0[start_index:end_index] = 1
+                rhohc0[start_index:end_index] = 1
+                kw0[start_index:end_index] = 1
+                khc0[start_index:end_index] = 1
+                swnew[start_index:end_index] = 1
+                rhownew[start_index:end_index] = 1
+                rhohcnew[start_index:end_index] = 1
+                kwnew[start_index:end_index] = 1
+                khcnew[start_index:end_index] = 1
+
+            fluid_end = start_index
+            for subfluid in layer['subfluids']:
+
+                fluid_start = fluid_end
+
+                fluid_end = fluid_start + \
+                  np.ceil(subfluid["thickness"]/dz)
+
+                fluid = subfluid["fluid"]
+                
+                swnew[fluid_start:fluid_end] = fluid["sw"]
+                rhownew[fluid_start:fluid_end] = fluid["rho_w"]
+                rhohcnew[fluid_start:fluid_end] = fluid["rho_hc"]
+                kwnew[fluid_start:fluid_end] = fluid["k_w"]
+                khcnew[fluid_start:fluid_end] = fluid["k_hc"]
+            
+
+
+   
         
-            
-        # Do the new fluids
-        end_index = 0
-        for layer in fluid_data:
+        vp_sub,vs_sub,rho_sub = smith_fluidsub(vp, vs, rho, phi,
+                                               rhow0,rhohc0,
+                                               sw0, swnew, kw0,
+                                               khc0, kclay,
+                                               kqtz, vclay,
+                                               rhownew, rhohcnew,
+                                               kwnew, khcnew)
 
-            # Again we should abstract this at some point
-            fluid = Fluid.get_by_id(int(layer["db_key"]),
-                                  parent=user)
-            if not fluid:
-                fluid = Fluid.get_by_id(int(layer["db_key"]),
-                                      parent=admin_user)
-            if not fluid:
-                fluid = Fluid.all().filter("name =",
-                                         layer["name"]).get()
-                if not (fluid.group in user.group) or (not fluid):
-                    raise Exception
-            
-            start_index = end_index
-            end_index = start_index + np.ceil(layer["thickness"]/dz)
-            if end_index > z.size:
-                end_index = z.size
-            
+        vp, vs, rho,sw0, t = depth2time(z, vp, vs, rho,sw0,dt)
+        vp_sub, vs_sub, rho_sub, sw_sub, t = \
+          depth2time(z, vp_sub, vs_sub, rho_sub,swnew,dt)
+          
 
-            swnew[start_index:end_index] = fluid.sw
-            rhownew[start_index:end_index] = fluid.rho_w
-            rhohcnew[start_index:end_index] = fluid.rho_hc
-            kwnew[start_index:end_index] = fluid.kw
-            khcnew[start_index:end_index] = fluid.khc
-            
-            
-
-
-        # Fix the NAN (undefined rock fluids) so they are the same
-        nan_ind = np.isnan(sw0)
-        sw0[nan_ind] = swnew[nan_ind]
-        rhow0[nan_ind] = rhownew[nan_ind]
-        rhohc0[nan_ind] = rhownew[nan_ind]
-        kw0[nan_ind] = kwnew[nan_ind]
-        khc0[nan_ind] = khcnew[nan_ind]
-
-
-        print np.mean(vs)
-        # Fluid subs
-        vp,vs,rho = smith_fluidsub(vp, vs, rho, phi, rhow0,rhohc0,
-                                   sw0, swnew, kw0, khc0, kclay,
-                                   kqtz, vclay, rhownew, rhohcnew,
-                                   kwnew, khcnew)
-                                   
-
-        print np.mean(vp)
-        print np.mean(vs)
-        print np.mean(rho)
-        print(np.mean(vs), np.mean(vp), np.mean(rho),
-        np.mean(phi), np.mean(rhow0), np.mean(rhohc0),
-        np.mean(sw0), np.mean(swnew), np.mean(kw0),
-        np.mean(khc0), np.mean(kclay), np.mean(kqtz),
-        np.mean(vclay), np.mean(rhownew), np.mean(rhohcnew),
-        np.mean(kwnew), np.mean(khcnew))
-        
-        vp, vs, rho,sw, t = depth2time(z, vp, vs, rho,swnew, dt)
+    
         scale = int(self.request.get("height")) * t / np.amax(t)
 
+        offset = 30
         ref = np.nan_to_num(akirichards(vp[0:-1], vs[0:-1], rho[0:-1],
                                         vp[1:], vs[1:], rho[1:],
                                         offset))
+        ref_sub = np.nan_to_num(akirichards(vp_sub[0:-1],
+                                            vs_sub[0:-1],
+                                            rho_sub[0:-1],vp_sub[1:],
+                                            vs_sub[1:],
+                                            rho_sub[1:],offset))
 
         wavelet = ricker(0.1, dt, frequency)
 
         synth = np.convolve(ref,wavelet, mode="same")
+        synth_sub = np.convolve(ref_sub,wavelet, mode="same")
         
         output = {"vp": tuple(vp), "vs": tuple(vs),
                   "rho": tuple(rho), "t": tuple(t),
+                  "sw": tuple(sw0),
                   "scale": tuple(scale),
-                  "sw": tuple(sw),
+                  "vp_sub": tuple(vp_sub),
+                  "vs_sub": tuple(vs_sub),
+                  "rho_sub": tuple(rho_sub),
                   "reflectivity": tuple(ref),
-                  "synthetic": tuple(synth)}
+                  "reflectivity_sub": tuple(ref_sub),
+                  "sw_sub": tuple(sw_sub),
+                  "synthetic": tuple(synth),
+                  "synthetic_sub": tuple(synth_sub)}
 
         self.response.write(json.dumps(output))
         
@@ -951,7 +947,27 @@ class EarthModelHandler(ModelrAPI):
             print e
             self.response.out.write(json.dumps({'success':False}))
 
-    
+
+
+class UpdateCreditCard(ModelrAPI):
+
+    @authenticate
+    def post(self, user):
+
+
+        card_token = self.request.get("card_token")
+        
+        stripe_id = user.stripe_id
+
+        # Create the new credit card
+        customer = stripe.Customer.retrieve(stripe_id)
+        customer.sources.create(source=card_token)
+
+        # set as the default credit card
+        customer.default_source = card_token
+        customer.save()
+        
+        
 class ModelServed(ModelrAPI):
 
     def post(self):
