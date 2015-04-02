@@ -344,85 +344,85 @@ class DashboardHandler(ModelrPageRequest):
                     parent=ModelrParent.all().get()).put()
         self.response.out.write(html)
         
-class AboutHandler(ModelrPageRequest):
-    def get(self):
+# class AboutHandler(ModelrPageRequest):
+#     def get(self):
 
-        # Uptime robot API key for modelr.io
-        #ur_api_key_modelr_io = 'm775980219-706fc15f12e5b88e4e886992'
-        # Uptime Robot API key for modelr.org REL
-        #ur_api_key_modelr_org = 'm775980224-e2303a724f89ef0ab886558a'
-        # Uptime Robot API key for modelr.org DEV
-        #ur_api_key_modelr_org = 'm776083114-e34c154f2239e7c273a04dd4'
+#         # Uptime robot API key for modelr.io
+#         #ur_api_key_modelr_io = 'm775980219-706fc15f12e5b88e4e886992'
+#         # Uptime Robot API key for modelr.org REL
+#         #ur_api_key_modelr_org = 'm775980224-e2303a724f89ef0ab886558a'
+#         # Uptime Robot API key for modelr.org DEV
+#         #ur_api_key_modelr_org = 'm776083114-e34c154f2239e7c273a04dd4'
 
-        ur_api_key = 'u108622-bd0a3d1e36a1bf3698514173'
+#         ur_api_key = 'u108622-bd0a3d1e36a1bf3698514173'
 
-        # Uptime Robot IDs
-        ur_modelr_io = '775980219'
-        ur_modelr_org = '775980224'  # REL, usually
+#         # Uptime Robot IDs
+#         ur_modelr_io = '775980219'
+#         ur_modelr_org = '775980224'  # REL, usually
 
-        # Uptime Robot URL
-        ur_url = 'http://api.uptimerobot.com/getMonitors'
+#         # Uptime Robot URL
+#         ur_url = 'http://api.uptimerobot.com/getMonitors'
 
-        params = {'apiKey': ur_api_key,
-          'monitors': ur_modelr_io + '-' + ur_modelr_org,
-          'customuptimeratio': '30',
-          'format': 'json',
-          'nojsoncallback':'1',
-          'responseTimes':'1'
-         }
+#         params = {'apiKey': ur_api_key,
+#           'monitors': ur_modelr_io + '-' + ur_modelr_org,
+#           'customuptimeratio': '30',
+#           'format': 'json',
+#           'nojsoncallback':'1',
+#           'responseTimes':'1'
+#          }
 
-        # A dict is easily converted to an HTTP-safe query string.
-        ur_query = urllib.urlencode(params)
+#         # A dict is easily converted to an HTTP-safe query string.
+#         ur_query = urllib.urlencode(params)
 
-        # Opened URLs are file-like.
-        full_url = '{0}?{1}'.format(ur_url, ur_query)
-        try:
-            f = urllib2.urlopen(full_url)
-            raw_json = f.read()
+#         # Opened URLs are file-like.
+#         full_url = '{0}?{1}'.format(ur_url, ur_query)
+#         try:
+#             f = urllib2.urlopen(full_url)
+#             raw_json = f.read()
 
-        except Exception as e:
-            print "Failed to retrieve stats.",
-            print "Uptime Robot may be down:", e
+#         except Exception as e:
+#             print "Failed to retrieve stats.",
+#             print "Uptime Robot may be down:", e
 
-        user = self.verify()
-        models_served = ModelServedCount.all().get()
+#         user = self.verify()
+#         models_served = ModelServedCount.all().get()
 
-        try:
-            j = json.loads(raw_json)
+#         try:
+#             j = json.loads(raw_json)
             
-            ur_ratio = j['monitors']['monitor'][0]['customuptimeratio']
-            ur_server_ratio = j['monitors']['monitor'][1]['customuptimeratio']
-            ur_server_status_code = j['monitors']['monitor'][1]['status']
-            ur_last_response_time = j['monitors']['monitor'][0]['responsetime'][-1]['value']
-            ur_last_server_response_time = j['monitors']['monitor'][1]['responsetime'][-1]['value']
+#             ur_ratio = j['monitors']['monitor'][0]['customuptimeratio']
+#             ur_server_ratio = j['monitors']['monitor'][1]['customuptimeratio']
+#             ur_server_status_code = j['monitors']['monitor'][1]['status']
+#             ur_last_response_time = j['monitors']['monitor'][0]['responsetime'][-1]['value']
+#             ur_last_server_response_time = j['monitors']['monitor'][1]['responsetime'][-1]['value']
             
-            ur_server_status = UR_STATUS_DICT[ur_server_status_code].upper()
+#             ur_server_status = UR_STATUS_DICT[ur_server_status_code].upper()
             
-            template_params = \
-            self.get_base_params(user=user,
-                                 ur_ratio=ur_ratio,
-                                 ur_response_time=ur_last_response_time,
-                                 ur_server_ratio=ur_server_ratio,
-                                 ur_server_status=ur_server_status,
-                                 ur_server_response_time=ur_last_server_response_time,
-                                 models_served=models_served.count
-                                 )
-        except:
+#             template_params = \
+#             self.get_base_params(user=user,
+#                                  ur_ratio=ur_ratio,
+#                                  ur_response_time=ur_last_response_time,
+#                                  ur_server_ratio=ur_server_ratio,
+#                                  ur_server_status=ur_server_status,
+#                                  ur_server_response_time=ur_last_server_response_time,
+#                                  models_served=models_served.count
+#                                  )
+#         except:
 
-            template_params = \
-            self.get_base_params(user=user,
-                                 ur_ratio=None,
-                                 ur_response_time=None,
-                                 ur_server_ratio=None,
-                                 ur_server_status="Unknown",
-                                 ur_server_response_time=None,
-                                 models_served=models_served.count
-                                 )
+#             template_params = \
+#             self.get_base_params(user=user,
+#                                  ur_ratio=None,
+#                                  ur_response_time=None,
+#                                  ur_server_ratio=None,
+#                                  ur_server_status="Unknown",
+#                                  ur_server_response_time=None,
+#                                  models_served=models_served.count
+#                                  )
 
         
-        template = env.get_template('about.html')
-        html = template.render(template_params)
-        self.response.out.write(html)          
+#         template = env.get_template('about.html')
+#         html = template.render(template_params)
+#         self.response.out.write(html)          
      
 class AboutHandler(ModelrPageRequest):
     def get(self):
