@@ -947,7 +947,27 @@ class EarthModelHandler(ModelrAPI):
             print e
             self.response.out.write(json.dumps({'success':False}))
 
-    
+
+
+class UpdateCreditCard(ModelrAPI):
+
+    @authenticate
+    def post(self, user):
+
+
+        card_token = self.request.get("card_token")
+        
+        stripe_id = user.stripe_id
+
+        # Create the new credit card
+        customer = stripe.Customer.retrieve(stripe_id)
+        customer.sources.create(source=card_token)
+
+        # set as the default credit card
+        customer.default_source = card_token
+        customer.save()
+        
+        
 class ModelServed(ModelrAPI):
 
     def post(self):
