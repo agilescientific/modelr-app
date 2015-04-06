@@ -616,8 +616,9 @@ class ProfileHandler(ModelrPageRequest):
             if g:
                 groups.append(g[0])
         
-        template_params = self.get_base_params(user=user,
-                                               groups=groups)
+        template_params = \
+          self.get_base_params(user=user, groups=groups,
+                               stripe_key=stripe_public_key)
         
         if self.request.get("createfailed"):
             create_error = "Group name exists"

@@ -608,6 +608,7 @@ class EarthModelHandler(ModelrAPI):
     @authenticate
     def delete(self, user):
 
+        self.response.headers['Content-Type'] = 'application/json'
         try:
             # Get the root of the model
             input_model_key = self.request.get('input_image_id')
@@ -630,7 +631,31 @@ class EarthModelHandler(ModelrAPI):
             print e
             self.response.out.write(json.dumps({'success':False}))
 
-    
+
+
+class UpdateCreditCardHandler(ModelrAPI):
+    @authenticate
+    def post(self, user):
+
+
+        try:
+            card_token = self.request.get("card_token")
+            stripe_id = user.stripe_id
+
+            # Create the new credit card
+            customer = stripe.Customer.retrieve(stripe_id)
+            card = customer.sources.create(source=card_token)
+
+            # set as the default credit card
+            customer.default_source = card
+            customer.save()
+
+            self.response.write(json.dumps({"message": "successfully updated card"}))
+                                
+        except stripe.InvalidRequestError as e:
+            
+            self.response.write(json.dumps({"message":e.msg}))
+            
 class ModelServed(ModelrAPI):
 
     def post(self):
