@@ -675,7 +675,8 @@ function FluidSub(image_div, image_height, image_width,
 	
 	// drop down select
 	var select = rock_div.selectAll("select");
-	select.property("value", i);
+	rock_ind = rocks.indexOf(interval.rock);
+	select.property("value", rock_ind);
 	
 	// Fluid indicator
 	var fluid_div = div.select("#rock_fluid_div");
