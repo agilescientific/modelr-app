@@ -622,6 +622,18 @@ function FluidSub(image_div, image_height, image_width,
 
 	d.rock = rock;
 	d.colour = rock_cmap[rock.name];
+
+	if(d.rock.fluid){
+	    d.fluid_colour = fluid_cmap[d.rock.fluid]
+
+	    if (d.subfluids.length == 0){
+		var subfluid ={depth: d.depth,
+			       fluid: fluids[0],
+			       thickness: d.thickness};
+		subfluid.colour = fluid_cmap[subfluid.fluid.name];
+		d.subfluids = [subfluid];
+	    };
+	};
 	    
 	interval_menu(d);
 
