@@ -464,6 +464,7 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
 
         # All this is in a try incase the image format isn't accepted
         try:
+            
             # Read the image file
             reader = blobstore.BlobReader(blob_info.key())
 
@@ -517,7 +518,6 @@ class ModelData1DHandler(ModelrAPI):
         rock_data = json.loads(self.request.get('rock_data'))
   
         # all the workings for fluid sub
-        
         min_depth = rock_data[0]["depth"]
         max_depth = rock_data[-1]["depth"] + \
           rock_data[-1]["thickness"]
@@ -641,33 +641,34 @@ class ModelData1DHandler(ModelrAPI):
     
         scale = int(self.request.get("height")) * t / np.amax(t)
 
-        offset = 30
-        ref = np.nan_to_num(akirichards(vp[0:-1], vs[0:-1], rho[0:-1],
+        offset = np.linspace(0,30,10)
+        ref = [np.nan_to_num(akirichards(vp[0:-1], vs[0:-1], rho[0:-1],
                                         vp[1:], vs[1:], rho[1:],
-                                        offset))
-        ref_sub = np.nan_to_num(akirichards(vp_sub[0:-1],
+                                        theta))
+                                        for theta in offset]
+        ref_sub = [np.nan_to_num(akirichards(vp_sub[0:-1],
                                             vs_sub[0:-1],
                                             rho_sub[0:-1],vp_sub[1:],
                                             vs_sub[1:],
-                                            rho_sub[1:],offset))
+                                            rho_sub[1:],theta))
+                                            for theta in offset]
 
         wavelet = ricker(0.1, dt, frequency)
 
-        synth = np.convolve(ref,wavelet, mode="same")
-        synth_sub = np.convolve(ref_sub,wavelet, mode="same")
+        synth = [tuple(np.convolve(ref_t,wavelet, mode="same"))
+                 for ref_t in ref]
+        synth_sub = [tuple(np.convolve(ref_t,wavelet, mode="same"))
+                     for ref_t in ref_sub]
         
         output = {"vp": tuple(vp), "vs": tuple(vs),
                   "rho": tuple(rho), "t": tuple(t),
-                  "sw": tuple(sw0),
                   "scale": tuple(scale),
                   "vp_sub": tuple(vp_sub),
                   "vs_sub": tuple(vs_sub),
                   "rho_sub": tuple(rho_sub),
-                  "reflectivity": tuple(ref),
-                  "reflectivity_sub": tuple(ref_sub),
-                  "sw_sub": tuple(sw_sub),
-                  "synthetic": tuple(synth),
-                  "synthetic_sub": tuple(synth_sub)}
+                  "traces": synth,
+                  "theta": tuple(offset),
+                  "traces_sub": synth_sub}
 
         self.response.write(json.dumps(output))
         
