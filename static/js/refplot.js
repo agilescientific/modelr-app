@@ -49,10 +49,11 @@ function refPlot(log_group,property,label,offset, colour,
 
 	// Draw sticks for the reflectivities, instead of a line
 	plot.selectAll("rect")
-	    .data(data.reflectivity)
+	    .data(data[property])
 	    .enter()
 	    .append("rect")
 	    .attr("class", "rc-stick")
+	    .attr("fill", colour)
 	    .attr("x", function(d) {
 		if (d > 0) {
 		    return propScale(0);
@@ -61,12 +62,12 @@ function refPlot(log_group,property,label,offset, colour,
 		}
 	    })
 	    .attr("y", function(d, i) {
-		return i * (height / data.reflectivity.length);
+		return i * (height / data[property].length);
 	    })
 	    .attr("width", function(d) {
 		return Math.abs(d*100);
 	    })
-	    .attr("height", height / (1.2*data.reflectivity.length));
+	    .attr("height", height / (1.2*data[property].length));
 	
     }; // end of function update_plot
 

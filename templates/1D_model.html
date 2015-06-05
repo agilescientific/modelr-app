@@ -18,7 +18,7 @@
  }
 
  .menu-label {
-  font: 16px sans-serif;
+  font: 12px sans-serif;
  }
 
  .wiggle-fill {
@@ -57,7 +57,7 @@
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css" />
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
 
-<script src="/static/js/core.js"></script>
+<script src="/static/js/fluidsub.js"></script>
 <script src="/static/js/logplot.js"></script>
 <script src="/static/js/refplot.js"></script>
 <script src="/static/js/trace.js"></script>
@@ -80,8 +80,7 @@
 
    setup1D("#rock-model-container",500,200,db_rocks, db_fluids,
 	   colour_map, 10000,
-	   "#rock-menu", "#fluid-model-container",
-	   "#fluid-menu", "#plot-container",
+	   "#rock-menu", "#plot-container",
 	   "#reflectivity-menu", "#seismic-menu");
  }
  )
@@ -101,39 +100,15 @@
       <div class="model-plot"> <!-- Helps with CSS -->
         <div class="col-md-3" id="rock-model-container">
         </div>
-	<div class="col-md-3" id="fluid-model-container">
-	</div>
-        <div class="col-md-3" id="plot-container">
+        <div class="col-md-9" id="plot-container">
         </div>
-        <div class="col-md-3" id="data-container">
-        </div>
+  
       </div> <!-- End of model-plot -->
     </div> <!-- End of panel body -->
   </div> <!-- End of panel -->
 
-<div id="rock-menu" title="Rock menu">
+<div id="rock-menu" title="Interval menu" >
 </div>
-<div id="fluid-menu" title="Fluid menu">
-</div>
-<div id="reflectivity-menu" title="Reflectivity menu">
-
-  Zoepritz etc...
-</div>
-<div id="seismic-menu" title="Seismic menu">
-  <div class="row">
-    <label>Frequency</label>
-    <input type="range" min="5" max="100"
-	   id="frequency-slide">
-  </div>
-  <div class="row">
-
-      <label>Offset</label>
-
-
-      <input type="range" min="0" max="45" id="offset-slide">
-
-  </div>
-</div> <!-- End of container -->
 
 
 <script>
