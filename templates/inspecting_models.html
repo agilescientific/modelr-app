@@ -184,14 +184,11 @@
             <p>If you can see individual pixels, the image probably doesn't have enough resolution and your seismic experiment will suffer from sampling artifacts.</p>
 
             <h4 class="media-heading">Frequency</h4>
-            <p>By default, the number of traces in the synthetic will be the same 
-            as the width of the image in pixels. As a result, one way to add more
-            traces to your synthetic model is to boost the resolution of 
-            your input image. Note that large images will be slower to process.</p>
+            <p>BModify the frequency content of your wavelet. For Ricker wavelets, the range of center frequencies is 8-85 Hz. Please note that center frequency is not the same as bandwidth. See Agile blog post: <a href="http://www.agilegeoscience.com/blog/2011/6/9/f-is-for-frequency.html?rq=F%20is%20for%20frequency">F-is-for-Frequency</a>.
+            </p>
 
             <h4 class="media-heading">Phase</h4>
-            <p>The vertical scale is set after upload, so the aspect ratio can be essentially anything that allows
-            you to achieve the information density and geological complexity that you want to model.</p>
+            <p>Rotate the phase of the model wavelet. The default, which is set to zero, represents a maximum positive value for downward increase in impedance across an interface.</p>
 
             <h4 class="media-heading">Noise</h4>
             <p>Add noise to your model by modifying the signal to noise ratio slider. Noise is applied in the frequency domain in proportion to the bandwidth of the signal.</p>
