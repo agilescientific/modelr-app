@@ -46,8 +46,6 @@
     <div id="collapseOne" class="panel-collapse collapse">
       <div class="panel-body">
 
-      <p>When a synthetic model is generated a figure will appear in the results area showing 3 variable intensity images through the model’s domains: a spatial cross-section (t-x domain); an angle gather (t-theta domain); and a wavelet gather (t-F domain).</p>
-
       <p>Use the scene selector drop down menu to switch between the two view styles:</p>
 
         <div class="media">
@@ -56,7 +54,7 @@
           </a>
           <div class="media-body">
             <h4 class="media-heading">Spatial, angle, and wavelet</h4>
-            3 panels
+            <p>When a synthetic model is generated a figure will appear in the results area showing 3 variable intensity images through the model’s domains: a spatial cross-section (t-x domain); an angle gather (t-theta domain); and a wavelet gather (t-F domain).</p>
           </div>
         </div>
                 
@@ -72,44 +70,43 @@
       </div>
     </div>
   </div>
-  
+
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-          Wiggle trace
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
+          Parameter control panel
         </a>
       </h4>
     </div>
     
-    <div id="collapseTwo" class="panel-collapse collapse">
+    <div id="collapseFour" class="panel-collapse collapse">
       <div class="panel-body">
-        <p>The wiggle It is used to serve as a reference marker. Please note that it is the same trace for all panels. In some cases, the wiggle trace will appear wider or narrower within the wavelet gather. This happens because the wavelet gather increases in powers of 2 (not linearly), which causes some non-linear amplification when plotting the wiggle trace.
-        </p>
         <div class="media">
           <a class="pull-left" href="#">
-            <img class="media-object" src="/static/img/help/inspecting_models/sliders.png" alt="...">
+            <img class="media-object" src="/static/img/help/inspecting_models/sliders_noannot.png" alt="...">
           </a>
           <div class="media-body">
-            <h4 class="media-heading">Trace slider</h4>
-            <p>Use the <i>Trace</i> slider to move the position of the wiggle trace. </p>
-          </div>
+            <p><b>Scene selector</b> – Choose between a cross-section view, or view of the cross-section, angle gather and frequency gather with instantaneous amplitude plots.</p>
+              
+            <p><b>Trace</b> –Move the position of the wiggle trace along the spatial cross-seciton.</p>
 
-          <div class="media-body">
-            <h4 class="media-heading">Offset angle slider</h4>
-            <p>Use the <i>Offset angle</i> slider to move the position of the wiggle trace on the angle gather. </p>
-          </div>
+            <p><b>TWT</b> –Move the vertical position of the horizontal green location of corresponding to the instantaneous amplitude plots.</p>
 
-          <div class="media-body">
-            <h4 class="media-heading">Frequency slider</h4>
-            <p>Use the <i>Frequency</i> slider to change the center frequency of the wavelet shown in the spatial cross-section and angle gather.</p>
-          </div>
+            <p><b>Gain slider</b> –Since Modeler, uses normalized wavelets, the synthetic data is a direct band-limited representation of the reflectivity of the earth model. The gain of the seismic display may need to be increased to make small reflectivity contrasts visible. Values range between 0 and 10. The default is 1.</p>
 
-          <div class="media-body">
-            <h4 class="media-heading">Phase slider</h4>
-            <p>Use the <i>Phase</i> slider to change rotate the phase of the wavelet.</p>
-          </div>
+            <p><b>Offset angle</b> –Change the offset angle displayed on the cross-section and frequency gather panels. The default is zero;  normal incidence. Change this slider to simulate the appearance of partial offset stacks.</p>
 
+            <p><b>Frequency</b> – Modify the frequency content of your wavelet. For Ricker wavelets, the range of center frequencies is 8-85 Hz. Please note that center frequency is not the same as bandwidth. See Agile blog post: <a href="http://www.agilegeoscience.com/blog/2011/6/9/f-is-for-frequency.html?rq=F%20is%20for%20frequency">F-is-for-Frequency</a>.
+            </p>
+
+            <p><b>Phase</b> – Rotate the phase of the model wavelet. The default, which is set to zero, represents a maximum positive value for downward increase in impedance across an interface.</p>
+
+            <p><b>Signal:noise (dB)</b> – Add noise to your model by modifying the signal to noise ratio slider. Noise is applied in the frequency domain in proportion to the bandwidth of the signal.</p>
+          
+             <p><b>Wavelet selector</b> – Select from either Ricker or Ormsby wavelets. The Ricker wavelet is defined with a single center frequency using the Frequency slider.</p>
+
+          </div>
         </div>
       </div>
     </div>
@@ -119,7 +116,7 @@
     <div class="panel-heading">
       <h4 class="panel-title">
         <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
-        Instantaneous amplitude graphs
+          Using the instantaneous amplitude graphs
         </a>
       </h4>
     </div>
@@ -164,43 +161,6 @@
     </div>
   </div>
 
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
-        Using data sliders to modify model parameters
-        </a>
-      </h4>
-    </div>
-    
-    <div id="collapseFour" class="panel-collapse collapse">
-      <div class="panel-body">
-        <div class="media">
-          <a class="pull-left" href="#">
-            <img class="media-object" src="/static/img/help/inspecting_models/sliders_noannot.png" alt="...">
-          </a>
-          <div class="media-body">
-            <h4 class="media-heading">Gain slider</h4>
-            <p>If you can see individual pixels, the image probably doesn't have enough resolution and your seismic experiment will suffer from sampling artifacts.</p>
-
-            <h4 class="media-heading">Frequency</h4>
-            <p>BModify the frequency content of your wavelet. For Ricker wavelets, the range of center frequencies is 8-85 Hz. Please note that center frequency is not the same as bandwidth. See Agile blog post: <a href="http://www.agilegeoscience.com/blog/2011/6/9/f-is-for-frequency.html?rq=F%20is%20for%20frequency">F-is-for-Frequency</a>.
-            </p>
-
-            <h4 class="media-heading">Phase</h4>
-            <p>Rotate the phase of the model wavelet. The default, which is set to zero, represents a maximum positive value for downward increase in impedance across an interface.</p>
-
-            <h4 class="media-heading">Noise</h4>
-            <p>Add noise to your model by modifying the signal to noise ratio slider. Noise is applied in the frequency domain in proportion to the bandwidth of the signal.</p>
-          
-            <h4 class="media-heading">Wavelet</h4>
-            <p>Select from either Ricker or Ormsby wavelets. The Ricker wavelet is defined with a single center frequency using the Frequency slider.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
 <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
@@ -212,7 +172,7 @@
 
     <div id="collapseFive" class="panel-collapse collapse">
       <div class="panel-body">
-        <p>A table of elastic rock properties in SI units including:</p>
+        <p>The elastic properties of each rock contained within the earth model is returned in a table with SI units. The computed rock properties include:</p>
           <ul>
             <li>Acoustic impedance</li>
             <li>Poisson’s ratio (PR)</li>
