@@ -506,13 +506,12 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
 class ModelData1DHandler(ModelrAPI):
 
     @authenticate
-    def get(self, user):
+    def post(self, user):
 
 
         admin_user = User.all()\
                          .filter("user_id =", admin_id).get()
                          
-        dt = 0.004
         dz = 1
 
         rock_data = json.loads(self.request.get('rock_data'))
@@ -549,6 +548,8 @@ class ModelData1DHandler(ModelrAPI):
         # Seismic properties
         offset = float(self.request.get("offset"))
         frequency = float(self.request.get("frequency"))
+
+        dt = 1./(10*frequency)
         
         # Loop through each rock layer
         end_index = 0

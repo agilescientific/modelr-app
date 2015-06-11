@@ -62,13 +62,14 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
 
     function update_data(){
 	var offset = 10;
-	var frequency = 15;
+	var frequency = $("#frequency").val();
 	var rock_intervals = rock_core.intervals;
 
-	$.get("/1D_model_data",{rock_data:JSON.stringify(rock_intervals),
-				height: rock_image_height*.9,
-				offset: offset,
-				frequency: frequency},
+var json_load = {rock_data:JSON.stringify(rock_intervals),
+		 height: rock_image_height*.9,
+		 offset: offset,
+		 frequency: frequency};
+	$.post("/1D_model_data",json_load,
 	      function(data){
 		  data = JSON.parse(data);
 
