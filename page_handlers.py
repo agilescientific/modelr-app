@@ -846,27 +846,28 @@ class ProfileHandler(ModelrPageRequest):
             ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
-                    
+
             g_req = GroupRequest.all().ancestor(ModelrParent.all().get())
             g_req = g_req.filter("user =", user_id)
             g_req = g_req.filter("group =", group).fetch(100)
             for g in g_req:
                 g.delete()
-                
+
         err_string = '&'.join(err_string) if err_string else ''
         self.redirect('/profile?' + err_string)
-        
+
+
 class SettingsHandler(ModelrPageRequest):
 
     @authenticate
     def get(self, user):
-        
+
         template_params = self.get_base_params(user=user)
         template = env.get_template('settings.html')
         html = template.render(template_params)
         self.response.out.write(html)        
-            
-        
+
+
 class ForgotHandler(webapp2.RequestHandler):
     """
     Class for forgotten passwords
@@ -876,15 +877,15 @@ class ForgotHandler(webapp2.RequestHandler):
         template = env.get_template('forgot.html')
         html = template.render()
         self.response.out.write(html)
-        
+
     def post(self):
 
         email = self.request.get('email')
         template = env.get_template('message.html')
-        
+
         try:
             forgot_password(email, parent=ModelrParent.all().get())
-            
+
             msg = ("Please check your inbox and spam folder " +
                    "for our message. Then click on the link " +
                    "in the email.")
@@ -894,20 +895,20 @@ class ForgotHandler(webapp2.RequestHandler):
             html = template.render(error=e.msg)
             self.response.out.write(html)
 
+
 class ResetHandler(ModelrPageRequest):
     """
     Class for resetting passwords
     """
 
     @authenticate
-    def post(self,user):
-
+    def post(self, user):
         current_pword = self.request.get("current_pword")
         new_password = self.request.get("new_password")
         verify = self.request.get("verify")
 
         template = env.get_template('profile.html')
-        
+
         try:
             reset_password(user,current_pword,new_password,
                            verify)
@@ -916,26 +917,23 @@ class ResetHandler(ModelrPageRequest):
             self.response.out.write(html)
         except AuthExcept as e:
             html = template.render(user=user, error=e.msg)
-        
+
+
 class DeleteHandler(ModelrPageRequest):
     """
     Class for deleting account
 
-    There is some placeholder code below, and 
+    There is some placeholder code below, and
     also see delete_account() in ModAuth.py
 
     Steps:
-    
     1. Ask user if they are sure (Bootstrap modal in JS?)
        http://stackoverflow.com/questions/8982295/confirm-delete-modal-dialog-with-twitter-bootstrap
-
     2. Suspend Subscription with delete method in Stripe,
        using at_period_end=True (note, this is NOT the default)
        Docs > https://stripe.com/docs/api#cancel_subscription
-    
     3. Remove them from MailChimp customer list
        Docs > http://apidocs.mailchimp.com/api/2.0/lists/unsubscribe.php
-    
     4. Give them some confirmation by email?
        Some code in bogus function to do this now
 
@@ -945,8 +943,7 @@ class DeleteHandler(ModelrPageRequest):
     def post(self, user):
 
         template = env.get_template('message.html')
-            
-            
+
         try:
             cancel_subscription(user) 
             msg = "Unsubscribed from Modelr"
@@ -1007,7 +1004,7 @@ class SignUp(webapp2.RequestHandler):
                 html = template.render(email=email,
                                        error=msg)
                 self.response.out.write(html)
-                
+
 
 class EmailAuthentication(ModelrPageRequest):
     """
@@ -1076,7 +1073,7 @@ class EmailAuthentication(ModelrPageRequest):
                                        "maximum": 1})
             cp_url = ("https://soa-gw.canadapost.ca/rs/postoffice?%s"
                       % params)
-    
+
             headers = {"Accept": "application/vnd.cpc.postoffice+xml",
                        "Authorization": "Basic " + cp_key}
 
@@ -1092,9 +1089,9 @@ class EmailAuthentication(ModelrPageRequest):
                                        'postoffice}province'):
                     province.append(i.text)
                     tax_code = province[0]
-                    
+
                 tax = tax_dict.get(tax_code) * price
-        
+
                 # Add the tax to the invoice
                 stripe.InvoiceItem.create(customer=customer.id,
                                               amount = int(tax),
@@ -1105,7 +1102,7 @@ class EmailAuthentication(ModelrPageRequest):
 
                 send_message(subject="taxation failed for %s" %customer.id)
                 tax = 0
-            
+
         else:
             tax_code = country
             tax = 0
@@ -1133,10 +1130,10 @@ class EmailAuthentication(ModelrPageRequest):
                         "Customer ID: %s") %(email, customer.id))
             self.redirect('/signin?verified=false')
             raise
-        
+
         self.redirect('/signin?verified=true')
-                        
-        
+
+
 class SignIn(webapp2.RequestHandler):
 
     def get(self):       
@@ -1148,7 +1145,7 @@ class SignIn(webapp2.RequestHandler):
             msg = ("Your account has been created and your card has "
                    "been charged. Welcome to Modelr!" )
             error_msg = None
-      
+
         elif status == "false":
             error_msg = ("Failed to create account. Your credit card will "
                    "not be charged.")
@@ -1172,7 +1169,7 @@ class SignIn(webapp2.RequestHandler):
             signin(email, password, ModelrParent.all().get())
             cookie = get_cookie_string(email)
             self.response.headers.add_header('Set-Cookie', cookie)
-    
+
             if redirect:
                 self.redirect(redirect)
             else:
@@ -1185,7 +1182,7 @@ class SignIn(webapp2.RequestHandler):
                                    error=msg)
             self.response.out.write(html)
 
-                               
+
 class SignOut(ModelrPageRequest):
 
     @authenticate
@@ -1198,7 +1195,7 @@ class SignOut(ModelrPageRequest):
         self.response.headers.add_header('Set-Cookie',
                                          'user=""; Path=/')
         self.redirect('/')
-        
+
 
 class ManageGroup(ModelrPageRequest):
     """
@@ -1220,7 +1217,7 @@ class ManageGroup(ModelrPageRequest):
         if group.admin != user.user_id:
             self.redirect('/profile')
             return
-        
+
         users = []
         for user_id in group.allowed_users:
             u = User.all().ancestor(ModelrParent.all().get()).filter("user_id =",
@@ -1242,14 +1239,13 @@ class ManageGroup(ModelrPageRequest):
 
     @authenticate
     def post(self, user):
-
         group_name = self.request.get("group")
         group = Group.all().ancestor(ModelrParent.all().get())
         group = group.filter("name =", group_name).fetch(1)[0]
-        
+
         # remove a user
         rm_user = self.request.get("user")
-        
+
         if rm_user:
             u = User.all().ancestor(ModelrParent.all().get())
             u = u.filter("user_id =", int(rm_user)).fetch(1)
@@ -1267,7 +1263,7 @@ class ManageGroup(ModelrPageRequest):
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
             return
-        
+
         # abolish a group
         if (self.request.get("abolish") == "abolish"):
             for uid in group.allowed_users:
@@ -1283,29 +1279,30 @@ class ManageGroup(ModelrPageRequest):
                         parent=ModelrParent.all().get()).put()
             self.redirect('/profile')
             return
+
+
 class ModelBuilder(ModelrPageRequest):
 
     @authenticate
     def get(self, user):
-    
+
         params = self.get_base_params(user=user)
         template = env.get_template('model_builder.html')
         html = template.render(params)
         self.response.out.write(html)
-        
 
     @authenticate
     def post(self, user):
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
-        
+
         bucket = '/modelr_live_bucket/'
         filename = bucket + str(user.user_id) +'/' + str(time.time())
 
         encoded_image = self.request.get('image').split(',')[1]
         pic = base64.b64decode(encoded_image)
-        
+
         gcsfile = gcs.open(filename, 'w')
         gcsfile.write(pic)
 
@@ -1375,6 +1372,7 @@ class ModelHandler(ModelrPageRequest):
         template = env.get_template('model.html')
         html = template.render(params)
         self.response.out.write(html)
+
 
 class NotFoundPageHandler(ModelrPageRequest):
     def get(self):
@@ -1451,7 +1449,8 @@ class AdminHandler(ModelrPageRequest):
             template = env.get_template('admin_site.html')
             html = template.render()
             self.response.out.write(html)
-            
+
+
 class FixScenarios(ModelrPageRequest):
 
     def get(self):
@@ -1467,7 +1466,7 @@ class FixScenarios(ModelrPageRequest):
             args = data["arguments"]
 
             for key, value in args.iteritems():
-            
+
                 if key.startswith("Rock"):
 
                     rocks = Rock.all().ancestor(
@@ -1481,13 +1480,14 @@ class FixScenarios(ModelrPageRequest):
             data["arguments"] = args
             s.data = json.dumps(data).encode()
             s.put()
-                
-        self.response.out.write("oK")
+
+        self.response.out.write("OK")
+
 
 class FixModels(ModelrPageRequest):
 
     def get(self):
-        
+
         models = EarthModel.all().fetch(1000)
 
         for m in models:
@@ -1502,7 +1502,7 @@ class FixModels(ModelrPageRequest):
                 try:
                     rocks = Rock.all().ancestor(
                         ModelrParent.all().get())
-                    
+
                     rock = rocks.filter("name =", rock_name).get()
                     cmap[color]["key"] = rock.key().id()
                 except:
@@ -1510,9 +1510,7 @@ class FixModels(ModelrPageRequest):
             m.data = json.dumps(data).encode()
         self.response.write("OK")
 
-                
 
-        
 class FixDefaultRocks(ModelrPageRequest):
     ## Used to fix rocks in the database
     def get(self):
@@ -1522,20 +1520,20 @@ class FixDefaultRocks(ModelrPageRequest):
         admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
                                                             admin_id).get()
         for i in default_rocks:
-            
+
             rocks = Rock.all()
             rocks.filter("user =", admin_id)
-            rocks.filter("name =",i['name'] )
+            rocks.filter("name =", i['name'])
             rocks = rocks.fetch(100)
-        
+
             for r in rocks:
                 r.delete()
-    
+
             rock = Rock(parent=admin_user)
             rock.user = admin_id
             rock.name = i['name']
             rock.group = 'public'
-            
+
             rock.description = i['description']
 
             rock.vp = float(i['vp'])
@@ -1550,17 +1548,18 @@ class FixDefaultRocks(ModelrPageRequest):
             rock.put()
         self.response.out.write("oK")
 
+
 class ServerError(ModelrPageRequest):
 
     def post(self):
 
-        send_message("Server Down","Scripts did not populate")
+        send_message("Server Down", "Scripts did not populate")
+
 
 class Model1DHandler(ModelrPageRequest):
 
     @authenticate
     def get(self, user):
-
 
         admin_rocks = Rock.all().order("name").filter("user =",
                                                         admin_id)
@@ -1587,7 +1586,6 @@ class Model1DHandler(ModelrPageRequest):
             test.append({"name":rock.name,
                          "db_key": rock.key().id()})
 
-
         # Fluids. This should be refactored into a function
         admin_fluids = Fluid.all().order("name").filter("user =",
                                                       admin_id)
@@ -1595,7 +1593,7 @@ class Model1DHandler(ModelrPageRequest):
 
         user_fluids = Fluid.all().order("name").ancestor(user)
         user_fluids = user_fluids.fetch(100)
-        
+
         group_fluids = []
         for group in user.group:
             g_fluids = \
@@ -1604,7 +1602,6 @@ class Model1DHandler(ModelrPageRequest):
             group_fluids = group_fluids + g_fluids.fetch(100)
 
         all_fluids = user_fluids + group_fluids + admin_fluids
-        
         fluid_json = []
         test=[]
         for i, fluid in enumerate(all_fluids):
@@ -1613,18 +1610,14 @@ class Model1DHandler(ModelrPageRequest):
             test.append({"name":fluid.name,
                          "db_key": fluid.key().id()})
 
-            
         colour_map = json.dumps(colour_map)
         params = self.get_base_params(user=user,
                                       db_rocks=rock_json,
                                       db_fluids=fluid_json,
                                       test=test,
                                       colour_map=colour_map)
-        
+
         template = env.get_template('1D_model.html')
 
         html = template.render(params)
         self.response.write(html)
-
-
-        
