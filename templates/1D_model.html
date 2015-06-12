@@ -60,7 +60,7 @@
 <script src="/static/js/fluidsub.js"></script>
 <script src="/static/js/logplot.js"></script>
 <script src="/static/js/refplot.js"></script>
-<script src="/static/js/trace.js"></script>
+<script src="/static/js/gatherPlot.js"></script>
 <script src="/static/js/1D_model.js"></script>
 
 <script>
@@ -107,7 +107,15 @@
     </div> <!-- End of panel body -->
   </div> <!-- End of panel -->
 
-<div id="rock-menu" title="Interval menu" >
+<div id="rock-menu" title="Interval Menu" >
+</div>
+
+<div id="seismic-menu" title="Seismic Menu">
+  Frequency:
+  <input type="range" min="3" max="100" id="frequency" value="30">
+  <div id="frequency-label">
+    30
+  </div>
 </div>
 
 

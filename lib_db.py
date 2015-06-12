@@ -15,23 +15,26 @@ class ModelrParent(db.Model):
     """
     pass
 
+
 class UserID(db.Model):
     next_id = db.IntegerProperty()
+
 
 class ModelServedCount(db.Model):
     """
     Item to keep track of how many models have been served by modelr
     """
     count = db.IntegerProperty()
-    
+
+
 class Issue(db.Model):
     """
     Item for GitHub issues for voting
     """
     issue_id = db.IntegerProperty()
     vote = db.IntegerProperty()
-    
-    
+
+
 class User(db.Model):
 
     user_id = db.IntegerProperty()
@@ -43,19 +46,21 @@ class User(db.Model):
     tax_code = db.StringProperty()
     unsubscribed = db.BooleanProperty(default=False)
 
+
 class ActivityLog(db.Model):
 
     user_id = db.IntegerProperty()
     activity = db.StringProperty()
     date = db.DateTimeProperty(auto_now_add=True)
-    
+
+
 class VerifyUser(User):
     """
     Temporary user objects to store user information while we wait
     for a confirmation
     """
     temp_id = db.StringProperty()
-    
+
 
 class Item(db.Model):
     """
@@ -65,72 +70,74 @@ class Item(db.Model):
     group = db.StringProperty()
     date = db.DateTimeProperty(auto_now_add=True)
 
-    
+
 class Group(db.Model):
 
     name = db.StringProperty()
     allowed_users = db.ListProperty(int)
     admin = db.IntegerProperty()
 
+
 class GroupRequest(db.Model):
 
     user = db.IntegerProperty()
     group = db.StringProperty()
 
+
 class ImageModel(Item):
-    
     image = blobstore.BlobReferenceProperty()
 
-# sub class for the fluid model
+
 class FluidModel(Item):
     image = blobstore.BlobReferenceProperty()
     name = db.StringProperty(multiline=False)
 
-        
-    
+
 class EarthModel(Item):
 
     name = db.StringProperty(multiline=False)
     data = db.BlobProperty()
-     
+
+
 class Forward2DModel(Item):
 
     name = db.StringProperty(multiline=False)
     input_model_key = db.StringProperty()
     output_image = blobstore.BlobReferenceProperty()
     data = db.BlobProperty()
-    
+
+
 class Scenario(Item):
     '''
-    Database of Scenarios 
+    Database of Scenarios
     '''
     name = db.StringProperty(multiline=False)
     data = db.BlobProperty()
+
 
 class Rock(Item):
     """
     Database of Rocks
     """
-    
+
     name = db.StringProperty(multiline=False)
     description = db.StringProperty(multiline=True)
 
     vp = db.FloatProperty()
     vs = db.FloatProperty()
     rho = db.FloatProperty()
-    
-    porosity = db.FloatProperty(default=0.5)
-    vclay = db.FloatProperty(default=2500.0)
+
+    porosity = db.FloatProperty(default=0.2)
+    vclay = db.FloatProperty(default=0.5)
 
     kclay = db.FloatProperty(default=25000000000.)
     kqtz = db.FloatProperty(default=37000000000.)
-    
+
     vp_std = db.FloatProperty()
     vs_std = db.FloatProperty()
     rho_std = db.FloatProperty()
 
     fluid_key = db.ReferenceProperty()
-
 
     @property
     def fluid(self):
@@ -149,7 +156,7 @@ class Rock(Item):
             return fid
         except:
             return None
-            
+
     @property
     def json(self):
 
@@ -171,7 +178,7 @@ class Rock(Item):
         """
         Calculates and returns the shear modulus mu
         """
-        return (self.rho * self.vs^2.0)
+        return (self.rho * self.vs**2.0)
 
     @property
     def M(self):
@@ -179,8 +186,7 @@ class Rock(Item):
         Compression modulus
         """
 
-        return (self.rho * self.vp^2.0)
-    
+        return (self.rho * self.vp**2.0)
 
     @property
     def K(self):
@@ -188,11 +194,9 @@ class Rock(Item):
         Calculates and returns the bulk modulus
         """
         return (self.M - (4.0/3)*self.mu)
-        
 
 
 class Fluid(Item):
-
 
     name = db.StringProperty(multiline=False)
     description = db.StringProperty(multiline=True)
@@ -204,8 +208,6 @@ class Fluid(Item):
     kw = db.FloatProperty(default=2950000000.)
 
     sw = db.FloatProperty(default=0.4)
-    
-    
 
     @property
     def json(self):
@@ -217,12 +219,8 @@ class Fluid(Item):
                            "name": self.name,
                            "description": self.description,
                            "db_key": self.key().id()})
-    
 
-    
+
 class Server(db.Model):
 
     host = db.StringProperty()
-
-    
-    
