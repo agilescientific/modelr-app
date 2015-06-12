@@ -50,51 +50,44 @@ setup1D = function(rock_div, rock_image_height, rock_image_width,
     var rhosubPlot = new logPlot(log_group, "rho_sub","Rho", 120, 
 			      "blue", true);
 
-    var kPlot = new logPlot(log_group, "sw","Sw", 160, "green", 
-			    false);
-    var ksubPlot = new logPlot(log_group, "sw_sub","Sw", 160, "green",
-			       true);
 
-    var reflectPlot = new refPlot(log_group, "reflectivity", "Ref",
-				  200, "black", ref_menu_div);
+    var seismicPlot = new gatherPlot(log_group, 200,'traces','F0',
+				     seismic_menu_div);
 
-    var reflectsubPlot = new refPlot(log_group, "reflectivity_sub", 
-				  "Ref",
-				  200, "red", ref_menu_div);
-
-    var seismicPlot = new tracePlot(log_group, "synthetic", "Syn",
-				    280, "black", seismic_menu_div);
-
-    var seismicsubPlot = new tracePlot(log_group, "synthetic_sub", "Syn sub.",
-				    360, "black", seismic_menu_div);
+    var seismicsubPlot = new gatherPlot(log_group,360,'traces_sub', 
+					'Fsub',
+					seismic_menu_div);
 
     update_data();
 
     function update_data(){
 	var offset = 10;
-	var frequency = 15;
+	var frequency = $("#frequency").val();
 	var rock_intervals = rock_core.intervals;
 
-	$.get("/1D_model_data",{rock_data:JSON.stringify(rock_intervals),
-				height: rock_image_height*.9,
-				offset: offset,
-				frequency: frequency},
+var json_load = {rock_data:JSON.stringify(rock_intervals),
+		 height: rock_image_height*.9,
+		 offset: offset,
+		 frequency: frequency};
+	$.post("/1D_model_data",json_load,
 	      function(data){
 		  data = JSON.parse(data);
+
 		  vpPlot.update_plot(data);
 		  vsPlot.update_plot(data);
+
 		  rhoPlot.update_plot(data);
-		  reflectPlot.update_plot(data, .9*rock_image_height);
+		  rhosubPlot.update_plot(data);
+	
 		  vpsubPlot.update_plot(data);
 		  vssubPlot.update_plot(data);
-		  rhosubPlot.update_plot(data);
-		  reflectsubPlot.update_plot(data, .9*rock_image_height);
+	
 		  seismicPlot.update_plot(data,.9*rock_image_height);
 		  seismicsubPlot.update_plot(data,.9*rock_image_height);
-		  kPlot.update_plot(data, .9*rock_image_height);
-		  ksubPlot.update_plot(data, .9*rock_image_height);
+	
 		  tScale.domain(data.t);
 		  tScale.range(data.scale);
+		  
 		  tAxis.scale(tScale);
 		  log_group.call(tAxis);
 	      }

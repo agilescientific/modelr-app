@@ -64,6 +64,7 @@ function tracePlot(log_group,property,label,offset, colour,
 	plot.append("path")
 	    .attr("class", 'wiggle-fill')
 	    .attr("d", synthFill(paired_data));
+
 	// Rather than slapping a rect on top
 	// I think it would be better to use a clipPath
 	plot.append("rect")

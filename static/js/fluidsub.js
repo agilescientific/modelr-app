@@ -622,6 +622,18 @@ function FluidSub(image_div, image_height, image_width,
 
 	d.rock = rock;
 	d.colour = rock_cmap[rock.name];
+
+	if(d.rock.fluid){
+	    d.fluid_colour = fluid_cmap[d.rock.fluid]
+
+	    if (d.subfluids.length == 0){
+		var subfluid ={depth: d.depth,
+			       fluid: fluids[0],
+			       thickness: d.thickness};
+		subfluid.colour = fluid_cmap[subfluid.fluid.name];
+		d.subfluids = [subfluid];
+	    };
+	};
 	    
 	interval_menu(d);
 
@@ -663,7 +675,8 @@ function FluidSub(image_div, image_height, image_width,
 	
 	// drop down select
 	var select = rock_div.selectAll("select");
-	select.property("value", i);
+	rock_ind = rocks.indexOf(interval.rock);
+	select.property("value", rock_ind);
 	
 	// Fluid indicator
 	var fluid_div = div.select("#rock_fluid_div");
