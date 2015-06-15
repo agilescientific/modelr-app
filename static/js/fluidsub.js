@@ -66,8 +66,8 @@ function FluidSub(image_div, image_height, image_width,
         .attr("style", "color:blue")
         .attr("text-anchor", "beginning")
         .attr("y", -10) 
-        .attr("x", 50)
-        .text("Rocks");
+        .attr("x", 55)
+        .text("Rock");
 
     rgroup.append("text")
         .attr("class", "y-label")
@@ -75,15 +75,15 @@ function FluidSub(image_div, image_height, image_width,
         .attr("text-anchor", "beginning")
         .attr("y", -10) 
         .attr("x", 100)
-        .text("F0");
+        .text("F\u2080");
 
     rgroup.append("text")
         .attr("class", "y-label")
         .attr("style", "color:blue")
         .attr("text-anchor", "beginning")
         .attr("y", -10) 
-        .attr("x", 120)
-        .text("Fs");
+        .attr("x", 122)
+        .text("F\u209B");
 
     var yAxis = d3.svg.axis()
         .scale(scale)
@@ -206,7 +206,7 @@ function FluidSub(image_div, image_height, image_width,
   var interval = rock_intervals.selectAll("g")
       .data(intervals)
       .on("click", function(d,i){
-        if (d3.event.altKey){
+        if (d3.event.altKey | d3.event.ctrlKey){
             interval_menu(d, i);
             $(menu_div).show();
             $(menu_div).dialog();

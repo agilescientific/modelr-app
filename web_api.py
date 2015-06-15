@@ -565,7 +565,7 @@ class ModelData1DHandler(ModelrAPI):
         offset = float(self.request.get("offset"))
         frequency = float(self.request.get("frequency"))
 
-        dt = 1./(10*frequency)
+        dt = 1./(1000)
         
         # Loop through each rock layer
         end_index = 0

@@ -105,7 +105,7 @@ function gatherPlot(svg_group, offset, key, label,seis_menu){
 		    .attr("fill", 'white')
 		    .attr("stroke", 'white');
 		
-		if(wiggle_hack = 1){
+		if(wiggle_hack == 1){
 		    plot.append("path")
 			.attr("class", 'wiggle-line')
 			.attr("d", lineFunc(paired_data));
