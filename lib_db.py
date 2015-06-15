@@ -122,6 +122,7 @@ class Rock(Item):
 
     name = db.StringProperty(multiline=False)
     description = db.StringProperty(multiline=True)
+    tag = db.StringProperty(multiline=True)
 
     vp = db.FloatProperty()
     vs = db.FloatProperty()
@@ -201,6 +202,7 @@ class Fluid(Item):
 
     name = db.StringProperty(multiline=False)
     description = db.StringProperty(multiline=True)
+    tag = db.StringProperty(multiline=True)
 
     rho_hc = db.FloatProperty(default=250.)
     rho_w = db.FloatProperty(default=1040.)
@@ -219,6 +221,7 @@ class Fluid(Item):
                            "sw": self.sw,
                            "name": self.name,
                            "description": self.description,
+                           "tag": self.tag,
                            "db_key": self.key().id()})
 
 
