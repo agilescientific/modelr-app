@@ -278,10 +278,16 @@ class RockHandler(ModelrAPI):
 
             try:
                 fluid_id = self.request.get("rock-fluid")
+
+                print fluid_id
+                if fluid_id != "None":
         
-                fluid = Fluid.get_by_id(int(fluid_id),
-                                        parent=user)
-                rock.fluid_key = fluid.key()
+                    fluid = Fluid.get_by_id(int(fluid_id),
+                                            parent=user)
+                    rock.fluid_key = fluid.key()
+                else:
+                    rock.fluid_key = None
+                    
             except Exception as e:
                 print e
 
@@ -327,10 +333,18 @@ class RockHandler(ModelrAPI):
             rock.group = self.request.get('group')
          
             try:
+            
                 fluid_id = self.request.get("rock-fluid")
-                fluid = Fluid.get_by_id(int(fluid_id),
-                                        parent=user).key()
+
+                if fluid_id != "None":
+                    fluid = Fluid.get_by_id(int(fluid_id),
+                                            parent=user).key()
+                else:
+                    fluid = None
+
+                print "FLUID KEY", fluid
                 rock.fluid_key = fluid
+                
             except:
                 pass
             
@@ -340,10 +354,12 @@ class RockHandler(ModelrAPI):
 
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.out.write('All OK!!')
+            
         except Exception as e:
             # Write out error message
             print e
-            pass 
+            pass
+        
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!') 
         return
