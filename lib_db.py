@@ -168,7 +168,7 @@ class Rock(Item):
                            "vs_std": self.vs_std,
                            "rho_std": self.rho_std,
                            "description": self.description,
-                           "tag": self.tag
+                           "tag": self.tag,
                            "fluid": self.fluid,
                            "fluid_id": self.fluid_id,
                            "name": self.name,
