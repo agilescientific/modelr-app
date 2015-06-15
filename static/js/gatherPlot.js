@@ -1,4 +1,4 @@
-function gatherPlot(svg_group, offset, key, label,seis_menu){
+function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 
 
 
@@ -24,17 +24,17 @@ function gatherPlot(svg_group, offset, key, label,seis_menu){
     var thetaAxis = d3.svg.axis().scale(thetaScale).orient("bottom")
 	.ticks(5);
 
-    var thetaGroup = plot.append("g").attr("transform", 
-					    "translate(0,450)");
+    //var thetaGroup = plot.append("g").attr("transform", 
+					    //"translate(0,450)");
 
-    thetaGroup.call(thetaAxis);
+    //thetaGroup.call(thetaAxis);
 
 
     // Axis labels
     plot.append("text")
 	.attr("class", "y-label")
 	.attr("text-anchor", "middle")
-	.attr("y", -10)
+	.attr("y", -height*0.05)
 	.attr("x", 40)
 	.text(label)
 	.on("click", show_menu)

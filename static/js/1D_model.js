@@ -7,7 +7,7 @@ setup1D = function(rock_div,
     var fluid_title = "Fluid core";
 
     // total canvas dimensions
-    var width = 600;
+    var width = 900;
     var height = 600;
 
     // initialize the canvas
@@ -21,10 +21,8 @@ setup1D = function(rock_div,
     widthScale = d3.scale.linear().range([0,width])
 	.domain([0,1]);
 
-
-
     // Rock core
-    core_width = widthScale(0.25);
+    core_width = widthScale(0.2);
     core_height = heightScale(.8);
     core_x = widthScale(0);
     core_y = heightScale(.1);
@@ -43,60 +41,80 @@ setup1D = function(rock_div,
 
 
 
-    // Setup the log plots
-    var plot_svg = d3.select(plot_div).append("svg")
-	.attr("height", height)
-	.attr("width", width);
-
-
-    var logXOffset = widthScale(.1);
-    var logYOffset = heightScale(0);
-    var log_group = plot_svg.append("g").attr("id", "log-group")
+    // Make the log plots
+    var logXOffset = widthScale(.4);
+    var logYOffset = heightScale(.1);
+    var log_group = canvas.append("g").attr("id", "log-group")
 	.attr("transform", "translate(" + logXOffset.toString() +',' +
 	      logYOffset.toString() + ")");
 
-    console.log(logXOffset);
+    var logWidth = d3.scale.linear()
+	.range([0, widthScale(.2)]).domain([0,1]);
 
     // Draw the time axis
     var tScale = d3.scale.linear()
-	.range(0, .9*height);
+	.range(0, heightScale(.9));
     var tAxis = d3.svg.axis()
 	.orient("right")
 	.ticks(5);
 
     // Axis label (done horizontally then rotated)
-    plot_svg.append("text")
+    log_group.append("text")
 	.attr("class", "y-label")
 	.attr("text-anchor", "end")
-	.attr("y", 6)
-	.attr("x", -50)
+	.attr("y", widthScale(-.025))
+	.attr("x",heightScale(-.08))
 	.attr("dy", ".75em")
 	.attr("transform", "rotate(-90)")
 	.text("time [s]");
 
 
-    var log_width = 20;
-    var vpPlot = new logPlot(log_group, "vp", "",40, log_width,"black",
-			     false);
+    
+    var vpPlot = new logPlot(log_group, "vp", "",logWidth(.2), 
+			     logWidth(.2),heightScale(.8),"black",false);
     var vpsubPlot = new logPlot(log_group, "vp_sub", "V\u209A",
-				40, log_width, "black", true);
+				logWidth(.2),
+				logWidth(.2),heightScale(.8),
+				"black", true);
 
-    var vsPlot = new logPlot(log_group, "vs", "",80, "red", false);
-    var vssubPlot = new logPlot(log_group, "vs_sub", "V\u209B",80, 
-				"red",
-				true);
+    var vsPlot = new logPlot(log_group, "vs", "",logWidth(.5), 
+			     logWidth(.2),heightScale(.8), "red", 
+			     false);
+    var vssubPlot = new logPlot(log_group, "vs_sub", "V\u209B",
+				logWidth(.5), logWidth(.2), 
+				heightScale(.8),
+				"red", true);
 
-    var rhoPlot = new logPlot(log_group, "rho","", 120, "blue", 
-			      false);
-    var rhosubPlot = new logPlot(log_group, "rho_sub","\u03C1", 120, 
-			      "blue", true);
+    var rhoPlot = new logPlot(log_group, "rho","", logWidth(.8),
+			      logWidth(.2), heightScale(.8),
+			      "blue",false);
+    var rhosubPlot = new logPlot(log_group, "rho_sub","\u03C1", 
+				 logWidth(.8), logWidth(.2), 
+				 heightScale(.8),
+				 "blue", true);
 
 
-    var seismicPlot = new gatherPlot(log_group, 200,'traces',
+
+
+    // Make the gather plots
+    var gatherXOffset = widthScale(.65);
+    var gatherYOffset = heightScale(.1);
+    var gather_group = canvas.append("g").attr("id", "log-group")
+	.attr("transform", "translate(" + gatherXOffset.toString() +',' +
+	      gatherYOffset.toString() + ")");
+
+
+
+    var seismicPlot = new gatherPlot(gather_group, 0,
+				     heightScale(.8),
+				     'traces',
 				     'F\u2080 synthetic',
+				    
 				     seismic_menu_div);
-
-    var seismicsubPlot = new gatherPlot(log_group,360,'traces_sub', 
+    
+    var seismicsubPlot = new gatherPlot(gather_group,widthScale(.15),
+					heightScale(.8),
+					'traces_sub', 
 					'F\u209B synthetic',
 					seismic_menu_div);
 
@@ -107,8 +125,8 @@ setup1D = function(rock_div,
 	var frequency = $("#frequency").val();
 	var rock_intervals = rock_core.intervals;
 
-var json_load = {rock_data:JSON.stringify(rock_intervals),
-		 height: rock_image_height*.9,
+	var json_load = {rock_data:JSON.stringify(rock_intervals),
+		 height: heightScale(.8),
 		 offset: offset,
 		 frequency: frequency};
 
@@ -125,9 +143,9 @@ var json_load = {rock_data:JSON.stringify(rock_intervals),
 		  vpsubPlot.update_plot(data);
 		  vssubPlot.update_plot(data);
 	
-		  seismicPlot.update_plot(data,.9*rock_image_height);
+		  seismicPlot.update_plot(data,.9*height);
 		  seismicsubPlot.update_plot(data,
-					     .9*rock_image_height);
+					     .9*height);
 	
 		  tScale.domain(data.t);
 		  tScale.range(data.scale);

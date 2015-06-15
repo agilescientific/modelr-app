@@ -266,8 +266,8 @@ function FluidSub(canvas,core_width, core_height,
 		  {return d.colour;})
 	    .attr("y", update_depth)
 	    .attr("height",update_thickness)
-	    .attr("x", "60")
-	    .attr("width", "10")
+	    .attr("x", rock_width + xScale(.2) + fluid_width)
+	    .attr("width", fluid_width)
 	    .attr("cursor","crosshair")
 	    .on("click", add_fluidsub_top)
 	    .on("contextmenu", delete_subfluid);
@@ -288,7 +288,8 @@ function FluidSub(canvas,core_width, core_height,
 	    .attr("y2", update_depth);
 
 	fluid_tops.enter().append("line")
-	    .attr("x1", 60).attr("x2", 70)
+	    .attr("x1", rock_width + xScale(.2)+fluid_width)
+	    .attr("x2", rock_width + xScale(.2) + 2*fluid_width)
 	    .attr("y1", update_depth).attr("y2", update_depth)
 	    .attr("id", "fluidtop")
 	    .attr("cursor", "ns-resize")

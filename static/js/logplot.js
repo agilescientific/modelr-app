@@ -1,7 +1,8 @@
-function logPlot(log_group,property,label,offset, width, colour,
-		 dash){
+function logPlot(log_group,property,label,offset, width, 
+		 height, colour,dash){
 
-   
+
+
 
     var propScale = d3.scale.linear() 
 	.range([0,20]);
@@ -16,7 +17,7 @@ function logPlot(log_group,property,label,offset, width, colour,
     plot.append("text")
 	.attr("class", "y-label")
 	.attr("text-anchor", "start")
-	.attr("y", -10)
+	.attr("y", -.05*height)
 	.attr("x", 2)
 	.text(label);
 
