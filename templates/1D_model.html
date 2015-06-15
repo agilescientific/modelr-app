@@ -78,7 +78,7 @@
      db_fluids[i] = JSON.parse(db_fluids[i]);
    };
 
-   setup1D("#rock-model-container",500,200,db_rocks, db_fluids,
+   setup1D("#rock-model-container",db_rocks, db_fluids,
 	   colour_map, 10000,
 	   "#rock-menu", "#plot-container",
 	   "#reflectivity-menu", "#seismic-menu");
@@ -98,9 +98,7 @@
     <div class="panel-body">
       <p class="lead"> Drag tops to move them. Left-click layers to insert new tops. Right-click layers to delete them.</p>
       <div class="model-plot"> <!-- Helps with CSS -->
-        <div class="col-md-3" id="rock-model-container">
-        </div>
-        <div class="col-md-9" id="plot-container">
+        <div class="col-md-12" id="plot-container">
         </div>
   
       </div> <!-- End of model-plot -->

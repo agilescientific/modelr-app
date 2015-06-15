@@ -15,21 +15,27 @@ function gatherPlot(svg_group, offset, key, label,seis_menu){
 	.range([0, 3.5]);
 
     var thetaScale = d3.scale.linear()
-	.range([0,10]);
+	.range([0,10]).domain([0,5]);
 
     var plot = svg_group.append("g")
 	.attr("transform", "translate("+offset.toString()+",0)");
 
 
+    var thetaAxis = d3.svg.axis().scale(thetaScale).orient("bottom")
+	.ticks(5);
 
+    var thetaGroup = plot.append("g").attr("transform", 
+					    "translate(0,450)");
+
+    thetaGroup.call(thetaAxis);
 
 
     // Axis labels
     plot.append("text")
 	.attr("class", "y-label")
 	.attr("text-anchor", "middle")
-	.attr("y", -25)
-	.attr("x", 25)
+	.attr("y", -10)
+	.attr("x", 40)
 	.text(label)
 	.on("click", show_menu)
 	.attr("cursor", "pointer");
@@ -90,21 +96,22 @@ function gatherPlot(svg_group, offset, key, label,seis_menu){
 		    });
 		
 
-		// Draw the trace
-		plot.append("path")
-		    .attr("class", 'wiggle-fill')
-		    .attr("d", lineFunc(paired_data));
-		
-		/// Rather than slapping a rect on top
-		// I think it would be better to use a clipPath
-		plot.append("rect")
-	    	    .attr("x", ampScale(0))
-		    .attr("y", tScale(0))
-		    .attr("width", ampScale(1))
-		    .attr("height", height)
-		    .attr("fill", 'white')
-		    .attr("stroke", 'white');
-		
+		if(wiggle_hack == 0){
+		    // Draw the trace
+		    plot.append("path")
+			.attr("class", 'wiggle-fill')
+			.attr("d", lineFunc(paired_data));
+		    
+		    /// Rather than slapping a rect on top
+		    // I think it would be better to use a clipPath
+		    plot.append("rect")
+	    		.attr("x", ampScale(0))
+			.attr("y", tScale(0))
+			.attr("width", ampScale(1))
+			.attr("height", height)
+			.attr("fill", 'white')
+			.attr("stroke", 'white');
+		}
 		if(wiggle_hack == 1){
 		    plot.append("path")
 			.attr("class", 'wiggle-line')

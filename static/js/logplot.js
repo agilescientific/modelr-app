@@ -1,4 +1,4 @@
-function logPlot(log_group,property,label,offset, colour,
+function logPlot(log_group,property,label,offset, width, colour,
 		 dash){
 
    
@@ -16,8 +16,8 @@ function logPlot(log_group,property,label,offset, colour,
     plot.append("text")
 	.attr("class", "y-label")
 	.attr("text-anchor", "start")
-	.attr("y", -25)
-	.attr("x", 0)
+	.attr("y", -10)
+	.attr("x", 2)
 	.text(label);
 
 

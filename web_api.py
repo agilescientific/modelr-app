@@ -279,7 +279,6 @@ class RockHandler(ModelrAPI):
             try:
                 fluid_id = self.request.get("rock-fluid")
 
-                print fluid_id
                 if fluid_id != "None":
         
                     fluid = Fluid.get_by_id(int(fluid_id),
