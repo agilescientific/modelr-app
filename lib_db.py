@@ -146,7 +146,6 @@ class Rock(Item):
             name = self.fluid_key.name
             return name
         except Exception as e:
-            print e
             return ""
 
     @property
@@ -156,7 +155,6 @@ class Rock(Item):
             fid = self.fluid_key.key().id()
             return fid
         except Exception as e:
-            print e
             return None
 
     @property
