@@ -206,10 +206,10 @@ class Fluid(Item):
     rho_hc = db.FloatProperty(default=250.)
     rho_w = db.FloatProperty(default=1040.)
 
-    khc = db.FloatProperty(default=207000000.)
-    kw = db.FloatProperty(default=2950000000.)
+    khc = db.FloatProperty(default=1500000000.)
+    kw = db.FloatProperty(default=2200000000.)
 
-    sw = db.FloatProperty(default=0.4)
+    sw = db.FloatProperty(default=0.3)
 
     @property
     def json(self):
