@@ -70,28 +70,21 @@ setup1D = function(rock_div,
 
 
     
-    var vpPlot = new logPlot(log_group, "vp", "",logWidth(.2), 
-			     logWidth(.2),heightScale(.8),"black",false);
-    var vpsubPlot = new logPlot(log_group, "vp_sub", "V\u209A",
-				logWidth(.2),
-				logWidth(.2),heightScale(.8),
-				"black", true);
+    var vpPlot = new logPlot(log_group, ["vp", "vp_sub"], "V\u209A",
+			     logWidth(.2), 
+			     logWidth(.2),heightScale(.8),"black");
 
-    var vsPlot = new logPlot(log_group, "vs", "",logWidth(.5), 
-			     logWidth(.2),heightScale(.8), "red", 
-			     false);
-    var vssubPlot = new logPlot(log_group, "vs_sub", "V\u209B",
-				logWidth(.5), logWidth(.2), 
-				heightScale(.8),
-				"red", true);
 
-    var rhoPlot = new logPlot(log_group, "rho","", logWidth(.8),
+    var vsPlot = new logPlot(log_group, ["vs", "vs_sub"], "V\u209B",
+			     logWidth(.5), 
+			     logWidth(.2),heightScale(.8), "red");
+
+    var rhoPlot = new logPlot(log_group, ["rho","rho_sub"], 
+			      "\u03C1",
+			      logWidth(.8),
 			      logWidth(.2), heightScale(.8),
-			      "blue",false);
-    var rhosubPlot = new logPlot(log_group, "rho_sub","\u03C1", 
-				 logWidth(.8), logWidth(.2), 
-				 heightScale(.8),
-				 "blue", true);
+			      "blue");
+   
 
 
 
@@ -136,12 +129,7 @@ setup1D = function(rock_div,
 
 		  vpPlot.update_plot(data);
 		  vsPlot.update_plot(data);
-
 		  rhoPlot.update_plot(data);
-		  rhosubPlot.update_plot(data);
-	
-		  vpsubPlot.update_plot(data);
-		  vssubPlot.update_plot(data);
 	
 		  seismicPlot.update_plot(data,.9*height);
 		  seismicsubPlot.update_plot(data,

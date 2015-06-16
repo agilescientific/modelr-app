@@ -609,7 +609,9 @@ class ModelData1DHandler(ModelrAPI):
                 rhohc0[start_index:end_index] = rock_fluid.rho_hc
                 kw0[start_index:end_index] = rock_fluid.kw
                 khc0[start_index:end_index] = rock_fluid.khc
+                
             except:
+                # No Fluid
                 sw0[start_index:end_index] = 1
                 rhow0[start_index:end_index] = 1
                 rhohc0[start_index:end_index] = 1
@@ -636,10 +638,7 @@ class ModelData1DHandler(ModelrAPI):
                 rhohcnew[fluid_start:fluid_end] = fluid["rho_hc"]
                 kwnew[fluid_start:fluid_end] = fluid["k_w"]
                 khcnew[fluid_start:fluid_end] = fluid["k_hc"]
-            
 
-
-   
         
         vp_sub,vs_sub,rho_sub = smith_fluidsub(vp, vs, rho, phi,
                                                rhow0,rhohc0,
