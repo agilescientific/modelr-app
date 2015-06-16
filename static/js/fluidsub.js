@@ -237,8 +237,8 @@ function FluidSub(canvas,core_width, core_height,
 	rock_fluid.enter().append("rect")
 	    .attr("id","rock_fluid")
 	    .attr("y", update_depth)
-	    .attr("x", x_offset)
-	    .attr("width", xScale(.2))
+	    .attr("x", rock_width + xScale(.1))
+	    .attr("width", fluid_width)
 	    .attr("fill", function(d){
 		return d.fluid_colour;
 	    })
