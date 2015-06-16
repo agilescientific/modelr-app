@@ -14,20 +14,30 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
     var tScale = d3.scale.linear()
 	.range([0, 3.5]);
 
+    var thetaAxisScale = d3.scale.linear()
+	.range([0,90]).domain([0,30]);
+
     var thetaScale = d3.scale.linear()
-	.range([0,10]).domain([0,5]);
+	.range([0,10]);
+
 
     var plot = svg_group.append("g")
 	.attr("transform", "translate("+offset.toString()+",0)");
 
+    var thetaGroup = svg_group.append("g")
+	.attr("transform",
+	      "translate("+offset.toString() + ",500)");
+    var thetaAxis = d3.svg.axis().scale(thetaAxisScale).orient("top")
+	.ticks(4);
 
-    var thetaAxis = d3.svg.axis().scale(thetaScale).orient("bottom")
-	.ticks(5);
+    thetaGroup.call(thetaAxis);
 
-    //var thetaGroup = plot.append("g").attr("transform", 
-					    //"translate(0,450)");
-
-    //thetaGroup.call(thetaAxis);
+    thetaGroup.append("text")
+	.attr("class", "y-label")
+	.attr("y", 15)
+	.text("\u03B8");
+    
+  
 
 
     // Axis labels
@@ -51,6 +61,8 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 	// Set the time and theta scales
 	tScale.domain(data.t);
 	thetaScale.domain(data.theta);
+
+
 
 	tScale.range(data.scale);
 
@@ -118,7 +130,9 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 			.attr("d", lineFunc(paired_data));
 		};
 	    };
+
 	};
+
     };
 
     function show_menu(){

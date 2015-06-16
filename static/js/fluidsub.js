@@ -73,7 +73,7 @@ function FluidSub(canvas,core_width, core_height,
         .attr("style", "color:blue")
         .attr("text-anchor", "beginning")
         .attr("y", yScale(-.05)) 
-        .attr("x", xScale(.7))
+        .attr("x", xScale(.72))
         .text("F\u2080");
 
     rgroup.append("text")
@@ -81,7 +81,7 @@ function FluidSub(canvas,core_width, core_height,
         .attr("style", "color:blue")
         .attr("text-anchor", "beginning")
         .attr("y", yScale(-.05)) 
-        .attr("x", xScale(1.))
+        .attr("x", xScale(1.0))
         .text("F\u209B");
 
     var yAxis = d3.svg.axis()
