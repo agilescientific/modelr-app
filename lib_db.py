@@ -151,7 +151,6 @@ class Rock(Item):
     @property
     def fluid_id(self):
         try:
-            print self.fluid_key
             fid = self.fluid_key.key().id()
             return fid
         except Exception as e:

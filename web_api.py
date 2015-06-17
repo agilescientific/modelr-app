@@ -41,6 +41,37 @@ from lib_util import posterize, depth2time, akirichards, ricker
 
 from fluidsub import smith_fluidsub
 
+
+def get_user(user_id):
+
+    return User.all().filter("user_id =", user_id).get()
+
+def get_by_id(entity, db_id, user):
+    """
+    Finds by id. Searches under the user, admin user
+    """
+
+    print user
+    # See if user owns it
+    item = entity.get_by_id(db_id, parent=user)
+
+    # See if admin owns it
+    admin = get_user(admin_id)
+    if not item:
+        item = entity.get_by_id(db_id, parent=get_user(admin_id))
+
+
+    return item
+
+def get_items_by_name_and_groups(entity, name, groups):
+    
+    items = entity.all().filter("name =", name).fetch(1000)
+
+    out_items = [item for item in items if item.group in items]
+
+    return out_items
+
+
 class ModelrAPI(webapp2.RequestHandler):
     """
     Base class for modelr apis. Mostly a skeleton right now
@@ -185,26 +216,16 @@ class RockHandler(ModelrAPI):
         key = self.request.get('key')
 
         user = self.verify()
-
-        ModelrRoot = ModelrParent.all().get()
-        admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
-                                       admin_id).get()
         
         if(name):
 
-            rock = Rock.all().filter("name =", name).get()
-            if(user):
-                u_rock = Rock.all().ancestor(user).filter("name =",
-                                                        name).get()
-                if(u_rock): rock = u_rock
+            rock = get_items_by_name_and_groups(Rock, name,
+                                                user.group)
+            data = rock[0].json
             
-          
-            data = rock.json
         elif(key):
-            rock = Rock.get_by_id(int(key), parent=admin_user)
-            
-            u_rock = Rock.get_by_id(int(key), parent=user)
-            if(u_rock): rock = u_rock
+        
+            rock = get_by_id(Rock,int(key), user)
             data = rock.json
         else:
             raise Exception
@@ -281,8 +302,7 @@ class RockHandler(ModelrAPI):
 
                 if fluid_id != "None":
         
-                    fluid = Fluid.get_by_id(int(fluid_id),
-                                            parent=user)
+                    fluid = get_by_id(Fluid, int(fluid_id), user)
                     rock.fluid_key = fluid.key()
                 else:
                     rock.fluid_key = None
@@ -336,13 +356,12 @@ class RockHandler(ModelrAPI):
                 fluid_id = self.request.get("rock-fluid")
 
                 if fluid_id != "None":
-                    fluid = Fluid.get_by_id(int(fluid_id),
-                                            parent=user).key()
+                    fluid = get_by_id(Fluid, int(fluid_id),user)
+                    fluid_key = fluid.key
                 else:
                     fluid = None
 
-                print "FLUID KEY", fluid
-                rock.fluid_key = fluid
+                rock.fluid_key = fluid_key
                 
             except:
                 pass
@@ -523,10 +542,7 @@ class ModelData1DHandler(ModelrAPI):
     @authenticate
     def post(self, user):
 
-
-        admin_user = User.all()\
-                         .filter("user_id =", admin_id).get()
-                         
+        # 1 meter spacing
         dz = 1
 
         rock_data = json.loads(self.request.get('rock_data'))
@@ -570,19 +586,14 @@ class ModelData1DHandler(ModelrAPI):
         end_index = 0
         for layer in rock_data:
 
-            # A little messy, we should abstract this query at
-            # some point
-            rock = Rock.get_by_id(int(layer["rock"]["db_key"]),
-                                  parent=user)
+            rock_id = int(layer["rock"]["db_key"])
+            rock = get_by_id(Rock, rock_id, user)
             if not rock:
-                rock = Rock.get_by_id(int(layer["rock"]["db_key"]),
-                                      parent=admin_user)
-            if not rock:
-                rock = Rock.all().filter("name =",
-                                         layer["rock"]["name"]).get()
-                if (not rock) or not (rock.group in user.group):
-                    raise Exception
-            
+                rock = get_rock_by_name_and_groups(rock_id,
+                                                   user.group)
+            if not rock: raise Exception
+
+      
             start_index = end_index
             end_index = start_index + np.ceil(layer["thickness"]/dz)
             if end_index > rho.size:
@@ -712,16 +723,11 @@ class FluidHandler(ModelrAPI):
     @authenticate
     def get(self, user):
 
-        ModelrRoot = ModelrParent.all().get()
-        admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
-                                       admin_id).get()
-
         key = self.request.get('key')
-              
-        fluid = Fluid.get_by_id(int(key), parent=admin_user)
-            
-        u_fluid = Fluid.get_by_id(int(key), parent=user)
-        if(u_fluid): fluid = u_fluid
+        fluid = get_by_id(Fluid, int(key), user)
+        
+        if not fluid:
+            raise Exception
 
         data = fluid.json
 
