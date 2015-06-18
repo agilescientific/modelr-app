@@ -67,12 +67,9 @@ def get_items_by_name_and_user(entity, name, user):
     
     items = entity.all().filter("name =", name).fetch(1000)
 
-    print items
-    print items[0].group
     out_items = [item for item in items if item.user == user.user_id
                  or item.group in user.group]
 
-    print out_items
     return out_items
 
 
@@ -358,11 +355,12 @@ class RockHandler(ModelrAPI):
             
                 fluid_id = self.request.get("rock-fluid")
 
+                print fluid_id
                 if fluid_id != "None":
                     fluid = get_by_id(Fluid, int(fluid_id),user)
                     fluid_key = fluid.key
                 else:
-                    fluid = None
+                    fluid_key = None
 
                 rock.fluid_key = fluid_key
                 
