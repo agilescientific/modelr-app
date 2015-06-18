@@ -42,7 +42,7 @@ setup1D = function(rock_div,
 
 
     // Make the log plots
-    var logXOffset = widthScale(.4);
+    var logXOffset = widthScale(.3);
     var logYOffset = heightScale(.1);
     var log_group = canvas.append("g").attr("id", "log-group")
 	.attr("transform", "translate(" + logXOffset.toString() +',' +
@@ -57,16 +57,6 @@ setup1D = function(rock_div,
     var tAxis = d3.svg.axis()
 	.orient("right")
 	.ticks(5);
-
-    // Axis label (done horizontally then rotated)
-    log_group.append("text")
-	.attr("class", "y-label")
-	.attr("text-anchor", "end")
-	.attr("y", widthScale(-.025))
-	.attr("x",heightScale(-.08))
-	.attr("dy", ".75em")
-	.attr("transform", "rotate(-90)")
-	.text("time [s]");
 
 
     
@@ -85,16 +75,24 @@ setup1D = function(rock_div,
 			      logWidth(.2), heightScale(.8),
 			      "blue");
    
-
-
+    
+    
+    var aiOffset =  widthScale(.55);
+    var ai_group = canvas.append("g")
+	.attr("transform", "translate(" + aiOffset.toString() +',' +
+	      logYOffset.toString() + ")");
+    var aiPlot = new logPlot(ai_group, ["ai", "ai_sub"], "Zp",
+			     logWidth(.2),  logWidth(.2),
+			     heightScale(.8), "black");
 
 
     // Make the gather plots
     var gatherXOffset = widthScale(.65);
     var gatherYOffset = heightScale(.1);
-    var gather_group = canvas.append("g").attr("id", "log-group")
+    var gather_group = canvas.append("g").attr("id", "gather-group")
 	.attr("transform", "translate(" + gatherXOffset.toString() +',' +
 	      gatherYOffset.toString() + ")");
+
 
 
 
@@ -110,6 +108,19 @@ setup1D = function(rock_div,
 					'traces_sub', 
 					'F\u209B synthetic',
 					seismic_menu_div);
+
+
+
+    // Axis label (done horizontally then rotated)
+    ai_group.append("text")
+	.attr("class", "y-label")
+	.attr("text-anchor", "end")
+	.attr("y", widthScale(-.025))
+	.attr("x",heightScale(-.08))
+	.attr("dy", ".75em")
+	.attr("transform", "rotate(-90)")
+	.text("time [s]");
+
 
     update_data();
 
@@ -127,10 +138,12 @@ setup1D = function(rock_div,
 	      function(data){
 		  data = JSON.parse(data);
 
-		  vpPlot.update_plot(data);
-		  vsPlot.update_plot(data);
-		  rhoPlot.update_plot(data);
+		  vpPlot.update_plot(data, time=false);
+		  vsPlot.update_plot(data, time=false);
+		  rhoPlot.update_plot(data, time=false);
 	
+		  aiPlot.update_plot(data, time=true);
+
 		  seismicPlot.update_plot(data,.9*height);
 		  seismicsubPlot.update_plot(data,
 					     .9*height);
@@ -139,7 +152,7 @@ setup1D = function(rock_div,
 		  tScale.range(data.scale);
 		  
 		  tAxis.scale(tScale);
-		  log_group.call(tAxis);
+		  ai_group.call(tAxis);
 	      }
 	     );
     }; // end of function update_data

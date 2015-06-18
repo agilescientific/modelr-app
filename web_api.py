@@ -659,24 +659,27 @@ class ModelData1DHandler(ModelrAPI):
                                                rhownew, rhohcnew,
                                                kwnew, khcnew)
 
-        vp, vs, rho,sw0, t = depth2time(z, vp, vs, rho,sw0,dt)
-        vp_sub, vs_sub, rho_sub, sw_sub, t = \
+        vpt, vst, rhot,sw0t, t = depth2time(z, vp, vs, rho,sw0,dt)
+        vpt_sub, vst_sub, rhot_sub, swt_sub, t = \
           depth2time(z, vp_sub, vs_sub, rho_sub,swnew,dt)
           
 
-    
-        scale = int(self.request.get("height")) * t / np.amax(t)
+        # Super hacky. We shouldn't be sending the image height
+        # to the backend
+        t_scale = int(self.request.get("height")) * t / np.amax(t)
+        z_scale = int(self.request.get("height")) * z / np.amax(z)
 
         offset = np.linspace(0,30,10)
-        ref = [np.nan_to_num(akirichards(vp[0:-1], vs[0:-1], rho[0:-1],
-                                        vp[1:], vs[1:], rho[1:],
-                                        theta))
+        ref = [np.nan_to_num(akirichards(vpt[0:-1], vst[0:-1],
+                                         rhot[0:-1],
+                                         vpt[1:], vst[1:], rhot[1:],
+                                         theta))
                                         for theta in offset]
-        ref_sub = [np.nan_to_num(akirichards(vp_sub[0:-1],
-                                            vs_sub[0:-1],
-                                            rho_sub[0:-1],vp_sub[1:],
-                                            vs_sub[1:],
-                                            rho_sub[1:],theta))
+        ref_sub = [np.nan_to_num(akirichards(vpt_sub[0:-1],
+                                            vst_sub[0:-1],
+                                            rhot_sub[0:-1],vpt_sub[1:],
+                                            vst_sub[1:],
+                                            rhot_sub[1:],theta))
                                             for theta in offset]
 
         wavelet = ricker(0.1, dt, frequency)
@@ -685,16 +688,24 @@ class ModelData1DHandler(ModelrAPI):
                  for ref_t in ref]
         synth_sub = [tuple(np.convolve(ref_t,wavelet, mode="same"))
                      for ref_t in ref_sub]
+
+        # Acoustic impedences
+        ai = rhot * vpt
+        ai_sub = rhot_sub * vpt_sub
         
         output = {"vp": tuple(vp), "vs": tuple(vs),
                   "rho": tuple(rho), "t": tuple(t),
-                  "scale": tuple(scale),
+                  "scale": tuple(t_scale),
+                  "z_scale": tuple(z_scale),
                   "vp_sub": tuple(vp_sub),
                   "vs_sub": tuple(vs_sub),
                   "rho_sub": tuple(rho_sub),
                   "traces": synth,
                   "theta": tuple(offset),
-                  "traces_sub": synth_sub}
+                  "traces_sub": synth_sub,
+                  "z": tuple(z),
+                  "ai": tuple(ai),
+                  "ai_sub": tuple(ai_sub)}
 
         self.response.write(json.dumps(output))
         

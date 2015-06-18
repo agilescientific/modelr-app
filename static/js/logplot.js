@@ -1,13 +1,11 @@
 function logPlot(log_group,properties,label,offset, width, 
 		 height, colour){
 
-
-
-
+    // Dummy scale values
     var propScale = d3.scale.linear() 
 	.range([0,20]);
     
-    var tScale = d3.scale.linear()
+    var zScale = d3.scale.linear()
 	.range([0, 20]);
 
     var plot = log_group.append("g")
@@ -24,7 +22,7 @@ function logPlot(log_group,properties,label,offset, width,
 
 
 
-    this.update_plot = function update_plot(data){
+    this.update_plot = function update_plot(data, time){
 	
 
 
@@ -46,9 +44,14 @@ function logPlot(log_group,properties,label,offset, width,
 	};
 	propScale.domain([min_val, 
   			  max_val]);
-	tScale.domain(data.t);
-	tScale.range(data.scale);
-	
+
+	if(time){
+	    zScale.domain(data.t);
+	    zScale.range(data.scale);
+	}else{
+	    zScale.domain(data.z);
+	    zScale.range(data.z_scale);
+	};
 
 	// Clear old plot
 	plot.selectAll("path").remove();
@@ -63,7 +66,7 @@ function logPlot(log_group,properties,label,offset, width,
 		    return propScale(d[property]);
 		})
 		.y(function(d) {
-		    return tScale(d.t);
+		    return zScale(d.z);
 		});
 
 	 
@@ -73,8 +76,11 @@ function logPlot(log_group,properties,label,offset, width,
 	    for(var i=0; i < data[property].length; i++){
 		var point = {};
 		point[property] = data[property][i]||0;
-		point["t"] = data.t[i];
-
+		if(time){
+		    point["z"] = data.t[i]
+		}else{
+		point["z"] = data.z[i];
+		}
   		paired_data[i] = point;
 	    } // end of for
 
