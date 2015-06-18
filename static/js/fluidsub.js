@@ -82,7 +82,7 @@ function FluidSub(canvas,core_width, core_height,
         .attr("text-anchor", "beginning")
         .attr("y", yScale(-.05)) 
         .attr("x", xScale(1.0))
-        .text("F\u209B");
+        .text("Fs");
 
     var yAxis = d3.svg.axis()
         .scale(scale)

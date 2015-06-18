@@ -60,12 +60,12 @@ setup1D = function(rock_div,
 
 
     
-    var vpPlot = new logPlot(log_group, ["vp", "vp_sub"], "V\u209A",
+    var vpPlot = new logPlot(log_group, ["vp", "vp_sub"], "Vp",
 			     logWidth(.2), 
 			     logWidth(.2),heightScale(.8),"black");
 
 
-    var vsPlot = new logPlot(log_group, ["vs", "vs_sub"], "V\u209B",
+    var vsPlot = new logPlot(log_group, ["vs", "vs_sub"], "Vs",
 			     logWidth(.5), 
 			     logWidth(.2),heightScale(.8), "red");
 
@@ -106,7 +106,7 @@ setup1D = function(rock_div,
     var seismicsubPlot = new gatherPlot(gather_group,widthScale(.15),
 					heightScale(.8),
 					'traces_sub', 
-					'F\u209B synthetic',
+					'Fs synthetic',
 					seismic_menu_div);
 
 
