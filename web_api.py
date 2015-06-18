@@ -63,12 +63,16 @@ def get_by_id(entity, db_id, user):
 
     return item
 
-def get_items_by_name_and_groups(entity, name, groups):
+def get_items_by_name_and_user(entity, name, user):
     
     items = entity.all().filter("name =", name).fetch(1000)
 
-    out_items = [item for item in items if item.group in items]
+    print items
+    print items[0].group
+    out_items = [item for item in items if item.user == user.user_id
+                 or item.group in user.group]
 
+    print out_items
     return out_items
 
 
@@ -219,8 +223,7 @@ class RockHandler(ModelrAPI):
         
         if(name):
 
-            rock = get_items_by_name_and_groups(Rock, name,
-                                                user.group)
+            rock = get_items_by_name_and_user(Rock, name, user)
             data = rock[0].json
             
         elif(key):
