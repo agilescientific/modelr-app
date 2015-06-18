@@ -50,8 +50,6 @@ def get_by_id(entity, db_id, user):
     """
     Finds by id. Searches under the user, admin user
     """
-
-    print user
     # See if user owns it
     item = entity.get_by_id(db_id, parent=user)
 
@@ -355,7 +353,6 @@ class RockHandler(ModelrAPI):
             
                 fluid_id = self.request.get("rock-fluid")
 
-                print fluid_id
                 if fluid_id != "None":
                     fluid = get_by_id(Fluid, int(fluid_id),user)
                     fluid_key = fluid.key
@@ -624,6 +621,7 @@ class ModelData1DHandler(ModelrAPI):
                 
             except:
                 # No Fluid
+                print "WTF"
                 sw0[start_index:end_index] = 1
                 rhow0[start_index:end_index] = 1
                 rhohc0[start_index:end_index] = 1
@@ -659,6 +657,12 @@ class ModelData1DHandler(ModelrAPI):
                                                kqtz, vclay,
                                                rhownew, rhohcnew,
                                                kwnew, khcnew)
+
+        # no fluid correction (Total Hack)
+        correction = swnew ==1
+        vp_sub[correction] = vp[correction]
+        vs_sub[correction] = vs[correction]
+        rho_sub[correction] = rho[correction]
 
         vpt, vst, rhot,sw0t, t = depth2time(z, vp, vs, rho,sw0,dt)
         vpt_sub, vst_sub, rhot_sub, swt_sub, t = \
