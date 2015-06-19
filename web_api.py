@@ -555,6 +555,9 @@ class ModelData1DHandler(ModelrAPI):
         vp = np.zeros(z.size)
         vs = np.zeros(z.size)
         rho = np.zeros(z.size)
+        vp_sub = np.zeros(z.size)
+        vs_sub = np.zeros(z.size)
+        rho_sub = np.zeros(z.size)
         phi = np.zeros(z.size)
         vclay = np.zeros(z.size)
         kclay = np.zeros(z.size)
@@ -619,55 +622,55 @@ class ModelData1DHandler(ModelrAPI):
                 rhohc0[start_index:end_index] = rock_fluid.rho_hc
                 kw0[start_index:end_index] = rock_fluid.kw
                 khc0[start_index:end_index] = rock_fluid.khc
+
+                fluid_end = start_index
+                for subfluid in layer['subfluids']:
+
+                    fluid_start = fluid_end
+
+                    fluid_end = fluid_start + \
+                      np.ceil(subfluid["thickness"]/dz)
+
+                    fluid = subfluid["fluid"]
                 
-            except:
-                # No Fluid
-                no_fluid = -9999
-                sw0[start_index:end_index] = no_fluid
-                rhow0[start_index:end_index] = no_fluid
-                rhohc0[start_index:end_index] = no_fluid
-                kw0[start_index:end_index] = no_fluid
-                khc0[start_index:end_index] = no_fluid
-                swnew[start_index:end_index] = no_fluid
-                rhownew[start_index:end_index] = no_fluid
-                rhohcnew[start_index:end_index] = no_fluid
-                kwnew[start_index:end_index] = no_fluid
-                khcnew[start_index:end_index] = no_fluid
+                    swnew[fluid_start:fluid_end] = fluid["sw"]
+                    rhownew[fluid_start:fluid_end] = fluid["rho_w"]
+                    rhohcnew[fluid_start:fluid_end] = fluid["rho_hc"]
+                    kwnew[fluid_start:fluid_end] = fluid["k_w"]
+                    khcnew[fluid_start:fluid_end] = fluid["k_hc"]
 
-            fluid_end = start_index
-            for subfluid in layer['subfluids']:
-
-                fluid_start = fluid_end
-
-                fluid_end = fluid_start + \
-                  np.ceil(subfluid["thickness"]/dz)
-
-                fluid = subfluid["fluid"]
-                
-                swnew[fluid_start:fluid_end] = fluid["sw"]
-                rhownew[fluid_start:fluid_end] = fluid["rho_w"]
-                rhohcnew[fluid_start:fluid_end] = fluid["rho_hc"]
-                kwnew[fluid_start:fluid_end] = fluid["k_w"]
-                khcnew[fluid_start:fluid_end] = fluid["k_hc"]
-
+                    (vp_sub[start_index:end_index],
+                     vs_sub[start_index:end_index],
+                     rho_sub[start_index:end_index]) = \
+                     smith_fluidsub(vp[start_index:end_index],
+                                    vs[start_index:end_index],
+                                    rho[start_index:end_index],
+                                    phi[start_index:end_index],
+                                    rhow0[start_index:end_index],
+                                    rhohc0[start_index:end_index],
+                                    sw0[start_index:end_index],
+                                    swnew[start_index:end_index],
+                                    kw0[start_index:end_index],
+                                    khc0[start_index:end_index],
+                                    kclay[start_index:end_index],
+                                    kqtz[start_index:end_index],
+                                    vclay[start_index:end_index],
+                                    rhownew[start_index:end_index],
+                                    rhohcnew[start_index:end_index],
+                                    kwnew[start_index:end_index],
+                                    khcnew[start_index:end_index])
         
-        vp_sub,vs_sub,rho_sub = smith_fluidsub(vp, vs, rho, phi,
-                                               rhow0,rhohc0,
-                                               sw0, swnew, kw0,
-                                               khc0, kclay,
-                                               kqtz, vclay,
-                                               rhownew, rhohcnew,
-                                               kwnew, khcnew)
+            except:                # No Fluid
+                vp_sub[start_index:end_index] = \
+                       vp[start_index:end_index]
+                vs_sub[start_index:end_index] = \
+                       vs[start_index:end_index]
+                rho_sub[start_index:end_index] = \
+                        rho[start_index:end_index]                                 
+          
 
 
-        
-        # no fluid correction (Total Hack)
-        correction = np.isfinite(vp_sub)
 
-        vp_sub = np.where(correction, vp_sub, vp)
-        vs_sub = np.where(correction, vs_sub, vs)
-        rho_sub = np.where(correction, rho_sub, rho)
-        
         vpt, vst, rhot,sw0t, t = depth2time(z, vp, vs, rho,sw0,dt)
         vpt_sub, vst_sub, rhot_sub, swt_sub, tsub = \
           depth2time(z, vp_sub, vs_sub, rho_sub,swnew,dt)
