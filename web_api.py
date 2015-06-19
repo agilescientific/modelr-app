@@ -621,7 +621,6 @@ class ModelData1DHandler(ModelrAPI):
                 
             except:
                 # No Fluid
-                print "WTF"
                 sw0[start_index:end_index] = 1
                 rhow0[start_index:end_index] = 1
                 rhohc0[start_index:end_index] = 1
@@ -698,19 +697,19 @@ class ModelData1DHandler(ModelrAPI):
         ai = rhot * vpt
         ai_sub = rhot_sub * vpt_sub
         
-        output = {"vp": tuple(vp), "vs": tuple(vs),
-                  "rho": tuple(rho), "t": tuple(t),
-                  "scale": tuple(t_scale),
-                  "z_scale": tuple(z_scale),
-                  "vp_sub": tuple(vp_sub),
-                  "vs_sub": tuple(vs_sub),
-                  "rho_sub": tuple(rho_sub),
+        output = {"vp": vp.tolist(), "vs": vs.tolist(),
+                  "rho": rho.tolist(), "t": t.tolist(),
+                  "scale": t_scale.tolist(),
+                  "z_scale": z_scale.tolist(),
+                  "vp_sub": vp_sub.tolist(),
+                  "vs_sub": vs_sub.tolist(),
+                  "rho_sub": rho_sub.tolist(),
                   "traces": synth,
-                  "theta": tuple(offset),
+                  "theta": offset.tolist(),
                   "traces_sub": synth_sub,
-                  "z": tuple(z),
-                  "ai": tuple(ai),
-                  "ai_sub": tuple(ai_sub)}
+                  "z": z.tolist(),
+                  "ai": ai.tolist(),
+                  "ai_sub": ai_sub.tolist()}
 
         self.response.write(json.dumps(output))
         
