@@ -578,7 +578,8 @@ class ModelData1DHandler(ModelrAPI):
         offset = float(self.request.get("offset"))
         frequency = float(self.request.get("frequency"))
 
-        dt = 1./(1000)
+        
+        dt = 1./(10*frequency)
         
         # Loop through each rock layer
         end_index = 0
@@ -621,16 +622,17 @@ class ModelData1DHandler(ModelrAPI):
                 
             except:
                 # No Fluid
-                sw0[start_index:end_index] = 1
-                rhow0[start_index:end_index] = 1
-                rhohc0[start_index:end_index] = 1
-                kw0[start_index:end_index] = 1
-                khc0[start_index:end_index] = 1
-                swnew[start_index:end_index] = 1
-                rhownew[start_index:end_index] = 1
-                rhohcnew[start_index:end_index] = 1
-                kwnew[start_index:end_index] = 1
-                khcnew[start_index:end_index] = 1
+                no_fluid = -9999
+                sw0[start_index:end_index] = no_fluid
+                rhow0[start_index:end_index] = no_fluid
+                rhohc0[start_index:end_index] = no_fluid
+                kw0[start_index:end_index] = no_fluid
+                khc0[start_index:end_index] = no_fluid
+                swnew[start_index:end_index] = no_fluid
+                rhownew[start_index:end_index] = no_fluid
+                rhohcnew[start_index:end_index] = no_fluid
+                kwnew[start_index:end_index] = no_fluid
+                khcnew[start_index:end_index] = no_fluid
 
             fluid_end = start_index
             for subfluid in layer['subfluids']:
@@ -657,16 +659,19 @@ class ModelData1DHandler(ModelrAPI):
                                                rhownew, rhohcnew,
                                                kwnew, khcnew)
 
-        # no fluid correction (Total Hack)
-        correction = swnew ==1
-        vp_sub[correction] = vp[correction]
-        vs_sub[correction] = vs[correction]
-        rho_sub[correction] = rho[correction]
 
+        
+        # no fluid correction (Total Hack)
+        correction = np.isfinite(vp_sub)
+
+        vp_sub = np.where(correction, vp_sub, vp)
+        vs_sub = np.where(correction, vs_sub, vs)
+        rho_sub = np.where(correction, rho_sub, rho)
+        
         vpt, vst, rhot,sw0t, t = depth2time(z, vp, vs, rho,sw0,dt)
-        vpt_sub, vst_sub, rhot_sub, swt_sub, t = \
+        vpt_sub, vst_sub, rhot_sub, swt_sub, tsub = \
           depth2time(z, vp_sub, vs_sub, rho_sub,swnew,dt)
-          
+
 
         # Super hacky. We shouldn't be sending the image height
         # to the backend
