@@ -541,7 +541,7 @@ class ModelData1DHandler(ModelrAPI):
     def post(self, user):
 
         # 1 meter spacing
-        dz = 1
+        dz = 5
 
         rock_data = json.loads(self.request.get('rock_data'))
   
@@ -673,7 +673,7 @@ class ModelData1DHandler(ModelrAPI):
 
         vpt, vst, rhot,sw0t, t = depth2time(z, vp, vs, rho,sw0,dt)
         vpt_sub, vst_sub, rhot_sub, swt_sub, tsub = \
-          depth2time(z, vp_sub, vs_sub, rho_sub,swnew,dt)
+          depth2time(z, vp_sub, vs_sub, rho_sub,swnew,t)
 
 
         # Super hacky. We shouldn't be sending the image height
@@ -696,28 +696,38 @@ class ModelData1DHandler(ModelrAPI):
 
         wavelet = ricker(0.1, dt, frequency)
 
-        synth = [tuple(np.convolve(ref_t,wavelet, mode="same"))
-                 for ref_t in ref]
-        synth_sub = [tuple(np.convolve(ref_t,wavelet, mode="same"))
-                     for ref_t in ref_sub]
+        synth = np.dstack([np.convolve(ref_t,wavelet, mode="same")
+                 for ref_t in ref]).squeeze()
+        synth_sub = np.dstack([np.convolve(ref_t,wavelet, mode="same")
+                     for ref_t in ref_sub]).squeeze()
 
         # Acoustic impedences
         ai = rhot * vpt
         ai_sub = rhot_sub * vpt_sub
+
+        log_data = np.dstack((z, vp,vp_sub,vs,vs_sub,
+                                  rho, rho_sub)).squeeze()
+
+
+        ai_data = np.dstack((t[0:-1], ai[0:-1],
+                            ai_sub[:-1])).squeeze()
+
+       
+        synth = np.concatenate((np.expand_dims(t[0:-1],1),
+                                synth),1).squeeze()
+        synth_sub = np.concatenate((np.expand_dims(t[0:-1],1),
+                               synth_sub),1).squeeze() 
         
-        output = {"vp": vp.tolist(), "vs": vs.tolist(),
-                  "rho": rho.tolist(), "t": t.tolist(),
+         
+        output = {"log_data": log_data.tolist(),
                   "scale": t_scale.tolist(),
                   "z_scale": z_scale.tolist(),
-                  "vp_sub": vp_sub.tolist(),
-                  "vs_sub": vs_sub.tolist(),
-                  "rho_sub": rho_sub.tolist(),
-                  "traces": synth,
+                  "synth": synth.tolist(),
+                  "synth_sub": synth_sub.tolist(),
                   "theta": offset.tolist(),
-                  "traces_sub": synth_sub,
-                  "z": z.tolist(),
-                  "ai": ai.tolist(),
-                  "ai_sub": ai_sub.tolist()}
+                  "ai_data": ai_data.tolist(),
+                  "t": t.tolist(),
+                  "z": z.tolist()}
 
         self.response.write(json.dumps(output))
         

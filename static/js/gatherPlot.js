@@ -52,38 +52,27 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 
 
 
-    this.update_plot = function update_plot(data, height){
+    this.update_plot = function update_plot(data, theta_in,t,t_scale,
+					    height){
 	
 
 	// Clear the plot
 	plot.selectAll("path").remove();
 
 	// Set the time and theta scales
-	tScale.domain(data.t);
-	thetaScale.domain(data.theta);
+	tScale.domain(t);
+	thetaScale.domain(theta_in);
 
 
+	tScale.range(t_scale);
 
-	tScale.range(data.scale);
-
-	for(var wiggle_hack=0;wiggle_hack<2;wiggle_hack++){
+	for(var wiggle_hack=1;wiggle_hack<2;wiggle_hack++){
 	    // Plot each trace in the data
-	    for(var trace_ind=0; trace_ind < data.theta.length;
+	    for(var trace_ind=0; trace_ind < theta_in.length;
 		trace_ind++){
 
-		var trace = data[key][trace_ind];
-		var theta = data.theta[trace_ind];
+		var theta = theta_in[trace_ind];
 		
-		// Make a data pair for the current trace
-		var paired_data = [];
-		for(var i=0; i < trace.length; i++){
-		    var point = {};
-		    point["amplitude"] = trace[i]||0;
-		    point["t"] = data.t[i];
-		    
-  		    paired_data[i] = point;
-		} // end of for
-
 
 		// Make a scale for the trace amplitude
 		var ampScale = d3.scale.linear().domain([-1,1]);
@@ -94,17 +83,17 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 		var synthFill = d3.svg.area()
 		    .x0(0)
 		    .x1(function(d) {
-			return ampScale(d.amplitude);
+			return ampScale(d[trace_ind+1]);
 		    })
 		    .y(function(d) {
-			return tScale(d.t);
+			return tScale(d[0]);
 		    });
 		var lineFunc = d3.svg.line()
 		    .x(function(d) {
-			return ampScale(d.amplitude);
+			return ampScale(d[trace_ind +1]);
 		    })
 		    .y(function(d) {
-			return tScale(d.t);
+			return tScale(d[0]);
 		    });
 		
 
@@ -112,7 +101,7 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 		    // Draw the trace
 		    plot.append("path")
 			.attr("class", 'wiggle-fill')
-			.attr("d", lineFunc(paired_data));
+			.attr("d", lineFunc(data));
 		    
 		    /// Rather than slapping a rect on top
 		    // I think it would be better to use a clipPath
@@ -127,7 +116,7 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 		if(wiggle_hack == 1){
 		    plot.append("path")
 			.attr("class", 'wiggle-line')
-			.attr("d", lineFunc(paired_data));
+			.attr("d", lineFunc(data));
 		};
 	    };
 

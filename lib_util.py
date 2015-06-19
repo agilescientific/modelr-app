@@ -114,13 +114,17 @@ def posterize(image):
                         colors=n_colours)
 
 
+
 # should refactored to not use all the values at once
 def depth2time(z, vp, vs, rho,k1, dt):
 
     v_avg = np.cumsum(vp) / np.arange(z.size)
-    t = 2 * z / v_avg  
+    t = 2 * z / v_avg
 
-    new_t = np.arange(t[0],t[-1],dt)
+    if np.size(dt) == 1:
+        new_t = np.arange(t[0],t[-1],dt)
+    else:
+        new_t = dt
 
     new_vp = np.interp(new_t, t, vp)
     new_vs = np.interp(new_t, t, vs)

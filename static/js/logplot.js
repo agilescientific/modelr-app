@@ -22,7 +22,7 @@ function logPlot(log_group,properties,label,offset, width,
 
 
 
-    this.update_plot = function update_plot(data, time){
+    this.update_plot = function update_plot(data,z, z_scale){
 	
 
 
@@ -45,13 +45,10 @@ function logPlot(log_group,properties,label,offset, width,
 	propScale.domain([min_val, 
   			  max_val]);
 
-	if(time){
-	    zScale.domain(data.t);
-	    zScale.range(data.scale);
-	}else{
-	    zScale.domain(data.z);
-	    zScale.range(data.z_scale);
-	};
+
+	zScale.domain(z);
+	zScale.range(z_scale);
+
 
 	// Clear old plot
 	plot.selectAll("path").remove();
@@ -66,28 +63,14 @@ function logPlot(log_group,properties,label,offset, width,
 		    return propScale(d[property]);
 		})
 		.y(function(d) {
-		    return zScale(d.z);
+		    return zScale(d[0]);
 		});
 
-	 
-
-	    var paired_data = [];
-
-	    for(var i=0; i < data[property].length; i++){
-		var point = {};
-		point[property] = data[property][i]||0;
-		if(time){
-		    point["z"] = data.t[i]
-		}else{
-		point["z"] = data.z[i];
-		}
-  		paired_data[i] = point;
-	    } // end of for
 
 
 
 	    var line = plot.append("path")
-		.attr("d", lineFunc(paired_data))
+		.attr("d", lineFunc(data))
 		.attr('stroke', colour)
 		.attr('stroke-width', 1)
 		.attr('fill', 'none');

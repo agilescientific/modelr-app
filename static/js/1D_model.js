@@ -60,16 +60,16 @@ setup1D = function(rock_div,
 
 
     
-    var vpPlot = new logPlot(log_group, ["vp", "vp_sub"], "Vp",
+    var vpPlot = new logPlot(log_group, [1, 2], "Vp",
 			     logWidth(.2), 
 			     logWidth(.2),heightScale(.8),"black");
 
 
-    var vsPlot = new logPlot(log_group, ["vs", "vs_sub"], "Vs",
+    var vsPlot = new logPlot(log_group, [3, 4], "Vs",
 			     logWidth(.5), 
 			     logWidth(.2),heightScale(.8), "red");
 
-    var rhoPlot = new logPlot(log_group, ["rho","rho_sub"], 
+    var rhoPlot = new logPlot(log_group, [5,6], 
 			      "\u03C1",
 			      logWidth(.8),
 			      logWidth(.2), heightScale(.8),
@@ -81,7 +81,7 @@ setup1D = function(rock_div,
     var ai_group = canvas.append("g")
 	.attr("transform", "translate(" + aiOffset.toString() +',' +
 	      logYOffset.toString() + ")");
-    var aiPlot = new logPlot(ai_group, ["ai", "ai_sub"], "Zp",
+    var aiPlot = new logPlot(ai_group, [1, 2], "Zp",
 			     logWidth(.2),  logWidth(.2),
 			     heightScale(.8), "black");
 
@@ -138,14 +138,22 @@ setup1D = function(rock_div,
 	      function(data){
 		  data = JSON.parse(data);
 
-		  vpPlot.update_plot(data, time=false);
-		  vsPlot.update_plot(data, time=false);
-		  rhoPlot.update_plot(data, time=false);
+		  vpPlot.update_plot(data["log_data"], data["z"],
+				     data["z_scale"]);
+		  vsPlot.update_plot(data["log_data"], data["z"],
+				     data["z_scale"]);
+		  rhoPlot.update_plot(data["log_data"], data["z"],
+				      data["z_scale"]);
 	
-		  aiPlot.update_plot(data, time=true);
+		  aiPlot.update_plot(data["ai_data"], data["t"],
+				     data["scale"]);
 
-		  seismicPlot.update_plot(data,.9*height);
-		  seismicsubPlot.update_plot(data,
+		  seismicPlot.update_plot(data["synth"],data["theta"],
+					  data["t"], data["scale"],
+					  .9*height);
+		  seismicsubPlot.update_plot(data["synth_sub"],
+					     data["theta"],
+					     data["t"], data["scale"],
 					     .9*height);
 	
 		  tScale.domain(data.t);
