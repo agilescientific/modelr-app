@@ -188,7 +188,9 @@ def akirichards(vp1, vs1, rho1, vp2, vs2, rho2, theta1):
     term4 = -1 * z * sin(radians(theta1))**2
     
     return (term1 + term2 + term3 + term4)
-    
+
+
+
 def ricker(duration, dt, f):
     """
     Also known as the mexican hat wavelet, models the function:
@@ -224,3 +226,5 @@ def ricker(duration, dt, f):
     if freq.size == 1: output = output.flatten()
         
     return output / np.amax(output)
+
+

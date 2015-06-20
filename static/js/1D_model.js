@@ -87,7 +87,7 @@ setup1D = function(rock_div,
 
 
     // Make the gather plots
-    var gatherXOffset = widthScale(.65);
+    var gatherXOffset = widthScale(.68);
     var gatherYOffset = heightScale(.1);
     var gather_group = canvas.append("g").attr("id", "gather-group")
 	.attr("transform", "translate(" + gatherXOffset.toString() +',' +
