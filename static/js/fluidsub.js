@@ -203,14 +203,7 @@ function FluidSub(canvas,core_width, core_height,
 	// -------------------- Rock Graphics --------------//
 
 	var interval = rock_intervals.selectAll("g")
-	    .data(intervals)
-	    .on("click", function(d,i){
-		if (d3.event.altKey | d3.event.ctrlKey){
-		    interval_menu(d, i);
-		    $(menu_div).show();
-		    $(menu_div).dialog();
-		} else{}
-            });
+	    .data(intervals);
 
 	// update the existing graphic blocks
 	interval.selectAll("#rock")
@@ -310,7 +303,7 @@ function FluidSub(canvas,core_width, core_height,
             })
 	    .attr("y", update_depth)
 	    .attr("height",update_thickness)
-	    .on("click", add_top)
+	    .on("click", rock_click)
 	    .on("contextmenu", delete_interval);
 	
 	new_interval.selectAll("#rock_fluid")
@@ -501,28 +494,6 @@ function FluidSub(canvas,core_width, core_height,
 	onchange();
     }
 
-    function add_top(d, i, j){
-	/*
-	  adds a top to the core at the ith interval
-	  param d: core rock attached to the ith interval
-	  param i: interval to place top
-	*/
-
-	if (d3.event.ctrlKey || d3.event.altKey){
-            return;
-	}
-
-	var bottom = d.depth + d.thickness;
-	thickness0 = d.thickness;
-	d.thickness = scale.invert( d3.mouse(this)[1] ) - d.depth;
-	var depth = d.depth + d.thickness;
-	var thickness = bottom - depth;
-	var squish = (thickness0 - thickness) / thickness0;
-	rescale_subfluids(d, squish);
-	add_interval(i, depth, thickness);
-	onchange();
-    }
-
     function delete_interval(d, i){
 	// deletes interval d from the ith layer
 	d3.event.preventDefault();
@@ -564,6 +535,29 @@ function FluidSub(canvas,core_width, core_height,
 	    onchange();
 	}
     }
+
+    function rock_click(d, i, j){
+
+	// Open the menu
+	if (d3.event.ctrlKey || d3.event.altKey){
+            interval_menu(d, i)
+	    $(menu_div).show()
+	    $(menu_div).dialog()
+	}else {
+
+	    var bottom = d.depth + d.thickness;
+	    thickness0 = d.thickness;
+	    d.thickness = scale.invert(d3.mouse(this)[1]) - d.depth;
+	    var depth = d.depth + d.thickness;
+	    var thickness = bottom - depth;
+	    var squish = (thickness0 - thickness) / thickness0;
+	    
+	    rescale_subfluids(d, squish);
+	    add_interval(i, depth, thickness);
+	    
+	    onchange();
+	};
+    };
 
     function create_menu(){
 	var div = d3.select(menu_div).append("div")

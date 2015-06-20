@@ -100,7 +100,6 @@ setup1D = function(rock_div,
 				     heightScale(.8),
 				     'traces',
 				     'F\u2080 synthetic',
-				    
 				     seismic_menu_div);
     
     var seismicsubPlot = new gatherPlot(gather_group,widthScale(.15),

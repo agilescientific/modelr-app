@@ -687,6 +687,7 @@ class ModelData1DHandler(ModelrAPI):
                                          vpt[1:], vst[1:], rhot[1:],
                                          theta))
                                         for theta in offset]
+        
         ref_sub = [np.nan_to_num(akirichards(vpt_sub[0:-1],
                                             vst_sub[0:-1],
                                             rhot_sub[0:-1],vpt_sub[1:],
