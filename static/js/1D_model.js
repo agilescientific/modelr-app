@@ -87,7 +87,7 @@ setup1D = function(rock_div,
 
 
     // Make the gather plots
-    var gatherXOffset = widthScale(.7);
+    var gatherXOffset = widthScale(.65);
     var gatherYOffset = heightScale(.1);
     var gather_group = canvas.append("g").attr("id", "gather-group")
 	.attr("transform", "translate(" + gatherXOffset.toString() +',' +
@@ -145,8 +145,7 @@ setup1D = function(rock_div,
 		  rhoPlot.update_plot(data["log_data"], data["z"],
 				      data["z_scale"]);
 	
-		  aiPlot.update_plot(data["ai_data"], data["t"],
-				     data["scale"]);
+		 
 
 		  seismicPlot.update_plot(data["synth"],data["theta"],
 					  data["t"], data["scale"],
@@ -156,6 +155,8 @@ setup1D = function(rock_div,
 					     data["t"], data["scale"],
 					     .9*height);
 	
+		  aiPlot.update_plot(data["ai_data"], data["t"],
+				     data["scale"]);
 		  tScale.domain(data.t);
 		  tScale.range(data.scale);
 		  
