@@ -66,10 +66,10 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 
 	tScale.range(t_scale);
 
-	for(var wiggle_hack=1;wiggle_hack<2;wiggle_hack++){
+	for(var wiggle_hack=0;wiggle_hack<2;wiggle_hack++){
 	    // Plot each trace in the data
-	    for(var trace_ind=0; trace_ind < theta_in.length;
-		trace_ind++){
+	    for(var trace_ind=theta_in.length-1; trace_ind >-1;
+		trace_ind--){
 
 		var theta = theta_in[trace_ind];
 		
@@ -106,9 +106,9 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 		    /// Rather than slapping a rect on top
 		    // I think it would be better to use a clipPath
 		    plot.append("rect")
-	    		.attr("x", ampScale(0))
+	    		.attr("x", thetaScale(theta)-20)
 			.attr("y", tScale(0))
-			.attr("width", ampScale(1))
+			.attr("width", 20)
 			.attr("height", height)
 			.attr("fill", 'white')
 			.attr("stroke", 'white');
