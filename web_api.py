@@ -541,7 +541,7 @@ class ModelData1DHandler(ModelrAPI):
     def post(self, user):
 
         # 1 meter spacing
-        dz = 5
+        dz = 1
 
         rock_data = json.loads(self.request.get('rock_data'))
   
