@@ -203,6 +203,12 @@ function FluidSub(canvas,core_width, core_height,
 	// -------------------- Rock Graphics --------------//
 
 	var interval = rock_intervals.selectAll("g")
+	    .onclick(function (){
+		if (d3.event.ctrlKey || d3.event.altKey){
+		    interval_menu(d, i)
+		    $(menu_div).show()
+		    $(menu_div).dialog()
+		}})
 	    .data(intervals);
 
 	// update the existing graphic blocks
