@@ -37,7 +37,7 @@ from lib_db import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
      ImageModel, Issue, EarthModel, Server, Fluid
 
-from lib_util import posterize, depth2time, akirichards, ricker
+from lib_util import posterize, depth2time, akirichards, zoeppritz, ricker
 
 from fluidsub import smith_fluidsub
 
@@ -682,13 +682,17 @@ class ModelData1DHandler(ModelrAPI):
         z_scale = int(self.request.get("height")) * z / np.amax(z)
 
         offset = np.linspace(0,30,10)
-        ref = [np.nan_to_num(akirichards(vpt[0:-1], vst[0:-1],
+
+        #algo = zoeppritz
+        algo = akirichards
+
+        ref = [np.nan_to_num(algo(vpt[0:-1], vst[0:-1],
                                          rhot[0:-1],
                                          vpt[1:], vst[1:], rhot[1:],
                                          theta))
                                         for theta in offset]
         
-        ref_sub = [np.nan_to_num(akirichards(vpt_sub[0:-1],
+        ref_sub = [np.nan_to_num(algo(vpt_sub[0:-1],
                                             vst_sub[0:-1],
                                             rhot_sub[0:-1],vpt_sub[1:],
                                             vst_sub[1:],

@@ -189,6 +189,79 @@ def akirichards(vp1, vs1, rho1, vp2, vs2, rho2, theta1):
     
     return (term1 + term2 + term3 + term4)
 
+def zoeppritz(vp1, vs1, rho1, vp0, vs0, rho0, theta1):
+    '''
+    Full Zoeppritz solution, considered the definitive solution.
+    Calculates the angle dependent p-wave reflectivity of an interface
+    between two mediums.
+
+    :param vp1: The p-wave velocity of the upper medium.
+    :param vs1: The s-wave velocity of the upper medium.
+    :param rho1: The density of the upper medium.
+
+    :param vp0: The p-wave velocity of the lower medium.
+    :param vs0: The s-wave velocity of the lower medium.
+    :param rho0: The density of the lower medium.
+    
+    :param theta1: An array of incident angles to use for reflectivity
+                   calculation [degrees].
+
+    :returns: a vector of len(theta1) containing the reflectivity
+             value corresponding to each angle.
+
+    TODO
+    This algo doesn't work if you pass arrays, only scalars.
+    '''
+    
+    # Set the ray paramter, p
+    p = sin(radians(theta1)) / vp1 # ray parameter
+    
+    # Calculate reflection & transmission angles for Zoeppritz
+    theta1 = radians(theta1)   # Convert theta1 to radians
+    theta2 = arcsin(p * vp0);      # Trans. angle of P-wave
+    phi1 = arcsin(p * vs1);      # Refl. angle of converted S-wave
+    phi2 = arcsin(p * vs0);      # Trans. angle of converted S-wave
+                
+    # Matrix form of Zoeppritz Equations... M & N are matricies
+    M = np.array([ \
+        [-sin(theta1), -cos(phi1), sin(theta2), cos(phi2)], \
+        [cos(theta1), -sin(phi1), cos(theta2), -sin(phi2)], \
+        [2 * rho1 * vs1 * sin(phi1) * cos(theta1), rho1 * vs1 *\
+            (1 - 2 * sin(phi1) ** 2), \
+            2 * rho0 * vs0 * sin(phi2) * cos(theta2), \
+            rho0 * vs0 * (1 - 2 * sin(phi2) ** 2)], \
+        [-rho1 * vp1 * (1 - 2 * sin(phi1) ** 2), rho1 * vs1 * \
+             sin(2 * phi1), \
+            rho0 * vp0 * (1 - 2 * sin(phi2) ** 2), -rho0 * \
+              vs0 * sin(2 * phi2)]
+        ], dtype='float')
+    
+    N = np.array([ \
+        [sin(theta1), cos(phi1), -sin(theta2), -cos(phi2)], \
+        [cos(theta1), -sin(phi1), cos(theta2), -sin(phi2)], \
+        [2 * rho1 * vs1 * sin(phi1) * cos(theta1), rho1 * vs1 * (1 - 2 * sin(phi1) ** 2), \
+            2 * rho0 * vs0 * sin(phi2) * cos(theta2), rho0 * vs0 * (1 - 2 * sin(phi2) ** 2)], \
+        [rho1 * vp1 * (1 - 2 * sin(phi1) ** 2), -rho1 * vs1 * sin(2 * phi1), \
+            - rho0 * vp0 * (1 - 2 * sin(phi2) ** 2), rho0 * vs0 * sin(2 * phi2)]\
+        ], dtype='float')
+    
+    # This is the important step, calculating
+    # coefficients for all modes
+    # and rays result is a 4x4 matrix, we want the R[0][0]
+    # element for Rpp reflectivity only
+    
+    if M.ndim == 3:
+        zoep = np.zeros([M.shape[-1]])
+        for i in range(M.shape[-1]): 
+            Mi = M[..., i]
+            Ni = N[..., i]
+            dt = np.dot(np.linalg.inv(Mi), Ni)
+            zoep[i] = dt[0][0]
+    else:
+        dt = np.dot(np.linalg.inv(M), N)
+        zoep = dt[0][0]
+    
+    return zoep
 
 
 def ricker(duration, dt, f):
