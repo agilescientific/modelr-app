@@ -1,4 +1,4 @@
-function logPlot(log_group, properties, label
+function logPlot(log_group, properties, label,
                  offset, width, height, colour){
 
     // Offset this curve
