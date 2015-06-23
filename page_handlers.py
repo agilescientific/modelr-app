@@ -312,8 +312,8 @@ class DashboardHandler(ModelrPageRequest):
             current_rock.name = "name"
             current_rock.description = "description"
             current_rock.vp = 3000.0
-            current_rock.vs = 2000.0
-            current_rock.rho = 1500.0
+            current_rock.vs = 1500.0
+            current_rock.rho = 2500.0
             current_rock.vp_std = 50.0
             current_rock.vs_std = 50.0
             current_rock.rho_std = 50.0
@@ -331,7 +331,7 @@ class DashboardHandler(ModelrPageRequest):
             current_fluid = Fluid()
             current_fluid.name = "name"
             current_fluid.description = "description"
-            current_fluid.vp = 3000.0
+            current_fluid.vp = 1500.0
             current_fluid.K = 200.0
             
         template_params['current_fluid'] = current_fluid
