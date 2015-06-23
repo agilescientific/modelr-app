@@ -293,6 +293,11 @@ function FluidSub(canvas, core_width, core_height,
 
 	// New Arrivals
 	var new_interval = interval.enter().append("g");
+		new_interval.on("click", function(d,i){
+		    if (d3.event.ctrlKey || d3.event.altKey){
+			interval_menu(d, i)
+			$(menu_div).show()
+			$(menu_div).dialog()}})
 
 	new_interval.append("rect")
 	    .attr("width", rock_width)
@@ -540,9 +545,7 @@ function FluidSub(canvas, core_width, core_height,
 
 	// Open the menu
 	if (d3.event.ctrlKey || d3.event.altKey){
-            interval_menu(d, i)
-	    $(menu_div).show()
-	    $(menu_div).dialog()
+         return;
 	}else {
 
 	    var bottom = d.depth + d.thickness;
