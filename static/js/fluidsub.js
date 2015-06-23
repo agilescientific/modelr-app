@@ -1,4 +1,4 @@
-function FluidSub(canvas,core_width, core_height,
+function FluidSub(canvas, core_width, core_height,
 		  rocks, fluids, rock_cmap, fluid_cmap,
 		  menu_div,onchange){
 
@@ -43,8 +43,8 @@ function FluidSub(canvas,core_width, core_height,
     canvas.append("text")
         .attr("class", "y-label")
         .attr("text-anchor", "end")
-        .attr("y", xScale(.2))
-        .attr("x", yScale(-.1))
+        .attr("y", xScale(0.2))
+        .attr("x", yScale(-0.0))
         .attr("dy", ".75em")
         .attr("transform", "rotate(-90)")
         .text("depth [m]");
