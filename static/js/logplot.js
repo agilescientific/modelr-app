@@ -1,114 +1,89 @@
-function logPlot(log_group,properties,label,offset, width, 
-		 height, colour){
+function logPlot(log_group, properties, label
+                 offset, width, height, colour){
 
-    // Dummy scale values
+    // Offset this curve
+    var t = "translate("+offset.toString()+",0)";
+    var plot = log_group.append("g")
+        .attr("transform", t);
+
+    // Append axis labels
+    plot.append("text")
+        .attr("class", "y-label")
+        .attr("text-anchor", "start")
+        .attr("y", -0.05*height)
+        .attr("x", 0)
+        .text(label);
+
+    // Do the plot!
+    this.update_plot = function update_plot(data, z, z_scale){
+
+    var subbed = false;
+
+    // Get the min and max from each pair of logs.
+    // First we need this helper function.
+    var getCol = function (arr, col){
+       var column = [];
+       for(var i=0; i<arr.length; i++){
+          column.push(arr[i][col]);
+       }
+       return column;
+    };
+
+    var max_val = -200000000;
+    var min_val =  200000000;
+    for (var log_ind=0; log_ind<properties.length; log_ind++){
+
+        var this_index = properties[log_ind];
+        var this_log = getCol(data, this_index);
+
+        var log_max = Math.max.apply(null, this_log);
+        var log_min = Math.min.apply(null, this_log);
+
+        if (log_min < min_val) {
+          min_val = log_min;
+        }
+        if (log_max > max_val) {
+          max_val = log_max;
+        }
+    }
+
+    // Set up the scales
     var propScale = d3.scale.linear() 
-	.range([0,20]);
+        .range([0, width])             // OUTPUT position
+        .domain([min_val, max_val]);   // INPUT data
     
     var zScale = d3.scale.linear()
-	.range([0, 20]);
+        .range(z_scale)                // OUTPUT position
+        .domain(z);                    // INPUT data
 
-    var plot = log_group.append("g")
-	.attr("transform", "translate("+offset.toString()+",0)");
+    // Clear old plot
+    plot.selectAll("path").remove();
 
-    // Axis labels
-    plot.append("text")
-	.attr("class", "y-label")
-	.attr("text-anchor", "start")
-	.attr("y", -.05*height)
-	.attr("x", 2)
-	.text(label);
+    // Now draw the lines
+    for (var log_ind=0; log_ind<properties.length; log_ind++) {
 
+        var property = properties[log_ind];
 
+        var lineFunc = d3.svg.line()
+        .x(function(d) {
+            return propScale(d[property]);
+        })
+        .y(function(d) {
+            return zScale(d[0]);
+        });
 
+        // Set the attributes
+        var line = plot.append("path")
+        .attr("d", lineFunc(data))
+        .attr('stroke', colour)
+        .attr('stroke-width', 1)
+        .attr('fill', 'none');
 
-    this.update_plot = function update_plot(data,z, z_scale){
-	
-
-
-	var dash = false;
-
-	// Set the scale
-	var max_val = -1000000;
-	var min_val = 200000000;
-	for(var log_ind = 0; log_ind < properties.length; log_ind++){
-	    var log_max = Math.max.apply(Math,data[properties[log_ind]]);
-	    var log_min = Math.min.apply(Math,data[properties[log_ind]]);
-	    if(log_min < min_val){
-		min_val = log_min;
-	    };
-	    if(log_max > max_val){
-		max_val = log_max;
-	    };
-	    
-	};
-	propScale.domain([min_val, 
-  			  max_val]);
-
-
-	zScale.domain(z);
-	zScale.range(z_scale);
-
-
-	// Clear old plot
-	plot.selectAll("path").remove();
-
-
-	for(var log_ind = 0; log_ind < properties.length; log_ind++){
-
-	    var property = properties[log_ind];
-
-	    var lineFunc = d3.svg.line()
-		.x(function(d) {
-		    return propScale(d[property]);
-		})
-		.y(function(d) {
-		    return zScale(d[0]);
-		});
-
-
-
-
-	    var line = plot.append("path")
-		.attr("d", lineFunc(data))
-		.attr('stroke', colour)
-		.attr('stroke-width', 1)
-		.attr('fill', 'none');
-	    if(dash){
-		line.style("stroke-dasharray", ("3, 3"));
-	    };
-
-	    dash = true;
-	};
-    }; // end of function update_plot
+        // Adjust the style if this is the subbed curve
+        if(subbed){
+          line.style("stroke-opacity", 0.5);
+        }
+        subbed = true;
+    }
+  }; // end of function update_plot
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
