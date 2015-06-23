@@ -4,6 +4,9 @@
 {% block content %}
 
 <style type="text/css">
+tspan {
+  font-size: 9px;
+}
 
  model-plot {
    font: 16px sans-serif;
@@ -97,7 +100,7 @@
       <h3 class="panel-title">Model</h3>
     </div>
     <div class="panel-body">
-      <p class="lead"> Drag tops to move them. Left-click layers to insert new tops. Right-click layers to delete them.</p>
+      <p class="lead"> Drag tops to move them. Left-click to insert new tops. Right-click layers to delete them. Alt-click to edit layers.</p>
       <div class="model-plot"> <!-- Helps with CSS -->
         <div class="col-md-12" id="plot-container">
         </div>
@@ -106,10 +109,10 @@
     </div> <!-- End of panel body -->
   </div> <!-- End of panel -->
 
-<div id="rock-menu" title="Interval Menu" >
+<div id="rock-menu" title="Interval menu">
 </div>
 
-<div id="seismic-menu" title="Seismic Menu">
+<div id="seismic-menu" title="Seismic menu">
   Frequency:
   <input type="range" min="3" max="100" id="frequency" value="30">
   <div id="frequency-label">
