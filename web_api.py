@@ -589,10 +589,11 @@ class ModelData1DHandler(ModelrAPI):
         for layer in rock_data:
 
             rock_id = int(layer["rock"]["db_key"])
+            rock_name = layer["rock"]["name"]
             rock = get_by_id(Rock, rock_id, user)
             if not rock:
-                rock = get_rock_by_name_and_groups(rock_id,
-                                                   user.group)
+                rock = get_items_by_name_and_user(Rock,rock_name,
+                                                  user)[0]
             if not rock: raise Exception
 
       
