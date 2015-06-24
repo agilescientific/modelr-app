@@ -484,7 +484,7 @@ function FluidSub(canvas, core_width, core_height,
 
     function fluidsub_click(d,i){
 
-    if (d3.event.ctrlKey & d3.event.shiftKey){
+    if (d3.event.altKey){
 	// delete sub fluid
 	// always keep one layer
         if (i > 0){
@@ -545,7 +545,7 @@ function FluidSub(canvas, core_width, core_height,
     function rock_click(d, i, j){
 
     // Open the menu
-        if (d3.event.ctrlKey & d3.event.shiftKey) {
+        if (d3.event.altKey) {
 	    delete_interval(d, i);
             return;
         } else {
