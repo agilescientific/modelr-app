@@ -11,20 +11,21 @@
     <li><a href="#scenarios" data-toggle="tab">Scenarios</a></li>
     <li><a href="#models" data-toggle="tab">Models</a></li>
     <li><a href="#rocks" data-toggle="tab">Rocks</a></li>
+    <li><a href="#fluids" data-toggle="tab">Fluids</a></li>
   </ul>
-    
+
   <div class="tab-content">
 
     <!-- +++++++++ FEED TAB CONTENT +++++++++ -->
     <div class="tab-pane active" id="feed">
       <div class="col-md-6">
-            <h2>Welcome to Modelr!</h2>
-            <p class="lead"> To get started, try our 
-	      <a href="/model">model</a> or 
-	      <a href="/scenario">scenario</a> 
-	      pages. Use the tabs on the right to manage your rocks and models!
-	    </p>
-            <p class="lead"><a href="/help">Need more help?</a></p>
+        <h2>Welcome to Modelr!</h2>
+        <p class="lead"> To get started, try our
+	  <a href="/model">model</a> or
+	  <a href="/scenario">scenario</a>
+	  pages. Use the tabs on the right to manage your rocks and models!
+	</p>
+        <p class="lead"><a href="/help">Need more help?</a></p>
       </div>
     </div>
 
@@ -36,27 +37,27 @@
         <tbody>
 
           {% for scenario in scenarios %}
-            <tr id="{{scenario.name}}">
-                <td><strong><a href='/scenario#{{scenario.name}}'>
-		  {{scenario.name}}
-		</a></strong>
-		</td>
-                <td>{{scenario.script}}</td>
-                <td> <a class="btn btn-success btn-xs" 
-			href="/scenario#{{scenario.name}}" > 
-		  edit&nbsp;</a> &nbsp;&nbsp;
-		  <button class="btn btn-danger btn-xs" 
-			  type="button" 
-			  onclick='delete_scenario("{{scenario.name}}")'>
-		    delete
-		  </button>
-		</td>
-	    </tr>
+          <tr id="{{scenario.name}}">
+            <td><strong><a href='/scenario#{{scenario.name}}'>
+              {{scenario.name}}
+	    </a></strong>
+	    </td>
+            <td>{{scenario.script}}</td>
+            <td> <a class="btn btn-success btn-xs"
+		    href="/scenario#{{scenario.name}}" >
+              edit&nbsp;</a> &nbsp;&nbsp;
+              <button class="btn btn-danger btn-xs"
+		      type="button"
+		      onclick='delete_scenario("{{scenario.name}}")'>
+		delete
+              </button>
+	    </td>
+	  </tr>
           {% endfor %}
         </tbody>
       </table>
 
-      <a class="btn btn-primary" href="/scenario" 
+      <a class="btn btn-primary" href="/scenario"
 	 role="button">Make a new scenario</a>
     </div>
 
@@ -66,7 +67,7 @@
       <h2>Models</h2>
       <p>Manage your uploaded images and saved models.</p>
       <div class="alert alert-warning">
-        <strong>Note:</strong> 
+        <strong>Note:</strong>
 	Deleting an image will remove all associated models.
       </div>
 
@@ -76,44 +77,44 @@
       <div class="row" id="{{img['image_key']}}">
 
         <div class="col-lg-3 col-md-3">
-        
+
           <a href="/model#image_key={{img['image_key']}}">
             <img class="img-rounded" src="{{img['image']}}" alt="" >
           </a>
-    
-          <a class="btn btn-success btn-xs" 
+
+          <a class="btn btn-success btn-xs"
 	     href="/model#image_key={{img['image_key']}}">
-	    open image
+            open image
 	  </a>
 
           {% if img.editable %}
-            <button class="btn btn-danger btn-xs" 
-		    onclick='delete_image("{{img['image_key']}}")'>
-	      delete image
-	    </button>
+          <button class="btn btn-danger btn-xs"
+		  onclick='delete_image("{{img['image_key']}}")'>
+            delete image
+	  </button>
           {% endif %}
-    
-    
+
+
         </div>
 
         <div class="col-lg-5 col-md-5">
-        
+
           <tr>
             {% for model in img["models"] %}
-              <div class="row">
-                <td><strong>
-		  <a href="/model#image_key={{img['image_key']}}&name={{model.name}}">
-		    {{model.name}}
-		  </a></strong></td>
-                <td> 
-		  <a class="btn btn-success btn-xs" 
-		     href="/model#image_key={{img['image_key']}}&name={{model.name}}" > 
-		    open&nbsp;</a> &nbsp;&nbsp;</td>
-                <button class="btn btn-danger btn-xs" 
-			onclick='delete_model("{{img['image_key']}}","{{model.name}}", this.parentNode)'>
-		  delete
-		</button>
-              </div>
+            <div class="row">
+              <td><strong>
+		<a href="/model#image_key={{img['image_key']}}&name={{model.name}}">
+		  {{model.name}}
+		</a></strong></td>
+              <td>
+		<a class="btn btn-success btn-xs"
+		   href="/model#image_key={{img['image_key']}}&name={{model.name}}" >
+		  open&nbsp;</a> &nbsp;&nbsp;</td>
+              <button class="btn btn-danger btn-xs"
+		      onclick='delete_model("{{img['image_key']}}","{{model.name}}", this.parentNode)'>
+		delete
+              </button>
+            </div>
             {% endfor%}
           </tr>
         </div>
@@ -130,8 +131,8 @@
       <!-- ------ My rocks table ------- -->
       <h2>My rocks</h2>
       <table class="table table-condensed table-hover">
-        <thead>
-          <tr>
+	<thead>
+	  <tr>
             <th></th>
             <th><em>V</em><sub>P</sub></th>
             <th><em>V</em><sub>S</sub></th>
@@ -139,175 +140,189 @@
             <th><em>V</em><sub>P</sub> SD</th>
             <th><em>V</em><sub>S</sub> SD</th>
             <th><em>ρ</em> SD</th>
+	    <th><em>&phi;</em></th>
+	    <th><em>V</em><sub>clay</sub></th>
             <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for rock in rocks %}
+	  </tr>
+	</thead>
+	<tbody>
+	  {% for rock in rocks %}
 
-          {% set slug  = rock.name | replace(' ','-') %}
+	  {% set slug  = rock.name | replace(' ','-') %}
 
-          <tr id="{{rock.name}}">
+	  <tr id="{{rock.name}}">
 
-	      <td><strong>{{ rock.name }}</strong>
-		<span style="color:#bbb; font-size:100%; vertical-align:middle; left:6px; top:-2px;" 
-		      class="glyphicon glyphicon-info-sign" 
-		      id="rock_desc_{{ slug }}" data-container="body" 
-		      data-toggle="popover" data-placement="right" 
-		      data-content="{{ rock.description }}">
-	      </td>
-              <td>{{rock.vp}}</td>
-              <td>{{rock.vs}}</td>
-              <td>{{rock.rho}}</td>
-              <td>{{rock.vp_std}}</td>
-              <td>{{rock.vs_std}}</td>
-              <td>{{rock.rho_std}}</td>
-              <td><button class="btn btn-success btn-xs" 
-			  type="button" 
-			  id="edit-rock-button"
-			  onclick='edit_rock("{{rock.name}}")'>
-		edit
-	      </button>
+	    <td><strong>{{ rock.name }}</strong>
+	      <span style="color:#bbb; font-size:100%; vertical-align:middle; left:6px; top:-2px;"
+		    class="glyphicon glyphicon-info-sign"
+		    id="rock_desc_{{ slug }}" data-container="body"
+		    data-toggle="popover" data-placement="right"
+		    data-content="{{ rock.description }}">
+	    </td>
 
-		&nbsp;&nbsp;&nbsp;&nbsp;
-		<button class="btn btn-danger btn-xs" type="button"  
-			onclick='delete_rock("{{rock.name}}")'>
-		  delete
-		</button>
-	      </td>
-            
-          </tr>
+            <td>{{rock.vp}}</td>
+            <td>{{rock.vs}}</td>
+            <td>{{rock.rho}}</td>
+            <td>{{rock.vp_std}}</td>
+            <td>{{rock.vs_std}}</td>
+            <td>{{rock.rho_std}}</td>
+	    <td>{{rock.porosity}}</td>
+	    <td>{{rock.vclay}}</td>
 
-      <script>
-        $('#rock_desc_{{ slug }}').popover({
-        trigger: 'hover click', 
-        html: true,
-        placement: 'right', 
-        container: 'body',
-        delay: { show: 500, hide: 1000 }
-        });
-      </script>
+            <td><button class="btn btn-success btn-xs"
+			type="button"
+			id="edit-rock-button"
+			onclick='edit_rock("{{rock.name}}")'>
+	      edit
+	    </button>
 
-          {% endfor %}
-        </tbody>
+	    &nbsp;&nbsp;&nbsp;&nbsp;
+	    <button class="btn btn-danger btn-xs" type="button"
+		    onclick='delete_rock("{{rock.name}}")'>
+	      delete
+	    </button>
+	    </td>
+
+	  </tr>
+
+	  <script>
+	   $('#rock_desc_{{ slug }}').popover({
+             trigger: 'hover click',
+             html: true,
+             placement: 'right',
+             container: 'body',
+             delay: { show: 500, hide: 1000 }
+	   });
+	  </script>
+
+	  {% endfor %}
+	</tbody>
       </table>
 
 
       <!-- ------ Shared rocks, if any ------- -->
       {% for rock_group in rock_groups %}
       <div class="panel panel-default">
-        <div class="panel-heading">
-          <h3 class="panel-title">{{rock_group['name']}} rocks</h3>
-        </div>
-        <div class="panel-body">
-          <table class="table table-condensed table-hover">
+	<div class="panel-heading">
+	  <h3 class="panel-title">{{rock_group['name']}} rocks</h3>
+	</div>
+	<div class="panel-body">
+	  <table class="table table-condensed table-hover">
             <thead>
               <tr>
-                <th></th>
-                <th><em>V</em><sub>P</sub></th>
-                <th><em>V</em><sub>S</sub></th>
-                <th><em>ρ</em></th>
-                <th><em>V</em><sub>P</sub> SD</th>
-                <th><em>V</em><sub>S</sub> SD</th>
-                <th><em>ρ</em> SD</th>
-                <th></th>
+		<th></th>
+		<th><em>V</em><sub>P</sub></th>
+		<th><em>V</em><sub>S</sub></th>
+		<th><em>ρ</em></th>
+		<th><em>V</em><sub>P</sub> SD</th>
+		<th><em>V</em><sub>S</sub> SD</th>
+		<th><em>ρ</em> SD</th>
+		<th><em>&phi;</em></th>
+		<th><em>V</em><sub>clay</sub></th>
+		<th></th>
               </tr>
             </thead>
             <tbody>
               {% for rock in rock_group['rocks'] %}
               <tr>
-                <input type="hidden" name="name" value="{{rock.name}}" />
-                <td><strong>{{rock.name}}</strong></td>
-                <td>{{rock.vp}}</td>
-                <td>{{rock.vs}}</td>
-                <td>{{rock.rho}}</td>
-                <td>{{rock.vp_std}}</td>
-                <td>{{rock.vs_std}}</td>
-                <td>{{rock.rho_std}}</td>
+		<input type="hidden" name="name" 
+		       value="{{rock.name}}" />
+		<td><strong>{{rock.name}}</strong></td>
+		<td>{{rock.vp}}</td>
+		<td>{{rock.vs}}</td>
+		<td>{{rock.rho}}</td>
+		<td>{{rock.vp_std}}</td>
+		<td>{{rock.vs_std}}</td>
+		<td>{{rock.rho_std}}</td>
+		<td>{{rock.porosity}}</td>
+		<td>{{rock.vclay}}</td>
               </tr>
               {% endfor %}
             </tbody>
-          </table>
-        </div>
+	  </table>
+	</div>
       </div>
       {% endfor %}
 
       <!-- ------ Default rocks ------- -->
       <div class="panel panel-default" id="accordion">
-        <div class="panel-heading">
-          <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapseDefault" data-toggle="collapse">
-          <i class="indicator glyphicon glyphicon-chevron-down pull-right" style="color:gray;"></i> Default rocks</a>
-          </h3>
-        </div>
-        <div class="panel-body panel-collapse collapse" id="collapseDefault">
-          <table class="table table-condensed table-hover">
+	<div class="panel-heading">
+	  <h3 class="panel-title"><a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapseDefault" data-toggle="collapse">
+            <i class="indicator glyphicon glyphicon-chevron-down pull-right" style="color:gray;"></i> Default rocks</a>
+	  </h3>
+	</div>
+	<div class="panel-body panel-collapse collapse" id="collapseDefault">
+	  <table class="table table-condensed table-hover">
             <thead>
               <tr>
-                <th></th>
-                <th><em>V</em><sub>P</sub></th>
-                <th><em>V</em><sub>S</sub></th>
-                <th><em>ρ</em></th>
-                <th><em>V</em><sub>P</sub> SD</th>
-                <th><em>V</em><sub>S</sub> SD</th>
-                <th><em>ρ</em> SD</th>
-                <th></th>
+		<th></th>
+		<th><em>V</em><sub>P</sub></th>
+		<th><em>V</em><sub>S</sub></th>
+		<th><em>ρ</em></th>
+		<th><em>V</em><sub>P</sub> SD</th>
+		<th><em>V</em><sub>S</sub> SD</th>
+		<th><em>ρ</em> SD</th>
+		<th><em>&phi;</em></th>
+		<th><em>V</em><sub>clay</sub></th>
+		<th></th>
               </tr>
             </thead>
             <tbody>
               {% for rock in default_rocks %}
               <tr>
-                <input type="hidden" name="name" value="{{rock.name}}" />
-                <td><strong>{{rock.name}}</strong></td>
-                  <td>{{rock.vp}}</td>
-                  <td>{{rock.vs}}</td>
-                  <td>{{rock.rho}}</td>
-                  <td>{{rock.vp_std}}</td>
-                  <td>{{rock.vs_std}}</td>
-                  <td>{{rock.rho_std}}</td>
+		<input type="hidden" name="name" value="{{rock.name}}" />
+		<td><strong>{{rock.name}}</strong></td>
+		<td>{{rock.vp}}</td>
+		<td>{{rock.vs}}</td>
+		<td>{{rock.rho}}</td>
+		<td>{{rock.vp_std}}</td>
+		<td>{{rock.vs_std}}</td>
+		<td>{{rock.rho_std}}</td>
+		<td>{{rock.porosity}}</td>
+		<td>{{rock.vclay}}</td>
               </tr>
               {% endfor %}
             </tbody>
-          </table>
-        </div> <!-- end of panel body -->
+	  </table>
+	</div> <!-- end of panel body -->
       </div> <!-- end of panel -->
 
       <!-- ------ Add a rock ------- -->
       <div class="panel panel-default" id="rock-form">
-        <div class="panel-heading">
-          <h3 class="panel-title" id="rock-manager-header">
+	<div class="panel-heading">
+	  <h3 class="panel-title" id="rock-manager-header">
 	    Add rock
 	  </h3>
-        </div>
-        <div class="panel-body">
+	</div>
+	<div class="panel-body">
 
-          <form class="form-horizontal" role="form" name="input" 
-		 id="rock-input-form">
+	  <form class="form-horizontal" role="form" name="input"
+		id="rock-input-form">
 
             <div class="row"> <!-- NAME -->
               <div class="form-group">
-                <label for="name" class="col-sm-2 control-label">
+		<label for="name" class="col-sm-2 control-label">
 		  Name
 		</label>
-                <div class="col-sm-9">
-                  <input class="form-control" type="text" name="name" 
+		<div class="col-sm-9">
+		  <input class="form-control" type="text" name="name"
 			 id="edit-rock-name"
 			 value="{{current_rock.name}}" />
-                </div>
+		</div>
               </div>
             </div> <!-- /row -->
 
             <div class="row"> <!-- DESCRIPTION -->
               <div class="form-group">
-                <label for="description" 
+		<label for="description"
 		       class="col-sm-2 control-label">
 		  Description</label>
-                <div class="col-sm-9">
-                  <textarea class="form-control" rows="2" 
+		<div class="col-sm-9">
+		  <textarea class="form-control" rows="2"
 			    name="description"
-			    id="edit-rock-desc">
-		    {{ current_rock.description }}
+			    id="edit-rock-desc">{{ current_rock.description }}
 		  </textarea>
-                </div>
+		</div>
               </div>
             </div> <!-- /row -->
 
@@ -315,163 +330,534 @@
 
               <div class="col-sm-6"> <!-- LEFT COLUMN -->
 
-                <div class="form-group">
-                  <label for="vp" class="col-sm-4 control-label">
+		<div class="form-group">
+		  <label for="vp" class="col-sm-4 control-label">
 		    <em>V</em><sub>P</sub></label>
-                  <div class="col-sm-6">
-                    <input class="form-control" type="text" 
+		  <div class="col-sm-6">
+                    <input class="form-control" type="text"
 			   name="vp" value="{{current_rock.vp}}"
 			   id="edit-vp" />
-                  </div>
-                 </div>
+		  </div>
+		</div>
 
-                <div class="form-group">
-                  <label for="vs" class="col-sm-4 control-label">
+		<div class="form-group">
+		  <label for="vs" class="col-sm-4 control-label">
 		    <em>V</em><sub>S</sub></label>
-                  <div class="col-sm-6">
-                    <input class="form-control" type="text" name="vs" 
-			   value="{{current_rock.vs}}" 
+		  <div class="col-sm-6">
+                    <input class="form-control" type="text" name="vs"
+			   value="{{current_rock.vs}}"
 			   id="edit-vs" />
-                  </div>
-                </div>
+		  </div>
+		</div>
 
-                <div class="form-group">
-                  <label for="rho" class="col-sm-4 control-label">
+		<div class="form-group">
+		  <label for="rho" class="col-sm-4 control-label">
 		    <em>ρ</em></label>
-                  <div class="col-sm-6">
-                    <input class="form-control" type="text" 
+		  <div class="col-sm-6">
+                    <input class="form-control" type="text"
 			   name="rho"
 			   value="{{current_rock.rho}}"
 			   id="edit-rho" />
-                  </div>
-                </div>
+		  </div>
+		</div>
+		<div class="form-group">
+		  <label for="vclay" class="col-sm-4 control-label">
+		    <em>V</em><sub>clay</sub></label>
 
+		  <div class="col-sm-6">
+                    <input class="form-control" type="text"
+			   name="vclay"
+			   id="edit-vclay"
+			   value="{{current_rock.vclay}}" />
+		  </div>
+		</div>
               </div> <!-- /column -->
 
-              <div class="col-sm-offset-6 col-sm-6 form-group"> 
+              <div class="col-sm-offset-6 col-sm-6 form-group">
 		<!-- RIGHT COLUMN -->
 
-                <div class="form-group">
-                  <label for="vp std" class="col-sm-4 control-label">
+		<div class="form-group">
+		  <label for="vp std" class="col-sm-4 control-label">
 		    <em>V</em><sub>P</sub> SD</label>
-                  <div class="col-sm-6">
-                    <input class="form-control" type="text" 
-			   name="vp_std" 
+		  <div class="col-sm-6">
+                    <input class="form-control" type="text"
+			   name="vp_std"
 			   value="{{current_rock.vp_std}}"
 			   id="edit-vp-std" />
-                  </div>
-                </div>
+		  </div>
+		</div>
 
-                <div class="form-group">
-                  <label for="vs std" class="col-sm-4 control-label">
+		<div class="form-group">
+		  <label for="vs std" class="col-sm-4 control-label">
 		    <em>V</em><sub>S</sub> SD</label>
-                  <div class="col-sm-6">
-                    <input class="form-control" type="text" 
-			   name="vs_std" 
+		  <div class="col-sm-6">
+                    <input class="form-control" type="text"
+			   name="vs_std"
 			   id="edit-vs-std"
 			   value="{{current_rock.vs_std}}" />
-                  </div>
-                </div>
+		  </div>
+		</div>
 
-                <div class="form-group">
-                  <label for="rho std" class="col-sm-4 control-label">
+		<div class="form-group">
+		  <label for="rho std" class="col-sm-4 control-label">
 		    <em>ρ</em> SD</label>
-                  <div class="col-sm-6">
-                    <input class="form-control" type="text" 
-			   name="rho_std" 
+		  <div class="col-sm-6">
+                    <input class="form-control" type="text"
+			   name="rho_std"
 			   id="edit-rho-std"
 			   value="{{current_rock.rho_std}}" />
-                  </div>
-                </div>
+		  </div>
+		</div>
+
+		<div class="form-group">
+		  <label for="porosity" class="col-sm-4 control-label">
+		    <em>&phi;</em></label>
+		  <div class="col-sm-6">
+                    <input class="form-control" type="text"
+			   name="porosity"
+			   id="edit-porosity"
+			   value="{{current_rock.porosity}}" />
+		  </div>
+		</div>
+
+
 		<input name="db_key" id="edit-rock-key" type="hidden"
-		       value={current_rock.db_key}}>
+		       value={{current_rock.db_key}}>
+              </div> <!-- /row -->
 
-              </div> <!-- /column -->
+              <div class="row"> <!-- FLUID ROW -->
+		<div class="form-group">
+		  <label for="rock-fluid" class="col-sm-2 control-label">
+		    Fluid 
+		  </label>
+		  <div class="col-sm-9">
+		    <select class="form-control" name="rock-fluid"
+			    id="edit-rock-fluid">
+		      <option value='None'> 
+			None
+		      </option>
+                      {% for fluid in fluids + default_fluids %}
+		      {% if current_rock.fluid_key and current_rock.fluid_id == fluid.key().id() %}
+                      <option value="{{current_rock.fluid}}" selected>
+			{% else %}
+			<option value="{{fluid.key().id()}}">
+			  {% endif %}
 
-            </div> <!-- /row -->
+			  {{fluid.name}}</option>
+			{% endfor %}
+		    </select>
+		  </div>
+		</div> <!-- end of form group -->
+              </div> <!-- end of fluid row -->
 
-            <div class="row"> <!-- SHARE ROW -->
-              <div class="form-group">
-                <label for="sharing" class="col-sm-2 control-label">
-		  Share</label>
-                <div class="col-sm-9">
-                  <select class="form-control" name="group">
-                    <option value="private" selected>
+              <div class="row"> <!-- SHARE ROW -->
+		<div class="form-group">
+		  <label for="sharing" class="col-sm-2 control-label">
+                    Share
+		  </label>
+		  <div class="col-sm-9">
+                    <select class="form-control" name="group">
+                      <option value="private" selected>
+			Private
+                      </option>
+                      {% for group in user.group %}
+                      {% if group==current_rock.group %}
+                      <option value={{group}} selected>
+			{% else %}
+			<option value="{{group}}">
+			  {% endif %}
+			  {{group.capitalize()}}
+			</option>
+			{% endfor %}
+                    </select>
+		  </div>
+		</div>
+              </div> <!-- end of share row -->
+
+	      <div class="row"> <!-- BUTTON ROW -->
+		<div class="form-group">
+		  <div class="col-sm-offset-2 col-sm-6">
+		    <button type="button" class="btn btn-primary"
+			    id="submit-rock-button"
+			    onclick="post_rock()">
+		      Add this rock
+		    </button>
+		    <button type="reset" class="btn btn-default"
+			    onclick="clear_rock_data()">
+		      Reset form
+		    </button>
+		  </div>
+		</div>
+	      </div> <!-- /row -->
+
+	  </form>
+
+
+            </div> <!-- end of panel body -->
+	</div> <!-- end of panel  -->
+      </div> <!-- /tab  -->
+    </div>
+    <!-- ------ My fluids table ------- -->
+    <div class="tab-pane" id="fluids">
+      <h2>My fluids</h2>
+      <table class="table table-condensed table-hover">
+	<thead>
+	  <tr>
+	    <th></th>
+	    <th><em>&rho;</em><sub>water</sub></th>
+	    <th><em>&rho;</em><sub>hc</sub></th>
+	    <th><em>K</em><sub>water</sub></th>
+	    <th><em>K</em><sub>hc</sub></th>
+	    <th><em>S</em><sub>w</sub></th>
+	    <th></th>
+	  </tr>
+	</thead>
+	<tbody>
+	  {% for fluid in fluids %}
+
+	  {% set slug  = fluid.name | replace(' ','-') %}
+
+	  <tr id="{{fluid.name}}">
+
+	    <td><strong>{{ fluid.name }}</strong>
+	      <span style="color:#bbb; font-size:100%; vertical-align:middle; left:6px; top:-2px;"
+		    class="glyphicon glyphicon-info-sign"
+		    id="fluid_desc_{{ slug }}" data-container="body"
+		    data-toggle="popover" data-placement="right"
+		    data-content="{{ fluid.description }}">
+	    </td>
+	    <td>{{fluid.rho_w}}</td>
+	    <td>{{fluid.rho_hc}}</td>
+	    <td>{{fluid.kw}}</td>
+	    <td>{{fluid.khc}}</td>
+	    <td>{{fluid.sw}}</td>
+	    <td><button class="btn btn-success btn-xs"
+			type="button"
+			id="edit-fluid-button"
+			onclick='edit_fluid("{{fluid.key().id()}}")'>
+	      edit
+	    </button>
+
+	    &nbsp;&nbsp;&nbsp;&nbsp;
+	    <button class="btn btn-danger btn-xs" type="button"
+		    onclick='delete_fluid("{{fluid.key().id()}}")'>
+	      delete
+	    </button>
+	    </td>
+
+	  </tr>
+
+	  <script>
+	   $('#fluid_desc_{{ slug }}').popover({
+	     trigger: 'hover click',
+	     html: true,
+	     placement: 'right',
+	     container: 'body',
+	     delay: { show: 500, hide: 1000 }
+	   });
+	  </script>
+
+	  {% endfor %}
+	</tbody>
+      </table>
+
+
+      <!-- ------ Shared rocks, if any ------- -->
+      {% for fluid_group in fluid_groups %}
+      <div class="panel panel-default">
+	<div class="panel-heading">
+	  <h3 class="panel-title">{{fluid_group['name']}} fluids</h3>
+	</div>
+	<div class="panel-body">
+	  <table class="table table-condensed table-hover">
+	    <thead>
+	      <tr>
+		<th></th>
+		<th><em>&rho;</em><sub>water</sub></th>
+		<th><em>&rho;</em><sub>hc</sub></th>
+		<th><em>K</em><sub>water</sub></th>
+		<th><em>K</em><sub>hc</sub></th>   
+		<th><em>S</em><sub>w</sub></th>       
+		<th></th>
+	      </tr>
+	    </thead>
+	    <tbody>
+	      {% for fluid in fluid_group['fluids'] %}
+	      <tr>
+		<input type="hidden" name="name" value="{{fluid.name}}" />
+		<td><strong>{{fluid.name}}</strong></td>
+		<td>{{fluid.rho_w}}</td>
+		<td>{{fluid.rho_hc}}</td>
+		<td>{{fluid.kw}}</td>
+		<td>{{fluid.khc}}</td>       
+		<td>{{fluid.sw}}</td>
+	      </tr>
+	      {% endfor %}
+	    </tbody>
+	  </table>
+	</div>
+      </div>
+      {% endfor %}
+
+      <!-- ------ Default fluids ------- -->
+      <div class="panel panel-default" id="accordion">
+	<div class="panel-heading">
+	  <h3 class="panel-title">
+	    <a class="accordion-toggle" 
+	       data-toggle="collapse" 
+	       data-parent="#accordion" 
+	       href="#collapseFluidDefault" data-toggle="collapse">
+	      <i class="indicator glyphicon glyphicon-chevron-down pull-right" style="color:gray;"></i> Default fluids</a>
+	  </h3>
+	</div>
+	<div class="panel-body panel-collapse collapse" id="collapseFluidDefault">
+	  <table class="table table-condensed table-hover">
+	    <thead>
+	      <tr>
+		<th></th>
+		<th><em>&rho;</em><sub>water</sub></th>
+		<th><em>&rho;</em><sub>hc</sub></th>
+		<th><em>K</em><sub>water</sub></th>
+		<th><em>K</em><sub>hc</sub></th>
+		<th><em>S</em><sub>w</sub></th>
+		<th></th>
+	      </tr>
+	    </thead>
+	    <tbody>
+	      {% for fluid in default_fluids %}
+	      <tr>
+		<input type="hidden" name="name" value="{{fluid.name}}" />
+		<td><strong>{{fluid.name}}</strong></td>
+		<td>{{fluid.rho_w}}</td>
+		<td>{{fluid.rho_hc}}</td>
+		<td>{{fluid.kw}}</td>
+		<td>{{fluid.khc}}</td>   
+		<td>{{fluid.sw}}</td>
+	      </tr>
+	      {% endfor %}
+	    </tbody>
+	  </table>
+	</div> <!-- end of panel body -->
+      </div> <!-- end of panel -->
+
+      <!-- ------ Add a fluid ------- -->
+      <div class="panel panel-default" id="fluid-form">
+	<div class="panel-heading">
+	  <h3 class="panel-title" id="fluid-manager-header">
+	    Add fluid
+	  </h3>
+	</div>
+	<div class="panel-body">
+
+	  <form class="form-horizontal" role="form" name="input"
+		id="fluid-input-form">
+
+	    <div class="row"> <!-- NAME -->
+	      <div class="form-group">
+		<label for="name" class="col-sm-2 control-label">
+		  Name
+		</label>
+		<div class="col-sm-9">
+		  <input class="form-control" type="text" name="name"
+			 id="edit-fluid-name"
+			 value="{{current_fluid.name}}" />
+		</div>
+	      </div>
+	    </div> <!-- /row -->
+
+	    <div class="row"> <!-- DESCRIPTION -->
+	      <div class="form-group">
+		<label for="description"
+		       class="col-sm-2 control-label">
+		  Description</label>
+		<div class="col-sm-9">
+		  <textarea class="form-control" rows="2"
+			    name="description"
+			    id="edit-fluid-desc">{{ current_fluid.description }}</textarea>
+		</div>
+	      </div>
+	    </div> <!-- /row -->
+
+	    <div class="row"> <!-- Properties ROW -->
+
+	      <div class="col-sm-6">
+		<div class="form-group">
+		  
+		  <label for="rho_w" class="col-sm-4 control-label">
+		    <em>&rho;</em><sub>water</sub>
+		  </label>
+		  
+		  <div class="col-sm-6">
+		    <input class="form-control" type="text" name="rho_w"
+			   value="{{current_fluid.rho_w}}"
+			   id="edit-fluid-rho-w" />
+		  </div>
+		</div>
+	      </div>
+
+	      <div class="col-sm-6">
+		<div class="form-group">
+		  
+		  <label for="rho_hc" class="col-sm-4 control-label">
+		    <em>&rho;</em><sub>hc</sub>
+		  </label>
+		  
+		  <div class="col-sm-6">
+		    <input class="form-control" type="text" name="rho_hc"
+			   value="{{current_fluid.rho_hc}}"
+			   id="edit-fluid-rho-hc" />
+		  </div>
+		</div>
+	      </div>
+	      
+	      <div class="col-sm-6">
+		<div class="form-group">
+		  
+		  <label for="kw" class="col-sm-4 control-label">
+		    <em>K</em><sub>water</sub>
+		  </label>
+		  
+		  <div class="col-sm-6">
+		    <input class="form-control" type="text" name="kw"
+			   value="{{current_fluid.kw}}"
+			   id="edit-fluid-kw" />
+		  </div>
+		</div>
+	      </div>
+
+	      <div class="col-sm-6">
+		<div class="form-group">
+		  
+		  <label for="khc" class="col-sm-4 control-label">
+		    <em>K</em><sub>hc</sub>
+		  </label>
+		  
+		  <div class="col-sm-6">
+		    <input class="form-control" type="text" name="khc"
+			   value="{{current_fluid.khc}}"
+			   id="edit-fluid-khc" />
+		  </div>
+		</div>
+	      </div>
+
+	      <div class="col-sm-6">
+		<div class="form-group">
+		  
+		  <label for="sw" class="col-sm-4 control-label">
+		    <em>S</em><sub>w</sub>
+		  </label>
+		  
+		  <div class="col-sm-6">
+		    <input class="form-control" type="text" name="sw"
+			   value="{{current_fluid.sw}}"
+			   id="edit-fluid-sw" />
+		  </div>
+		</div>
+	      </div>
+	      
+	      <input name="db_key" id="edit-fluid-key" type="hidden"
+		     value={{current_fluid.db_key}} />
+
+	    </div> <!-- /row -->
+
+	    <div class="row"> <!-- SHARE ROW -->
+	      <div class="form-group">
+		<label for="sharing" class="col-sm-2 control-label">
+		  Share
+		</label>
+		<div class="col-sm-9">
+		  <select class="form-control" name="group">
+		    <option value="private" selected>
 		      Private
 		    </option>
-                    {% for group in user.group %}
-		    {% if group==current_rock.group %}
+		    {% for group in user.group %}
+		    {% if group==current_fluid.group %}
                     <option value={{group}} selected>
 		      {% else %}
-		      <option value="{{group}}">
+                      <option value="{{group}}">
 			{% endif %}
 
-		      {{group.capitalize()}}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </div>
-            </div> <!-- /row -->
-    
-            <div class="row"> <!-- BUTTON ROW -->
-              <div class="form-group">
-                <div class="col-sm-offset-2 col-sm-6">
-                  <button type="button" class="btn btn-primary"
-                          id="submit-rock-button"
-			  onclick="post_rock()">
-		    Add this rock
+			{{group.capitalize()}}</option>
+		      {% endfor %}
+		  </select>
+		</div>
+	      </div> <!-- /form-group -->
+	    </div> <!-- /row -->
+
+	    <div class="row"> <!-- BUTTON ROW -->
+	      <div class="form-group">
+		<div class="col-sm-offset-2 col-sm-6">
+		  <button type="button" class="btn btn-primary"
+			  id="submit-fluid-button"
+			  onclick="post_fluid()">
+		    Add this fluid
 		  </button>
-                  <button type="reset" class="btn btn-default"
-			  onclick="clear_rock_data()">
+		  <button type="reset" class="btn btn-default"
+			  onclick="clear_fluid_data()">
 		    Reset form
 		  </button>
-                </div>
-              </div>
-            </div> <!-- /row -->
-    
-          </form>
+		</div>
+	      </div>
+	    </div> <!-- /row -->
 
+	  </form>
 
-        </div> <!-- end of panel body -->
+	</div> <!-- end of panel body -->
       </div> <!-- end of panel  -->
     </div> <!-- /tab  -->
 
-    </div> <!-- end all of tab content  -->
+  </div> <!-- end all of tab content  -->
 
-    <!-- +++++++++ END OF TAB CONTENT +++++++++ -->
+  <!-- +++++++++ END OF TAB CONTENT +++++++++ -->
 
-</div>
+</div> <!-- END OF CONTAINER -->
 
 <script>
 
-// Show tabs on clicking
-$('.tabbable .nav-tabs a').click(function (e) {
-  e.preventDefault();
-  $(this).tab('show');
-  });
-  
+ // Show tabs on clicking
+ $('.tabbable .nav-tabs a').click(function (e) {
+   e.preventDefault();
+   $(this).tab('show');
+ });
 
-function clear_rock_data(){
+
+ function clear_rock_data(){
    button = $("#submit-rock-button");
    button.text("Add this rock");
    $("#rock-manager-header").text("Add rock");
+ }
 
- };
- 
-function put_rock(){
+ function clear_fluid_data(){
+   button = $("#submit-fluid-button");
+   button.text("Add this fluid");
+   $("#fluid-manager-header").text("Add fluid");
+ }
+
+ function put_fluid(){
+   formData = $('#fluid-input-form').serialize();
+   
+   cb = function(data){
+     location.reload(true);
+   };
+   
+   $.ajax('/fluid?'+formData, {type:"PUT",
+			       success:cb});
+ }
+
+ function put_rock(){
    // Modifies an existing rock in the database
 
    formData = $('#rock-input-form').serialize();
 
    cb = function(data){
-     location.reload(true); 
+     location.reload(true);
    };
 
    $.ajax('/rock?'+formData, {type:"PUT",
 			      success:cb});
-};
+ }
 
-function post_rock(){
+ function post_rock(){
    // adds a rock in the database
 
    form = $('#rock-input-form');
@@ -479,19 +865,55 @@ function post_rock(){
 
 
    cb = function(data){
-     location.reload(true); 
+     location.reload(true);
    };
 
    $.ajax('/rock?'+formData, {type:"POST",
 			      success:cb});
-};
+ }
 
-function edit_rock(name){
+ function post_fluid(){
 
-   document.getElementById("submit-rock-button").onclick = put_rock
+   var form = $('#fluid-input-form');
+   var formData = form.serialize();
+
+   cb = function(data){
+     location.reload(true);
+   };
+
+   $.ajax('/fluid?'+formData, {type:"POST",
+			       success:cb});
+ }
+
+ function edit_fluid(key){
+
+   document.getElementById("submit-fluid-button").onclick = put_fluid;
+   button = $("#submit-fluid-button");
+   button.text("Update fluid");
+
+
+   $("#fluid-manager-header").text("Manage fluid");
+
+   $("html, body").scrollTop($("#fluid-form").offset().top);
+   cb = function(data){
+
+     data = JSON.parse(data);
+     $("#edit-fluid-name").attr("value", data.name);
+     $("#edit-fluid-desc").attr("value", data.description);
+     $("#edit-fluid-vp").attr("value", data.vp);
+     $("#edit-K").attr("value", data.K);
+     $("#edit-fluid-key").attr("value", data.db_key);
+   };
+
+   $.ajax('/fluid?key=' + key,
+	  {type: "GET", success: cb});
+ }
+
+ function edit_rock(name){
+   document.getElementById("submit-rock-button").onclick = put_rock;
    button = $("#submit-rock-button");
    button.text("Update rock");
-   
+
 
    $("#rock-manager-header").text("Manage rock");
 
@@ -500,89 +922,91 @@ function edit_rock(name){
 
      data = JSON.parse(data);
      $("#edit-rock-name").attr("value",name);
-     $("#edit-rock-desc").attr("value",data["description"]);
-     $("#edit-vp").attr("value", data["vp"]);
-     $("#edit-vs").attr("value", data["vs"]);
-     $("#edit-rho").attr("value",data["rho"]);
-     $("#edit-vp-std").attr("value",data["vp_std"]);
-     $("#edit-vs-std").attr("value",data["vs_std"]);
-     $("#edit-rho-std").attr("value",data["rho_std"]);
-     $("#edit-rock-key").attr("value", data["db_key"]);
+     $("#edit-rock-desc").attr("value", data.description);
+     $("#edit-vp").attr("value", data.vp);
+     $("#edit-vs").attr("value", data.vs);
+     $("#edit-rho").attr("value",data.rho);
+     $("#edit-vp-std").attr("value",data.vp_std);
+     $("#edit-vs-std").attr("value",data.vs_std);
+     $("#edit-rho-std").attr("value",data.rho_std);
+     $("#edit-rock-key").attr("value", data.db_key);
+     $("#edit-porosity").attr("value", data.porosity);
+     $("#edit-vclay").attr("value", data.vclay);
+
+     $("#edit-rock-fluid").val(data.fluid_id);
    };
-   $.ajax('/rock?name=' + name, 
+   $.ajax('/rock?name=' + name,
 	  {type: "GET", success: cb});
- };
+ }
 
-
-function delete_rock(name){
-
+ function delete_fluid(key){
    cb = function(data){
-      location.reload(true); 
+     location.reload(true);
+   };
+
+   $.ajax('/fluid?key=' + key, {type: "DELETE",
+				success: cb});
+ }
+
+ function delete_rock(name){
+   cb = function(data){
+     location.reload(true);
    };
 
    $.ajax('/rock?name=' + name, {type: "DELETE",
-			    success: cb})
+				 success: cb});
+ }
 
- 
- };
-
-function delete_scenario(scenario){
+ function delete_scenario(scenario){
 
    cb = function(data){
-    var elem = document.getElementById(scenario);
-    elem.parentNode.removeChild(elem);
+     var elem = document.getElementById(scenario);
+     elem.parentNode.removeChild(elem);
    };
 
    $.ajax('/scenario_db?name='+scenario, {type: "DELETE",
 					  success: cb});
- };
+ }
 
-function delete_model(image_key, model_name, element){
+ function delete_model(image_key, model_name, element){
 
    callback = function(data){
-
-
-     if (JSON.parse(data)["success"]){
+     if (JSON.parse(data).success){
        element.parentNode.removeChild(element);
-     };
+     }
    };
 
    $.ajax('/earth_model?input_image_id=' + image_key + '&' + 'name=' + model_name,
 	  {type: "DELETE",success: callback});
- };
+ }
 
-function delete_image(image_key){
-
+ function delete_image(image_key){
    callback = function(data){
-
-    var elem = document.getElementById(image_key);
-    elem.parentNode.removeChild(elem);
-   }
-  
+     var elem = document.getElementById(image_key);
+     elem.parentNode.removeChild(elem);
+   };
    $.ajax('/image_model?image_key=' + image_key, {type:"DELETE",
-              success: callback});
-
-};
-
-
+						  success: callback});
+ }
 </script>
 
 <script>
 
-  $('#myTab a').click(function (e) {
-  e.preventDefault();
-  $(this).tab('show');
-    });
-  // store the currently selected tab in the hash value
-  $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
-  var id = $(e.target).attr("href").substr(1);
-  window.location.hash = id;
-  });  
-  // on load of the page: switch to the currently selected tab
-  var hash = window.location.hash;
-  $('#myTab a[href="' + hash + '"]').tab('show');
-  
+ $('#myTab a').click(function (e) {
+   e.preventDefault();
+   $(this).tab('show');
+ });
+ // store the currently selected tab in the hash value
+ $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
+   var id = $(e.target).attr("href").substr(1);
+   window.location.hash = id;
+ });
+ // on load of the page: switch to the currently selected tab
+ var hash = window.location.hash;
+ $('#myTab a[href="' + hash + '"]').tab('show');
+
 </script>
+
 <script>
  $(document).ready(function() {
 
@@ -601,4 +1025,3 @@ function delete_image(image_key){
 
 
 {% endblock %}
-

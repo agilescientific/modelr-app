@@ -38,7 +38,7 @@ import StringIO
 from xml.etree import ElementTree
 
 from constants import admin_id, env, LOCAL, PRICE, UR_STATUS_DICT, \
-     tax_dict, stripe_api_key, stripe_public_key
+     tax_dict, stripe_api_key, stripe_public_key, usgs_colours
 
 from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      verify, authenticate, verify_signup, initialize_user,\
@@ -47,7 +47,7 @@ from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
      
 from lib_db import Rock, Scenario, User, ModelrParent, Group, \
      GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Issue, EarthModel, Server
+     ImageModel, Issue, EarthModel, Server, Fluid
 
 from lib_util import RGBToString
 
@@ -236,6 +236,23 @@ class DashboardHandler(ModelrPageRequest):
                                                     name).fetch(100)}
             rock_groups.append(dic)
 
+        # Get all the fluids
+        fluids = Fluid.all()
+        fluids.ancestor(user)
+        fluids.filter("user =", user.user_id)
+        fluids.order("-date")
+
+        default_fluids = Fluid.all()
+        default_fluids.filter("user =", admin_id)
+
+        fluid_groups = []
+        for name in user.group:
+            dic = {'name': name.capitalize(),
+                   'fluids':
+                    Fluid.all().ancestor(ModelrParent.all().get()).filter("group =",
+                                                    name).fetch(100)}
+            fluid_groups.append(dic)
+
         # Get all the user scenarios
         scenarios = Scenario.all()
         if not user.user_id == admin_id:
@@ -279,6 +296,9 @@ class DashboardHandler(ModelrPageRequest):
                                scenarios=scenarios.fetch(100),
                                default_rocks=default_rocks.fetch(100),
                                rock_groups=rock_groups,
+                               fluids=fluids.fetch(100),
+                               default_fluids=default_fluids.fetch(100),
+                               fluid_groups=fluid_groups,
                                models=models)
 
         # Check if a rock is being edited
@@ -292,8 +312,8 @@ class DashboardHandler(ModelrPageRequest):
             current_rock.name = "name"
             current_rock.description = "description"
             current_rock.vp = 3000.0
-            current_rock.vs = 2000.0
-            current_rock.rho = 1500.0
+            current_rock.vs = 1500.0
+            current_rock.rho = 2500.0
             current_rock.vp_std = 50.0
             current_rock.vs_std = 50.0
             current_rock.rho_std = 50.0
@@ -301,7 +321,20 @@ class DashboardHandler(ModelrPageRequest):
             template_params['current_rock'] = current_rock
         
 
-        
+         # Check if a fluid is being edited
+        if self.request.get("selected_fluid"):
+            fluid_id = self.request.get("selected_fluid")
+            current_fluid = Fluid.get_by_id(int(fluid_id),
+                                          parent=user)
+            template_params['current_fluid'] = current_fluid
+        else:
+            current_fluid = Fluid()
+            current_fluid.name = "name"
+            current_fluid.description = "description"
+            current_fluid.vp = 1500.0
+            current_fluid.K = 200.0
+            
+        template_params['current_fluid'] = current_fluid
         template = env.get_template('dashboard.html')
         html = template.render(template_params)
 
@@ -311,6 +344,86 @@ class DashboardHandler(ModelrPageRequest):
                     parent=ModelrParent.all().get()).put()
         self.response.out.write(html)
         
+# class AboutHandler(ModelrPageRequest):
+#     def get(self):
+
+#         # Uptime robot API key for modelr.io
+#         #ur_api_key_modelr_io = 'm775980219-706fc15f12e5b88e4e886992'
+#         # Uptime Robot API key for modelr.org REL
+#         #ur_api_key_modelr_org = 'm775980224-e2303a724f89ef0ab886558a'
+#         # Uptime Robot API key for modelr.org DEV
+#         #ur_api_key_modelr_org = 'm776083114-e34c154f2239e7c273a04dd4'
+
+#         ur_api_key = 'u108622-bd0a3d1e36a1bf3698514173'
+
+#         # Uptime Robot IDs
+#         ur_modelr_io = '775980219'
+#         ur_modelr_org = '775980224'  # REL, usually
+
+#         # Uptime Robot URL
+#         ur_url = 'http://api.uptimerobot.com/getMonitors'
+
+#         params = {'apiKey': ur_api_key,
+#           'monitors': ur_modelr_io + '-' + ur_modelr_org,
+#           'customuptimeratio': '30',
+#           'format': 'json',
+#           'nojsoncallback':'1',
+#           'responseTimes':'1'
+#          }
+
+#         # A dict is easily converted to an HTTP-safe query string.
+#         ur_query = urllib.urlencode(params)
+
+#         # Opened URLs are file-like.
+#         full_url = '{0}?{1}'.format(ur_url, ur_query)
+#         try:
+#             f = urllib2.urlopen(full_url)
+#             raw_json = f.read()
+
+#         except Exception as e:
+#             print "Failed to retrieve stats.",
+#             print "Uptime Robot may be down:", e
+
+#         user = self.verify()
+#         models_served = ModelServedCount.all().get()
+
+#         try:
+#             j = json.loads(raw_json)
+            
+#             ur_ratio = j['monitors']['monitor'][0]['customuptimeratio']
+#             ur_server_ratio = j['monitors']['monitor'][1]['customuptimeratio']
+#             ur_server_status_code = j['monitors']['monitor'][1]['status']
+#             ur_last_response_time = j['monitors']['monitor'][0]['responsetime'][-1]['value']
+#             ur_last_server_response_time = j['monitors']['monitor'][1]['responsetime'][-1]['value']
+            
+#             ur_server_status = UR_STATUS_DICT[ur_server_status_code].upper()
+            
+#             template_params = \
+#             self.get_base_params(user=user,
+#                                  ur_ratio=ur_ratio,
+#                                  ur_response_time=ur_last_response_time,
+#                                  ur_server_ratio=ur_server_ratio,
+#                                  ur_server_status=ur_server_status,
+#                                  ur_server_response_time=ur_last_server_response_time,
+#                                  models_served=models_served.count
+#                                  )
+#         except:
+
+#             template_params = \
+#             self.get_base_params(user=user,
+#                                  ur_ratio=None,
+#                                  ur_response_time=None,
+#                                  ur_server_ratio=None,
+#                                  ur_server_status="Unknown",
+#                                  ur_server_response_time=None,
+#                                  models_served=models_served.count
+#                                  )
+
+        
+#         template = env.get_template('about.html')
+#         html = template.render(template_params)
+#         self.response.out.write(html)          
+     
 class AboutHandler(ModelrPageRequest):
     def get(self):
 
@@ -734,27 +847,28 @@ class ProfileHandler(ModelrPageRequest):
             ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
-                    
+
             g_req = GroupRequest.all().ancestor(ModelrParent.all().get())
             g_req = g_req.filter("user =", user_id)
             g_req = g_req.filter("group =", group).fetch(100)
             for g in g_req:
                 g.delete()
-                
+
         err_string = '&'.join(err_string) if err_string else ''
         self.redirect('/profile?' + err_string)
-        
+
+
 class SettingsHandler(ModelrPageRequest):
 
     @authenticate
     def get(self, user):
-        
+
         template_params = self.get_base_params(user=user)
         template = env.get_template('settings.html')
         html = template.render(template_params)
         self.response.out.write(html)        
-            
-        
+
+
 class ForgotHandler(webapp2.RequestHandler):
     """
     Class for forgotten passwords
@@ -764,15 +878,15 @@ class ForgotHandler(webapp2.RequestHandler):
         template = env.get_template('forgot.html')
         html = template.render()
         self.response.out.write(html)
-        
+
     def post(self):
 
         email = self.request.get('email')
         template = env.get_template('message.html')
-        
+
         try:
             forgot_password(email, parent=ModelrParent.all().get())
-            
+
             msg = ("Please check your inbox and spam folder " +
                    "for our message. Then click on the link " +
                    "in the email.")
@@ -782,20 +896,20 @@ class ForgotHandler(webapp2.RequestHandler):
             html = template.render(error=e.msg)
             self.response.out.write(html)
 
+
 class ResetHandler(ModelrPageRequest):
     """
     Class for resetting passwords
     """
 
     @authenticate
-    def post(self,user):
-
+    def post(self, user):
         current_pword = self.request.get("current_pword")
         new_password = self.request.get("new_password")
         verify = self.request.get("verify")
 
         template = env.get_template('profile.html')
-        
+
         try:
             reset_password(user,current_pword,new_password,
                            verify)
@@ -804,26 +918,23 @@ class ResetHandler(ModelrPageRequest):
             self.response.out.write(html)
         except AuthExcept as e:
             html = template.render(user=user, error=e.msg)
-        
+
+
 class DeleteHandler(ModelrPageRequest):
     """
     Class for deleting account
 
-    There is some placeholder code below, and 
+    There is some placeholder code below, and
     also see delete_account() in ModAuth.py
 
     Steps:
-    
     1. Ask user if they are sure (Bootstrap modal in JS?)
        http://stackoverflow.com/questions/8982295/confirm-delete-modal-dialog-with-twitter-bootstrap
-
     2. Suspend Subscription with delete method in Stripe,
        using at_period_end=True (note, this is NOT the default)
        Docs > https://stripe.com/docs/api#cancel_subscription
-    
     3. Remove them from MailChimp customer list
        Docs > http://apidocs.mailchimp.com/api/2.0/lists/unsubscribe.php
-    
     4. Give them some confirmation by email?
        Some code in bogus function to do this now
 
@@ -833,8 +944,7 @@ class DeleteHandler(ModelrPageRequest):
     def post(self, user):
 
         template = env.get_template('message.html')
-            
-            
+
         try:
             cancel_subscription(user) 
             msg = "Unsubscribed from Modelr"
@@ -895,7 +1005,7 @@ class SignUp(webapp2.RequestHandler):
                 html = template.render(email=email,
                                        error=msg)
                 self.response.out.write(html)
-                
+
 
 class EmailAuthentication(ModelrPageRequest):
     """
@@ -964,7 +1074,7 @@ class EmailAuthentication(ModelrPageRequest):
                                        "maximum": 1})
             cp_url = ("https://soa-gw.canadapost.ca/rs/postoffice?%s"
                       % params)
-    
+
             headers = {"Accept": "application/vnd.cpc.postoffice+xml",
                        "Authorization": "Basic " + cp_key}
 
@@ -980,9 +1090,9 @@ class EmailAuthentication(ModelrPageRequest):
                                        'postoffice}province'):
                     province.append(i.text)
                     tax_code = province[0]
-                    
+
                 tax = tax_dict.get(tax_code) * price
-        
+
                 # Add the tax to the invoice
                 stripe.InvoiceItem.create(customer=customer.id,
                                               amount = int(tax),
@@ -993,7 +1103,7 @@ class EmailAuthentication(ModelrPageRequest):
 
                 send_message(subject="taxation failed for %s" %customer.id)
                 tax = 0
-            
+
         else:
             tax_code = country
             tax = 0
@@ -1021,10 +1131,10 @@ class EmailAuthentication(ModelrPageRequest):
                         "Customer ID: %s") %(email, customer.id))
             self.redirect('/signin?verified=false')
             raise
-        
+
         self.redirect('/signin?verified=true')
-                        
-        
+
+
 class SignIn(webapp2.RequestHandler):
 
     def get(self):       
@@ -1036,7 +1146,7 @@ class SignIn(webapp2.RequestHandler):
             msg = ("Your account has been created and your card has "
                    "been charged. Welcome to Modelr!" )
             error_msg = None
-      
+
         elif status == "false":
             error_msg = ("Failed to create account. Your credit card will "
                    "not be charged.")
@@ -1060,7 +1170,7 @@ class SignIn(webapp2.RequestHandler):
             signin(email, password, ModelrParent.all().get())
             cookie = get_cookie_string(email)
             self.response.headers.add_header('Set-Cookie', cookie)
-    
+
             if redirect:
                 self.redirect(redirect)
             else:
@@ -1073,7 +1183,7 @@ class SignIn(webapp2.RequestHandler):
                                    error=msg)
             self.response.out.write(html)
 
-                               
+
 class SignOut(ModelrPageRequest):
 
     @authenticate
@@ -1086,7 +1196,7 @@ class SignOut(ModelrPageRequest):
         self.response.headers.add_header('Set-Cookie',
                                          'user=""; Path=/')
         self.redirect('/')
-        
+
 
 class ManageGroup(ModelrPageRequest):
     """
@@ -1108,7 +1218,7 @@ class ManageGroup(ModelrPageRequest):
         if group.admin != user.user_id:
             self.redirect('/profile')
             return
-        
+
         users = []
         for user_id in group.allowed_users:
             u = User.all().ancestor(ModelrParent.all().get()).filter("user_id =",
@@ -1130,14 +1240,13 @@ class ManageGroup(ModelrPageRequest):
 
     @authenticate
     def post(self, user):
-
         group_name = self.request.get("group")
         group = Group.all().ancestor(ModelrParent.all().get())
         group = group.filter("name =", group_name).fetch(1)[0]
-        
+
         # remove a user
         rm_user = self.request.get("user")
-        
+
         if rm_user:
             u = User.all().ancestor(ModelrParent.all().get())
             u = u.filter("user_id =", int(rm_user)).fetch(1)
@@ -1155,7 +1264,7 @@ class ManageGroup(ModelrPageRequest):
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
             return
-        
+
         # abolish a group
         if (self.request.get("abolish") == "abolish"):
             for uid in group.allowed_users:
@@ -1171,29 +1280,30 @@ class ManageGroup(ModelrPageRequest):
                         parent=ModelrParent.all().get()).put()
             self.redirect('/profile')
             return
+
+
 class ModelBuilder(ModelrPageRequest):
 
     @authenticate
     def get(self, user):
-    
+
         params = self.get_base_params(user=user)
         template = env.get_template('model_builder.html')
         html = template.render(params)
         self.response.out.write(html)
-        
 
     @authenticate
     def post(self, user):
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
-        
+
         bucket = '/modelr_live_bucket/'
         filename = bucket + str(user.user_id) +'/' + str(time.time())
 
         encoded_image = self.request.get('image').split(',')[1]
         pic = base64.b64decode(encoded_image)
-        
+
         gcsfile = gcs.open(filename, 'w')
         gcsfile.write(pic)
 
@@ -1263,6 +1373,7 @@ class ModelHandler(ModelrPageRequest):
         template = env.get_template('model.html')
         html = template.render(params)
         self.response.out.write(html)
+
 
 class NotFoundPageHandler(ModelrPageRequest):
     def get(self):
@@ -1339,7 +1450,8 @@ class AdminHandler(ModelrPageRequest):
             template = env.get_template('admin_site.html')
             html = template.render()
             self.response.out.write(html)
-            
+
+
 class FixScenarios(ModelrPageRequest):
 
     def get(self):
@@ -1355,7 +1467,7 @@ class FixScenarios(ModelrPageRequest):
             args = data["arguments"]
 
             for key, value in args.iteritems():
-            
+
                 if key.startswith("Rock"):
 
                     rocks = Rock.all().ancestor(
@@ -1369,13 +1481,14 @@ class FixScenarios(ModelrPageRequest):
             data["arguments"] = args
             s.data = json.dumps(data).encode()
             s.put()
-                
-        self.response.out.write("oK")
+
+        self.response.out.write("OK")
+
 
 class FixModels(ModelrPageRequest):
 
     def get(self):
-        
+
         models = EarthModel.all().fetch(1000)
 
         for m in models:
@@ -1390,7 +1503,7 @@ class FixModels(ModelrPageRequest):
                 try:
                     rocks = Rock.all().ancestor(
                         ModelrParent.all().get())
-                    
+
                     rock = rocks.filter("name =", rock_name).get()
                     cmap[color]["key"] = rock.key().id()
                 except:
@@ -1398,10 +1511,9 @@ class FixModels(ModelrPageRequest):
             m.data = json.dumps(data).encode()
         self.response.write("OK")
 
-                
 
-        
 class FixDefaultRocks(ModelrPageRequest):
+    ## Used to fix rocks in the database
     def get(self):
 
         from default_rocks import default_rocks
@@ -1409,20 +1521,20 @@ class FixDefaultRocks(ModelrPageRequest):
         admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
                                                             admin_id).get()
         for i in default_rocks:
-            
+
             rocks = Rock.all()
             rocks.filter("user =", admin_id)
-            rocks.filter("name =",i['name'] )
+            rocks.filter("name =", i['name'])
             rocks = rocks.fetch(100)
-        
+
             for r in rocks:
                 r.delete()
-    
+
             rock = Rock(parent=admin_user)
             rock.user = admin_id
             rock.name = i['name']
             rock.group = 'public'
-            
+
             rock.description = i['description']
 
             rock.vp = float(i['vp'])
@@ -1437,8 +1549,76 @@ class FixDefaultRocks(ModelrPageRequest):
             rock.put()
         self.response.out.write("oK")
 
+
 class ServerError(ModelrPageRequest):
 
     def post(self):
 
-        send_message("Server Down","Scripts did not populate")
+        send_message("Server Down", "Scripts did not populate")
+
+
+class Model1DHandler(ModelrPageRequest):
+
+    @authenticate
+    def get(self, user):
+
+        admin_rocks = Rock.all().order("name").filter("user =",
+                                                        admin_id)
+        admin_rocks = admin_rocks.fetch(100)
+
+        user_rocks = Rock.all().order("name").ancestor(user)
+        user_rocks = user_rocks.fetch(100)
+        
+        group_rocks = []
+        for group in user.group:
+            g_rocks = \
+            Rock.all().order('name').ancestor(ModelrParent.all().get()).filter("group =",
+                                                         group)
+            group_rocks = group_rocks + g_rocks.fetch(100)
+
+        all_rocks = user_rocks + group_rocks + admin_rocks
+        
+        rock_json = []
+        colour_map = {}
+        test=[]
+        for i, rock in enumerate(all_rocks):
+            rock_json.append(rock.json)
+            colour_map[rock.name] = RGBToString(usgs_colours[i])
+            test.append({"name":rock.name,
+                         "db_key": rock.key().id()})
+
+        # Fluids. This should be refactored into a function
+        admin_fluids = Fluid.all().order("name").filter("user =",
+                                                      admin_id)
+        admin_fluids = admin_fluids.fetch(100)
+
+        user_fluids = Fluid.all().order("name").ancestor(user)
+        user_fluids = user_fluids.fetch(100)
+
+        group_fluids = []
+        for group in user.group:
+            g_fluids = \
+            Fluid.all().order('name').ancestor(ModelrParent.all().get()).filter("group =",
+                                                         group)
+            group_fluids = group_fluids + g_fluids.fetch(100)
+
+        all_fluids = user_fluids + group_fluids + admin_fluids
+        fluid_json = []
+        test=[]
+        for i, fluid in enumerate(all_fluids):
+            fluid_json.append(fluid.json)
+            colour_map[fluid.name] = RGBToString(usgs_colours[-i])
+            test.append({"name":fluid.name,
+                         "db_key": fluid.key().id()})
+
+        colour_map = json.dumps(colour_map)
+        params = self.get_base_params(user=user,
+                                      db_rocks=rock_json,
+                                      db_fluids=fluid_json,
+                                      test=test,
+                                      colour_map=colour_map)
+
+        template = env.get_template('1D_model.html')
+
+        html = template.render(params)
+        self.response.write(html)

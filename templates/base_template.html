@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+
     <title>{% block title %} PAGE TITLE GOES HERE {% endblock %}</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -102,7 +103,8 @@ We recommend using IE10+, or a recent version of another browser.</p>
       {% if user %}
       <li><a href="/dashboard">Dashboard</a></li>
       <li><a href="/scenario">Scenario</a></li>
-      <li><a href="/model">Model</a></li>
+      <li><a href="/1D_model">1D-model</a></li>
+      <li><a href="/model">2D-model</a></li>
       {% endif %}
       {% if not user %}
       <li><a href="/features">Features</a></li>
@@ -118,7 +120,8 @@ We recommend using IE10+, or a recent version of another browser.</p>
       
     {% if user %}
          <li style="margin-left:7px; margin-top:8px;">
-	   <figure style="width:32px; border: 1px solid #f2f2f2;"><img src="https://www.gravatar.com/avatar/{{ email_hash }}?s=32&d=identicon" /></figure></li>
+	   <figure style="width:32px; border: 1px solid #f2f2f2;">
+	     <img src="https://www.gravatar.com/avatar/{{ email_hash }}?s=32&d=identicon" /></figure></li>
 
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ user.email }}<b class="caret"></b></a>
