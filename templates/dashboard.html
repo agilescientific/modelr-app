@@ -900,9 +900,12 @@
      data = JSON.parse(data);
      $("#edit-fluid-name").attr("value", data.name);
      $("#edit-fluid-desc").attr("value", data.description);
-     $("#edit-fluid-vp").attr("value", data.vp);
-     $("#edit-K").attr("value", data.K);
+     $("#edit-fluid-kw").attr("value", data.k_w);
      $("#edit-fluid-key").attr("value", data.db_key);
+     $("#edit-fluid-rho-w").attr("value", data.rho_w);
+     $("#edit-fluid-rho-HC").attr("value", data.rho_hc);
+     $("#edit-fluid-khc").attr("value", data.k_hc);
+     $("#edit-fluid-sw").attr("value", data.sw);
    };
 
    $.ajax('/fluid?key=' + key,

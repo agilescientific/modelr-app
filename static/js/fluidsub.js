@@ -301,7 +301,7 @@ function FluidSub(canvas, core_width, core_height,
               interval_menu(d, i);
               $(menu_div).show();
               $(menu_div).dialog({
-                width:700
+                width:1000
               });
             
 	});
