@@ -266,8 +266,7 @@ function FluidSub(canvas, core_width, core_height,
         .attr("x", rock_width + xScale(0.2) + fluid_width)
         .attr("width", fluid_width)
         .attr("cursor","crosshair")
-        .on("click", add_fluidsub_top)
-        .on("contextmenu", delete_subfluid);
+        .on("click", fluidsub_click);
 
     fluidsub.exit().remove();
 
@@ -297,16 +296,16 @@ function FluidSub(canvas, core_width, core_height,
 
     // New Arrivals
     var new_interval = interval.enter().append("g");
-        new_interval.on("click", function(d,i){
-            if (d3.event.ctrlKey || d3.event.altKey){
+        new_interval.on("contextmenu", function(d,i){
+	    d3.event.preventDefault();
               interval_menu(d, i);
               $(menu_div).show();
               $(menu_div).dialog({
                 width:500,
                 height:100
               });
-          }
-      });
+            
+	});
 
     new_interval.append("rect")
         .attr("width", rock_width)
@@ -318,7 +317,7 @@ function FluidSub(canvas, core_width, core_height,
         .attr("y", update_depth)
         .attr("height",update_thickness)
         .on("click", rock_click)
-        .on("contextmenu", delete_interval);
+ 
     
     new_interval.selectAll("#rock_fluid")
         .data(function(d){ if(d.rock.fluid){
@@ -350,8 +349,7 @@ function FluidSub(canvas, core_width, core_height,
         .attr("x", rock_width + xScale(0.2) + fluid_width)
         .attr("width", fluid_width)
         .attr("cursor","crosshair")
-        .on("click", add_fluidsub_top)
-        .on("contextmenu", delete_subfluid);
+        .on("click", fluidsub_click)
 
     new_interval.selectAll("#fluidtop")
         .data(function(d){
@@ -485,9 +483,18 @@ function FluidSub(canvas, core_width, core_height,
     }  // end of if
     } // end of function
 
-    function add_fluidsub_top(d,i){
+    function fluidsub_click(d,i){
 
-    if (d3.event.ctrlKey || d3.event.altKey){
+    if (d3.event.ctrlKey & d3.event.shiftKey){
+	// delete sub fluid
+	// always keep one layer
+        if (i > 0){
+            interval = this.parentNode.__data__;
+            interval.subfluids.splice(i,1);
+            calculate_thickness();
+            draw();
+            onchange();
+         }
             return;
     }
 
@@ -535,26 +542,13 @@ function FluidSub(canvas, core_width, core_height,
     } // end of outer if
     } // end of function delete_interval
 
-    function delete_subfluid(d,i){
-        if (d3.event) {  // get null events sometimes
-            d3.event.preventDefault();
-        }
-
-        // always keep one layer
-        if (i > 0){
-            interval = this.parentNode.__data__;
-            interval.subfluids.splice(i,1);
-            calculate_thickness();
-            draw();
-            onchange();
-         }
-    }
 
     function rock_click(d, i, j){
 
     // Open the menu
-        if (d3.event.ctrlKey || d3.event.altKey) {
-             return;
+        if (d3.event.ctrlKey & d3.event.shiftKey) {
+	    delete_interval(d, i);
+            return;
         } else {
             var bottom = d.depth + d.thickness;
             thickness0 = d.thickness;
