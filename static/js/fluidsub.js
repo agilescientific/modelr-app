@@ -542,20 +542,17 @@ function delete_fluidsub(interval,i){
 		    intervals[i-1].depth;
 		var squish = new_thickness / thickness0;
 		rescale_subfluids(intervals[i-1], squish);
-            } else{
-		
-		d.depth = 0;
-		d.thickness = intervals[i+1].depth;
-
-		if(d.subfluids.length > 0){
-		    var endpoint = d.subfluids[0].thickness + 
-			d.subfluids[0].depth;
-
-		    d.subfluids[0].depth = 0;
-		    d.subfluids[0].thickness = endpoint;
-		}
-            }
+            } 
+        
             intervals.splice(i,1);
+
+	    if (i==0){
+		intervals[0].depth = 0;
+		intervals[0].thickness = intervals[1].depth;
+		if(intervals[0].subfluids.length > 0){
+		    intervals[0].subfluids[0].depth = 0;
+		};
+	    };
             calculate_thickness();
             draw();
 
