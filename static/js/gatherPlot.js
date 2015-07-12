@@ -2,9 +2,6 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 
 
 
-
-    $(seis_menu).hide();
-
     $("#frequency").on("change", function (){
 	$("#frequency-label").text($("#frequency").val())
     }
@@ -46,9 +43,7 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 	.attr("text-anchor", "middle")
 	.attr("y", -height*0.05)
 	.attr("x", 40)
-	.text(label)
-	.on("click", show_menu)
-	.attr("cursor", "pointer");
+	.text(label);
 
 
 
@@ -124,10 +119,7 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 
     };
 
-    function show_menu(){
-	$(seis_menu).show();
-	$(seis_menu).dialog();
-    };
+
 
 
 };
