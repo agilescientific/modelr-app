@@ -726,7 +726,7 @@ function delete_fluidsub(interval,i){
 
     function initialize_menu(menu){
 
-	var html = '<table class="table table-condensed" id="menu_table" style="width:90%"><th>&nbsp;&nbsp;Rock</th><th>Fluid</th><th>Subbed fluid</th></table>'
+	var html = '<table class="table table-condensed" id="menu_table" style="width:95%"><th>&nbsp;&nbsp;Rock</th><th>Fluid</th><th>Subbed fluid</th></table>'
 	
 	var menu_item = d3.select(menu).html(html);
     };// end of function declaration

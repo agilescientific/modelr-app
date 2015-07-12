@@ -13,6 +13,7 @@ tspan {
    table-layout: fixed;
     
    margin-left: 20px;
+   margin-right: 20px;
 }
 
  model-plot {
@@ -126,9 +127,9 @@ vertical-align: middle;
       </div> <!-- End of model-plot -->
     </div> <!-- End of panel body -->
     <div class="row">
-      <div id="rock-menu" class="col-md-6" title="Interval menu">
-      </div>
-      <div id="seismic-menu" title="Seismic menu" class="col-md-6">
+      <div id="seismic-menu" title="Seismic menu" 
+	   class="col-md-offset-6 col-md-6" 
+	   style="margin-top:-40px; margin-bottom: 20px;">
 	<label>
 	  Frequency
 	</label>
@@ -140,6 +141,11 @@ vertical-align: middle;
 	</label>
       </div>
     </div>
+    <div class="row">
+      <div id="rock-menu" class="col-md-12" title="Interval menu">
+      </div>
+    </div>
+
   </div> <!-- End of panel -->
 
 
