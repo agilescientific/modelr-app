@@ -2,8 +2,8 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 
 
 
-    $("#frequency").on("change", function (){
-	$("#frequency-label").text($("#frequency").val())
+    $("#frequency").on("input", function (){
+	$("#frequency-label").text($("#frequency").val() + " Hz")
     }
 		      );
 

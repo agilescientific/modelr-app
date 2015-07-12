@@ -583,23 +583,32 @@ function delete_fluidsub(interval,i){
 	var div  = d3.select(this);
 	div.html("");
 
-        var rock_div = div.append("td")
+        var rock_div = div.append("td");
           
-	if(intervals.length > 2){
-	rock_div.append("button").attr("class", "btn btn-danger btn-xs glyphicon glyphicon-remove")
-	    .attr("cursor", "pointer")
-	    .on("click", function(){delete_interval(d,i)});
-	};
+	
+	var btn =  rock_div.append("span")
+	    .attr("class", 
+		  "glyphicon glyphicon-remove-sign deleteBtn btn btn-xs")
+	    .attr("id", "deleteBtn")
+	    .attr("style", "color: grey");
+	   
 
-        rock_div.append("div")
-            .attr("class", "cblock")
+	if(intervals.length >2){
+	    btn.attr("style", "color: red")
+		.attr("cursor", "pointer")
+		.on("click", function(){delete_interval(d,i)});
+	} else{ btn.attr("disabled", "disabled")};
+
+        rock_div.append("span")
+            .attr("class", "glyphicon glyphicon-stop cblock")
             .attr("id", "rock_colour")
-	    .attr("style", "margin2 6px 0 0; background-color:" +
-			 d.colour+ "; display:inline-block") ;
+	    .attr("style", "color:" +
+			 d.colour);
 
 
 	var rock_ind = rocks.indexOf(d.rock);
         var select = rock_div.append("select")
+	    .attr("class", "menuSelect")
             .on("change", update_rock)
 
         select.selectAll("option").data(rocks)
@@ -611,11 +620,15 @@ function delete_fluidsub(interval,i){
 
 
 
-        var fluid_div = div.append("td");
+        var fluid_div = div.append("td")
 	if (d.rock.fluid){
-            fluid_div.html('<div class="row"> <div class="cblock" style="margin0 6px 0 0; background-color:' +
-			   fluid_cmap[d.rock.fluid] +'; display:inline-block"></div>' +
-			   d.rock.fluid + "</div>");
+
+	    fluid_div.append("span")
+		.attr("class", "glyphicon glyphicon-stop cblock")
+		.attr("style", "color:" + fluid_cmap[d.rock.fluid]);
+	    fluid_div.append("label").text(d.rock.fluid)
+		.attr("style", "vertical-align: top; margin: 8px 0 0 0;");
+	 
 	} else {
             fluid_div.html("");
 	}
@@ -637,21 +650,26 @@ function delete_fluidsub(interval,i){
             .append("div")
             .attr("class","row");
 
-	if(d.subfluids.length > 1){
-	fluidsub_row.append("button").attr("class", "btn btn-danger btn-xs glyphicon glyphicon-remove")
-	    .attr("cursor", "pointer")
-	    .on("click", function(dummy,i){delete_fluidsub(d,i)});
-	};
 
-	fluidsub_row.append("div")
-            .attr("class", "cblock")
+	var deleteFluidBtn = fluidsub_row.append("span")
+	    .attr("class",  
+		  "glyphicon glyphicon-remove-sign deleteBtn btn btn-xs")
+	    .attr("style", "color: grey;");
+
+	if(d.subfluids.length > 1){
+	    deleteFluidBtn.attr("cursor", "pointer")
+		.attr("style", "color: red;")
+		.on("click", function(dummy,i){delete_fluidsub(d,i)});
+	} else{deleteFluidBtn.attr("disabled", "disabled")};
+
+	fluidsub_row.append("span")
+            .attr("class", "glyphicon glyphicon-stop cblock")
             .attr("style",function(d){
-		return "margin0 6px 0 0; background-color:" +
-		    d.colour + "; display:inline-block";
-            }
-		 );
+		return "color:" +
+		    d.colour});
 
 	var fluidsub_select = fluidsub_row.append("select")
+	    .attr("class", "menuSelect")
             .on("change", update_fluid);
 
 	var option = fluidsub_select.selectAll("option")
@@ -708,7 +726,7 @@ function delete_fluidsub(interval,i){
 
     function initialize_menu(menu){
 
-	var html = '<table id="menu_table" border="1" style="width:100%"><th>Rock</th><th>Fluid</th><th>Sub. Fluid</th></table>'
+	var html = '<table class="table table-condensed" id="menu_table" style="width:90%"><th>&nbsp;&nbsp;Rock</th><th>Fluid</th><th>Subbed fluid</th></table>'
 	
 	var menu_item = d3.select(menu).html(html);
     };// end of function declaration

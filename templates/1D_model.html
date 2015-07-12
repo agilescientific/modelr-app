@@ -8,6 +8,13 @@ tspan {
   font-size: 9px;
 }
 
+
+ table{
+   table-layout: fixed;
+    
+   margin-left: 20px;
+}
+
  model-plot {
    font: 16px sans-serif;
  }
@@ -24,6 +31,10 @@ tspan {
   font: 12px sans-serif;
  }
 
+.intervalRow {
+vertical-align: middle;
+}
+
  .wiggle-fill {
     fill: grey;
     stroke-width: 0;
@@ -35,14 +46,21 @@ tspan {
     stroke: black;
 }
 
+
+ .deleteBtn{
+   margin: 10px 0 0 0;
+   vertical-align: top;
+   color:red;
+}
+
+ .menuSelect{
+   vertical-align: top;
+   margin: 6px 0 0 0;
+}
+
  .cblock {   
-   float: left;
-   width: 20px;
-   height: 20px;     
-   margin: 5px 25px 5px 25px;
-   border-width: 1px;
-   border-style: solid;
-   border-color: rgba(0,0,0,.2);
+  font-size: 200%;
+   margin-right: 8px;
  }
 
  .domain { 
@@ -111,11 +129,15 @@ tspan {
       <div id="rock-menu" class="col-md-6" title="Interval menu">
       </div>
       <div id="seismic-menu" title="Seismic menu" class="col-md-6">
-	Frequency:
-	<input type="range" min="3" max="100" id="frequency" value="30">
-	<div id="frequency-label">
-	  30
-	</div>
+	<label>
+	  Frequency
+	</label>
+
+	<input type="range" min="3" max="100" id="frequency" 
+	       value="30">
+	<label id="frequency-label">
+	  30 Hz
+	</label>
       </div>
     </div>
   </div> <!-- End of panel -->
