@@ -1,3 +1,9 @@
+modelr 02.2.6.1 Aguust 26th
+same as previous with updated yaml
+
+modelr 0.2.6 August 26th 2015
+changed from jqueryUI to tables for disply
+
 modelr 0.2.5 April 8th
 Added update credit card form
 

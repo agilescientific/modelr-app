@@ -10,8 +10,9 @@ import re
 import string
 import stripe
 
-PASS_RE =  re.compile(r"^.{3,20}$")
-EMAIL_RE = re.compile(r"^[\S]+@[\S]+\.[\S]+$" )
+PASS_RE = re.compile(r"^.{3,20}$")
+EMAIL_RE = re.compile(r"^[\S]+@[\S]+\.[\S]+$")
+
 
 # Define an exception for authentication errors
 class AuthExcept(Exception):
@@ -30,17 +31,17 @@ def get_cookie_string(email):
     user = User.all().filter("email =", email).fetch(1)[0]
     name = 'user'
     value = str(user.user_id) + '|' + str(user.password)
+    return '%s=%s; Path=/' % (name, value)
 
-    return '%s=%s; Path=/'%(name,value)
 
 def make_salt():
     """
     Create a random string to salt up the encryption
     """
-    
     return ''.join(
         [random.choice(string.letters + string.digits)
-        for i in range(10)])
+         for i in range(10)])
+
 
 def encrypt_password(password, salt):
     """
@@ -48,7 +49,8 @@ def encrypt_password(password, salt):
     once google has that python library in app engine.
     """
     return hashlib.sha256(password + salt).hexdigest()
- 
+
+
 def make_userid():
     """
     Generates the next user id number from the database.
@@ -59,7 +61,8 @@ def make_userid():
         uid = UserID(next_id=1)
     else:
         uid = uid[0]
-        
+
+    # update ids
     current_id = uid.next_id
     next_id = current_id + 1
     uid.next_id = next_id
@@ -68,14 +71,13 @@ def make_userid():
 
     return current_id
 
+
 def make_user(email, password, parent=None, user_id=None):
 
     if User.all().ancestor(parent).filter("email =", email).fetch(1):
         raise AuthExcept("email exists")
-    
     if user_id is None:
         user_id = make_userid()
-    
     salt = make_salt()
     encrypted_password = encrypt_password(password, salt)
     admin_user = User(user_id=user_id,
@@ -86,7 +88,8 @@ def make_user(email, password, parent=None, user_id=None):
     admin_user.put()
 
     return admin_user
-    
+
+
 def signup(email, password, parent=None):
     """
     Checks for valid inputs then adds a user to the User database.
@@ -105,28 +108,25 @@ def signup(email, password, parent=None):
     salt = make_salt()
     encrypted_password = encrypt_password(password, salt)
     temp_id = hashlib.sha256(make_salt()).hexdigest()
-    
+
     # Set up groups. See if the email domain exists
     groups = ['public']
     domain = email.split('@')[1]
-    g = Group.all().ancestor(parent).filter("name =",domain).fetch(1)
+    g = Group.all().ancestor(parent).filter("name =", domain).fetch(1)
 
     if g:
         groups.append(domain)
-    
     user = VerifyUser(email=email, password=encrypted_password,
                       salt=salt, temp_id=temp_id,
                       group=groups, parent=parent)
-    
     user.put()
 
     print("http://modelr.io/verify_email?user_id=%s" %
           str(user.temp_id))
-    
     mail.send_mail(sender="Hello <hello@modelr.io>",
-              to="<%s>" % user.email,
-              subject="Modelr email verification",
-              body="""
+                   to="<%s>" % user.email,
+                   subject="Modelr email verification",
+                   body="""
 Welcome to Modelr!
 
 We need to verify your email address. Click the link below to validate your account and continue to billing. 
@@ -137,6 +137,7 @@ Cheers,
 Matt, Evan, and Ben
 """ % str(user.temp_id))
     return temp_id
+
 
 def verify_signup(user_id, parent):
     """
@@ -173,8 +174,9 @@ def initialize_user(email, stripe_id, parent, tax_code, price, tax):
                      (province abbrieviation)
     """
 
-    verified_filter = \
-      VerifyUser.all().ancestor(parent).filter("email =", email)
+    verified_filter = VerifyUser.all()\
+                                .ancestor(parent)\
+                                .filter("email =", email)
     verified_user = verified_filter.fetch(1)
 
     if not verified_user:
@@ -197,7 +199,6 @@ def initialize_user(email, stripe_id, parent, tax_code, price, tax):
                                                 group).fetch(1)
         g[0].allowed_users.append(user.user_id)
         g[0].put()
-            
     user.put()
 
     # remove the temporary user from the queue
@@ -205,9 +206,9 @@ def initialize_user(email, stripe_id, parent, tax_code, price, tax):
 
     # send a payment confirmation email
     mail.send_mail(sender="Hello <hello@modelr.io>",
-              to="<%s>" % user.email,
-              subject="Modelr subscription confirmation",
-              body="""
+                   to="<%s>" % user.email,
+                   subject="Modelr subscription confirmation",
+                   body="""
 Welcome to Modelr!
 
 You are now subscribed to Modelr! Your receipt is below.
@@ -237,7 +238,7 @@ Matt, Evan, and Ben
  reg # 840217913RT0001
 ========================
 """.format(price/100., tax/100., (price+tax)/100.))
-       
+
 def signin(email, password, parent):
     """
     Checks if a email and password are valid. Will throw a AuthExcept
@@ -248,13 +249,12 @@ def signin(email, password, parent):
                                               email).fetch(1)
     if not user:
         raise AuthExcept('invalid email')
-    
     user = user[0]
 
     encrypted_password = encrypt_password(password, user.salt)
-
-    if not encrypted_password==user.password:
+    if not encrypted_password == user.password:
         raise AuthExcept('invalid password')
+
     
 def verify(userid, password, ancestor):
     """
@@ -263,9 +263,9 @@ def verify(userid, password, ancestor):
     """
 
     try:
-        user = \
-          User.all().ancestor(ancestor).filter("user_id =",
-                                            int(userid)).fetch(1)[0]
+        user = User.all().ancestor(ancestor)\
+                         .filter("user_id =",
+                                 int(userid)).fetch(1)[0]
         verified = (user.password == password)
         return user
     except IndexError:
@@ -283,14 +283,14 @@ def authenticate(func):
             self.redirect('/signup')
             return
         else:
-            return func(self, user,*args, **kwargs)
+            return func(self, user, *args, **kwargs)
     return authenticate_and_call
+
 
 def send_message(subject, message):
     """
     Sends us a message from a user or non-user.
     """
-    
     # send the message
     mail.send_mail(sender="Hello <hello@modelr.io>",
                    to="hello@modelr.io",
@@ -307,21 +307,19 @@ def forgot_password(email, parent):
                                               email).fetch(1)
     if not user:
         raise AuthExcept('invalid email')
-    
     user = user[0]
 
     def generate_password(size=8,
                           chars=(string.ascii_uppercase +
                                  string.digits)):
         return ''.join(random.choice(chars) for x in range(size))
-        
     new = generate_password()
 
     # send a new password email
     mail.send_mail(sender="Hello <hello@modelr.io>",
-              to="<%s>" % user.email,
-              subject="Modelr password reset",
-              body="""
+                   to="<%s>" % user.email,
+                   subject="Modelr password reset",
+                   body="""
 Here's your new password!
 
     %s
@@ -339,6 +337,7 @@ Matt, Evan, and Ben
     # Change it in the database
     user.password = encrypt_password(new, user.salt)
     user.put()
+
 
 def reset_password(user, current_pword, new_password,
                    verify):
@@ -365,7 +364,8 @@ def reset_password(user, current_pword, new_password,
 
     # Save it in the database
     user.put()
-    
+
+
 def cancel_subscription(user):
     """
     Delete the user. See notes in DeleteHandler() in main.py
@@ -375,8 +375,7 @@ def cancel_subscription(user):
         stripe_customer = stripe.Customer.retrieve(user.stripe_id)
         # Check for extra invoices, ie Taxes, that also need
         # to be cancelled.
-        invoice_items = \
-          stripe.InvoiceItem.all(customer=stripe_customer)
+        invoice_items = stripe.InvoiceItem.all(customer=stripe_customer)
 
         for invoice in invoice_items.data:
             invoice_id = invoice["id"]
@@ -391,13 +390,10 @@ def cancel_subscription(user):
                 """.format(invoice_id, user.stripe_id)
                 send_message("invoice not deleted",
                              msg)
-            
         sub_id = stripe_customer.subscriptions["data"][0]["id"]
 
-        stripe_customer.subscriptions.retrieve(sub_id).delete(at_period_end=True)
-        
-  
-            
+        stripe_customer.subscriptions\
+            .retrieve(sub_id).delete(at_period_end=True)
         user.unsubscribed = True
         user.put()
 
@@ -405,13 +401,10 @@ def cancel_subscription(user):
     except Exception as e:
         print e
         raise AuthExcept("Failed to unsubscribe user: " + user.email)
-    
-
-    
     mail.send_mail(sender="Hello <hello@modelr.io>",
-              to="<%s>" % user.email,
-              subject="Modelr account deleted",
-              body="""
+                   to="<%s>" % user.email,
+                   subject="Modelr account deleted",
+                   body="""
 You have unsubscribed from Modelr. Your account will be deleted
 at the end of the billing cycle.
 
