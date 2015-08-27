@@ -1,6 +1,5 @@
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
-from google.appengine.api import images
 
 import json
 """
@@ -92,6 +91,14 @@ class ImageModel(Item):
 class FluidModel(Item):
     image = blobstore.BlobReferenceProperty()
     name = db.StringProperty(multiline=False)
+
+
+class Model1D(Item):
+    name = db.StringProperty(multiline=False)
+    data = db.BlobProperty()
+
+    def to_json(self):
+        return self.data
 
 
 class EarthModel(Item):

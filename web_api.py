@@ -74,7 +74,7 @@ class ModelrAPI(webapp2.RequestHandler):
     def verify(self):
         """
         Verify that the current user is a legimate user. Returns the
-        user object from the database if true, otherwise returns None.
+        user object from the dabase if true, otherwise returns None.
 
         TODO: This shouldn't be done with browser cookies
         """
@@ -207,10 +207,10 @@ class RockHandler(ModelrAPI):
             user = User.all().filter('user_id =',
                                      self.request.get('auth'))\
                 .get()
+            key = self.request.get('keys')
         else:
             user = self.verify()
 
-        print user
         if(name):
             rock = get_items_by_name_and_user(Rock, name, user)
             data = rock[0].json
@@ -859,7 +859,8 @@ class EarthModelHandler(ModelrAPI):
         if self.request.get("auth"):
             user = User.all().filter("user_id =",
                                      self.request.get("auth"))
-            model_key = self.request.get("key")
+            model_key = self.request.get("keys")
+            print model_key
             model = EarthModel.get(model_key)
             self.response.headers['Content-Type'] = 'application/json'
             self.response.out.write(model.to_json())
