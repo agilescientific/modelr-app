@@ -1,5 +1,6 @@
 from google.appengine.ext import db
 from google.appengine.ext import blobstore
+from google.appengine.api import images
 
 import json
 """
@@ -97,6 +98,9 @@ class EarthModel(Item):
 
     name = db.StringProperty(multiline=False)
     data = db.BlobProperty()
+
+    def to_json(self):
+        return self.data
 
 
 class Forward2DModel(Item):

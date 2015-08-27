@@ -7,37 +7,19 @@
 
 from google.appengine.ext import webapp as webapp2
 from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.api import users
 
+from web_api import *
+from page_handlers import *
 # For image serving
 import cloudstorage as gcs
 
-import urllib
-import urllib2
-
-import os
-
-import hashlib
 import logging
 
 import stripe
-
-import re
-
-from page_handlers import *
-from web_api import *
-
-from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
-     verify, authenticate, verify_signup, initialize_user,\
-     reset_password, \
-     forgot_password, send_message, make_user, cancel_subscription
-     
-from lib_db import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Forward2DModel, Issue, EarthModel, Server
-
-
-from constants import admin_id, env, LOCAL, stripe_api_key
+from lib_db import Server, ModelrParent, ModelServedCount,\
+    User, Group
+from lib_auth import make_user
+from constants import admin_id, LOCAL, stripe_api_key
 
 # Retry can help overcome transient urlfetch or GCS issues,
 # such as timeouts.
@@ -62,14 +44,14 @@ ModelrRoot = ModelrParent.all().get()
 if ModelrRoot is None:
     ModelrRoot = ModelrParent()
     ModelrRoot.put()
-    
+
 # For the plot server
 server = Server.all().ancestor(ModelrRoot).get()
 if server is None:
     server = Server(parent=ModelrRoot)
 
 if LOCAL is True:
-    server.host =  "http://127.0.0.1:8081"
+    server.host = "http://127.0.0.1:8081"
     logging.debug("[*] Debug info activated")
     stripe.verify_ssl_certs = False
 else:
@@ -78,19 +60,16 @@ server.put()
 
 stripe.api_key = stripe_api_key
 
-#=====================================================================
+# =====================================================================
 # Define Global Variables
-#=====================================================================
-
-
-
+# =====================================================================
 
 # Initialize the model served counter
 models_served = ModelServedCount.all().ancestor(ModelrRoot).get()
 if models_served is None:
     models_served = ModelServedCount(count=0, parent=ModelrRoot)
     models_served.put()
-    
+
 # Put in the default rock database under the admin account.
 # The admin account is set up so every user can view our default
 # scenarios and rocks
@@ -100,12 +79,11 @@ admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
 # Create the admin account
 if admin_user is None:
     password = "Mod3lrAdm1n"
-    email="admin@modelr.io"
-    
+    email = "admin@modelr.io"
     admin_user = make_user(user_id=admin_id, email=email,
                            password=password,
                            parent=ModelrRoot)
-    
+
 # Create the public group. All users are automatically entitled
 # to part of this group.
 public = Group.all().ancestor(ModelrRoot).filter("name =", 'public')
@@ -116,27 +94,12 @@ if not public:
                    parent=ModelrRoot)
     public.put()
 
-    
-# Populate the default rock database.
-
-
-
-#====================================================================
-# Global Variables
-#====================================================================
-# Secret API key from Stripe dashboard
-
-
-
-
-        
-
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/dashboard', DashboardHandler),
                                ('/rock', RockHandler),
-                               ('/fluid', FluidHandler), 
+                               ('/fluid', FluidHandler),
                                ('/scenario', ScenarioPageHandler),
-                               ('/scenario_db',ScenarioHandler),
+                               ('/scenario_db', ScenarioHandler),
                                ('/pricing', PricingHandler),
                                ('/profile', ProfileHandler),
                                ('/settings', SettingsHandler),

@@ -22,22 +22,17 @@ import logging
 import stripe
 
 import json
-import base64
 import StringIO
 
-from constants import admin_id, LOCAL, PRICE, UR_STATUS_DICT, \
-     tax_dict
+from constants import admin_id, PRICE, tax_dict
 
-from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
-     verify, authenticate, verify_signup, initialize_user,\
-     reset_password, \
-     forgot_password, send_message, make_user, cancel_subscription
-     
-from lib_db import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Issue, EarthModel, Server, Fluid
+from lib_auth import verify, authenticate, send_message
 
-from lib_util import posterize, depth2time, akirichards, zoeppritz, ricker
+from lib_db import Rock, Scenario, User, ModelrParent,\
+    ActivityLog, ModelServedCount,\
+    ImageModel, EarthModel, Fluid
+
+from lib_util import posterize, depth2time, akirichards, ricker
 
 from fluidsub import smith_fluidsub
 
@@ -45,6 +40,7 @@ from fluidsub import smith_fluidsub
 def get_user(user_id):
 
     return User.all().filter("user_id =", user_id).get()
+
 
 def get_by_id(entity, db_id, user):
     """
@@ -54,19 +50,18 @@ def get_by_id(entity, db_id, user):
     item = entity.get_by_id(db_id, parent=user)
 
     # See if admin owns it
-    admin = get_user(admin_id)
     if not item:
         item = entity.get_by_id(db_id, parent=get_user(admin_id))
 
-
     return item
 
+
 def get_items_by_name_and_user(entity, name, user):
-    
     items = entity.all().filter("name =", name).fetch(1000)
 
-    out_items = [item for item in items if item.user == user.user_id
-                 or item.group in user.group]
+    out_items = [item for item in items if
+                 item.user == user.user_id or
+                 item.group in user.group]
 
     return out_items
 
@@ -92,18 +87,19 @@ class ModelrAPI(webapp2.RequestHandler):
             user, password = cookie.split('|')
         except ValueError:
             return
-        
         return verify(user, password, ModelrParent.all().get())
 
+
 class ScenarioHandler(ModelrAPI):
-    
+    """
+    API to the scenario database
+    """
     def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
 
         # Get the user but don't redirect. Any can play with public
         # scenarios.
         user = self.verify()
-        
-        self.response.headers['Content-Type'] = 'application/json'
         name = self.request.get('name')
 
         if user:
@@ -113,19 +109,19 @@ class ScenarioHandler(ModelrAPI):
             scenarios.filter("name =", name)
             scenarios = scenarios.fetch(1)
         else:
-            scenarios=[]
+            scenarios = []
 
         # Get Evan's default scenarios (created with the admin)
-        scen = Scenario.all().ancestor(ModelrParent.all().get()).filter("user_id =",
-                                                          admin_id)
-        scen = Scenario.all().filter("name =",name).fetch(100)
+        scen = Scenario.all()\
+                       .ancestor(ModelrParent.all().get())\
+                       .filter("user_id =", admin_id)
+        scen = Scenario.all().filter("name =", name).fetch(100)
         if scen:
             scenarios += scen
 
         if scenarios:
             logging.info(scenarios[0])
             logging.info(scenarios[0].data)
-        
             scenario = scenarios[0]
             self.response.out.write(scenario.data)
         else:
@@ -136,20 +132,18 @@ class ScenarioHandler(ModelrAPI):
             ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
-        return 
+        return
 
     @authenticate
     def delete(self, user):
 
         name = self.request.get('name')
-        
         scenarios = Scenario.all()
         scenarios.ancestor(user)
         scenarios.filter("user =", user.user_id)
         scenarios.filter("name =", name)
         scenarios = scenarios.fetch(100)
 
-        
         for scenario in scenarios:
             scenario.delete()
 
@@ -161,18 +155,15 @@ class ScenarioHandler(ModelrAPI):
         # Output for successful post reception
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
-        
 
     @authenticate
     def post(self, user):
-        
         # Output for successful post reception
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
 
         name = self.request.get('name')
         group = self.request.get('group')
-        
         logging.info(('name', name))
         data = self.request.get('json')
 
@@ -202,38 +193,36 @@ class ScenarioHandler(ModelrAPI):
                     parent=ModelrParent.all().get()).put()
 
 
-       
 class RockHandler(ModelrAPI):
-
-
     def get(self):
         """
         Get the requested rock from the user's database
         """
 
+        self.response.headers['Content-Type'] = 'application/json'
         name = self.request.get('name')
         key = self.request.get('key')
 
-        user = self.verify()
-        
-        if(name):
+        if self.request.get('auth'):
+            user = User.all().filter('user_id =',
+                                     self.request.get('auth'))\
+                .get()
+        else:
+            user = self.verify()
 
+        print user
+        if(name):
             rock = get_items_by_name_and_user(Rock, name, user)
             data = rock[0].json
-            
         elif(key):
-        
-            rock = get_by_id(Rock,int(key), user)
+            rock = get_by_id(Rock, int(key), user)
             data = rock.json
         else:
             raise Exception
-        
         self.response.out.write(data)
-        
 
     @authenticate
     def delete(self, user):
-
 
         selected_rock = Rock.all()
         selected_rock.ancestor(user)
@@ -251,20 +240,16 @@ class RockHandler(ModelrAPI):
             rock = selected_rock.fetch(1)[0]
             rock.delete()
         except:
-            pass 
-
+            pass
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
-            
+
     @authenticate
     def post(self, user):
         # Adds a rock to the database, will throw an error
         # if the rock name already exists
-        
         try:
-            
             name = self.request.get("name")
-        
             rocks = Rock.all()
             rocks.ancestor(user)
             rocks.filter("user =", user.user_id)
@@ -299,12 +284,10 @@ class RockHandler(ModelrAPI):
                 fluid_id = self.request.get("rock-fluid")
 
                 if fluid_id != "None":
-        
                     fluid = get_by_id(Fluid, int(fluid_id), user)
                     rock.fluid_key = fluid.key()
                 else:
                     rock.fluid_key = None
-                    
             except Exception as e:
                 print e
 
@@ -318,9 +301,8 @@ class RockHandler(ModelrAPI):
         except Exception as e:
             # send error
             print e
-        
         self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!') 
+        self.response.out.write('All OK!!')
 
     @authenticate
     def put(self, user):
@@ -332,7 +314,7 @@ class RockHandler(ModelrAPI):
             key = self.request.get("db_key")
 
             rock = Rock.get_by_id(int(key), parent=user)
-        
+
             # Update the rock
             rock.vp = float(self.request.get('vp'))
             rock.vs = float(self.request.get('vs'))
@@ -344,43 +326,41 @@ class RockHandler(ModelrAPI):
 
             rock.porosity = float(self.request.get('porosity'))
             rock.vclay = float(self.request.get('vclay'))
-            
+
             rock.description = self.request.get('description')
             rock.name = self.request.get('name')
             rock.group = self.request.get('group')
-         
             try:
-            
                 fluid_id = self.request.get("rock-fluid")
 
                 if fluid_id != "None":
-                    fluid = get_by_id(Fluid, int(fluid_id),user)
+                    fluid = get_by_id(Fluid, int(fluid_id), user)
                     fluid_key = fluid.key
                 else:
                     fluid_key = None
 
                 rock.fluid_key = fluid_key
-                
+
             except:
                 pass
-            
+
             rock.name = self.request.get('name')
-         
+
             rock.put()
 
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.out.write('All OK!!')
-            
+
         except Exception as e:
             # Write out error message
             print e
             pass
-        
+
         self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!') 
+        self.response.out.write('All OK!!')
         return
 
-        
+
 class StripeHandler(ModelrAPI):
     '''
     Handle webhook POSTs from Stripe
@@ -476,9 +456,7 @@ class StripeHandler(ModelrAPI):
             #             message=message)
             self.response.write("ALL OK")
 
-        
 
-    
 class Upload(blobstore_handlers.BlobstoreUploadHandler,
              ModelrAPI):
     """
@@ -496,7 +474,6 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
 
         # All this is in a try incase the image format isn't accepted
         try:
-            
             # Read the image file
             reader = blobstore.BlobReader(blob_info.key())
 
@@ -531,8 +508,6 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
         except Exception as e:
             print e
             self.redirect('/model?error=True')
-        
-
 
 
 class ModelData1DHandler(ModelrAPI):
@@ -736,13 +711,13 @@ class ModelData1DHandler(ModelrAPI):
                   "z": z.tolist()}
 
         self.response.write(json.dumps(output))
-        
+
 
 class ImageModelHandler(ModelrAPI):
 
     @authenticate
     def get(self, user):
-        
+
         models = ImageModel.all().ancestor(user).fetch(1000)
 
     @authenticate
@@ -821,7 +796,7 @@ class FluidHandler(ModelrAPI):
     @authenticate
     def put(self, user):
 
-          # Get the database key from the request
+        # Get the database key from the request
         try:
 
             key = self.request.get("db_key")
@@ -875,17 +850,26 @@ class FluidHandler(ModelrAPI):
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
-        
+
+
 class EarthModelHandler(ModelrAPI):
 
-    
     def get(self):
 
+        if self.request.get("auth"):
+            user = User.all().filter("user_id =",
+                                     self.request.get("auth"))
+            model_key = self.request.get("key")
+            model = EarthModel.get(model_key)
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.out.write(model.to_json())
 
-        user = self.verify()
+            return
         
+        else:
+            user = self.verify()
+
         try:
-            
             # Get the root of the model
             input_model_key = self.request.get('image_key')
             input_model = ImageModel.get(str(input_model_key))
@@ -900,53 +884,44 @@ class EarthModelHandler(ModelrAPI):
                 earth_model = EarthModel.all().ancestor(input_model)
 
                 if user:
-                # Check first for a user model with the right name
+                    # Check first for a user model with the right name
                     earth_model = earth_model.filter("user =",
                                                      user.user_id)
                     earth_model = earth_model.filter("name =",
-                                                 name)
-
+                                                     name)
                     earth_model = earth_model.get()
                 else:
                     earth_model = None
 
-
                 if not earth_model:
                     # Check in the defaults
-                    earth_model = \
-                      EarthModel.all().ancestor(input_model)
-
-                    earth_model = earth_model.filter("user =",
-                                                       admin_id)
+                    earth_model = EarthModel.all().ancestor(input_model)
                     earth_model = earth_model.filter("name =",
-                                                       name).get()
+                                                     name).get()
 
-                    
                 self.response.out.write(earth_model.data)
 
             else:
 
-                
                 earth_models = EarthModel.all().ancestor(input_model)
 
                 def_models = EarthModel.all().ancestor(input_model)
-                
                 earth_models = earth_models.filter("user =",
-                                                  user.user_id)
+                                                   user.user_id)
                 def_models = def_models.filter("user =",
-                                                 admin_id)
+                                               admin_id)
                 earth_models.order('-date')
                 def_models.order('-date')
-                
+
                 earth_models = (earth_models.fetch(100) +
                                 def_models.fetch(100))
 
                 output = json.dumps([em.name for em in earth_models])
                 self.response.out.write(output)
-            
+
         except Exception as e:
             print e
-            self.response.out.write(json.dumps({'failed':True}))
+            self.response.out.write(json.dumps({'failed': True}))
 
     @authenticate
     def post(self, user):
