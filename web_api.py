@@ -203,11 +203,12 @@ class RockHandler(ModelrAPI):
         name = self.request.get('name')
         key = self.request.get('key')
 
+        # query with an api key
         if self.request.get('auth'):
-            user = User.all().filter('user_id =',
-                                     self.request.get('auth'))\
-                .get()
-            key = self.request.get('keys')
+            keys = self.request.get('keys')
+            self.response.write([rock.json for rock in Rock.get(keys)])
+            return
+
         else:
             user = self.verify()
 

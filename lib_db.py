@@ -172,8 +172,10 @@ class Rock(Item):
 
         return json.dumps({"vp": self.vp, "vs": self.vs,
                            "rho": self.rho,
-                           "porosity": self.porosity,
+                           "phi": self.porosity,
                            "vclay": self.vclay,
+                           "kclay": self.kclay,
+                           "kqtz": self.kqtz,
                            "vp_std": self.vp_std,
                            "vs_std": self.vs_std,
                            "rho_std": self.rho_std,
