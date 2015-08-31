@@ -37,7 +37,8 @@ from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
 
 from lib_db import Rock, Scenario, User, ModelrParent, Group, \
     GroupRequest, ActivityLog, ModelServedCount,\
-    ImageModel, Issue, EarthModel, Server, Fluid
+    ImageModel, Issue, EarthModel, Server, Fluid,\
+    get_all_items_user
 
 from lib_util import RGBToString
 
@@ -1534,60 +1535,21 @@ class Model1DHandler(ModelrPageRequest):
     @authenticate
     def get(self, user):
 
-        admin_rocks = Rock.all().order("name")\
-                                .filter("user =", admin_id)
-        admin_rocks = admin_rocks.fetch(100)
+        all_rocks = get_all_items_user(Rock, user)
 
-        user_rocks = Rock.all().order("name").ancestor(user)
-        user_rocks = user_rocks.fetch(100)
+        rock_json = [rock.simple_json for rock in all_rocks]
+      
+        all_fluids = get_all_items_user(Fluid, user)
+        fluid_json = [fluid.simple_json for fluid in all_fluids]
 
-        group_rocks = []
-        for group in user.group:
-            g_rocks = Rock.all().order('name')\
-                                .ancestor(ModelrParent.all().get())\
-                                .filter("group =", group)
-            group_rocks = group_rocks + g_rocks.fetch(100)
-
-        all_rocks = user_rocks + group_rocks + admin_rocks
-
-        rock_json = []
-        colour_map = {}
-        test = []
-        for i, rock in enumerate(all_rocks):
-            rock_json.append(rock.json)
-            colour_map[rock.name] = RGBToString(usgs_colours[i])
-            test.append({"name": rock.name,
-                         "db_key": rock.key().id()})
-
-        # Fluids. This should be refactored into a function
-        admin_fluids = Fluid.all().order("name")\
-                                  .filter("user =", admin_id)
-        admin_fluids = admin_fluids.fetch(100)
-
-        user_fluids = Fluid.all().order("name").ancestor(user)
-        user_fluids = user_fluids.fetch(100)
-
-        group_fluids = []
-        for group in user.group:
-            g_fluids = Fluid.all().order('name')\
-                                  .ancestor(ModelrParent.all().get())\
-                                  .filter("group =", group)
-            group_fluids = group_fluids + g_fluids.fetch(100)
-
-        all_fluids = user_fluids + group_fluids + admin_fluids
-        fluid_json = []
-        test = []
-        for i, fluid in enumerate(all_fluids):
-            fluid_json.append(fluid.json)
-            colour_map[fluid.name] = RGBToString(usgs_colours[-i])
-            test.append({"name": fluid.name,
-                         "db_key": fluid.key().id()})
+        colour_map = {item.name: RGBToString(colour)
+                      for (item, colour) in
+                      zip(all_rocks + all_fluids, usgs_colours)}
 
         colour_map = json.dumps(colour_map)
         params = self.get_base_params(user=user,
                                       db_rocks=rock_json,
                                       db_fluids=fluid_json,
-                                      test=test,
                                       colour_map=colour_map)
 
         template = env.get_template('1D_model.html')

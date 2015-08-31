@@ -91,7 +91,7 @@ EarthStructure.prototype.pull_rocks =function(){
     // fill rock properties from the front-end server
 
     cb = (function(data){
-	this.mapping[i].property = rock_to_string(JSON.parse(data));
+	this.mapping[i].property = rock_to_string(data);
     }).bind(this)
 
     for (var i in this.mapping){
@@ -337,7 +337,7 @@ Scenario.prototype.qs = function() {
             var rock_name = this.rocks[args[argname]];
 	    if (rock_name){
 		cb = function(data){
-		    data = JSON.parse(data);
+		    // data = data;
 		    //We should send the json object, but would
 		    //break other apps
 		    value = rock_to_string(data);

@@ -4,72 +4,72 @@
 {% block content %}
 
 <style type="text/css">
-tspan {
+  tspan {
   font-size: 9px;
-}
+  }
 
 
- table{
-   table-layout: fixed;
-    
-   margin-left: 20px;
-   margin-right: 20px;
-}
+  table{
+  table-layout: fixed;
+  
+  margin-left: 20px;
+  margin-right: 20px;
+  }
 
- model-plot {
-   font: 16px sans-serif;
- }
- 
- text {
-   font: 12px sans-serif;
- }
- 
- .y-label {
-   font: 16px sans-serif;
- }
-
- .menu-label {
+  model-plot {
+  font: 16px sans-serif;
+  }
+  
+  text {
   font: 12px sans-serif;
- }
+  }
+  
+  .y-label {
+  font: 16px sans-serif;
+  }
 
-.intervalRow {
-vertical-align: middle;
-}
+  .menu-label {
+  font: 12px sans-serif;
+  }
 
- .wiggle-fill {
-    fill: grey;
-    stroke-width: 0;
-   stroke: transparent;
-}
- .wiggle-line {
-    fill: none;
-    stroke-width: 1;
-    stroke: black;
-}
+  .intervalRow {
+  vertical-align: middle;
+  }
+
+  .wiggle-fill {
+  fill: grey;
+  stroke-width: 0;
+  stroke: transparent;
+  }
+  .wiggle-line {
+  fill: none;
+  stroke-width: 1;
+  stroke: black;
+  }
 
 
- .deleteBtn{
-   margin: 10px 0 0 0;
-   vertical-align: top;
-   color:red;
-}
+  .deleteBtn{
+  margin: 10px 0 0 0;
+  vertical-align: top;
+  color:red;
+  }
 
- .menuSelect{
-   vertical-align: top;
-   margin: 6px 0 0 0;
-}
+  .menuSelect{
+  vertical-align: top;
+  margin: 6px 0 0 0;
+  }
 
- .cblock {   
+  .cblock {   
   font-size: 200%;
-   margin-right: 8px;
- }
+  margin-right: 8px;
+  }
 
- .domain { 
-   fill:none; 
-   stroke: #000; 
-   stroke-width: 1px; 
-   shape-rendering: crispEdges;
- } 
+  .domain { 
+  fill:none; 
+  stroke: #000; 
+  stroke-width: 1px; 
+  shape-rendering: crispEdges;
+  } 
 
 
 </style>
@@ -87,26 +87,26 @@ vertical-align: middle;
 <script src="/static/js/1D_model.js"></script>
 
 <script>
- $(document).ready(function(){
+  $(document).ready(function(){
 
-   var db_rocks = {{db_rocks}};
-   var colour_map={{colour_map}};
-   var db_fluids = {{db_fluids}};
+  var db_rocks = {{db_rocks}};
+  var colour_map={{colour_map}};
+  var db_fluids = {{db_fluids}};
 
-   for (var i in db_rocks){
-     db_rocks[i] = JSON.parse(db_rocks[i]);
-   };
+  for (var i in db_rocks){
+  db_rocks[i] = JSON.parse(db_rocks[i]);
+  };
 
-   for (var i in db_fluids){
-     db_fluids[i] = JSON.parse(db_fluids[i]);
-   };
+  for (var i in db_fluids){
+  db_fluids[i] = JSON.parse(db_fluids[i]);
+  };
 
-   setup1D("#rock-model-container",db_rocks, db_fluids,
-	   colour_map, 10000,
-	   "#rock-menu", "#plot-container",
-	   "#reflectivity-menu", "#seismic-menu");
- }
- )
+  setup1D("#rock-model-container",db_rocks, db_fluids,
+  colour_map, 10000,
+  "#rock-menu", "#plot-container",
+  "#reflectivity-menu", "#seismic-menu","{{HOSTNAME}}");
+  }
+  )
 </script>
 
 
@@ -123,7 +123,7 @@ vertical-align: middle;
       <div class="model-plot"> <!-- Helps with CSS -->
         <div class="col-md-12" id="plot-container">
         </div>
-  
+        
       </div> <!-- End of model-plot -->
     </div> <!-- End of panel body -->
     <div class="row">
@@ -149,16 +149,16 @@ vertical-align: middle;
   </div> <!-- End of panel -->
 
 
-<script>
-$('#model_info').popover({
-        trigger: 'hover click', 
-        html: true,
-        placement: 'right', 
-        container: 'body',
-        delay: { show: 500, hide: 1000 }
-});
-</script>
+  <script>
+    $('#model_info').popover({
+    trigger: 'hover click', 
+    html: true,
+    placement: 'right', 
+    container: 'body',
+    delay: { show: 500, hide: 1000 }
+    });
+  </script>
 
-{% endblock %}
+  {% endblock %}
 
 

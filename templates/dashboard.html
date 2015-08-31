@@ -437,10 +437,10 @@
 			None
 		      </option>
                       {% for fluid in fluids + default_fluids %}
-		      {% if current_rock.fluid_key and current_rock.fluid_id == fluid.key().id() %}
-                      <option value="{{current_rock.fluid}}" selected>
+		      {% if current_rock.fluid_key and current_rock.fluid_key == fluid.key() %}
+                      <option value="{{fluid.fluid_key}}" selected>
 			{% else %}
-			<option value="{{fluid.key().id()}}">
+			<option value="{{fluid.key()}}">
 			  {% endif %}
 
 			  {{fluid.name}}</option>
@@ -897,7 +897,6 @@
    $("html, body").scrollTop($("#fluid-form").offset().top);
    cb = function(data){
 
-     data = JSON.parse(data);
      $("#edit-fluid-name").attr("value", data.name);
      $("#edit-fluid-desc").attr("value", data.description);
      $("#edit-fluid-kw").attr("value", data.k_w);
@@ -923,7 +922,6 @@
    $("html, body").scrollTop($("#rock-form").offset().top);
    cb = function(data){
 
-     data = JSON.parse(data);
      $("#edit-rock-name").attr("value",name);
      $("#edit-rock-desc").attr("value", data.description);
      $("#edit-vp").attr("value", data.vp);
@@ -936,7 +934,11 @@
      $("#edit-porosity").attr("value", data.porosity);
      $("#edit-vclay").attr("value", data.vclay);
 
-     $("#edit-rock-fluid").val(data.fluid_id);
+     if(data.fluid){
+ $("#edit-rock-fluid").val(data.fluid.db_key);
+ } else{
+ $("#edit-rock-fluid").val("None");
+ };
    };
    $.ajax('/rock?name=' + name,
 	  {type: "GET", success: cb});
