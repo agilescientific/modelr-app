@@ -751,12 +751,15 @@ function FluidSub(canvas, core_width, core_height,
             for(var j=0; j<interval.subfluids.length;j++){
 
                 var subinterval = intervals[i].subfluids[j];
-                $.get('/fluid', {keys: subinterval.fluid.key},
-                      function (data){
-                          var subfluid = data;
-                          subfluid.thickness = subinterval.thickness;
-                          layer.subfluids.push(subfluid);
-                      }
+                $.ajax('/fluid', {type: "GET", async: false,
+                                  data: {keys: subinterval.fluid.key},
+                                  success: function (data){
+                                      var subfluid = {};
+                                      subfluid.fluid = data;
+                                      subfluid.thickness = subinterval.thickness;
+                                      layer.subfluids.push(subfluid);
+                                  }
+                                 }
                      );
             }
 

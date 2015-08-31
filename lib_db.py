@@ -208,15 +208,22 @@ class Rock(Item):
     @property
     def simple_json(self):
         dic = simple_item(self)
-        if self.fluid_key:
+        try:
             dic["fluid"] = simple_item(self.fluid_key)
-        print "dic", dic
+        except:
+            dic["fluid"] = None
+
         return json.dumps(dic)
 
     @property
     def fluid(self):
 
-        return self.fluid_key
+        try:
+            fluid = self.fluid_key
+        except:
+            fluid = None
+
+        return fluid
 
     @property
     def fluid_id(self):

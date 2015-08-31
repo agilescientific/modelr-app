@@ -509,7 +509,7 @@ class FluidHandler(ModelrAPI):
             raise Exception
 
         data = fluid.json
-
+        self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(data)
         
     @authenticate
@@ -567,7 +567,7 @@ class FluidHandler(ModelrAPI):
             key = self.request.get("db_key")
 
             fluid = Fluid.get_by_id(int(key), parent=user)
-        
+
             # Update the fluid
             fluid.rho_w = float(self.request.get('rho_w'))
             fluid.rho_hc = float(self.request.get('rho_hc'))
@@ -576,42 +576,50 @@ class FluidHandler(ModelrAPI):
             fluid.khc = float(self.request.get('khc'))
 
             fluid.sw = float(self.request.get('sw'))
-          
+
             fluid.description = self.request.get('description')
             fluid.name = self.request.get('name')
             fluid.group = self.request.get('group')
 
             fluid.name = self.request.get('name')
-         
+
             fluid.put()
 
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.out.write('All OK!!')
-            
+
         except Exception as e:
             # Write out error message
             print e
-            pass 
+            pass
+        
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!') 
         return
 
     @authenticate
-    def delete(self,user):
-      
+    def delete(self, user):
+
         key = int(self.request.get("key"))
         selected_fluid = Fluid.get_by_id(key, parent=user)
 
         try:
+            fluid_key = selected_fluid.key()
+
+            # fix all rocks
+            rocks = Rock.all().filter("fluid_key =", fluid_key).fetch(1000)
+            for rock in rocks:
+                rock.fluid_key = None
+                rock.put()
+
             selected_fluid.delete()
         except:
             pass
-        
+
         activity = "removed_fluid"
         ActivityLog(user_id=user.user_id,
                     activity=activity,
                     parent=ModelrParent.all().get()).put()
-
 
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
