@@ -1,3 +1,4 @@
+
 function FluidSub(canvas, core_width, core_height,
 		  rocks, fluids, rock_cmap, fluid_cmap,
 		  menu_div,onchange){
@@ -28,7 +29,7 @@ function FluidSub(canvas, core_width, core_height,
     var max_scale = d3.scale.linear()
             .domain([0, max_depth])
             .range([y_offset, core_height]);
-
+  
     var drag = d3.behavior.drag()
 	    .on("drag", dragResize)
 	    .on("dragend", onchange);
@@ -741,7 +742,7 @@ function FluidSub(canvas, core_width, core_height,
             interval = intervals[i];
             $.ajax('/rock',{type: "GET", async: false, data: {keys: JSON.stringify([interval.rock.key])},
                             success: function (data){
-                                layer.rock = data.rocks[0];
+                                layer.rock = data;
                                 layer.thickness = interval.thickness;
                             }
                            });
@@ -751,12 +752,15 @@ function FluidSub(canvas, core_width, core_height,
             for(var j=0; j<interval.subfluids.length;j++){
 
                 var subinterval = intervals[i].subfluids[j];
-                $.get('/fluid', {keys: subinterval.fluid.key},
-                      function (data){
-                          var subfluid = data;
-                          subfluid.thickness = subinterval.thickness;
-                          layer.subfluids.push(subfluid);
-                      }
+                $.ajax('/fluid', {type: "GET", async: false,
+                                  data: {keys: subinterval.fluid.key},
+                                  success: function (data){
+                                      var subfluid = {};
+                                      subfluid.fluid = data;
+                                      subfluid.thickness = subinterval.thickness;
+                                      layer.subfluids.push(subfluid);
+                                  }
+                                 }
                      );
             }
 

@@ -97,7 +97,7 @@ EarthStructure.prototype.pull_rocks =function(){
     for (var i in this.mapping){
 
 	rock_key = this.mapping[i].key
-	$.ajax("/rock?key="+rock_key, {type: "GET",
+	$.ajax("/rock?keys="+rock_key, {type: "GET",
 				     async: false,
 				     success: cb})
     };

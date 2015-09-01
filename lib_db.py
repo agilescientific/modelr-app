@@ -2,6 +2,7 @@ from google.appengine.ext import db
 from google.appengine.ext import blobstore
 from constants import admin_id
 import json
+
 """
 Authentication and permissions will be structured similar to linux
 wuth groups and users. Group permissions can be added to an item to
@@ -60,7 +61,6 @@ def simple_item(obj):
     payload = {"name": obj.name,
                "description": obj.description,
                "key": str(obj.key())}
-    print payload
     return payload
 
 
@@ -164,6 +164,12 @@ class EarthModel(Item):
     def to_json(self):
         return self.data
 
+    @property
+    def simple_json(self):
+        return {"name": self.name,
+                "description": 'empty',
+                "key": str(self.key())}
+
 
 class Forward2DModel(Item):
 
@@ -208,15 +214,22 @@ class Rock(Item):
     @property
     def simple_json(self):
         dic = simple_item(self)
-        if self.fluid_key:
+        try:
             dic["fluid"] = simple_item(self.fluid_key)
-        print "dic", dic
-        return json.dumps(dic)
+        except:
+            dic["fluid"] = None
+
+        return dic
 
     @property
     def fluid(self):
 
-        return self.fluid_key
+        try:
+            fluid = self.fluid_key
+        except:
+            fluid = None
+
+        return fluid
 
     @property
     def fluid_id(self):
@@ -230,26 +243,26 @@ class Rock(Item):
     def fluid_payload(self):
         fluid = self.fluid
         if self.fluid:
-            return json.loads(fluid.json)
+            return fluid.json
         else:
             return None
 
     @property
     def json(self):
 
-        return json.dumps({"vp": self.vp, "vs": self.vs,
-                           "rho": self.rho,
-                           "phi": self.porosity,
-                           "vclay": self.vclay,
-                           "kclay": self.kclay,
-                           "kqtz": self.kqtz,
-                           "vp_std": self.vp_std,
-                           "vs_std": self.vs_std,
-                           "rho_std": self.rho_std,
-                           "description": self.description,
-                           "fluid": self.fluid_payload,
-                           "name": self.name,
-                           "db_key": str(self.key())})
+        return {"vp": self.vp, "vs": self.vs,
+                "rho": self.rho,
+                "phi": self.porosity,
+                "vclay": self.vclay,
+                "kclay": self.kclay,
+                "kqtz": self.kqtz,
+                "vp_std": self.vp_std,
+                "vs_std": self.vs_std,
+                "rho_std": self.rho_std,
+                "description": self.description,
+                "fluid": self.fluid_payload,
+                "name": self.name,
+                "db_key": str(self.key())}
 
     @property
     def mu(self):
@@ -289,18 +302,18 @@ class Fluid(Item):
 
     @property
     def json(self):
-        return json.dumps({"k_hc": self.khc,
-                           "k_w": self.kw,
-                           "rho_hc": self.rho_hc,
-                           "rho_w": self.rho_w,
-                           "sw": self.sw,
-                           "name": self.name,
-                           "description": self.description,
-                           "db_key": str(self.key())})
+        return {"k_hc": self.khc,
+                "k_w": self.kw,
+                "rho_hc": self.rho_hc,
+                "rho_w": self.rho_w,
+                "sw": self.sw,
+                "name": self.name,
+                "description": self.description,
+                "db_key": str(self.key())}
 
     @property
     def simple_json(self):
-        return json.dumps(simple_item(self))
+        return simple_item(self)
 
 
 class Server(db.Model):
