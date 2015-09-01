@@ -1537,10 +1537,10 @@ class Model1DHandler(ModelrPageRequest):
 
         all_rocks = get_all_items_user(Rock, user)
 
-        rock_json = [rock.simple_json for rock in all_rocks]
+        rock_json = json.dumps([rock.simple_json for rock in all_rocks])
       
         all_fluids = get_all_items_user(Fluid, user)
-        fluid_json = [fluid.simple_json for fluid in all_fluids]
+        fluid_json = json.dumps([fluid.simple_json for fluid in all_fluids])
 
         colour_map = {item.name: RGBToString(colour)
                       for (item, colour) in

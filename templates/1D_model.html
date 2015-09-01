@@ -90,16 +90,8 @@
   $(document).ready(function(){
 
   var db_rocks = {{db_rocks}};
-  var colour_map={{colour_map}};
+  var colour_map = {{colour_map}};
   var db_fluids = {{db_fluids}};
-
-  for (var i in db_rocks){
-  db_rocks[i] = JSON.parse(db_rocks[i]);
-  };
-
-  for (var i in db_fluids){
-  db_fluids[i] = JSON.parse(db_fluids[i]);
-  };
 
   setup1D("#rock-model-container",db_rocks, db_fluids,
   colour_map, 10000,

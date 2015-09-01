@@ -172,13 +172,13 @@
             <td><button class="btn btn-success btn-xs"
 			type="button"
 			id="edit-rock-button"
-			onclick='edit_rock("{{rock.name}}")'>
+			onclick='edit_rock("{{rock.key()}}")'>
 	      edit
 	    </button>
 
 	    &nbsp;&nbsp;&nbsp;&nbsp;
 	    <button class="btn btn-danger btn-xs" type="button"
-		    onclick='delete_rock("{{rock.name}}")'>
+		    onclick='delete_rock("{{rock.key().id()}}")'>
 	      delete
 	    </button>
 	    </td>
@@ -534,7 +534,7 @@
 	    <td><button class="btn btn-success btn-xs"
 			type="button"
 			id="edit-fluid-button"
-			onclick='edit_fluid("{{fluid.key().id()}}")'>
+			onclick='edit_fluid("{{fluid.key()}}")'>
 	      edit
 	    </button>
 
@@ -907,11 +907,11 @@
      $("#edit-fluid-sw").attr("value", data.sw);
    };
 
-   $.ajax('/fluid?key=' + key,
+   $.ajax('/fluid?keys=' + key,
 	  {type: "GET", success: cb});
  }
 
- function edit_rock(name){
+ function edit_rock(key){
    document.getElementById("submit-rock-button").onclick = put_rock;
    button = $("#submit-rock-button");
    button.text("Update rock");
@@ -922,7 +922,7 @@
    $("html, body").scrollTop($("#rock-form").offset().top);
    cb = function(data){
 
-     $("#edit-rock-name").attr("value",name);
+     $("#edit-rock-name").attr("value",data.name);
      $("#edit-rock-desc").attr("value", data.description);
      $("#edit-vp").attr("value", data.vp);
      $("#edit-vs").attr("value", data.vs);
@@ -940,7 +940,7 @@
  $("#edit-rock-fluid").val("None");
  };
    };
-   $.ajax('/rock?name=' + name,
+   $.ajax('/rock?keys=' + key,
 	  {type: "GET", success: cb});
  }
 
@@ -953,12 +953,12 @@
 				success: cb});
  }
 
- function delete_rock(name){
+ function delete_rock(id){
    cb = function(data){
      location.reload(true);
    };
 
-   $.ajax('/rock?name=' + name, {type: "DELETE",
+   $.ajax('/rock?id=' + id, {type: "DELETE",
 				 success: cb});
  }
 
