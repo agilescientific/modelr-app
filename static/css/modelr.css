@@ -1,3 +1,22 @@
+.tick line{
+    opacity: 0.1;
+}
+
+.axis text {
+  font: 10px sans-serif;
+}
+
+div.plot {
+  padding:0;
+}
+
+.axis path,
+.axis line {
+  stroke-width: 1;
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
 .ribbon-banner {
    display: block;
    position: absolute;
