@@ -1,0 +1,113 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'node',
+1 verbose cli   '/usr/local/bin/npm',
+1 verbose cli   'install',
+1 verbose cli   '--save-dev',
+1 verbose cli   'readable-stream/transform' ]
+2 info using npm@2.11.3
+3 info using node@v0.12.7
+4 verbose install initial load of /private/var/www/modelr/modelr_app/static/js/package.json
+5 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/ansi-regex/package.json
+6 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/clone-stats/package.json
+7 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/gulp/package.json
+8 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/gulp-concat/package.json
+9 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/gulp-continuous-concat/package.json
+10 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/gulp-jshint/package.json
+11 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/gulp-watch/package.json
+12 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/jshint-stylish/package.json
+13 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/lodash/package.json
+14 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/lodash._escapestringchar/package.json
+15 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/lodash.defaults/package.json
+16 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/lodash.escape/package.json
+17 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/lodash.keys/package.json
+18 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/lodash.templatesettings/package.json
+19 verbose installManyTop reading scoped package data from /private/var/www/modelr/modelr_app/static/js/node_modules/lodash.values/package.json
+20 info package.json gulp-continuous-concat@0.1.1 No license field.
+21 verbose readDependencies loading dependencies from /private/var/www/modelr/modelr_app/static/js/package.json
+22 silly cache add args [ 'readable-stream/transform', null ]
+23 verbose cache add spec readable-stream/transform
+24 silly cache add parsed spec { raw: 'readable-stream/transform',
+24 silly cache add   scope: null,
+24 silly cache add   name: null,
+24 silly cache add   rawSpec: 'readable-stream/transform',
+24 silly cache add   spec: 'github:readable-stream/transform',
+24 silly cache add   type: 'hosted',
+24 silly cache add   hosted:
+24 silly cache add    { type: 'github',
+24 silly cache add      ssh: 'git@github.com:readable-stream/transform.git',
+24 silly cache add      sshUrl: 'git+ssh://git@github.com/readable-stream/transform.git',
+24 silly cache add      httpsUrl: 'git+https://github.com/readable-stream/transform.git',
+24 silly cache add      gitUrl: 'git://github.com/readable-stream/transform.git',
+24 silly cache add      shortcut: 'github:readable-stream/transform',
+24 silly cache add      directUrl: 'https://raw.githubusercontent.com/readable-stream/transform/master/package.json' } }
+25 verbose addRemoteGit caching readable-stream/transform
+26 verbose addRemoteGit readable-stream/transform is a repository hosted by github
+27 silly tryGitProto attempting to clone git://github.com/readable-stream/transform.git
+28 silly tryClone cloning readable-stream/transform via git://github.com/readable-stream/transform.git
+29 verbose tryClone git-github-com-readable-stream-transform-git-37bea52f not in flight; caching
+30 info git [ 'clone',
+30 info git   '--template=/Users/justin/.npm/_git-remotes/_templates',
+30 info git   '--mirror',
+30 info git   'git://github.com/readable-stream/transform.git',
+30 info git   '/Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-37bea52f' ]
+31 verbose git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror git://github.com/readable-stream/transform.git /Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-37bea52f: Cloning into bare repository '/Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-37bea52f'...
+31 verbose git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror git://github.com/readable-stream/transform.git /Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-37bea52f: fatal: remote error:
+31 verbose git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror git://github.com/readable-stream/transform.git /Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-37bea52f:   Repository not found.
+32 silly tryHTTPS attempting to clone git+https://github.com/readable-stream/transform.git
+33 silly tryClone cloning readable-stream/transform via git+https://github.com/readable-stream/transform.git
+34 verbose tryClone https-github-com-readable-stream-transform-git-54d90bfe not in flight; caching
+35 info git [ 'clone',
+35 info git   '--template=/Users/justin/.npm/_git-remotes/_templates',
+35 info git   '--mirror',
+35 info git   'https://github.com/readable-stream/transform.git',
+35 info git   '/Users/justin/.npm/_git-remotes/https-github-com-readable-stream-transform-git-54d90bfe' ]
+36 verbose git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror https://github.com/readable-stream/transform.git /Users/justin/.npm/_git-remotes/https-github-com-readable-stream-transform-git-54d90bfe: Cloning into bare repository '/Users/justin/.npm/_git-remotes/https-github-com-readable-stream-transform-git-54d90bfe'...
+36 verbose git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror https://github.com/readable-stream/transform.git /Users/justin/.npm/_git-remotes/https-github-com-readable-stream-transform-git-54d90bfe: remote: Invalid username or password.
+36 verbose git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror https://github.com/readable-stream/transform.git /Users/justin/.npm/_git-remotes/https-github-com-readable-stream-transform-git-54d90bfe: fatal: Authentication failed for 'https://github.com/readable-stream/transform.git/'
+37 silly trySSH attempting to clone git@github.com:readable-stream/transform.git
+38 silly tryClone cloning readable-stream/transform via git@github.com:readable-stream/transform.git
+39 verbose tryClone git-github-com-readable-stream-transform-git-934c353e not in flight; caching
+40 info git [ 'clone',
+40 info git   '--template=/Users/justin/.npm/_git-remotes/_templates',
+40 info git   '--mirror',
+40 info git   'git@github.com:readable-stream/transform.git',
+40 info git   '/Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e' ]
+41 error git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror git@github.com:readable-stream/transform.git /Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e: Cloning into bare repository '/Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e'...
+41 error git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror git@github.com:readable-stream/transform.git /Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e: Warning: Permanently added 'github.com,192.30.252.128' (RSA) to the list of known hosts.
+41 error git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror git@github.com:readable-stream/transform.git /Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e: Permission denied (publickey).
+41 error git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror git@github.com:readable-stream/transform.git /Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e: fatal: Could not read from remote repository.
+41 error git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror git@github.com:readable-stream/transform.git /Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e:
+41 error git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror git@github.com:readable-stream/transform.git /Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e: Please make sure you have the correct access rights
+41 error git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror git@github.com:readable-stream/transform.git /Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e: and the repository exists.
+42 verbose stack Error: Command failed: git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror git@github.com:readable-stream/transform.git /Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e
+42 verbose stack Cloning into bare repository '/Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e'...
+42 verbose stack Warning: Permanently added 'github.com,192.30.252.128' (RSA) to the list of known hosts.
+42 verbose stack Permission denied (publickey).
+42 verbose stack fatal: Could not read from remote repository.
+42 verbose stack
+42 verbose stack Please make sure you have the correct access rights
+42 verbose stack and the repository exists.
+42 verbose stack
+42 verbose stack     at ChildProcess.exithandler (child_process.js:751:12)
+42 verbose stack     at ChildProcess.emit (events.js:110:17)
+42 verbose stack     at maybeClose (child_process.js:1015:16)
+42 verbose stack     at Socket.<anonymous> (child_process.js:1183:11)
+42 verbose stack     at Socket.emit (events.js:107:17)
+42 verbose stack     at Pipe.close (net.js:485:12)
+43 verbose cwd /private/var/www/modelr/modelr_app/static/js
+44 error Darwin 14.3.0
+45 error argv "node" "/usr/local/bin/npm" "install" "--save-dev" "readable-stream/transform"
+46 error node v0.12.7
+47 error npm  v2.11.3
+48 error code 128
+49 error Command failed: git clone --template=/Users/justin/.npm/_git-remotes/_templates --mirror git@github.com:readable-stream/transform.git /Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e
+49 error Cloning into bare repository '/Users/justin/.npm/_git-remotes/git-github-com-readable-stream-transform-git-934c353e'...
+49 error Warning: Permanently added 'github.com,192.30.252.128' (RSA) to the list of known hosts.
+49 error Permission denied (publickey).
+49 error fatal: Could not read from remote repository.
+49 error
+49 error Please make sure you have the correct access rights
+49 error and the repository exists.
+50 error If you need help, you may report this error at:
+50 error     <https://github.com/npm/npm/issues>
+51 verbose exit [ 1, true ]
