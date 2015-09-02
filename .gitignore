@@ -25,8 +25,8 @@ develop-eggs
 lib
 lib64
 __pycache__
-strict/js/node_modules
-strict/js/bower_components
+strict/js/node_modules/
+strict/js/bower_components/
 # Installer logs
 pip-log.txt
 
