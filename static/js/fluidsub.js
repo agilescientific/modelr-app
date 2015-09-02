@@ -15,7 +15,7 @@ function FluidSub(canvas, core_width, core_height,
     var max_depth = 10000.0;
     var total_depth = max_depth * 0.10;
     var y_offset = 0.00;
-    var x_offset = xScale(0.30);
+    var x_offset = xScale(-0.25);
     var intervals = [];
     var rock_width = xScale(0.3);
     var fluid_width = xScale(0.15);
@@ -39,14 +39,14 @@ function FluidSub(canvas, core_width, core_height,
 	    .on("dragend", onchange);
 
     //------ Main canvas -------------------------//    
-    canvas.append("text")
-        .attr("class", "y-label")
-        .attr("text-anchor", "end")
-        .attr("y", xScale(0.2))
-        .attr("x", yScale(-0.0))
-        .attr("dy", ".75em")
-        .attr("transform", "rotate(-90)")
-        .text("depth [m]");
+    // canvas.append("text")
+    //     .attr("class", "y-label")
+    //     .attr("text-anchor", "end")
+    //     .attr("y", xScale(0.2))
+    //     .attr("x", yScale(-0.0))
+    //     .attr("dy", ".75em")
+    //     .attr("transform", "rotate(-90)")
+    //     .text("depth [m]");
 
     // scaling circle
     var circle = canvas.append("g");
@@ -89,12 +89,12 @@ function FluidSub(canvas, core_width, core_height,
         .attr("dy", ".7em")
         .text("S");
 
-    var yAxis = d3.svg.axis()
-            .scale(scale)
-            .orient("right")
-            .ticks(5);
+    // var yAxis = d3.svg.axis()
+    //         .scale(scale)
+    //         .orient("right")
+    //         .ticks(5);
 
-    rgroup.call(yAxis);
+    // rgroup.call(yAxis);
 
     // These groups are made in this order for specifically for 
     // layering order

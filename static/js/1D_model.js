@@ -18,17 +18,17 @@ setup1D = function(rock_div,
         .domain([0,1]);
    
     // Rock core
-    var core_width = widthScale(0.2);
+    var core_width = widthScale(0.15);
     var core_height = heightScale(0.8);
     var core_x = widthScale(0);
     var core_y = heightScale(0.1);
 
     var axisPlot = g3.plot('.plot')
             .setHeight(core_height)
-            .setWidth(30)
+            .setWidth(5)
             .setYTitle("depth [m]")
             .toggleXAxis(false)
-            .setMargin(core_y,30,30,widthScale(.35))
+            .setMargin(core_y,30,30,widthScale(.18))
             .setYDomain([0,1000])
             .draw();
 
@@ -60,88 +60,112 @@ setup1D = function(rock_div,
     var vpLog = undefined,
     vsLog = undefined,
     rhoLog = undefined,
-    zPLog = undefined;
+    zPLog = undefined
+    synthLog = undefined;
 
     $.ajax(server + "/data.json?type=seismic&script=fluid_sub.py",
        {type: "GET", data: {payload: JSON.stringify({seismic: seismic, earth_model: earth_model})},
         success: function success(data){
 
-        
+            var width = 65;
             // Create VP Plot
             var vpPlot = g3.plot('.plot')
                 .setXTicks(3)
-                .setHeight(height)
-                .setWidth(100)
+                .setHeight(core_height)
+                .setWidth(width)
                 .setXTitle("Vp")
+                .setMargin(core_y,10,30,10)
                 .toggleYAxis(false)
                 .setYDomain(data["z_lim"])
                 .setXDomain(data["vp_lim"])
-                //.draw();
+                .draw();
 
             // Create VP Log 
             vpLog = g3.log(vpPlot, data["vp"])
             .setColor("red")
-            //.draw();
+            .draw();
 
             // Create VS Plot
             var vsPlot = g3.plot('.plot')
                 .setXTicks(3)
-                .setHeight(height)
-                .setWidth(100)
+                .setHeight(core_height)
+                .setWidth(width)
                 .setXTitle("Vs")
+                .setMargin(core_y,10,30,10)
                 .toggleYAxis(false)
                 .setYDomain(data["z_lim"])
                 .setXDomain(data["vs_lim"])
-              //  .draw();
+                .draw();
 
             // Create VP Log
             vsLog = g3.log(vsPlot, data["vs"])
                 .setColor("blue")
-                //.draw();
+                .draw();
 
             // Create Rho Plot
             var rhoPlot = g3.plot('.plot')
                 .setXTicks(3)
-                .setHeight(height)
-                .setWidth(100)
+                .setHeight(core_height)
+                .setWidth(width)
+                .setMargin(core_y,10,30,10)
                 .setXTitle("\u03C1")
                 .toggleYAxis(false)
                 .setYDomain(data["z_lim"])
                 .setXDomain(data["rho_lim"])
-                //.draw();
+                .draw();
 
             // Create Rho Log
             rhoLog = g3.log(rhoPlot, data["rho"])
                 .setColor("green")
-                //.draw();
+                .draw();
 
             // Create T Plot
             var tPlot = g3.plot('.plot')
-                .setMargin(50, 30, 30, 40)
-                .setHeight(600)
-                .setWidth(10)
+                .setMargin(core_y,30,30,30)
+                .setHeight(core_height)
+                .setWidth(5)
                 .setYTitle("time [s]")
                 .toggleXAxis(false)
                 .setYDomain(data["t_lim"])
-                //.draw();
+                .draw();
 
             // Create Zp Plot
             var zPPlot = g3.plot('.plot')
                 .setXTicks(3)
-                .setHeight(600)
-                .setWidth(100)
+                .setHeight(core_height)
+                .setMargin(core_y,10,30,10)
+                .setWidth(width)
                 .setXTitle("Zp")
                 .toggleYAxis(false)
-                .setYDomain(data["t_lim"])
                 .setXDomain(data["rpp_lim"])
-                //.draw();
+                .setYDomain(data["t_lim"])
+                .draw();
 
             // Create Zp Log
-            console.log(data["rpp"]);
             zPLog = g3.log(zPPlot, data["rpp"])
-                .setYInt(0.001)
+                .setYInt(data["dt"])
                 .setColor("black")
-                //.draw();
+                .draw();
+
+            // Create Synth Plot
+            var synthLim = [d3.min(data["theta"]) - 10, d3.max(data["theta"]) + 10];
+            var synthPlot = g3.plot('.plot')
+                .setXTicks(3)
+                .setHeight(core_height)
+                .setMargin(core_y,40,30,10)
+                .setWidth(width)
+                .setXTitle("Synth")
+                .toggleYAxis(false)
+                .setXDomain(synthLim)
+                .setYDomain(data["t_lim"])
+                .draw();
+
+            synthLog = g3.wiggle(synthPlot, data["synth"])
+                .setYInt(data["dt"])
+                .setXMin(0)
+                .setSampleRate(3)
+                .setGain(50)
+                .draw();
 
             console.log(data);
         }
@@ -164,11 +188,12 @@ setup1D = function(rock_div,
         $.ajax(server + "/data.json?type=seismic&script=fluid_sub.py",
                {type: "GET", data: {payload: JSON.stringify({seismic: seismic, earth_model: earth_model})},
                 success: function success(data){
-                    
-                    vpLog.reDraw(data["vp"]);
-                    vsLog.reDraw(data["vs"]);
-                    rhoLog.reDraw(data["rho"]);
-                    zPLog.reDraw(data["rpp"]);
+                    var synthLim = [d3.min(data["theta"]) - 10, d3.max(data["theta"]) + 10];
+                    vpLog.reDraw(data["vp"], data["vp_lim"], data["z_lim"]);
+                    vsLog.reDraw(data["vs"], data["vs_lim"], data["z_lim"]);
+                    rhoLog.reDraw(data["rho"], data["rho_lim"], data["z_lim"]);
+                    zPLog.reDraw(data["rpp"], data["rpp_lim"], data["t_lim"]);
+                    synthLog.reDraw(data["synth"], synthLim, data["t_lim"]);
                     // vpPlot.update_plot(data["log_data"], data["z"]);
                     // vsPlot.update_plot(data["log_data"], data["z"]);
                     // rhoPlot.update_plot(data["log_data"], data["z"]);
