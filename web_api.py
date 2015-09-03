@@ -186,8 +186,11 @@ class RockHandler(ModelrAPI):
         elif ("ls" in self.request.arguments()):
             output = json.dumps([rock.simple_json
                                  for rock in Rock.all().fetch(1000)])
-                                 # for rock in get_all_items_user(Rock, user)])
-
+            
+        elif "all" in self.request.arguments():
+            output = json.dumps([rock.json
+                                 for rock in Rock.all().fetch(1000)])
+        
         elif ("name" in self.request.arguments()):
             name = self.request.get("name")
             rock = get_items_by_name_and_user(Rock, name, user)
@@ -505,15 +508,18 @@ class FluidHandler(ModelrAPI):
                 output = [fluid.json for fluid in fluids]
             else:
                 output = fluids.json
+                
         elif "ls" in self.request.arguments():
             output = [fluid.simple_json
                       for fluid in Fluid.all().fetch(1000)]
-            # get_all_items_user(Fluid, user)]
+
+        elif "all" in self.request.arguments():
+            output = [fluid.json
+                      for fluid in Fluid.all().fetch(1000)]
         else:
         
             raise Exception
 
-        self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(output))
         
     @authenticate
@@ -598,7 +604,7 @@ class FluidHandler(ModelrAPI):
             pass
         
         self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!') 
+        self.response.out.write('All OK!!')
         return
 
     @authenticate
@@ -640,6 +646,15 @@ class EarthModelHandler(ModelrAPI):
             self.response.out.write(json.dumps(data))
 
             return
+
+        elif "all" in self.request.arguments():
+
+            data = [json.loads(em.data) for em in EarthModel.all().fetch(1000)]
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.out.write(json.dumps(data))
+
+            return
+        
         elif "keys" in self.request.arguments():
 
             keys = self.request.get("keys")
