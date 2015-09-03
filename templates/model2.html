@@ -12,77 +12,77 @@
     <div class="panel-body">
       <div class="col-xs-12 col-sm-7 well">
 
-	<!-- INFO POPOVER & BUTTONS-->
-	<div class="col-xs-12 bottom-buffer">
-	  <span title="{[popover.title]}" data-content="{[popover.content]}"
-                class="glyphicon glyphicon-info-sign model_info" data-animation="am-flip-x"
-                data-auto-close="1" data-trigger="hover" bs-popover></span>
-	  <form style="float:right;" action="{{upload_url}}" method="POST" enctype="multipart/form-data">
-	    <div style='height: 0px;width:0px; overflow:hidden;'>
-	      <input type="submit" name="submit" value="Submit" id="submit">
-	      <input id="file" type="file" name="file" ng-model="file" onchange="$('#submit').click()"/>
-	    </div>
-	    <div class="btn btn-info" id="upload_btn" onclick="$('#file').click()">
-	      Upload image
-	    </div> 
-	    <button type="button" class="btn btn-info" onclick="window.location.href='/model_builder'">
-	      Make a wedge
-	    </button>
-	  </form>
+				<!-- INFO POPOVER & BUTTONS-->
+				<div class="col-xs-12 bottom-buffer">
 
-	</div>
-		  	  <div class="col-xs-12 container">
-		<flex-slider flex-slide="s in earthModels track by $index" slideshow="false">
-		    <li>
-		        <img ng-src="{[s.image]}">
-		    </li>
-		</flex-slider>
-		</div>
+					<!-- INFO SPAN -->
+		  		<span title="{[popover.title]}" data-content="{[popover.content]}"
+	        class="glyphicon glyphicon-info-sign model_info" data-animation="am-flip-x"
+	        data-auto-close="1" data-trigger="hover" bs-popover>
+	        </span>
 
+	        <!-- BUTTONS -->
+		  		<form style="float:right;" action="{{upload_url}}" method="POST" enctype="multipart/form-data">
+			    	<div style='height: 0px;width:0px; overflow:hidden;'>
+			      	<input type="submit" name="submit" value="Submit" id="submit">
+			      	<input id="file" type="file" name="file" ng-model="file" onchange="$('#submit').click()"/>
+			    	</div>
+			    	<div class="btn btn-info" id="upload_btn" onclick="$('#file').click()">
+			      	Upload image
+			    	</div> 
+			    	<button type="button" class="btn btn-info" 
+			    		onclick="window.location.href='/model_builder'">
+			      	Make a wedge
+			    	</button>
+			  	</form>
+				</div>
+
+				<!-- IMAGE SLIDER -->
+			  <div class="col-xs-12 container">
+					<flex-slider flex-slide="s in earthModels track by $index" slideshow="false">
+					    <li>
+					        <img ng-src="{[s.image]}">
+					    </li>
+					</flex-slider>
+				</div>
       </div>
       <div class="col-xs-12 col-sm-5 well">
-	<div class="panel panel-default">
-	  <div class="panel-heading">
-	    <h3 class="panel-title">Assign rocks to the model framework</h3>
-	  </div>
-	  <div class="panel-body">
+				<div class="panel panel-default">
+				  <div class="panel-heading">
+				    <h3 class="panel-title">Assign rocks to the model framework</h3>
+				  </div>
+	  			<div class="panel-body">
 
-			<!-- PRELOADED MODELS -->
-			<button type="button" class="btn btn-default col-xs-12 model_select" placeholder="Load saved earth model" placement="bottom-right" ng-model="savedEarthModel" bs-options="item.name for item in earthModels" bs-select>
-			  Action<span class="caret"></span>
-			</button>
+						<!-- PRELOADED MODELS -->
+						<button type="button" class="btn btn-default col-xs-12 model_select" placeholder="Load saved earth model" placement="bottom-right" ng-model="savedEarthModel" bs-options="item.name for item in earthModels" bs-select>
+						  Action<span class="caret"></span>
+						</button>
 
-	    <!-- LOADED ROCKS -->
-	    <div ng-repeat="item in savedEarthModel.mapping">
-	    	<div class="rock-color col-xs-2" ng-style="{'background-color': item.colour}"></div>
-	    	<button type="button" placeholder="{[item.rock.name]}" class="btn btn-default col-xs-9 model_select" placement="bottom-right" ng-model="item.rock" bs-options="rock.name for rock in rocks" bs-select>
-	    	<span class="caret"></span>
-				</button>
-	    </div>
-	      			</div>
-	      		</div>
-    				<div class="panel panel-default">
-	      			<div class="panel-heading">
-	      				<h3 class="panel-title">Define the physical limits, domain, and reflectivity model of the earth</h3>
-	      			</div>
-	      			<div class="panel-body">
-
-	      				<!-- Z-Axis Domain -->
-	      				<div class="col-xs-4">
-									<h4><span class="label label-default">z-axis domain</span></h4>
-								</div>
-	      				<button type="button" class="btn btn-default col-xs-4 model_select" placement="bottom-right" ng-model="zAxisDomain" bs-options="type for type in zDomain" bs-select>
-						    	<span class="caret"></span>
-								</button>
-	      			</div>
-	      		</div>
+				    <!-- LOADED ROCKS -->
+				    <div ng-repeat="item in savedEarthModel.mapping">
+				    	<div class="rock-color col-xs-2" ng-style="{'background-color': item.colour}"></div>
+				    	<button type="button" placeholder="{[item.rock.name]}" class="btn btn-default col-xs-9 model_select" placement="bottom-right" ng-model="item.rock" bs-options="rock.name for rock in rocks" bs-select>
+				    	<span class="caret"></span>
+							</button>
+				    </div>
+	      	</div>
+	      </div>
+    		<div class="panel panel-default">
+	      	<div class="panel-heading">
+	      		<h3 class="panel-title">Define the physical limits, domain, and reflectivity model of the earth</h3>
+	      	</div>
+	      	<div class="panel-body">
+    				<!-- Z-Axis Domain -->
+    				<div class="col-xs-4">
+							<h4><span class="label label-default">z-axis domain</span></h4>
+						</div>
+    				<button type="button" class="btn btn-default col-xs-4 model_select" placement="bottom-right" ng-model="zAxisDomain" bs-options="type for type in zDomain" bs-select>
+				    	<span class="caret"></span>
+						</button>
 	      	</div>
 	      </div>
 	    </div>
 	  </div>
 	</div>
-      </div>
-    </div>
-  </div>
 </div>
 {% endblock %}

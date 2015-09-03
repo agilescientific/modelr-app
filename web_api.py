@@ -8,6 +8,7 @@ from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext import blobstore
 from google.appengine.ext import webapp as webapp2
 from google.appengine.ext import db
+from google.appengine.api import images
 
 # For image serving
 import cloudstorage as gcs
@@ -33,7 +34,7 @@ from lib_db import Rock, Scenario, User, ModelrParent,\
     get_items_by_name_and_user
 # get_all_items_user
 
-from lib_util import posterize
+from lib_util import posterize, RGBToString
 
 
 class ModelrAPI(webapp2.RequestHandler):
@@ -479,9 +480,16 @@ class ImageModelHandler(ModelrAPI):
     @authenticate
     def get(self, user):
 
-        pass
-        # models = ImageModel.all().ancestor(user).fetch(1000)
+        models = ImageModel.all().ancestor(user).fetch(1000)
 
+        data = [{"colours": [RGBToString(j[1]) for j in
+                             Image.open(blobstore.BlobReader(i.image.key()))
+                             .convert('RGB').getcolors()],
+                 "image": images.get_serving_url(i.image)} for i in models]
+
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(data))
+        
     @authenticate
     def delete(self, user):
 
