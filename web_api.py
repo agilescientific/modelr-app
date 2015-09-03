@@ -485,7 +485,10 @@ class ImageModelHandler(ModelrAPI):
         data = [{"colours": [RGBToString(j[1]) for j in
                              Image.open(blobstore.BlobReader(i.image.key()))
                              .convert('RGB').getcolors()],
-                 "image": images.get_serving_url(i.image)} for i in models]
+                 "image": images.get_serving_url(i.image),
+                 "earth_models": [j.json for j in
+                                  EarthModel.all().ancestor(i).fetch(1000)]}
+                for i in models]
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(data))
