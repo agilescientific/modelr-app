@@ -649,7 +649,7 @@ class EarthModelHandler(ModelrAPI):
 
         elif "all" in self.request.arguments():
 
-            data = [json.loads(em.data) for em in EarthModel.all().fetch(1000)]
+            data = [json.loads(em.json) for em in EarthModel.all().fetch(1000)]
             self.response.headers['Content-Type'] = 'application/json'
             self.response.out.write(json.dumps(data))
 

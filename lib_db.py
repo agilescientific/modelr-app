@@ -161,6 +161,20 @@ class EarthModel(Item):
     name = db.StringProperty(multiline=False)
     data = db.BlobProperty()
 
+    @property
+    def json(self):
+
+        output = {}
+        data = json.loads(self.image)
+        
+        output["image"] = data["image"]
+        output["name"] = data["name"]
+
+        output["mapping"] = [{"colour": key, "rock": item}
+                             for key, item in data["mapping"].iteritems()]
+
+        return output
+    
     def to_json(self):
         return self.data
 
