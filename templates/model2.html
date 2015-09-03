@@ -3,6 +3,7 @@
 
 {% block content %}
 
+
 	<div ng-cloak class="container" ng-controller="2DCtrl">
 	    <div class="panel panel-default">
 
@@ -16,6 +17,7 @@
 	      		<!-- INFO POPOVER & BUTTONS-->
 	      		<div class="col-xs-12">
 	      		   <span title="{[popover.title]}" data-content="{[popover.content]}" class="glyphicon glyphicon-info-sign model_info" data-animation="am-flip-x" data-auto-close="1" data-trigger="hover" bs-popover></span>
+
 		      	  <form style="float:right;" action="{{upload_url}}" method="POST" enctype="multipart/form-data">
 		      	    <div style='height: 0px;width:0px; overflow:hidden;'>
 		      	      <input type="submit" name="submit" value="Submit" id="submit">
@@ -39,24 +41,30 @@
 	      			<div class="panel-body">
 
 	      				<!-- PRELOADED MODELS -->
-	      				<div class="col-xs-12">
-		      				<select class="form-control model-select col-xs-12" ng-model="savedEarthModel" ng-options="item.title for item in earthModels">
-		      					<option value="" hidden disabled selected>Load saved earth model</option>
-		      				</select>
-		      			</div>
+		      			<button type="button" class="btn btn-default col-xs-12 model_select" placeholder="Load saved earth model" placement="bottom-right" ng-model="savedEarthModel" bs-options="item.title for item in earthModels" bs-select>
+								  Action<span class="caret"></span>
+								</button>
 
 						    <!-- LOADED ROCKS -->
 						    <div ng-repeat="item in savedEarthModel.data">
-						    	<div class="col-xs-12">
-						    		<div class="col-xs-2">
-						    			<div class="rock-color col-xs-2" ng-style="{'background-color': item.color}"></div>
-						    		</div>
-						    		<div class="col-xs-8 col-xs-offset-1">
-											<select class="form-control model-select" ng-model="item.rock" ng-options="rock for rock in rocks">
-											</select>
-										</div>
-									</div>
+						    	<div class="rock-color col-xs-2" ng-style="{'background-color': item.color}"></div>
+						    	<button type="button" class="btn btn-default col-xs-9 model_select" placeholder="Load saved earth model" placement="bottom-right" ng-model="item.rock" bs-options="rock for rock in rocks" bs-select>
+						    	<span class="caret"></span>
+									</button>
 						    </div>
+	      			</div>
+	      		</div>
+    				<div class="panel panel-default">
+	      			<div class="panel-heading">
+	      				<h3 class="panel-title">Define the physical limits, domain, and reflectivity model of the earth</h3>
+	      			</div>
+	      			<div class="panel-body">
+
+	      				<!-- Z-Axis Domain -->
+	      				<button type="button" class="btn btn-default col-xs-4 model_select" placement="bottom-right" ng-model="zAxisDomain" bs-options="type for type in zDomain" bs-select>
+						    	<span class="caret"></span>
+								</button>
+								  <span class="input-group-addon" id="basic-addon2">@example.com</span>
 	      			</div>
 	      		</div>
 	      	</div>

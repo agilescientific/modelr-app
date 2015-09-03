@@ -6,17 +6,20 @@ app.config(['$interpolateProvider', function($interpolateProvider) {
   $interpolateProvider.endSymbol(']}');
 }]);
 
-app.controller('2DCtrl', function ($scope) {
+app.controller('2DCtrl', function ($scope, $http) {
+
+	$scope.zDomain = ['depth', 'time'];
+	$scope.zAxisDomain = 'depth';
 	$scope.popover = {
 		title: "Models",
 		content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
 	};
 
-	//$scope.savedEarthModel = {data:[3,4,5,6,2]};
-	$scope.model1 = {title: "Model 1", data:[
+	$scope.model1 = {title: "Model 1", color: "#fef", data:[
 		{ rock:'rock1', color: "#fef" }, 
-		{ rock: 'rock2', color: "fff" }, 
-		{ rock: 'rock3', color: "ddd" }]};
+		{ rock: 'rock2', color: "#fae" }, 
+		{ rock: 'rock3', color: "#00f" }]};
+
 	$scope.model2 = {title: "Model 2", data:[
 		{ rock:'rock1', color: "#fef" }]};
 
