@@ -20,7 +20,8 @@ app.controller('2DCtrl', function ($scope, $http) {
     $http.get('/earth_model?all').
         then(function(response) {
             $scope.earthModels = response.data;
-            console.log($scope.earthModels);
+            console.log(response.data);
+            //console.log($scope.earthModels);
         });
     
     // populate the rocks

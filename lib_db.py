@@ -1,4 +1,5 @@
 from google.appengine.ext import db
+from google.appengine.api import images
 from google.appengine.ext import blobstore
 from constants import admin_id
 import json
@@ -165,10 +166,12 @@ class EarthModel(Item):
     def json(self):
 
         output = {}
-        data = json.loads(self.image)
+        data = json.loads(self.data)
         
-        output["image"] = data["image"]
-        output["name"] = data["name"]
+        output["image"] = images.get_serving_url(
+            self.parent().image)
+        
+        output["name"] = self.name
 
         output["mapping"] = [{"colour": key, "rock": item}
                              for key, item in data["mapping"].iteritems()]
