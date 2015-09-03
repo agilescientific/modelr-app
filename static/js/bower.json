@@ -10,8 +10,14 @@
   "license": "NA",
   "dependencies": {
     "angular": "~1.4.5",
+    "angular-animate": "~1.4.5",
+    "angular-motion": "~0.4.2",
+    "angular-strap": "~2.3.1",
     "bootstrap": "~3.3.5",
     "d3": "~3.5.6",
     "jquery": "~2.1.4"
+  },
+  "devDependencies": {
+    "angular-bootstrap": "~0.13.3"
   }
 }

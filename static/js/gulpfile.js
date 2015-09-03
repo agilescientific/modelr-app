@@ -13,7 +13,7 @@ gulp.task('concat', function (cb) {
         // console.log('\n');
         console.log(new Date() + ' -- ' + e.history[0].replace(e.base, ''));
         //js = e.history[0].replace(e.base, '');
-        gulp.src(['controllers/*.js'])
+        gulp.src(['controllers/start.js','controllers/!(start)*.js',])
         .pipe(concat('app.js', {newLine: '\n'}))
         .pipe(gulp.dest('./'));
     });
@@ -27,3 +27,8 @@ gulp.task('jshint', function () {
     .pipe(jshint())
     .pipe(jshint.reporter('jshint-stylish'));
 });
+
+[
+  '/src/**/!(foobar)*.js', // all files that end in .js EXCEPT foobar*.js
+  '/src/js/foobar.js',
+]

@@ -1,0 +1,66 @@
+{% extends "base_template.html" %} 
+{% block title %}Modelr &middot; Section model{% endblock %} 
+
+{% block content %}
+
+	<div ng-cloak class="container" ng-controller="2DCtrl">
+	    <div class="panel panel-default">
+
+	      <div class="panel-heading">
+	        <h3 class="panel-title">Model</h3>
+	      </div>
+
+	      <div class="panel-body">
+	      	<div class="col-xs-12 col-sm-7 well">
+
+	      		<!-- INFO POPOVER & BUTTONS-->
+	      		<div class="col-xs-12">
+	      		   <span title="{[popover.title]}" data-content="{[popover.content]}" class="glyphicon glyphicon-info-sign model_info" data-animation="am-flip-x" data-auto-close="1" data-trigger="hover" bs-popover></span>
+		      	  <form style="float:right;" action="{{upload_url}}" method="POST" enctype="multipart/form-data">
+		      	    <div style='height: 0px;width:0px; overflow:hidden;'>
+		      	      <input type="submit" name="submit" value="Submit" id="submit">
+		      	      <input id="file" type="file" name="file" ng-model="file" onchange="$('#submit').click()"/>
+		            </div>
+		      	    <div class="btn btn-info" id="upload_btn" onclick="$('#file').click()">
+		      		    Upload image
+		      	    </div> 
+		      	    <button type="button" class="btn btn-info" onclick="window.location.href='/model_builder'">
+		      		    Make a wedge
+		      	    </button>
+		      	  </form>
+	      		</div>
+
+	      	</div>
+	      	<div class="col-xs-12 col-sm-5 well">
+	      		<div class="panel panel-default">
+	      			<div class="panel-heading">
+	      				<h3 class="panel-title">Assign rocks to the model framework</h3>
+	      			</div>
+	      			<div class="panel-body">
+
+	      				<!-- PRELOADED MODELS -->
+	      				<div class="col-xs-12">
+		      				<select class="form-control model-select col-xs-12" ng-model="savedEarthModel" ng-options="item.title for item in earthModels">
+		      					<option value="" hidden disabled selected>Load saved earth model</option>
+		      				</select>
+		      			</div>
+
+						    <!-- LOADED ROCKS -->
+						    <div ng-repeat="item in savedEarthModel.data">
+						    	<div class="col-xs-12">
+						    		<div class="col-xs-2">
+						    			<div class="rock-color col-xs-2" ng-style="{'background-color': item.color}"></div>
+						    		</div>
+						    		<div class="col-xs-8 col-xs-offset-1">
+											<select class="form-control model-select" ng-model="item.rock" ng-options="rock for rock in rocks">
+											</select>
+										</div>
+									</div>
+						    </div>
+	      			</div>
+	      		</div>
+	      	</div>
+	      </div>
+	    </div>
+	</div>
+{% endblock %}
