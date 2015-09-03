@@ -8,7 +8,7 @@ app.controller('2DCtrl', function ($scope, $http) {
 		title: "Models",
 		content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
 	};
-
+	
     // check for saved earth models
     $http.get('/earth_model?all').
         then(function(response) {
