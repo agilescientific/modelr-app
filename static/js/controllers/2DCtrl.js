@@ -3,31 +3,17 @@ app.controller('2DCtrl', function ($scope, $http) {
 
 	$scope.zDomain = ['depth', 'time'];
 	$scope.zAxisDomain = 'depth';
+
 	$scope.popover = {
 		title: "Models",
 		content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
 	};
 
-	$scope.model1 = {title: "Model 1", color: "#fef", data:[
-		{ rock:'rock1', color: "#fef" }, 
-		{ rock: 'rock2', color: "#fae" }, 
-		{ rock: 'rock3', color: "#00f" }]};
-
-	$scope.model2 = {title: "Model 2", data:[
-		{ rock:'rock1', color: "#fef" }]};
-
-	$scope.earthModels = [$scope.model1, $scope.model2];
-    $scope.popover = {
-	title: "Models",
-	content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
-    };
-
     // check for saved earth models
     $http.get('/earth_model?all').
         then(function(response) {
-
-            var em = response.data;
-            $scope.earthModels = em;
+            $scope.earthModels = response.data;
+            console.log($scope.earthModels);
         });
     
     // populate the rocks
@@ -35,11 +21,9 @@ app.controller('2DCtrl', function ($scope, $http) {
         then(function(response) {
             // this callback will be called asynchronously
             // when the response is available
-            var rocks = response.data;
-            $scope.rocks = rocks;
+            $scope.rocks = response.data;
+            console.log($scope.rocks);
         });
-             
-    console.log($scope.earthModels);
     
     $scope.test = function(model){
 

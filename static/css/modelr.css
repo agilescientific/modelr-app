@@ -11,6 +11,10 @@
   top:4px;
 }
 
+.model_h3 {
+  margin: 0;
+}
+
 .model_select {
   text-align: right;
   float: right;
