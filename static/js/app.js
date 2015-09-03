@@ -8,13 +8,13 @@ app.config(['$interpolateProvider', function($interpolateProvider) {
 
 app.controller('2DCtrl', function ($scope, $http) {
 
-	$scope.zDomain = ['depth', 'time'];
-	$scope.zAxisDomain = 'depth';
+    $scope.zDomain = ['depth', 'time'];
+    $scope.zAxisDomain = 'depth';
 
-	$scope.popover = {
-		title: "Models",
-		content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
-	};
+    $scope.popover = {
+	title: "Models",
+	content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
+    };
 
     $http.get('/image_model').
         then(function(response) {
@@ -38,6 +38,12 @@ app.controller('2DCtrl', function ($scope, $http) {
             $scope.rocks = response.data;
             console.log($scope.rocks);
         });
+
+    $scope.plot = function(data){
+
+        // Seismic plotting
+    };
+
     
     $scope.test = function(model){
 
@@ -60,6 +66,21 @@ app.controller('2DCtrl', function ($scope, $http) {
         var data = {seismic: seismic,
                     earth_model: earth_model};
 
-        $http.post($scope.server + '/data.json', data);
+        $http.post($scope.server + '/data.json', data).
+            then(plot);
+    };
+    
+    $scope.save_earthmodel = function(){
+
+        var data = {mapping: $scope.mapping,
+                    image_key: $scope.image.key,
+                    z: $scope.z,
+                    x: $scope.x,
+                    theta:[0,3,6,9,12,15,18,21,24,27,30]};
+
+        $http.post('/earth_model', data).
+            then(function(response){
+                // Notify the success;
+            });
     };
 });

@@ -11,8 +11,6 @@ from google.appengine.api import images
 # For image serving
 import cloudstorage as gcs
 
-from PIL import Image
-
 import urllib
 import urllib2
 import time
@@ -1304,42 +1302,7 @@ class ModelHandler(ModelrPageRequest):
         # Make the upload url
         upload_url = blobstore.create_upload_url('/upload')
 
-        # Get the model images
-        models = ImageModel.all().ancestor(user).order("-date")
-        models = models.fetch(100)
-
-        # Get the default models
-        admin_user = User.all().filter("user_id =", admin_id).get()
-        default_models = ImageModel.all().ancestor(admin_user).fetch(100)
-
-        # Create the serving urls
-        imgs = [images.get_serving_url(i.image, size=1400,
-                                       crop=False, secure_url=True)
-                for i in (models + default_models)]
-
-        keys = [str(i.key()) for i in models + default_models]
-
-        # Read in each image to get the RGB colours
-        readers = [blobstore.BlobReader(i.image.key())
-                   for i in (models + default_models)]
-        colors = [[RGBToString(j[1])
-                   for j in Image.open(i).convert('RGB').getcolors()]
-                  for i in readers]
-
-        # Grab the rocks
-        rocks = Rock.all()
-        rocks.ancestor(user)
-        rocks.filter("user =", user.user_id)
-        rocks.order("-date")
-
-        default_rocks = Rock.all()
-        default_rocks.filter("user =", admin_id)
         params = self.get_base_params(user=user,
-                                      images=imgs,
-                                      colors=colors,
-                                      keys=keys,
-                                      rocks=rocks.fetch(100),
-                                      default_rocks=default_rocks.fetch(100),
                                       upload_url=upload_url)
 
         # Check if there was an upload error (see Upload handler)
@@ -1348,6 +1311,7 @@ class ModelHandler(ModelrPageRequest):
 
         template = env.get_template('model2.html')
         html = template.render(params)
+
         self.response.out.write(html)
 
 
@@ -1500,7 +1464,7 @@ class Model1DHandler(ModelrPageRequest):
         all_rocks = get_all_items_user(Rock, user)
 
         rock_json = json.dumps([rock.simple_json for rock in all_rocks])
-      
+
         all_fluids = get_all_items_user(Fluid, user)
         fluid_json = json.dumps([fluid.simple_json for fluid in all_fluids])
 
