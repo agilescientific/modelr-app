@@ -1,9 +1,9 @@
 'use strict';
 var app = angular.module('modelr', ['mgcrea.ngStrap', 'ngAnimate','angular-flexslider']);
- 
+
 app.config(['$interpolateProvider', function($interpolateProvider) {
-  $interpolateProvider.startSymbol('{[');
-  $interpolateProvider.endSymbol(']}');
+    $interpolateProvider.startSymbol('{[');
+    $interpolateProvider.endSymbol(']}');
 }]);
 
 app.controller('2DCtrl', function ($scope, $http) {
@@ -11,14 +11,28 @@ app.controller('2DCtrl', function ($scope, $http) {
     $scope.zDomain = ['depth', 'time'];
     $scope.zAxisDomain = 'depth';
 
+
     $scope.popover = {
 	title: "Models",
 	content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
     };
 
+
     $http.get('/image_model').
         then(function(response) {
             $scope.images = response.data;
+
+            if($scope.images.length > 0){
+            	$scope.curImage = $scope.images[0];
+
+  		for(var i = 0; i < $scope.images.length; i++){
+  		    $scope.images[i].rocks = [];
+  		    for(var j = 0; j < $scope.images[i].colours.length; j++){
+  			var rand = $scope.rocks[Math.floor(Math.random() * $scope.rocks.length)];
+  			$scope.images[i].rocks.push(rand);
+  		    }
+  		}
+            }
             console.log($scope.images);
         }
             );
@@ -45,8 +59,8 @@ app.controller('2DCtrl', function ($scope, $http) {
     };
 
     
-    $scope.test = function(model){
-
+    $scope.slideClick = function(slider){
+    	$scope.curImage = $scope.images[slider.element.currentSlide];
     };
 
     $scope.update_data = function(){

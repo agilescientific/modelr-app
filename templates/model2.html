@@ -10,7 +10,7 @@
     </div>
 
     <div class="panel-body">
-      <div class="col-xs-12 col-sm-7 well">
+      <div class="col-xs-12 col-sm-7">
 
 				<!-- INFO POPOVER & BUTTONS-->
 				<div class="col-xs-12 bottom-buffer">
@@ -39,14 +39,14 @@
 
 				<!-- IMAGE SLIDER -->
 			  <div class="col-xs-12 container">
-					<flex-slider flex-slide="s in earthModels track by $index" slideshow="false">
+					<flex-slider after="slideClick($slider)" flex-slide="s in images track by $index" slideshow="false">
 					    <li>
 					        <img ng-src="{[s.image]}">
 					    </li>
 					</flex-slider>
 				</div>
       </div>
-      <div class="col-xs-12 col-sm-5 well">
+      <div class="col-xs-12 col-sm-5">
 				<div class="panel panel-default">
 				  <div class="panel-heading">
 				    <h3 class="panel-title">Assign rocks to the model framework</h3>
@@ -54,14 +54,14 @@
 	  			<div class="panel-body">
 
 						<!-- PRELOADED MODELS -->
-						<button type="button" class="btn btn-default col-xs-12 model_select" placeholder="Load saved earth model" placement="bottom-right" ng-model="savedEarthModel" bs-options="item.name for item in earthModels" bs-select>
+						<button type="button" class="btn btn-default col-xs-12 model_select" placeholder="Load saved earth model" placement="bottom-right" ng-model="savedEarthModel" bs-options="item.name for item in curImage.earth_models" bs-select>
 						  Action<span class="caret"></span>
 						</button>
 
 				    <!-- LOADED ROCKS -->
-				    <div ng-repeat="item in savedEarthModel.mapping">
-				    	<div class="rock-color col-xs-2" ng-style="{'background-color': item.colour}"></div>
-				    	<button type="button" placeholder="{[item.rock.name]}" class="btn btn-default col-xs-9 model_select" placement="bottom-right" ng-model="item.rock" bs-options="rock.name for rock in rocks" bs-select>
+				    <div ng-repeat="item in curImage.rocks track by $index">
+				    	<div class="rock-color col-xs-2" ng-style="{'background-color': curImage.colours[$index]}"></div>
+				    	<button type="button" placeholder="{[item.name]}" class="btn btn-default col-xs-9 model_select" placement="bottom-right" ng-model="item" bs-options="rock.name for rock in rocks" bs-select>
 				    	<span class="caret"></span>
 							</button>
 				    </div>
@@ -79,6 +79,8 @@
     				<button type="button" class="btn btn-default col-xs-4 model_select" placement="bottom-right" ng-model="zAxisDomain" bs-options="type for type in zDomain" bs-select>
 				    	<span class="caret"></span>
 						</button>
+						<!-- Z-Range -->
+
 	      	</div>
 	      </div>
 	    </div>

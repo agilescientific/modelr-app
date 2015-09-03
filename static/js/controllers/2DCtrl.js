@@ -4,14 +4,34 @@ app.controller('2DCtrl', function ($scope, $http) {
     $scope.zDomain = ['depth', 'time'];
     $scope.zAxisDomain = 'depth';
 
+<<<<<<< HEAD
     $scope.popover = {
 	title: "Models",
 	content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
     };
+=======
+
+	$scope.popover = {
+		title: "Models",
+		content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
+	};
+>>>>>>> f794796b8dc41a9c0a853645915e1e4827322f1a
 
     $http.get('/image_model').
         then(function(response) {
             $scope.images = response.data;
+
+            if($scope.images.length > 0){
+            	$scope.curImage = $scope.images[0];
+
+  				for(var i = 0; i < $scope.images.length; i++){
+  					$scope.images[i].rocks = [];
+  					for(var j = 0; j < $scope.images[i].colours.length; j++){
+  						var rand = $scope.rocks[Math.floor(Math.random() * $scope.rocks.length)];
+  						$scope.images[i].rocks.push(rand);
+  					}
+  				}
+            }
             console.log($scope.images);
         }
             );
@@ -38,8 +58,8 @@ app.controller('2DCtrl', function ($scope, $http) {
     };
 
     
-    $scope.test = function(model){
-
+    $scope.slideClick = function(slider){
+    	$scope.curImage = $scope.images[slider.element.currentSlide];
     };
 
     $scope.update_data = function(){
