@@ -1317,7 +1317,7 @@ class ModelHandler(ModelrPageRequest):
                                        crop=False, secure_url=True)
                 for i in (models + default_models)]
 
-        keys = [str(i.key()) for i in (models + default_models)]
+        keys = [str(i.key()) for i in models + default_models]
 
         # Read in each image to get the RGB colours
         readers = [blobstore.BlobReader(i.image.key())
@@ -1483,44 +1483,6 @@ class FixModels(ModelrPageRequest):
                     pass
             m.data = json.dumps(data).encode()
         self.response.write("OK")
-
-
-class FixDefaultRocks(ModelrPageRequest):
-    # Used to fix rocks in the database
-    def get(self):
-
-        from default_rocks import default_rocks
-        ModelrRoot = ModelrParent.all().get()
-        admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
-                                                            admin_id).get()
-        for i in default_rocks:
-
-            rocks = Rock.all()
-            rocks.filter("user =", admin_id)
-            rocks.filter("name =", i['name'])
-            rocks = rocks.fetch(100)
-
-            for r in rocks:
-                r.delete()
-
-            rock = Rock(parent=admin_user)
-            rock.user = admin_id
-            rock.name = i['name']
-            rock.group = 'public'
-
-            rock.description = i['description']
-
-            rock.vp = float(i['vp'])
-            rock.vs = float(i['vs'])
-            rock.rho = float(i['rho'])
-
-            rock.vp_std = float(i['vp_std'])
-            rock.vs_std = float(i['vs_std'])
-            rock.rho_std = float(i['rho_std'])
-
-            rock.Parent = admin_user
-            rock.put()
-        self.response.out.write("oK")
 
 
 class ServerError(ModelrPageRequest):
