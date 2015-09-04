@@ -44,10 +44,13 @@ def get_all_items_user(entity, user):
     """
     Returns entities that the user has permissions for
     """
+
     admin_items = entity.all().order("name")\
                               .filter("user =", admin_id).fetch(1000)
+    
     user_items = entity.all().order("name")\
-                             .ancestor(user).fetch(1000)
+                             .filter("user =", user.user_id).fetch(1000)
+
     group_items = [item for item in
                    (entity.all().order("name")
                     .ancestor(ModelrParent.all().get())
@@ -58,10 +61,23 @@ def get_all_items_user(entity, user):
     return list(uniq_items)
 
 
+def check_read_permission(entity, user):
+
+    if((entity.user_id == admin_id) or
+       (entity.user_id == user.user_id) or
+       (entity.group in user.group)):
+
+        return True
+    else:
+        return False
+
+
+def filter_on_read_permission(entities, user):
+    return [item for item in entities if check_read_permission(item)]
+
+
 def simple_item(obj):
-    payload = {"name": obj.name,
-               "description": obj.description,
-               "key": str(obj.key())}
+    
     return payload
 
 
@@ -125,6 +141,15 @@ class Item(db.Model):
     user = db.IntegerProperty()
     group = db.StringProperty()
     date = db.DateTimeProperty(auto_now_add=True)
+    description = db.StringProperty()
+
+    @property
+    def simple_json(self):
+
+        payload = {"name": self.name,
+                   "description": self.description,
+                   "key": str(self.key())}
+        return payload
 
 
 class Group(db.Model):
@@ -143,12 +168,7 @@ class GroupRequest(db.Model):
 class ImageModel(Item):
     image = blobstore.BlobReferenceProperty()
 
-
-class FluidModel(Item):
-    image = blobstore.BlobReferenceProperty()
-    name = db.StringProperty(multiline=False)
-
-
+    
 class Model1D(Item):
     name = db.StringProperty(multiline=False)
     data = db.BlobProperty()
@@ -188,14 +208,6 @@ class EarthModel(Item):
                 "key": str(self.key())}
 
 
-class Forward2DModel(Item):
-
-    name = db.StringProperty(multiline=False)
-    input_model_key = db.StringProperty()
-    output_image = blobstore.BlobReferenceProperty()
-    data = db.BlobProperty()
-
-
 class Scenario(Item):
     '''
     Database of Scenarios
@@ -227,16 +239,6 @@ class Rock(Item):
     rho_std = db.FloatProperty()
 
     fluid_key = db.ReferenceProperty()
-
-    @property
-    def simple_json(self):
-        dic = simple_item(self)
-        try:
-            dic["fluid"] = simple_item(self.fluid_key)
-        except:
-            dic["fluid"] = None
-
-        return dic
 
     @property
     def fluid(self):
