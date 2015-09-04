@@ -75,12 +75,12 @@ def check_read_permission(entity, user):
 def filter_on_read_permission(entities, user):
     return [item for item in entities if check_read_permission(item)]
 
-
-def simple_item(obj):
+def deep_delete(obj):
     
-    return payload
-
-
+    [item.delete() for item in
+     db.query_descendants(obj).fetch(1000)]
+    
+    
 class ModelrParent(db.Model):
     """
     parent to all of modelr to allow for strongly consistent queries
