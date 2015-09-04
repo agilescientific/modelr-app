@@ -486,6 +486,7 @@ class ImageModelHandler(ModelrAPI):
                              Image.open(blobstore.BlobReader(i.image.key()))
                              .convert('RGB').getcolors()],
                  "image": images.get_serving_url(i.image),
+                 "key": str(i.key()),
                  "earth_models": [j.json for j in
                                   EarthModel.all().ancestor(i).fetch(1000)]}
                 for i in models]

@@ -11,6 +11,13 @@
   top:4px;
 }
 
+canvas {
+  position: absolute;
+}
+
+svg {
+  z-index: 3;
+}
 .remove-padding {
   padding:0;
 }
@@ -54,6 +61,7 @@
 /*************/
 
 /* 1D Models */
+
 .tick line{
     opacity: 0.1;
 }
