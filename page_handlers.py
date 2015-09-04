@@ -11,6 +11,8 @@ from google.appengine.api import images
 # For image serving
 import cloudstorage as gcs
 
+from PIL import Image
+
 import urllib
 import urllib2
 import time
@@ -1302,18 +1304,7 @@ class ModelHandler(ModelrPageRequest):
         # Make the upload url
         upload_url = blobstore.create_upload_url('/upload')
 
-        params = self.get_base_params(user=user,
-                                      upload_url=upload_url)
-
-        # Check if there was an upload error (see Upload handler)
-        if self.request.get("error"):
-            params.update(error="Invalid image file")
-
-        template = env.get_template('model2.html')
-        html = template.render(params)
-
-        self.response.out.write(html)
-
+       
 
 class NotFoundPageHandler(ModelrPageRequest):
     def get(self):
@@ -1449,6 +1440,44 @@ class FixModels(ModelrPageRequest):
         self.response.write("OK")
 
 
+class FixDefaultRocks(ModelrPageRequest):
+    # Used to fix rocks in the database
+    def get(self):
+
+        from default_rocks import default_rocks
+        ModelrRoot = ModelrParent.all().get()
+        admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
+                                                            admin_id).get()
+        for i in default_rocks:
+
+            rocks = Rock.all()
+            rocks.filter("user =", admin_id)
+            rocks.filter("name =", i['name'])
+            rocks = rocks.fetch(100)
+
+            for r in rocks:
+                r.delete()
+
+            rock = Rock(parent=admin_user)
+            rock.user = admin_id
+            rock.name = i['name']
+            rock.group = 'public'
+
+            rock.description = i['description']
+
+            rock.vp = float(i['vp'])
+            rock.vs = float(i['vs'])
+            rock.rho = float(i['rho'])
+
+            rock.vp_std = float(i['vp_std'])
+            rock.vs_std = float(i['vs_std'])
+            rock.rho_std = float(i['rho_std'])
+
+            rock.Parent = admin_user
+            rock.put()
+        self.response.out.write("oK")
+
+
 class ServerError(ModelrPageRequest):
 
     def post(self):
@@ -1463,10 +1492,10 @@ class Model1DHandler(ModelrPageRequest):
 
         all_rocks = get_all_items_user(Rock, user)
 
-        rock_json = json.dumps([rock.simple_json for rock in all_rocks])
-
+        rock_json = json.dumps([rock.json for rock in all_rocks])
+      
         all_fluids = get_all_items_user(Fluid, user)
-        fluid_json = json.dumps([fluid.simple_json for fluid in all_fluids])
+        fluid_json = json.dumps([fluid.json for fluid in all_fluids])
 
         colour_map = {item.name: RGBToString(colour)
                       for (item, colour) in

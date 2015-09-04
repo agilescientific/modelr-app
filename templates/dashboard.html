@@ -178,7 +178,7 @@
 
 	    &nbsp;&nbsp;&nbsp;&nbsp;
 	    <button class="btn btn-danger btn-xs" type="button"
-		    onclick='delete_rock("{{rock.key().id()}}")'>
+		    onclick='delete_rock("{{rock.key()}}")'>
 	      delete
 	    </button>
 	    </td>
@@ -540,7 +540,7 @@
 
 	    &nbsp;&nbsp;&nbsp;&nbsp;
 	    <button class="btn btn-danger btn-xs" type="button"
-		    onclick='delete_fluid("{{fluid.key().id()}}")'>
+		    onclick='delete_fluid("{{fluid.key()}}")'>
 	      delete
 	    </button>
 	    </td>
@@ -953,12 +953,12 @@
 				success: cb});
  }
 
- function delete_rock(id){
+ function delete_rock(key){
    cb = function(data){
      location.reload(true);
    };
 
-   $.ajax('/rock?id=' + id, {type: "DELETE",
+   $.ajax('/rock?key=' + key, {type: "DELETE",
 				 success: cb});
  }
 

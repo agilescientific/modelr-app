@@ -7,8 +7,7 @@ functions can be called as web apis
 from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext import blobstore
 from google.appengine.ext import webapp as webapp2
-from google.appengine.ext import db
-from google.appengine.api import images
+
 
 # For image serving
 import cloudstorage as gcs
@@ -30,11 +29,10 @@ from lib_auth import verify, authenticate, send_message
 
 from lib_db import Rock, Scenario, User, ModelrParent,\
     ActivityLog, ModelServedCount,\
-    ImageModel, EarthModel, Fluid, get_by_id, \
-    get_items_by_name_and_user
-# get_all_items_user
+    ImageModel, EarthModel, Fluid, Item, \
+    get_items_by_name_and_user, get_all_items_user, deep_delete
 
-from lib_util import posterize, RGBToString
+from lib_util import posterize
 
 
 class ModelrAPI(webapp2.RequestHandler):
@@ -165,60 +163,9 @@ class ScenarioHandler(ModelrAPI):
                     parent=ModelrParent.all().get()).put()
 
 
-class RockHandler(ModelrAPI):
+class RockHandler(dbAPI):
 
-    def get(self):
-        """
-        Get the requested rock from the user's database
-        """
-
-        self.response.headers['Content-Type'] = 'application/json'
-        user = self.verify()
-
-        if ("keys" in self.request.arguments()):
-            keys = self.request.get("keys")
-            rocks = Rock.get(keys)
-            if type(rocks) is list:
-                output = json.dumps([rock.json
-                                     for rock in rocks])
-            else:
-                output = json.dumps(rocks.json)
-
-        elif ("ls" in self.request.arguments()):
-            output = json.dumps([rock.simple_json
-                                 for rock in Rock.all().fetch(1000)])
-            
-        elif "all" in self.request.arguments():
-            output = json.dumps([rock.json
-                                 for rock in Rock.all().fetch(1000)])
-        
-        elif ("name" in self.request.arguments()):
-            name = self.request.get("name")
-            rock = get_items_by_name_and_user(Rock, name, user)
-            output = json.dumps(rock[0].json)
-
-        else:
-            raise Exception
-        self.response.out.write(output)
-
-    @authenticate
-    def delete(self, user):
-
-        try:
-            db_id = int(self.request.get("id"))
-            rock = get_by_id(Rock, db_id, user)
-            rock.delete()
-
-            activity = "removed_rock"
-            ActivityLog(user_id=user.user_id,
-                        activity=activity,
-                        parent=ModelrParent.all().get()).put()
-
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.out.write('All OK!!')
-        except Exception as e:
-            print e
-            self.error(500)
+    entity = Rock
 
     @authenticate
     def post(self, user):
@@ -259,7 +206,7 @@ class RockHandler(ModelrAPI):
 
             print fluid_key != "None"
             if fluid_key != "None":
-                rock.fluid_key = fluid_key
+                rock.fluid_key = Fluid.get(str(fluid_key)).key()
 
             # Save in the database
             rock.put()
@@ -326,6 +273,278 @@ class RockHandler(ModelrAPI):
         self.response.out.write('All OK!!')
         return
 
+
+class ImageModelHandler(dbAPI):
+
+    @authenticate
+    def get(self, user):
+
+        pass
+        # models = ImageModel.all().ancestor(user).fetch(1000)
+
+    @authenticate
+    def delete(self, user):
+
+class FluidHandler(dbAPI):
+
+    entity = Fluid
+
+        image.delete()
+
+
+class FluidHandler(ModelrAPI):
+
+    def get(self):
+
+        self.response.headers['Content-Type'] = 'application/json'
+    
+        keys = self.request.get('keys')
+
+        if keys:
+            fluids = Fluid.get(keys)
+            if type(fluids) is list:
+                output = [fluid.json for fluid in fluids]
+            else:
+                output = fluids.json
+        elif "ls" in self.request.arguments():
+            output = [fluid.simple_json
+                      for fluid in Fluid.all().fetch(1000)]
+            # get_all_items_user(Fluid, user)]
+        else:
+        
+            raise Exception
+
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(output))
+        
+    @authenticate
+    def post(self, user):
+
+        try:
+            name = self.request.get("name")
+
+            fluids = Fluid.all()
+            fluids.ancestor(user)
+            fluids.filter("user =", user.user_id)
+            fluids.filter("name =", name)
+            fluids = fluids.fetch(1)
+
+            # Rewrite if the rock exists
+            if fluids:
+                # write out error message
+                return
+            else:
+                fluid = Fluid(parent=user)
+                fluid.user = user.user_id
+
+            fluid.rho_w = float(self.request.get('rho_w'))
+            fluid.rho_hc = float(self.request.get('rho_hc'))
+
+            fluid.kw = float(self.request.get('kw'))
+            fluid.khc = float(self.request.get('khc'))
+
+            fluid.sw = float(self.request.get('sw'))
+            
+            fluid.name = name
+            fluid.description = self.request.get("description")
+            fluid.group = self.request.get("group")
+            fluid.put()
+            
+            activity = "added_fluid"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrParent.all().get()).put()
+
+        except Exception as e:
+            # Handle error
+            print e
+            self.error(500)
+
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!')
+
+    @authenticate
+    def put(self, user):
+
+        # Get the database key from the request
+        try:
+
+            key = self.request.get("db_key")
+
+            fluid = Fluid.get(key)
+
+            # Update the fluid
+            fluid.rho_w = float(self.request.get('rho_w'))
+            fluid.rho_hc = float(self.request.get('rho_hc'))
+
+            fluid.kw = float(self.request.get('kw'))
+            fluid.khc = float(self.request.get('khc'))
+
+            fluid.sw = float(self.request.get('sw'))
+
+            fluid.description = self.request.get('description')
+            fluid.name = self.request.get('name')
+            fluid.group = self.request.get('group')
+
+            fluid.name = self.request.get('name')
+
+            fluid.put()
+
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.out.write('All OK!!')
+
+        except Exception as e:
+            # Write out error message
+            print e
+            pass
+        
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!') 
+        return
+
+   
+
+class EarthModelHandler(ModelrAPI):
+
+    def get(self):
+
+        if "ls" in self.request.arguments():
+
+            data = [em.simple_json for em in EarthModel.all().fetch(1000)]
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.out.write(json.dumps(data))
+
+            return
+        elif "keys" in self.request.arguments():
+
+            keys = self.request.get("keys")
+            data = EarthModel.get(keys)
+            if type(data) is list:
+                data = [json.loads(em.data) for em in data]
+            else:
+                data = json.loads(data.data)
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.out.write(json.dumps(data))
+
+            return
+
+        else:
+            user = self.verify()
+
+        try:
+
+            # Get the root of the model
+            input_model_key = self.request.get('image_key')
+            input_model = ImageModel.get(str(input_model_key))
+
+            name = self.request.get('name')
+
+            # If the name is provided, return the model, otherwise
+            # return a list of the earth model names associated
+            # with the model.
+            if name:
+
+                earth_model = EarthModel.all().ancestor(input_model)
+
+                if user:
+                    # Check first for a user model with the right name
+                    earth_model = earth_model.filter("user =",
+                                                     user.user_id)
+                    earth_model = earth_model.filter("name =",
+                                                     name)
+                    earth_model = earth_model.get()
+                else:
+                    earth_model = None
+
+                if not earth_model:
+                    # Check in the defaults
+                    earth_model = EarthModel.all().ancestor(input_model)
+                    earth_model = earth_model.filter("name =",
+                                                     name).get()
+
+                self.response.out.write(earth_model.data)
+
+            else:
+
+                earth_models = EarthModel.all().ancestor(input_model)
+
+                def_models = EarthModel.all().ancestor(input_model)
+                earth_models = earth_models.filter("user =",
+                                                   user.user_id)
+                def_models = def_models.filter("user =",
+                                               admin_id)
+                earth_models.order('-date')
+                def_models.order('-date')
+
+                earth_models = (earth_models.fetch(100) +
+                                def_models.fetch(100))
+
+                output = json.dumps([em.name for em in earth_models])
+                self.response.out.write(output)
+
+        except Exception as e:
+            print e
+            self.response.out.write(json.dumps({'failed': True}))
+
+    @authenticate
+    def post(self, user):
+
+        try:
+            # Get the root of the model
+            input_model_key = self.request.get('image_key')
+            image_model = ImageModel.get(input_model_key)
+
+            name = self.request.get('name')
+
+            # Get the rest of data
+            data = self.request.get('json')
+
+            # See if we are overwriting
+            earth_model = EarthModel.all().ancestor(image_model)
+            earth_model = earth_model.filter('user =', user.user_id)
+            earth_model = earth_model.filter('name =', name).get()
+
+            if earth_model:
+                earth_model.data = data.encode()
+            else:
+                earth_model = EarthModel(user=user.user_id,
+                                         data=data.encode(),
+                                         name=name,
+                                         parent=image_model)
+            earth_model.put()
+        
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.out.write('All OK!!')
+
+        except Exception:
+            # TODO Handle failure
+            pass
+
+    @authenticate
+    def delete(self, user):
+
+        try:
+            # Get the root of the model
+            input_model_key = self.request.get('input_image_id')
+
+            name = self.request.get('name')
+
+            image_model = ImageModel.get(input_model_key)
+
+            model = EarthModel.all().ancestor(image_model)
+
+            model = model.filter("user =", user.user_id)
+            model = model.filter("name =", name).get()
+
+            if model:
+                model.delete()
+
+            self.response.out.write(json.dumps({'success': True}))
+        except Exception as e:
+            print e
+            self.response.out.write(json.dumps({'success': False}))
+            
 
 class StripeHandler(ModelrAPI):
     '''
@@ -475,327 +694,9 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             self.redirect('/model?error=True')
 
 
-class ImageModelHandler(ModelrAPI):
 
-    @authenticate
-    def get(self, user):
 
-        models = ImageModel.all().ancestor(user).fetch(1000)
 
-        data = [{"colours": [RGBToString(j[1]) for j in
-                             Image.open(blobstore.BlobReader(i.image.key()))
-                             .convert('RGB').getcolors()],
-                 "image": images.get_serving_url(i.image),
-                 "key": str(i.key()),
-                 "earth_models": [j.json for j in
-                                  EarthModel.all().ancestor(i).fetch(1000)]}
-                for i in models]
-
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.out.write(json.dumps(data))
-        
-    @authenticate
-    def delete(self, user):
-
-        image_key = self.request.get("image_key")
-
-        image = ImageModel.get(image_key)
-        for i in db.Query().ancestor(image).fetch(1000):
-            i.delete()
-
-        image.delete()
-
-
-class FluidHandler(ModelrAPI):
-
-    def get(self):
-
-        self.response.headers['Content-Type'] = 'application/json'
-    
-        keys = self.request.get('keys')
-
-        if keys:
-            fluids = Fluid.get(keys)
-            if type(fluids) is list:
-                output = [fluid.json for fluid in fluids]
-            else:
-                output = fluids.json
-                
-        elif "ls" in self.request.arguments():
-            output = [fluid.simple_json
-                      for fluid in Fluid.all().fetch(1000)]
-
-        elif "all" in self.request.arguments():
-            output = [fluid.json
-                      for fluid in Fluid.all().fetch(1000)]
-        else:
-        
-            raise Exception
-
-        self.response.out.write(json.dumps(output))
-        
-    @authenticate
-    def post(self, user):
-
-        try:
-            name = self.request.get("name")
-
-            fluids = Fluid.all()
-            fluids.ancestor(user)
-            fluids.filter("user =", user.user_id)
-            fluids.filter("name =", name)
-            fluids = fluids.fetch(1)
-
-            # Rewrite if the rock exists
-            if fluids:
-                # write out error message
-                return
-            else:
-                fluid = Fluid(parent=user)
-                fluid.user = user.user_id
-
-            fluid.rho_w = float(self.request.get('rho_w'))
-            fluid.rho_hc = float(self.request.get('rho_hc'))
-
-            fluid.kw = float(self.request.get('kw'))
-            fluid.khc = float(self.request.get('khc'))
-
-            fluid.sw = float(self.request.get('sw'))
-            
-            fluid.name = name
-            fluid.description = self.request.get("description")
-            fluid.group = self.request.get("group")
-            fluid.put()
-            
-            activity = "added_fluid"
-            ActivityLog(user_id=user.user_id,
-                        activity=activity,
-                        parent=ModelrParent.all().get()).put()
-
-        except Exception as e:
-            # Handle error
-            print e
-            self.error(500)
-
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!')
-
-    @authenticate
-    def put(self, user):
-
-        # Get the database key from the request
-        try:
-
-            key = self.request.get("db_key")
-
-            fluid = Fluid.get(key)
-
-            # Update the fluid
-            fluid.rho_w = float(self.request.get('rho_w'))
-            fluid.rho_hc = float(self.request.get('rho_hc'))
-
-            fluid.kw = float(self.request.get('kw'))
-            fluid.khc = float(self.request.get('khc'))
-
-            fluid.sw = float(self.request.get('sw'))
-
-            fluid.description = self.request.get('description')
-            fluid.name = self.request.get('name')
-            fluid.group = self.request.get('group')
-
-            fluid.name = self.request.get('name')
-
-            fluid.put()
-
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.out.write('All OK!!')
-
-        except Exception as e:
-            # Write out error message
-            print e
-            pass
-        
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!')
-        return
-
-    @authenticate
-    def delete(self, user):
-
-        key = int(self.request.get("key"))
-        selected_fluid = Fluid.get_by_id(key, parent=user)
-
-        try:
-            fluid_key = selected_fluid.key()
-
-            # fix all rocks
-            rocks = Rock.all().filter("fluid_key =", fluid_key).fetch(1000)
-            for rock in rocks:
-                rock.fluid_key = None
-                rock.put()
-
-            selected_fluid.delete()
-        except:
-            pass
-
-        activity = "removed_fluid"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrParent.all().get()).put()
-
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!')
-
-
-class EarthModelHandler(ModelrAPI):
-
-    def get(self):
-
-        if "ls" in self.request.arguments():
-
-            data = [em.simple_json for em in EarthModel.all().fetch(1000)]
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.out.write(json.dumps(data))
-
-            return
-
-        elif "all" in self.request.arguments():
-
-            data = [em.json for em in EarthModel.all().fetch(1000)]
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.out.write(json.dumps(data))
-
-            return
-        
-        elif "keys" in self.request.arguments():
-
-            keys = self.request.get("keys")
-            data = EarthModel.get(keys)
-            if type(data) is list:
-                data = [json.loads(em.data) for em in data]
-            else:
-                data = json.loads(data.data)
-
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.out.write(json.dumps(data))
-
-            return
-
-        else:
-            user = self.verify()
-
-        try:
-
-            # Get the root of the model
-            input_model_key = self.request.get('image_key')
-            input_model = ImageModel.get(str(input_model_key))
-
-            name = self.request.get('name')
-
-            # If the name is provided, return the model, otherwise
-            # return a list of the earth model names associated
-            # with the model.
-            if name:
-
-                earth_model = EarthModel.all().ancestor(input_model)
-
-                if user:
-                    # Check first for a user model with the right name
-                    earth_model = earth_model.filter("user =",
-                                                     user.user_id)
-                    earth_model = earth_model.filter("name =",
-                                                     name)
-                    earth_model = earth_model.get()
-                else:
-                    earth_model = None
-
-                if not earth_model:
-                    # Check in the defaults
-                    earth_model = EarthModel.all().ancestor(input_model)
-                    earth_model = earth_model.filter("name =",
-                                                     name).get()
-
-                self.response.out.write(earth_model.data)
-
-            else:
-
-                earth_models = EarthModel.all().ancestor(input_model)
-
-                def_models = EarthModel.all().ancestor(input_model)
-                earth_models = earth_models.filter("user =",
-                                                   user.user_id)
-                def_models = def_models.filter("user =",
-                                               admin_id)
-                earth_models.order('-date')
-                def_models.order('-date')
-
-                earth_models = (earth_models.fetch(100) +
-                                def_models.fetch(100))
-
-                output = json.dumps([em.name for em in earth_models])
-                self.response.out.write(output)
-
-        except Exception as e:
-            print e
-            self.response.out.write(json.dumps({'failed': True}))
-
-    @authenticate
-    def post(self, user):
-
-        try:
-            # Get the root of the model
-            input_model_key = self.request.get('image_key')
-            image_model = ImageModel.get(input_model_key)
-
-            name = self.request.get('name')
-
-            # Get the rest of data
-            data = self.request.get('json')
-
-            # See if we are overwriting
-            earth_model = EarthModel.all().ancestor(image_model)
-            earth_model = earth_model.filter('user =', user.user_id)
-            earth_model = earth_model.filter('name =', name).get()
-
-            if earth_model:
-                earth_model.data = data.encode()
-            else:
-                earth_model = EarthModel(user=user.user_id,
-                                         data=data.encode(),
-                                         name=name,
-                                         parent=image_model)
-            earth_model.put()
-        
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.out.write('All OK!!')
-
-        except Exception as e:
-            # TODO Handle failure
-            pass
-
-    @authenticate
-    def delete(self, user):
-
-        try:
-            # Get the root of the model
-            input_model_key = self.request.get('input_image_id')
-
-            name = self.request.get('name')
-
-            image_model = ImageModel.get(input_model_key)
-
-            model = EarthModel.all().ancestor(image_model)
-
-            model = model.filter("user =", user.user_id)
-            model = model.filter("name =", name).get()
-
-            if model:
-                model.delete()
-
-            self.response.out.write(json.dumps({'success': True}))
-        except Exception as e:
-            print e
-            self.response.out.write(json.dumps({'success': False}))
 
 
 class UpdateCreditCardHandler(ModelrAPI):

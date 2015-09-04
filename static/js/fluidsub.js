@@ -105,6 +105,7 @@ function FluidSub(canvas, core_width, core_height,
 	    .attr("transform", "translate("+rock_offset.toString() +",0)"); 
     
     initialize_menu(menu_div);
+    
     // Load up to intervals
     add_interval(0,0,total_depth);
     add_interval(1, total_depth/2,total_depth/2);
@@ -740,28 +741,37 @@ function FluidSub(canvas, core_width, core_height,
 
             var layer = {};
             interval = intervals[i];
-            $.ajax('/rock',{type: "GET", async: false, data: {keys: JSON.stringify([interval.rock.key])},
-                            success: function (data){
-                                layer.rock = data;
-                                layer.thickness = interval.thickness;
-                            }
-                           });
+            layer.rock = interval.rock;
+            layer.thickness = interval.thickness;
+            
+            //$.ajax('/rock',{type: "GET", async: false,
+            //                data: {keys: JSON.stringify([interval.rock.key])},
+            //                success: function (data){
+            //                    layer.rock = data;
+            //                    layer.thickness = interval.thickness;
+            //                }
+            //               });
             
 
             layer.subfluids = [];
             for(var j=0; j<interval.subfluids.length;j++){
 
                 var subinterval = intervals[i].subfluids[j];
-                $.ajax('/fluid', {type: "GET", async: false,
-                                  data: {keys: subinterval.fluid.key},
-                                  success: function (data){
-                                      var subfluid = {};
-                                      subfluid.fluid = data;
-                                      subfluid.thickness = subinterval.thickness;
-                                      layer.subfluids.push(subfluid);
-                                  }
-                                 }
-                     );
+                var subfluid = {};
+                subfluid.fluid = subinterval.fluid;
+                subfluid.thickness = subinterval.thickness;
+                layer.subfluids.push(subfluid);
+                
+                //$.ajax('/fluid', {type: "GET", async: false,
+                //                  data: {keys: subinterval.fluid.key},
+                //                  success: function (data){
+                //                      var subfluid = {};
+                //                      subfluid.fluid = data;
+                //                      subfluid.thickness = subinterval.thickness;
+                //                      layer.subfluids.push(subfluid);
+                //                  }
+                //                 }
+                //     );
             }
 
             layers.push(layer);
