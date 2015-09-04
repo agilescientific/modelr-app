@@ -16,6 +16,7 @@ canvas {
 }
 
 svg {
+  position: relative;
   z-index: 3;
 }
 .remove-padding {

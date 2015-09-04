@@ -470,7 +470,7 @@ g3.seismic = function(plot, data, options){
 		.domain([-this.max, 0, this.max])
 		.range(['#FF0000', '#FFF', '#0000FF']);
 
-  	var position = $(plot.elem).position();
+  	var elem = $(plot.elem);
     this.canvas = d3.select(plot.elem)
       .append('canvas')
       .attr('width', data.length)
@@ -478,8 +478,8 @@ g3.seismic = function(plot, data, options){
       .style('width', plot.width +  'px')
       .style('height', plot.height + 'px')
       .style('opacity', 0.95)
-      .style('top', position.top + plot.margin.top + 'px')
-      .style('left', position.left + plot.margin.left + 'px')
+      .style('top', plot.margin.top + 'px')
+      .style('left', plot.margin.left + 'px')
       .call(seismic.drawImage);
     return this;
   }

@@ -3,32 +3,32 @@ app.controller('2DCtrl', function ($scope, $http) {
 
     $scope.zDomain = ['depth', 'time'];
     $scope.zAxisDomain = 'depth';
-
+    $scope.zRange = 1000;
     $scope.server = 'http://localhost:8081'
 
     $scope.popover = {
-	title: "Models",
-	content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
+			title: "Models",
+			content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
     };
 
     $http.get('/image_model').
         then(function(response) {
-            $scope.images = response.data;
+          $scope.images = response.data;
 
-            if($scope.images.length > 0){
-            	$scope.curImage = $scope.images[0];
+          if($scope.images.length > 0){
+          	$scope.curImage = $scope.images[0];
 
-  		for(var i = 0; i < $scope.images.length; i++){
-  		    $scope.images[i].rocks = [];
-  		    for(var j = 0; j < $scope.images[i].colours.length; j++){
-  			var rand = $scope.rocks[Math.floor(Math.random() * $scope.rocks.length)];
-  			$scope.images[i].rocks.push(rand);
-  		    }
-  		}
-            }
-            console.log($scope.images);
+	  				for(var i = 0; i < $scope.images.length; i++){
+	  		    	$scope.images[i].rocks = [];
+	  		    	for(var j = 0; j < $scope.images[i].colours.length; j++){
+	  						var rand = $scope.rocks[Math.floor(Math.random() * $scope.rocks.length)];
+	  						$scope.images[i].rocks.push(rand);
+	  		    	}
+	  				}
+          }
+          console.log($scope.images);
         }
-            );
+      );
     
     // populate the rocks
     $http.get('/rock?all').
@@ -38,18 +38,20 @@ app.controller('2DCtrl', function ($scope, $http) {
             $scope.rocks = response.data;
             console.log($scope.rocks);
         });
-
-    $scope.plot = function(data){
-
-        // Seismic plotting
-    };
-
     
     $scope.slideClick = function(slider){
     	$scope.curImage = $scope.images[slider.element.currentSlide];
-
-        $scope.update_data();
     };
+
+    $scope.saveModel = function(){
+    	$scope.zRange;
+    	$scope.earthModelName;
+    	$scope.zAxisDomain;
+    };
+
+    $scope.updatePlot = function(){
+        $scope.update_data();
+    }
 
     $scope.update_data = function(){
 
@@ -83,8 +85,9 @@ app.controller('2DCtrl', function ($scope, $http) {
 
     $scope.plot = function(data){
     	console.log(data);
+
     	var max;
-    	
+    		    //$scope.result = true;
     	if(Math.abs(data.max) > Math.abs(data.min)){
     		max = Math.abs(data.max);
     	} else {
@@ -92,24 +95,24 @@ app.controller('2DCtrl', function ($scope, $http) {
     	}
 
     	var height = 300;
-    	var width = 200;
-    	var vDPlot = g3.plot('.seis_plot')
+    	var width = $('.vd_plot').width();
+    	console.log(width);
+    	var vDPlot = g3.plot('.vd_plot')
 	        .setHeight(height)
-	        .setWidth(width)
+	        .setWidth(width - 30)
 	        .toggleX2Axis(true)
 	        .toggleY2Axis(true)
 	        .setXTickFormat("")
 	        .setY2TickFormat("")
-	        .setX2TickFormat("")
-	        .setMargin(50,50,50,50)
-	        //.toggleYAxis(false)
+	        //.setX2TickFormat("")
+	        .setMargin(10,10,20,20)
 	       	.setXDomain([0, data.seismic.length])
 	        .setYDomain([0, data.seismic[0].length])
 	        .setX2Domain([0, data.seismic.length])
 	        .setY2Domain([0, data.seismic[0].length])
 	        .draw();
 
-	    // var vDLog = g3.wiggle(vDPlot, data.seismic)
+	    // var vDLog = g3.wiggle(vDPlot, data.seismic[34])
 	    //     //.setYInt(data.dt)
 	    //     //.setXInt(data.dx)
 	    //     //.setSampleRate(1)
@@ -121,6 +124,51 @@ app.controller('2DCtrl', function ($scope, $http) {
 	    	.setMax(max)
 	    	.setGain(100)
 	    	.draw();
+
+	    var width = $('.og_plot').width();
+	   	var wGPlot = g3.plot('.og_plot')
+		    .setHeight(height)
+				.setWidth(width - 30)
+				.toggleX2Axis(true)
+				.toggleY2Axis(true)
+				.setXTickFormat("")
+				.setYTickFormat("")
+				.setY2TickFormat("")
+				//.setX2TickFormat("")
+				.setMargin(10,10,20,20)
+				.setXDomain([0, data.offset_gather.length])
+				.setYDomain([0, data.offset_gather[0].length])
+				.setX2Domain([0, data.offset_gather.length])
+				.setY2Domain([0, data.offset_gather[0].length])
+				.draw();
+
+			var og = g3.seismic(wGPlot, data.offset_gather)
+				.setMax(max)
+				.setGain(100)
+				.draw();
+
+    	var width = $('.wg_plot').width();
+	   	var wGPlot = g3.plot('.wg_plot')
+		    .setHeight(height)
+				.setWidth(width - 30)
+				.toggleX2Axis(true)
+				.toggleY2Axis(true)
+				.setXTickFormat("")
+				.setYTickFormat("")
+				.setY2TickFormat("")
+				//.setX2TickFormat("")
+				.setMargin(10,10,20,20)
+				.setXDomain([0, data.wavelet_gather.length])
+				.setYDomain([0, data.wavelet_gather[0].length])
+				.setX2Domain([0, data.wavelet_gather.length])
+				.setY2Domain([0, data.wavelet_gather[0].length])
+				.draw();
+
+			var wg = g3.seismic(wGPlot, data.wavelet_gather)
+				.setMax(max)
+				.setGain(100)
+				.draw();
+
     };
     
     $scope.save_earthmodel = function(){
