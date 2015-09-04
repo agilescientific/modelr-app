@@ -11,8 +11,6 @@ from google.appengine.api import images
 # For image serving
 import cloudstorage as gcs
 
-from PIL import Image
-
 import urllib
 import urllib2
 import time
@@ -1304,7 +1302,18 @@ class ModelHandler(ModelrPageRequest):
         # Make the upload url
         upload_url = blobstore.create_upload_url('/upload')
 
-       
+        params = self.get_base_params(user=user,
+                                      upload_url=upload_url)
+
+        # Check if there was an upload error (see Upload handler)
+        if self.request.get("error"):
+            params.update(error="Invalid image file")
+
+        template = env.get_template('model2.html')
+        html = template.render(params)
+
+        self.response.out.write(html)
+
 
 class NotFoundPageHandler(ModelrPageRequest):
     def get(self):

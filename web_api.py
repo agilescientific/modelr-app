@@ -8,6 +8,7 @@ from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext import blobstore
 from google.appengine.ext import webapp as webapp2
 
+from google.appengine.api import images
 
 # For image serving
 import cloudstorage as gcs
@@ -32,7 +33,7 @@ from lib_db import Rock, Scenario, User, ModelrParent,\
     ImageModel, EarthModel, Fluid, Item, \
     get_items_by_name_and_user, get_all_items_user, deep_delete
 
-from lib_util import posterize
+from lib_util import posterize, RGBToString
 
 
 class ModelrAPI(webapp2.RequestHandler):
@@ -59,6 +60,74 @@ class ModelrAPI(webapp2.RequestHandler):
         return verify(user, password, ModelrParent.all().get())
 
 
+class dbAPI(ModelrAPI):
+
+    entity = Item
+
+    def get(self):
+        """
+        Get the requested rock from the user's database
+        """
+
+        self.response.headers['Content-Type'] = 'application/json'
+        user = self.verify()
+
+        if ("keys" in self.request.arguments()):
+            keys = self.request.get("keys")
+            items = self.entity.get(keys)
+            if type(items) is list:
+                output = json.dumps([item.json
+                                     for item in items])
+            else:
+                output = json.dumps(items.json)
+
+        if ("all" in self.request.arguments()):
+            output = json.dumps([item.json
+                                 for item in
+                                 get_all_items_user(self.entity, user)])
+       
+        elif ("ls" in self.request.arguments()):
+            output = json.dumps([item.simple_json
+                                 for item in get_all_items_user(self.entity,
+                                                                user)])
+
+        elif ("name" in self.request.arguments()):
+            name = self.request.get("name")
+            item = get_items_by_name_and_user(self.entity, name, user)
+            output = json.dumps(item[0].json)
+
+        else:
+            self.error(502)
+            
+        self.response.out.write(output)
+
+    @authenticate
+    def delete(self, user):
+
+        try:
+
+            key = self.request.get('key')
+
+            item = self.entity.get(key)
+
+            if item.user != user.user_id:
+                raise Exception
+
+            deep_delete(item)
+            
+            activity = "removed_item"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrParent.all().get()).put()
+            
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.out.write('All OK!!')
+        
+        except Exception as e:
+            print e
+            self.error(502)
+
+
 class ScenarioHandler(ModelrAPI):
     """
     API to the scenario database
@@ -66,7 +135,7 @@ class ScenarioHandler(ModelrAPI):
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
 
-        # Get the user but don't redirect. Any can play with public
+        # Get the user but don't redirect. Anyone can play with public
         # scenarios.
         user = self.verify()
         name = self.request.get('name')
@@ -204,7 +273,6 @@ class RockHandler(dbAPI):
 
             fluid_key = self.request.get("rock-fluid")
 
-            print fluid_key != "None"
             if fluid_key != "None":
                 rock.fluid_key = Fluid.get(str(fluid_key)).key()
 
@@ -274,49 +342,31 @@ class RockHandler(dbAPI):
         return
 
 
+
 class ImageModelHandler(dbAPI):
 
     @authenticate
     def get(self, user):
 
-        pass
-        # models = ImageModel.all().ancestor(user).fetch(1000)
+        models = ImageModel.all().ancestor(user).fetch(1000)
 
-    @authenticate
-    def delete(self, user):
+        data = [{"colours": [RGBToString(j[1]) for j in
+                             Image.open(blobstore.BlobReader(i.image.key()))
+                             .convert('RGB').getcolors()],
+                 "image": images.get_serving_url(i.image),
+                 "key": str(i.key()),
+                 "earth_models": [j.json for j in
+                                  EarthModel.all().ancestor(i).fetch(1000)]}
+                for i in models]
+
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(data))
+        
 
 class FluidHandler(dbAPI):
 
     entity = Fluid
 
-        image.delete()
-
-
-class FluidHandler(ModelrAPI):
-
-    def get(self):
-
-        self.response.headers['Content-Type'] = 'application/json'
-    
-        keys = self.request.get('keys')
-
-        if keys:
-            fluids = Fluid.get(keys)
-            if type(fluids) is list:
-                output = [fluid.json for fluid in fluids]
-            else:
-                output = fluids.json
-        elif "ls" in self.request.arguments():
-            output = [fluid.simple_json
-                      for fluid in Fluid.all().fetch(1000)]
-            # get_all_items_user(Fluid, user)]
-        else:
-        
-            raise Exception
-
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.out.write(json.dumps(output))
-        
     @authenticate
     def post(self, user):
 
@@ -402,7 +452,6 @@ class FluidHandler(ModelrAPI):
         self.response.out.write('All OK!!') 
         return
 
-   
 
 class EarthModelHandler(ModelrAPI):
 
@@ -692,11 +741,6 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
         except Exception as e:
             print e
             self.redirect('/model?error=True')
-
-
-
-
-
 
 
 class UpdateCreditCardHandler(ModelrAPI):

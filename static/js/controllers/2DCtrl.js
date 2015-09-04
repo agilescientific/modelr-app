@@ -7,28 +7,28 @@ app.controller('2DCtrl', function ($scope, $http) {
     $scope.server = 'http://localhost:8081'
 
     $scope.popover = {
-			title: "Models",
-			content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
+	title: "Models",
+	content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
     };
 
     $http.get('/image_model').
         then(function(response) {
-          $scope.images = response.data;
+            $scope.images = response.data;
 
-          if($scope.images.length > 0){
+            if($scope.images.length > 0){
           	$scope.curImage = $scope.images[0];
 
-	  				for(var i = 0; i < $scope.images.length; i++){
-	  		    	$scope.images[i].rocks = [];
-	  		    	for(var j = 0; j < $scope.images[i].colours.length; j++){
-	  						var rand = $scope.rocks[Math.floor(Math.random() * $scope.rocks.length)];
-	  						$scope.images[i].rocks.push(rand);
-	  		    	}
-	  				}
-          }
-          console.log($scope.images);
+	  	for(var i = 0; i < $scope.images.length; i++){
+	  	    $scope.images[i].rocks = [];
+	  	    for(var j = 0; j < $scope.images[i].colours.length; j++){
+	  		var rand = $scope.rocks[Math.floor(Math.random() * $scope.rocks.length)];
+	  		$scope.images[i].rocks.push(rand);
+	  	    }
+	  	}
+            }
+            console.log($scope.images);
         }
-      );
+            );
     
     // populate the rocks
     $http.get('/rock?all').
@@ -51,7 +51,7 @@ app.controller('2DCtrl', function ($scope, $http) {
 
     $scope.updatePlot = function(){
         $scope.update_data();
-    }
+    };
 
     $scope.update_data = function(){
 
@@ -63,9 +63,8 @@ app.controller('2DCtrl', function ($scope, $http) {
         
         var earth_model = {mapping: mapping,
                            image: image.image,
-                           z: 100.0,
-                           x: 1000.0,
-                           theta:[0]};
+                           zrange: $scope.zRange,
+                           theta: [0,3,6,9,12,15,18,21,24,27,30]};
         
         var seismic = {frequency: 20.0,
                        wavelet: "ricker", dt: .001};
@@ -87,11 +86,11 @@ app.controller('2DCtrl', function ($scope, $http) {
     	console.log(data);
 
     	var max;
-    		    //$scope.result = true;
+    	//$scope.result = true;
     	if(Math.abs(data.max) > Math.abs(data.min)){
-    		max = Math.abs(data.max);
+    	    max = Math.abs(data.max);
     	} else {
-    		max = Math.abs(data.min);
+    	    max = Math.abs(data.min);
     	}
 
     	var height = 300;
@@ -104,7 +103,7 @@ app.controller('2DCtrl', function ($scope, $http) {
 	        .toggleY2Axis(true)
 	        .setXTickFormat("")
 	        .setY2TickFormat("")
-	        //.setX2TickFormat("")
+	//.setX2TickFormat("")
 	        .setMargin(10,10,20,20)
 	       	.setXDomain([0, data.seismic.length])
 	        .setYDomain([0, data.seismic[0].length])
@@ -112,62 +111,62 @@ app.controller('2DCtrl', function ($scope, $http) {
 	        .setY2Domain([0, data.seismic[0].length])
 	        .draw();
 
-	    // var vDLog = g3.wiggle(vDPlot, data.seismic[34])
-	    //     //.setYInt(data.dt)
-	    //     //.setXInt(data.dx)
-	    //     //.setSampleRate(1)
-	    //     //.setSkip(10)
-	    //     .setGain(50)
-	    //     .draw();
+	// var vDLog = g3.wiggle(vDPlot, data.seismic[34])
+	//     //.setYInt(data.dt)
+	//     //.setXInt(data.dx)
+	//     //.setSampleRate(1)
+	//     //.setSkip(10)
+	//     .setGain(50)
+	//     .draw();
 
-	    var seismic = g3.seismic(vDPlot, data.seismic)
+	var seismic = g3.seismic(vDPlot, data.seismic)
 	    	.setMax(max)
 	    	.setGain(100)
 	    	.draw();
 
-	    var width = $('.og_plot').width();
-	   	var wGPlot = g3.plot('.og_plot')
-		    .setHeight(height)
-				.setWidth(width - 30)
-				.toggleX2Axis(true)
-				.toggleY2Axis(true)
-				.setXTickFormat("")
-				.setYTickFormat("")
-				.setY2TickFormat("")
-				//.setX2TickFormat("")
-				.setMargin(10,10,20,20)
-				.setXDomain([0, data.offset_gather.length])
-				.setYDomain([0, data.offset_gather[0].length])
-				.setX2Domain([0, data.offset_gather.length])
-				.setY2Domain([0, data.offset_gather[0].length])
-				.draw();
+	var width = $('.og_plot').width();
+	var wGPlot = g3.plot('.og_plot')
+		.setHeight(height)
+		.setWidth(width - 30)
+		.toggleX2Axis(true)
+		.toggleY2Axis(true)
+		.setXTickFormat("")
+		.setYTickFormat("")
+		.setY2TickFormat("")
+	//.setX2TickFormat("")
+		.setMargin(10,10,20,20)
+		.setXDomain([0, data.offset_gather.length])
+		.setYDomain([0, data.offset_gather[0].length])
+		.setX2Domain([0, data.offset_gather.length])
+		.setY2Domain([0, data.offset_gather[0].length])
+		.draw();
 
-			var og = g3.seismic(wGPlot, data.offset_gather)
-				.setMax(max)
-				.setGain(100)
-				.draw();
+	var og = g3.seismic(wGPlot, data.offset_gather)
+		.setMax(max)
+		.setGain(100)
+		.draw();
 
     	var width = $('.wg_plot').width();
-	   	var wGPlot = g3.plot('.wg_plot')
-		    .setHeight(height)
-				.setWidth(width - 30)
-				.toggleX2Axis(true)
-				.toggleY2Axis(true)
-				.setXTickFormat("")
-				.setYTickFormat("")
-				.setY2TickFormat("")
-				//.setX2TickFormat("")
-				.setMargin(10,10,20,20)
-				.setXDomain([0, data.wavelet_gather.length])
-				.setYDomain([0, data.wavelet_gather[0].length])
-				.setX2Domain([0, data.wavelet_gather.length])
-				.setY2Domain([0, data.wavelet_gather[0].length])
-				.draw();
+	var wGPlot = g3.plot('.wg_plot')
+		.setHeight(height)
+		.setWidth(width - 30)
+		.toggleX2Axis(true)
+		.toggleY2Axis(true)
+		.setXTickFormat("")
+		.setYTickFormat("")
+		.setY2TickFormat("")
+	//.setX2TickFormat("")
+		.setMargin(10,10,20,20)
+		.setXDomain([0, data.wavelet_gather.length])
+		.setYDomain([0, data.wavelet_gather[0].length])
+		.setX2Domain([0, data.wavelet_gather.length])
+		.setY2Domain([0, data.wavelet_gather[0].length])
+		.draw();
 
-			var wg = g3.seismic(wGPlot, data.wavelet_gather)
-				.setMax(max)
-				.setGain(100)
-				.draw();
+	var wg = g3.seismic(wGPlot, data.wavelet_gather)
+		.setMax(max)
+		.setGain(100)
+		.draw();
 
     };
     
