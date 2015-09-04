@@ -28,8 +28,8 @@ from lib_auth import verify, authenticate, send_message
 
 from lib_db import Rock, Scenario, User, ModelrParent,\
     ActivityLog, ModelServedCount,\
-    ImageModel, EarthModel, Fluid, Item, get_by_id, \
-    get_items_by_name_and_user, get_all_items_user
+    ImageModel, EarthModel, Fluid, Item, \
+    get_items_by_name_and_user, get_all_items_user, deep_delete
 
 from lib_util import posterize
 
@@ -98,11 +98,17 @@ class dbAPI(ModelrAPI):
     def delete(self, user):
 
         try:
-            db_id = int(self.request.get("id"))
-            rock = get_by_id(Rock, db_id, user)
-            rock.delete()
 
-            activity = "removed_rock"
+            key = self.request.get('key')
+
+            item = self.entity.get(key)
+
+            if item.user != user.user_id:
+                raise Exception
+
+            deep_delete(item)
+            
+            activity = "removed_item"
             ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
@@ -261,7 +267,7 @@ class RockHandler(dbAPI):
             fluid_key = self.request.get("rock-fluid")
 
             if fluid_key != "None":
-                rock.fluid_key = fluid_key
+                rock.fluid_key = Fluid.get(str(fluid_key)).key()
 
             # Save in the database
             rock.put()
@@ -341,6 +347,7 @@ class ImageModelHandler(dbAPI):
 class FluidHandler(dbAPI):
 
     entity = Fluid
+
     @authenticate
     def post(self, user):
 
@@ -425,28 +432,6 @@ class FluidHandler(dbAPI):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!') 
         return
-
-    @authenticate
-    def delete(self, user):
-
-        key = 
-        # fix all rocks
-        rocks = Rock.all().filter("fluid_key =", fluid_key).fetch(1000)
-        for rock in rocks:
-            rock.fluid_key = None
-            rock.put()
-
-            selected_fluid.delete()
-        except:
-            pass
-
-        activity = "removed_fluid"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrParent.all().get()).put()
-
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!')
 
 
 class EarthModelHandler(ModelrAPI):

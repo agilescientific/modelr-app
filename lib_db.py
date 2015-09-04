@@ -47,7 +47,7 @@ def get_all_items_user(entity, user):
 
     admin_items = entity.all().order("name")\
                               .filter("user =", admin_id).fetch(1000)
-    
+
     user_items = entity.all().order("name")\
                              .filter("user =", user.user_id).fetch(1000)
 
@@ -75,12 +75,15 @@ def check_read_permission(entity, user):
 def filter_on_read_permission(entities, user):
     return [item for item in entities if check_read_permission(item)]
 
+
 def deep_delete(obj):
     
-    [item.delete() for item in
+    [deep_delete(item) for item in
      db.query_descendants(obj).fetch(1000)]
-    
-    
+
+    obj.delete()
+
+
 class ModelrParent(db.Model):
     """
     parent to all of modelr to allow for strongly consistent queries
@@ -141,7 +144,7 @@ class Item(db.Model):
     user = db.IntegerProperty()
     group = db.StringProperty()
     date = db.DateTimeProperty(auto_now_add=True)
-    description = db.StringProperty()
+    description = db.StringProperty(multiline=True)
 
     @property
     def simple_json(self):
@@ -222,7 +225,6 @@ class Rock(Item):
     """
 
     name = db.StringProperty(multiline=False)
-    description = db.StringProperty(multiline=True)
 
     vp = db.FloatProperty()
     vs = db.FloatProperty()
@@ -246,7 +248,9 @@ class Rock(Item):
         try:
             fluid = self.fluid_key
         except:
+            # Fluid no longer exists
             fluid = None
+            self.fluid_key = None
 
         return fluid
 
@@ -309,7 +313,6 @@ class Rock(Item):
 class Fluid(Item):
 
     name = db.StringProperty(multiline=False)
-    description = db.StringProperty(multiline=True)
 
     rho_hc = db.FloatProperty(default=250.)
     rho_w = db.FloatProperty(default=1040.)
@@ -329,10 +332,6 @@ class Fluid(Item):
                 "name": self.name,
                 "description": self.description,
                 "db_key": str(self.key())}
-
-    @property
-    def simple_json(self):
-        return simple_item(self)
 
 
 class Server(db.Model):
