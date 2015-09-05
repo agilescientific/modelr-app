@@ -1,24 +1,27 @@
 'use strict';
 var app = angular.module('modelr', ['mgcrea.ngStrap', 'ngAnimate','angular-flexslider']);
+
  
 app.config(['$interpolateProvider', function($interpolateProvider) {
   $interpolateProvider.startSymbol('{[');
   $interpolateProvider.endSymbol(']}');
 }]);
 
+
 app.controller('2DCtrl', function ($scope, $http) {
 
     $scope.zDomain = ['depth', 'time'];
     $scope.zAxisDomain = 'depth';
     $scope.zRange = 1000;
-    $scope.server = 'http://localhost:8081'
+    $scope.server = 'http://localhost:8081';
 
+    $scope.theta = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30];
     $scope.popover = {
 	title: "Models",
 	content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
     };
 
-    $http.get('/image_model').
+    $http.get('/image_model?all').
         then(function(response) {
             $scope.images = response.data;
 
@@ -50,11 +53,11 @@ app.controller('2DCtrl', function ($scope, $http) {
     	$scope.curImage = $scope.images[slider.element.currentSlide];
     };
 
-    $scope.saveModel = function(){
-    	$scope.zRange;
-    	$scope.earthModelName;
-    	$scope.zAxisDomain;
-    };
+    //$scope.saveModel = function(){
+    //	$scope.zRange;
+   // 	$scope.earthModelName;
+    //	$scope.zAxisDomain;
+    //};
 
     $scope.updatePlot = function(){
         $scope.update_data();
@@ -63,18 +66,15 @@ app.controller('2DCtrl', function ($scope, $http) {
     $scope.update_data = function(){
 
         var image = $scope.curImage;
+       
         var mapping = {};
         for( var i =0; i < image.rocks.length; i++){
             mapping[image.colours[i]] = image.rocks[i];
-        };
-        
-        var earth_model = {mapping: mapping,
-                           image: image.image,
-                           zrange: $scope.zRange,
-                           theta: [0,3,6,9,12,15,18,21,24,27,30]};
+        }
+        var earth_model = $scope.makeEarthModelStruct();
         
         var seismic = {frequency: 20.0,
-                       wavelet: "ricker", dt: .001};
+                       wavelet: "ricker", dt: 0.001};
 
         var payload = JSON.stringify({earth_model: earth_model,
                                       seismic: seismic});
@@ -131,7 +131,7 @@ app.controller('2DCtrl', function ($scope, $http) {
 	    	.setGain(100)
 	    	.draw();
 
-	var width = $('.og_plot').width();
+	width = $('.og_plot').width();
 	var wGPlot = g3.plot('.og_plot')
 		.setHeight(height)
 		.setWidth(width - 30)
@@ -153,8 +153,8 @@ app.controller('2DCtrl', function ($scope, $http) {
 		.setGain(100)
 		.draw();
 
-    	var width = $('.wg_plot').width();
-	var wGPlot = g3.plot('.wg_plot')
+    	width = $('.wg_plot').width();
+	wGPlot = g3.plot('.wg_plot')
 		.setHeight(height)
 		.setWidth(width - 30)
 		.toggleX2Axis(true)
@@ -176,18 +176,34 @@ app.controller('2DCtrl', function ($scope, $http) {
 		.draw();
 
     };
-    
-    $scope.save_earthmodel = function(){
 
-        var data = {mapping: $scope.mapping,
-                    image_key: $scope.image.key,
-                    z: $scope.z,
-                    x: $scope.x,
-                    theta:[0,3,6,9,12,15,18,21,24,27,30]};
+    $scope.makeEarthModelStruct = function(){
+
+        var image = $scope.curImage;
+        var mapping = {};
+        for( var i =0; i < image.rocks.length; i++){
+            mapping[image.colours[i]] = image.rocks[i];
+        }
+        
+        var data = {image: $scope.curImage.image,
+                    mapping: mapping,
+                    image_key: $scope.curImage.key,
+                    zrange: $scope.zRange,
+                    domain: $scope.zAxisDomain,
+                    theta: $scope.theta,
+                    name: $scope.earthModelName};
+        return(data);
+    };
+    
+    $scope.saveModel = function(){
+
+       
+        
+        var data = $scope.makeEarthModelStruct();
 
         $http.post('/earth_model', data).
             then(function(response){
-                // Notify the success;
+                $scope.curImage.earth_models.push(response.data);
             });
     };
 });

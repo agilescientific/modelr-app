@@ -44,13 +44,11 @@ def get_all_items_user(entity, user):
     """
     Returns entities that the user has permissions for
     """
-    admin_items = entity.all().order("name")\
-                              .filter("user =", admin_id).fetch(1000)
-    user_items = entity.all().order("name")\
-                             .filter("user =", user.user_id).fetch(1000)
+    admin_items = entity.all().filter("user =", admin_id).fetch(1000)
+    user_items = entity.all().filter("user =", user.user_id).fetch(1000)
 
     group_items = [item for item in
-                   (entity.all().order("name")
+                   (entity.all()
                     .ancestor(ModelrParent.all().get())
                     .filter("group =", group)
                     for group in user.group)]
@@ -186,19 +184,10 @@ class EarthModel(Item):
     @property
     def json(self):
 
-        output = {}
         data = json.loads(self.data)
-        
-        output["image"] = images.get_serving_url(
-            self.parent().image)
-        
-        output["name"] = self.name
+        data["image"] = images.get_serving_url(self.parent().image)
+        return data
 
-        output["mapping"] = [{"colour": key, "rock": item}
-                             for key, item in data["mapping"].iteritems()]
-
-        return output
-    
     def to_json(self):
         return self.data
 
@@ -207,7 +196,6 @@ class EarthModel(Item):
         return {"name": self.name,
                 "description": 'empty',
                 "key": str(self.key())}
-
 
 
 class Scenario(Item):
@@ -333,7 +321,6 @@ class Fluid(Item):
                 "description": self.description,
                 "db_key": str(self.key())}
 
- 
 
 class Server(db.Model):
 
