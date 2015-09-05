@@ -13,6 +13,12 @@ app.controller('2DCtrl', function ($scope, $http) {
     $scope.zDomain = ['depth', 'time'];
     $scope.zAxisDomain = 'depth';
     $scope.zRange = 1000;
+
+    // TODO update from mouse over on seismic plots
+    $scope.trace = 10;
+    $scope.current_offset = 3;
+
+    // TODO get from app before so we get the prod url
     $scope.server = 'http://localhost:8081';
 
     $scope.theta = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30];
@@ -53,12 +59,6 @@ app.controller('2DCtrl', function ($scope, $http) {
     	$scope.curImage = $scope.images[slider.element.currentSlide];
     };
 
-    //$scope.saveModel = function(){
-    //	$scope.zRange;
-   // 	$scope.earthModelName;
-    //	$scope.zAxisDomain;
-    //};
-
     $scope.updatePlot = function(){
         $scope.update_data();
     };
@@ -80,7 +80,9 @@ app.controller('2DCtrl', function ($scope, $http) {
                                       seismic: seismic});
 
         var data = {seismic: seismic,
-                    earth_model: earth_model};
+                    earth_model: earth_model,
+                    trace: $scope.trace,
+                    offset: $scope.current_offset};
 
         $http.get($scope.server + '/data.json?type=seismic&script=convolution_model.py&payload=' + payload).
             then(function(response){
