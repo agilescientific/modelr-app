@@ -28,8 +28,11 @@ setup1D = function(rock_div,
             .setWidth(5)
             .setYTitle("depth [m]")
             .toggleXAxis(false)
+            .toggleYAxis(false)
+            .toggleY2Axis(true)
+            .setY2Domain([0, 1000])
             .setMargin(core_y,30,30,widthScale(.18))
-            .setYDomain([0,1000])
+            //.setYDomain([0,1000])
             .draw();
 
     var canvas = d3.select(axisPlot.svg.node().parentNode);
@@ -75,7 +78,10 @@ setup1D = function(rock_div,
                 .setWidth(width)
                 .setXTitle("Vp")
                 .setMargin(core_y,10,30,10)
-                .toggleYAxis(false)
+                .setYTickFormat("")
+                .toggleY2Axis(true)
+                .setY2Domain(data["z_lim"])
+                .setY2TickFormat("")
                 .setYDomain(data["z_lim"])
                 .setXDomain(data["vp_lim"])
                 .draw();
@@ -92,7 +98,10 @@ setup1D = function(rock_div,
                 .setWidth(width)
                 .setXTitle("Vs")
                 .setMargin(core_y,10,30,10)
-                .toggleYAxis(false)
+                .setYTickFormat("")
+                .toggleY2Axis(true)
+                .setY2Domain(data["z_lim"])
+                .setY2TickFormat("")
                 .setYDomain(data["z_lim"])
                 .setXDomain(data["vs_lim"])
                 .draw();
@@ -109,7 +118,10 @@ setup1D = function(rock_div,
                 .setWidth(width)
                 .setMargin(core_y,10,30,10)
                 .setXTitle("\u03C1")
-                .toggleYAxis(false)
+                .setYTickFormat("")
+                .toggleY2Axis(true)
+                .setY2Domain(data["z_lim"])
+                .setY2TickFormat("")
                 .setYDomain(data["z_lim"])
                 .setXDomain(data["rho_lim"])
                 .draw();
@@ -125,8 +137,10 @@ setup1D = function(rock_div,
                 .setHeight(core_height)
                 .setWidth(5)
                 .setYTitle("time [s]")
-                .toggleXAxis(false)
-                .setYDomain(data["t_lim"])
+                .setYTickFormat("")
+                .toggleYAxis(false)
+                .toggleY2Axis(true)
+                .setY2Domain(data["t_lim"])
                 .draw();
 
             // Create Zp Plot
@@ -136,7 +150,10 @@ setup1D = function(rock_div,
                 .setMargin(core_y,10,30,10)
                 .setWidth(width)
                 .setXTitle("Zp")
-                .toggleYAxis(false)
+                .setYTickFormat("")
+                .toggleY2Axis(true)
+                .setY2Domain(data["t_lim"])
+                .setY2TickFormat("")
                 .setXDomain(data["rpp_lim"])
                 .setYDomain(data["t_lim"])
                 .draw();
@@ -155,7 +172,10 @@ setup1D = function(rock_div,
                 .setMargin(core_y,40,30,10)
                 .setWidth(width)
                 .setXTitle("Synth")
-                .toggleYAxis(false)
+                .setYTickFormat("")
+                .toggleY2Axis(true)
+                .setY2Domain(data["t_lim"])
+                .setY2TickFormat("")
                 .setXDomain(synthLim)
                 .setYDomain(data["t_lim"])
                 .draw();
@@ -215,5 +235,3 @@ setup1D = function(rock_div,
               );
     }; // end of function update_data
 };
-
-
