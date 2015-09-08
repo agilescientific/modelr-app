@@ -70,43 +70,29 @@
   stroke-width: 1px; 
   shape-rendering: crispEdges;
   } 
-
-
 </style>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"
-	charset="utf-8"></script>
-
+  charset="utf-8"></script>
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css" />
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
 
 <script src="/static/js/fluidsub.js"></script>
-<script src="/static/js/logplot.js"></script>
-<script src="/static/js/refplot.js"></script>
-<script src="/static/js/gatherPlot.js"></script>
 <script src="/static/js/1D_model.js"></script>
 <script src="/static/js/g3.js"></script>
 
 <script>
   $(document).ready(function(){
+    var db_rocks = {{db_rocks}};
+    var colour_map = {{colour_map}};
+    var db_fluids = {{db_fluids}};
 
-  var db_rocks = {{db_rocks}};
-  var colour_map = {{colour_map}};
-  var db_fluids = {{db_fluids}};
-
-  setup1D("#rock-model-container",db_rocks, db_fluids,
-  colour_map, 10000,
-  "#rock-menu", "#plot-container",
-  "#reflectivity-menu", "#seismic-menu","{{HOSTNAME}}");
-  }
-  )
+    setup1D("#rock-model-container",db_rocks, db_fluids,
+      colour_map, 10000, "#rock-menu", "#plot-container",
+      "#reflectivity-menu", "#seismic-menu","{{HOSTNAME}}");
+  });
 </script>
 
-
-
 <div class="container">
-
-
   <div class="panel panel-default">
     <div class="panel-heading">
       <h3 class="panel-title">Model</h3>
@@ -116,22 +102,17 @@
       <div class="model-plot"> <!-- Helps with CSS -->
         <div class="col-md-12 plot" id="plot-container">
         </div>
-        
       </div> <!-- End of model-plot -->
     </div> <!-- End of panel body -->
     <div class="row">
-      <div id="seismic-menu" title="Seismic menu" 
-	   class="col-md-offset-6 col-md-6" 
-	   style="margin-top:-40px; margin-bottom: 20px;">
-	<label>
-	  Frequency
-	</label>
-
-	<input type="range" min="3" max="100" id="frequency" 
-	       value="30">
-	<label id="frequency-label">
-	  30 Hz
-	</label>
+      <div id="seismic-menu" title="Seismic menu" class="col-md-offset-6 col-md-6">
+         <label>
+	         Frequency
+	       </label>
+	       <input type="range" min="3" max="100" id="frequency" value="30">
+	       <label id="frequency-label">
+	         30 Hz
+	       </label>
       </div>
     </div>
     <div class="row">
@@ -140,23 +121,16 @@
     </div>
 
   </div> <!-- End of panel -->
-<!-- 
-  <div class="panel panel-default">
-    <div class="col-xs-12 plot">
-    </div>
-  </div> -->
+</div>
 
-
-  <script>
-    $('#model_info').popover({
+<script>
+  $('#model_info').popover({
     trigger: 'hover click', 
     html: true,
     placement: 'right', 
     container: 'body',
     delay: { show: 500, hide: 1000 }
-    });
-  </script>
+  });
+</script>
 
-  {% endblock %}
-
-
+{% endblock %}
