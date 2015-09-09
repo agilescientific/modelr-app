@@ -64,8 +64,10 @@ app.controller('2DCtrl', function ($scope, $http) {
       }
       var earth_model = $scope.makeEarthModelStruct();
       
-      var seismic = {frequency: 20.0,
-                     wavelet: "ricker", dt: 0.001};
+      var seismic = {
+        frequency: 20.0,
+        wavelet: "ricker", dt: 0.001
+      };
 
       var payload = JSON.stringify({
         earth_model: earth_model,
@@ -81,6 +83,7 @@ app.controller('2DCtrl', function ($scope, $http) {
 
       $http.get($scope.server + '/data.json?type=seismic&script=convolution_model.py&payload=' + payload)
         .then(function(response){
+          console.log(response);
           $scope.seismic = response.data;
           $scope.plot(response.data);
         });
@@ -196,4 +199,10 @@ app.controller('2DCtrl', function ($scope, $http) {
               $scope.curImage.earth_models.push(response.data);
           });
     };
+
+  $scope.alert = {
+    "title": "Holy guacamole!",
+    "content": "Best check yo self, you're not looking too good.",
+    "type": "info"
+  };
 });
