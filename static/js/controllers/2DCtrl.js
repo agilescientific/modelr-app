@@ -183,7 +183,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           mapping[image.colours[i]] = image.rocks[i];
       }
       
-      
       var data = {
         image: $scope.curImage.image,
         mapping: mapping,
