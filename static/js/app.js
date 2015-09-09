@@ -103,7 +103,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
     };
 
     $scope.plot = function(data){
-    	console.log(data);
 
     	var max;
     	if(Math.abs(data.max) > Math.abs(data.min)){
@@ -113,21 +112,25 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
     	}
 
     	var height = 300;
-    	var width = $('.vd_plot').width();
-    	console.log(width);
-    	var vDPlot = g3.plot('.vd_plot')
-        .setHeight(height)
-        .setWidth(width - 30)
-        .toggleX2Axis(true)
-        .toggleY2Axis(true)
-        .setXTickFormat("")
-        .setY2TickFormat("")
-        .setMargin(10,10,20,20)
-       	.setXDomain([0, data.seismic.length])
-        .setYDomain([0, data.seismic[0].length])
-        .setX2Domain([0, data.seismic.length])
-        .setY2Domain([0, data.seismic[0].length])
-        .draw();
+    	// var width = $('.vd_plot').width();
+    	// console.log(width);
+
+
+     //  if(!$scope.vDPlot){
+     //  	$scope.vDPlot = g3.plot('.vd_plot')
+     //      .setHeight(height)
+     //      .setWidth(width - 30)
+     //      .toggleX2Axis(true)
+     //      .toggleY2Axis(true)
+     //      .setXTickFormat("")
+     //      .setY2TickFormat("")
+     //      .setMargin(10,10,20,20)
+     //     	.setXDomain([0, data.seismic.length])
+     //      .setYDomain([0, data.seismic[0].length])
+     //      .setX2Domain([0, data.seismic.length])
+     //      .setY2Domain([0, data.seismic[0].length])
+     //      .draw();
+     //    }
 
 	// var vDLog = g3.wiggle(vDPlot, data.seismic[34])
 	//     //.setYInt(data.dt)
@@ -137,52 +140,61 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
 	//     .setGain(50)
 	//     .draw();
 
-    	var seismic = g3.seismic(vDPlot, data.seismic)
-	    	.setMax(max)
-	    	.setGain(100)
-	    	.draw();
+    	// $scope.seismic = g3.seismic($scope.vDPlot, data.seismic)
+	    // 	.setMax(max)
+	    // 	.setGain(100)
+	    // 	.draw();
 
-    	width = $('.og_plot').width();
-    	var wGPlot = g3.plot('.og_plot')
-    		.setHeight(height)
-    		.setWidth(width - 30)
-    		.toggleX2Axis(true)
-    		.toggleY2Axis(true)
-    		.setXTickFormat("")
-    		.setYTickFormat("")
-    		.setY2TickFormat("")
-    		.setMargin(10,10,20,20)
-    		.setXDomain([0, data.offset_gather.length])
-    		.setYDomain([0, data.offset_gather[0].length])
-    		.setX2Domain([0, data.offset_gather.length])
-    		.setY2Domain([0, data.offset_gather[0].length])
-    		.draw();
+    	// width = $('.og_plot').width();
+     //  if(!$scope.oGPlot){
+     //  	$scope.oGPlot = g3.plot('.og_plot')
+     //  		.setHeight(height)
+     //  		.setWidth(width - 30)
+     //  		.toggleX2Axis(true)
+     //  		.toggleY2Axis(true)
+     //  		.setXTickFormat("")
+     //  		.setYTickFormat("")
+     //  		.setY2TickFormat("")
+     //  		.setMargin(10,10,20,20)
+     //  		.setXDomain([0, data.offset_gather.length])
+     //  		.setYDomain([0, data.offset_gather[0].length])
+     //  		.setX2Domain([0, data.offset_gather.length])
+     //  		.setY2Domain([0, data.offset_gather[0].length])
+     //  		.draw();
+     //    }
 
-    	var og = g3.seismic(wGPlot, data.offset_gather)
-    		.setMax(max)
-    		.setGain(100)
-    		.draw();
+    	// $scope.og = g3.seismic($scope.oGPlot, data.offset_gather)
+    	// 	.setMax(max)
+    	// 	.setGain(100)
+    	// 	.draw();
 
-      width = $('.wg_plot').width();
-    	wGPlot = g3.plot('.wg_plot')
-    		.setHeight(height)
-    		.setWidth(width - 30)
-    		.toggleX2Axis(true)
-    		.toggleY2Axis(true)
-    		.setXTickFormat("")
-    		.setYTickFormat("")
-    		.setY2TickFormat("")
-    		.setMargin(10,10,20,20)
-    		.setXDomain([0, data.wavelet_gather.length])
-    		.setYDomain([0, data.wavelet_gather[0].length])
-    		.setX2Domain([0, data.wavelet_gather.length])
-    		.setY2Domain([0, data.wavelet_gather[0].length])
-    		.draw();
+      var width = $('.wg_plot').width();
+      if(!$scope.wGPlot){
+      	$scope.wGPlot = g3.plot('.wg_plot')
+      		.setHeight(height)
+      		.setWidth(width - 30)
+      		.toggleX2Axis(true)
+      		.toggleY2Axis(true)
+      		.setXTickFormat("")
+      		.setYTickFormat("")
+      		.setY2TickFormat("")
+      		.setMargin(10,10,20,20)
+      		.setXDomain([0, data.wavelet_gather.length])
+      		.setYDomain([0, data.wavelet_gather[0].length])
+      		.setX2Domain([0, data.wavelet_gather.length])
+      		.setY2Domain([0, data.wavelet_gather[0].length])
+      		.draw();
+        }
 
-    	var wg = g3.seismic(wGPlot, data.wavelet_gather)
-    		.setMax(max)
-    		.setGain(100)
-    		.draw();
+      if(!$scope.wg){
+      	$scope.wg = g3.seismic($scope.wGPlot, data.wavelet_gather)
+      		.setMax(max)
+      		.setGain(100)
+      		.draw();
+      } else {
+        console.log("HERE");
+        $scope.wg.reDraw(data.wavelet_gather);
+      }
     };
 
     $scope.makeEarthModelStruct = function(){

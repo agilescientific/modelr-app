@@ -20,6 +20,10 @@
   z-index: 1000;
 }
 
+.flexslider .slides img {
+  max-height: 400px;
+}
+
 canvas {
   position: absolute;
 }

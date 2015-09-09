@@ -491,6 +491,7 @@ g3.seismic = function(plot, data, options){
 	var seismic = {};
 	seismic.max = 1;
 	seismic.gain = 1;
+	seismic.data = data;
 
   seismic.draw = function(){
 	seismic.color = d3.scale.linear()
@@ -511,15 +512,23 @@ g3.seismic = function(plot, data, options){
     return this;
   }
 
+  seismic.reDraw = function(data){
+  	seismic.data = data;
+  	console.log(seismic.data);
+  	console.log(this.canvas);
+  	this.canvas
+  		.call(seismic.drawImage);
+  }
+
 	seismic.drawImage = function(canvas){
-		var context = canvas.node().getContext('2d'),
-		x = data.length,
-		y = data[0].length,
+		seismic.context = canvas.node().getContext('2d'),
+		x = seismic.data.length,
+		y = seismic.data[0].length,
 		image = context.createImageData(x,y);
 
 		for(var i = 0, p = -1; i < y; ++ i){
 			for(var j = 0; j < x; ++j){
-				var c = d3.rgb(seismic.color(data[j][i]));
+				var c = d3.rgb(seismic.color(seismic.data[j][i]));
 				image.data[++p] = c.r;
 				image.data[++p] = c.g;
 				image.data[++p] = c.b;
