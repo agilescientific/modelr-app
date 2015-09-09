@@ -39,14 +39,14 @@ function FluidSub(canvas, core_width, core_height,
 	    .on("dragend", onchange);
 
     //------ Main canvas -------------------------//    
-    // canvas.append("text")
-    //     .attr("class", "y-label")
-    //     .attr("text-anchor", "end")
-    //     .attr("y", xScale(0.2))
-    //     .attr("x", yScale(-0.0))
-    //     .attr("dy", ".75em")
-    //     .attr("transform", "rotate(-90)")
-    //     .text("depth [m]");
+    canvas.append("text")
+        .attr("class", "y-label")
+        .attr("text-anchor", "end")
+        .attr("y", xScale(0.2))
+        .attr("x", yScale(-0.0))
+        .attr("dy", ".75em")
+        .attr("transform", "rotate(-90)")
+        .text("depth [m]");
 
     // scaling circle
     var circle = canvas.append("g");
