@@ -54,15 +54,14 @@
 	  <div class="panel-body">
 
 	    <!-- PRELOADED MODELS -->
-	    <button type="button" class="btn btn-default col-xs-12 model_select" placeholder="Load saved earth model"
-                    placement="bottom-right" ng-model="savedEarthModel" bs-options="item.name for item in curImage.earth_models" bs-select>
+	    <button type="button" ng-change="loadSaved()" class="btn btn-default col-xs-12 model_select" placeholder="Load saved earth model" placement="bottom-right" ng-model="savedEarthModel" bs-options="em.name for em in curImage.earth_models" bs-select>
 	      Action<span class="caret"></span>
 	    </button>
 
 	    <!-- LOADED ROCKS -->
 	    <div ng-repeat="item in curImage.rocks track by $index">
 	      <div class="rock-color col-xs-2" ng-style="{'background-color': curImage.colours[$index]}"></div>
-	      <button type="button" placeholder="{[item.name]}" class="btn btn-default col-xs-9 model_select" placement="bottom-right" ng-model="item" bs-options="rock.name for rock in rocks" bs-select>
+	      <button type="button" class="btn btn-default col-xs-9 model_select" placement="bottom-right" ng-model="item.name" bs-options="rock.name as rock.name for rock in rocks" bs-select>
 		<span class="caret"></span>
 	      </button>
 	    </div>

@@ -11,7 +11,7 @@ gulp.task('concat', function (cb) {
     watch('controllers/*.js', options, function (e) {
          console.log('e:'+JSON.stringify(e));
          console.log('\n');
-        console.log(new Date() + ' -- ' + e.history[0].replace(e.base, ''));
+        //console.log(new Date() + ' -- ' + e.history[0].replace(e.base, ''));
         //js = e.history[0].replace(e.base, '');
         gulp.src(['controllers/start.js','controllers/!(start)*.js',])
         .pipe(concat('app.js', {newLine: '\n'}))

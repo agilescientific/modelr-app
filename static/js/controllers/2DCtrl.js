@@ -33,7 +33,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
 	  	      }
 	  	    }
         }
-        console.log($scope.images);
+       // console.log($scope.curImage);
       }
     );
     
@@ -43,8 +43,19 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
             // this callback will be called asynchronously
             // when the response is available
             $scope.rocks = response.data;
-            console.log($scope.rocks);
         });
+
+    $scope.loadSaved = function(){
+      var array = $.map($scope.savedEarthModel.mapping, function(value, index) {
+        return [value];
+      });
+
+      $scope.curImage.rocks = [];
+      for(var i = 0; i < array.length; i++){
+        $scope.curImage.rocks.push(array[i]);
+      }
+      console.log($scope.curImage);
+    }
     
     $scope.slideClick = function(slider){
     	$scope.curImage = $scope.images[slider.element.currentSlide];
@@ -172,6 +183,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           mapping[image.colours[i]] = image.rocks[i];
       }
       
+      
       var data = {
         image: $scope.curImage.image,
         mapping: mapping,
@@ -181,27 +193,27 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
         theta: $scope.theta,
         name: $scope.earthModelName
       };
+
       return(data);
     };
     
     $scope.saveModel = function(){
       var data = $scope.makeEarthModelStruct();
-
       $http.post('/earth_model', data)
         .then(function(response){
           $scope.curImage.earth_models.push(response.data);
-          $scope.earthModelName = "";
           $scope.zAxisDomain = 'depth';
           $scope.zRange = 1000;
 
           var myAlert = $alert({
             title: 'Success:',
-            content: 'You have saved your model.',
+            content: 'You have saved your model \'' + $scope.earthModelName + '\'.',
             placement: 'alert-success',
             type: 'success',
             duration: 5,
             show: true
           });
+          $scope.earthModelName = "";
       });
     };
 });
