@@ -55,24 +55,17 @@ app.controller('2DCtrl', function ($scope, $http) {
     };
 
     $scope.update_data = function(){
-
       var image = $scope.curImage;
-     
       var mapping = {};
-      for( var i =0; i < image.rocks.length; i++){
+      for(var i=0; i < image.rocks.length; i++){
           mapping[image.colours[i]] = image.rocks[i];
       }
       var earth_model = $scope.makeEarthModelStruct();
-      
+        
       var seismic = {
         frequency: 20.0,
         wavelet: "ricker", dt: 0.001
       };
-
-      var payload = JSON.stringify({
-        earth_model: earth_model,
-        seismic: seismic
-      });
 
       var data = {
         seismic: seismic,
@@ -81,9 +74,9 @@ app.controller('2DCtrl', function ($scope, $http) {
         offset: $scope.current_offset
       };
 
-      $http.get($scope.server + '/data.json?type=seismic&script=convolution_model.py&payload=' + payload)
+      var payload = JSON.stringify(data);
+        $http.get($scope.server + '/data.json?type=seismic&script=convolution_model.py&payload=' + payload)
         .then(function(response){
-          console.log(response);
           $scope.seismic = response.data;
           $scope.plot(response.data);
         });
