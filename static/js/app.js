@@ -76,14 +76,14 @@ app.controller('2DCtrl', function ($scope, $http) {
         var seismic = {frequency: 20.0,
                        wavelet: "ricker", dt: 0.001};
 
-        var payload = JSON.stringify({earth_model: earth_model,
-                                      seismic: seismic});
+
 
         var data = {seismic: seismic,
                     earth_model: earth_model,
                     trace: $scope.trace,
                     offset: $scope.current_offset};
 
+	var payload = JSON.stringify(data);
         $http.get($scope.server + '/data.json?type=seismic&script=convolution_model.py&payload=' + payload).
             then(function(response){
             	$scope.seismic = response.data;
