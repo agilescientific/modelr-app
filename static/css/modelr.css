@@ -11,6 +11,15 @@
   top:4px;
 }
 
+.alert-success {
+  width:50%;
+  height: 60px;
+  position: fixed;
+  right: 10px;
+  top: 10px;
+  z-index: 1000;
+}
+
 canvas {
   position: absolute;
 }

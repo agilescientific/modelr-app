@@ -1,5 +1,5 @@
 
-app.controller('2DCtrl', function ($scope, $http) {
+app.controller('2DCtrl', function ($scope, $http, $alert) {
 
     $scope.zDomain = ['depth', 'time'];
     $scope.zAxisDomain = 'depth';
@@ -188,14 +188,20 @@ app.controller('2DCtrl', function ($scope, $http) {
       var data = $scope.makeEarthModelStruct();
 
       $http.post('/earth_model', data)
-          .then(function(response){
-              $scope.curImage.earth_models.push(response.data);
-          });
-    };
+        .then(function(response){
+          $scope.curImage.earth_models.push(response.data);
+          $scope.earthModelName = "";
+          $scope.zAxisDomain = 'depth';
+          $scope.zRange = 1000;
 
-  $scope.alert = {
-    "title": "Holy guacamole!",
-    "content": "Best check yo self, you're not looking too good.",
-    "type": "info"
-  };
+          var myAlert = $alert({
+            title: 'Success:',
+            content: 'You have saved your model.',
+            placement: 'alert-success',
+            type: 'success',
+            duration: 5,
+            show: true
+          });
+      });
+    };
 });
