@@ -20,6 +20,10 @@
   z-index: 1000;
 }
 
+.form-control {
+  margin-bottom: 5px;
+}
+
 .flexslider .slides img {
   max-height: 400px;
 }

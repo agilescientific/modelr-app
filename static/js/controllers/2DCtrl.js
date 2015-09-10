@@ -7,7 +7,12 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
 
     // TODO update from mouse over on seismic plots
     $scope.trace = 10;
-    $scope.current_offset = 3;
+    $scope.traceStr = "10";
+    $scope.offset = 3;
+    $scope.offsetStr = "3";
+    $scope.twt = 30;
+    $scope.twtStr = "30";
+
 
     // TODO get from app before so we get the prod url
     $scope.server = 'http://localhost:8081';
@@ -33,7 +38,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
 	  	      }
 	  	    }
         }
-       // console.log($scope.curImage);
       }
     );
     
@@ -54,8 +58,11 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       for(var i = 0; i < array.length; i++){
         $scope.curImage.rocks.push(array[i]);
       }
-      console.log($scope.curImage);
     }
+
+    $scope.changeRock = function(){
+      //console.log($scope.curImage);
+    };
     
     $scope.slideClick = function(slider){
     	$scope.curImage = $scope.images[slider.element.currentSlide];
@@ -66,11 +73,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
     };
 
     $scope.update_data = function(){
-      var image = $scope.curImage;
-      var mapping = {};
-      for(var i=0; i < image.rocks.length; i++){
-          mapping[image.colours[i]] = image.rocks[i];
-      }
+
       var earth_model = $scope.makeEarthModelStruct();
         
       var seismic = {
@@ -82,16 +85,45 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
         seismic: seismic,
         earth_model: earth_model,
         trace: $scope.trace,
-        offset: $scope.current_offset
+        offset: $scope.offset
       };
 
       var payload = JSON.stringify(data);
         $http.get($scope.server + '/data.json?type=seismic&script=convolution_model.py&payload=' + payload)
         .then(function(response){
           //$scope.seismic = response.data;
+          console.log(response.data);
           $scope.plot(response.data);
+          $scope.maxTrace = String(response.data.seismic.length);
+          $scope.maxTWT = String(response.data.seismic[0].length);
+          $scope.updateClicked = true;
         });
     };
+
+    $scope.changeTraceStr = function(){
+      $scope.trace = Number($scope.traceStr);
+    };
+    $scope.changeTraceNum = function(){
+      $scope.traceStr = String($scope.trace);
+    }
+    $scope.changeTWTStr = function(){
+      $scope.twt = Number($scope.twtStr);
+    };
+    $scope.changeTWTNum = function(){
+      $scope.twtStr = String($scope.twt);
+    }
+    $scope.changeGainStr = function(){
+      $scope.gain = Number($scope.gainStr);
+    };
+    $scope.changeGainNum = function(){
+      $scope.gainStr = String($scope.gain);
+    }
+    $scope.changeOffsetStr = function(){
+      $scope.offset = Number($scope.offsetStr);
+    };
+    $scope.changeOffsetNum = function(){
+      $scope.offsetStr = String($scope.offset);
+    }
 
     $scope.plot = function(data){
 
@@ -104,8 +136,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
 
     	var height = 300;
     	var width = $('.vd_plot').width();
-    	// console.log(width);
-
 
       if(!$scope.vDPlot){
       	$scope.vDPlot = g3.plot('.vd_plot')
