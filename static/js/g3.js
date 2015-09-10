@@ -1,4 +1,4 @@
-/*! g3 - v0.0.1 - 2015-09-08 - justinkheisler */
+/*! g3 - v0.0.1 - 2015-09-10 - justinkheisler */
 'use strict';
 ;(function (window) {
 
@@ -289,12 +289,12 @@ g3.plot = function(elem, options){
   }
 
   plot.setX2Ticks = function(ticks){
-  	this.xTicks = ticks;
+  	this.x2Ticks = ticks;
   	return this;
   }
 
   plot.setY2Ticks = function(ticks){
-  	this.yTicks = ticks;
+  	this.y2Ticks = ticks;
   	return this;
   }
 
@@ -420,17 +420,29 @@ g3.plot = function(elem, options){
 	  }
 
 		if(this.xTitle){
+      
+      if(this.xTickFormat === ""){
+        var margin = -10;
+      } else {
+        var margin = -30;
+      }
 			this.svg.append("text")
 					.attr("x", (this.width) / 2)
-					.attr("y", -30)
+					.attr("y", margin)
 					.style("text-anchor", "middle")
 					.text(this.xTitle);
 		}
 		if(this.yTitle){
+
+      if(this.yTickFormat === ""){
+        var margin = -10;
+      } else {
+        var margin = -20;
+      }
 			this.svg.append("text")
 				.attr("transform", "rotate(-90)")
 				//.attr("x", -15)
-				.attr("y", -20)
+				.attr("y", margin)
 				.attr("dy", "1em")
 				.style("text-anchor", "end")
 				.text(this.yTitle);
@@ -469,7 +481,7 @@ g3.plot = function(elem, options){
         .ease('linear')
         .selectAll("text")  
           .style("text-anchor", "start")
-          .attr("transform", "rotate(-45)");
+          .attr("transform", "rotate(45)");
     }
 
     if(y2Domain){
@@ -491,6 +503,7 @@ g3.seismic = function(plot, data, options){
 	var seismic = {};
 	seismic.max = 1;
 	seismic.gain = 1;
+	seismic.plot = plot;
 	seismic.data = data;
 
   seismic.draw = function(){
@@ -512,30 +525,55 @@ g3.seismic = function(plot, data, options){
     return this;
   }
 
-  seismic.reDraw = function(data){
+	seismic.reDraw = function(data){
+
+  	// Update the Canvas Attributes
+  	seismic.canvas
+      .attr('width', data.length)
+      .attr('height', data[0].length)
+      .style('width', seismic.plot.width +  'px')
+      .style('height', seismic.plot.height + 'px');
+
+    // Wipe the old canvas, the new size can be different
+  	seismic.context.clearRect(0, 0, seismic.data.length, seismic.data[0].length);
+
   	seismic.data = data;
-  	console.log(seismic.data);
-  	console.log(this.canvas);
-  	this.canvas
-  		.call(seismic.drawImage);
-  }
+		var x = data.length,
+		y = data[0].length;
+		var image = seismic.context.createImageData(x,y);
 
-	seismic.drawImage = function(canvas){
-		seismic.context = canvas.node().getContext('2d'),
-		x = seismic.data.length,
-		y = seismic.data[0].length,
-		image = context.createImageData(x,y);
-
+		// Paint the image
 		for(var i = 0, p = -1; i < y; ++ i){
 			for(var j = 0; j < x; ++j){
-				var c = d3.rgb(seismic.color(seismic.data[j][i]));
+				var c = d3.rgb(seismic.color(data[j][i]));
 				image.data[++p] = c.r;
 				image.data[++p] = c.g;
 				image.data[++p] = c.b;
 				image.data[++p] = 255;
 			}
 		}
-		context.putImageData(image, 0, 0);
+
+		// Dump image to canvas
+		seismic.context.putImageData(image, 0, 0);
+	  return this;
+  }
+
+	seismic.drawImage = function(canvas){
+		seismic.context = canvas.node().getContext('2d');
+		var x = seismic.data.length,
+		y = seismic.data[0].length;
+		seismic.image = seismic.context.createImageData(x,y);
+
+		for(var i = 0, p = -1; i < y; ++ i){
+			for(var j = 0; j < x; ++j){
+				var c = d3.rgb(seismic.color(seismic.data[j][i]));
+				seismic.image.data[++p] = c.r;
+				seismic.image.data[++p] = c.g;
+				seismic.image.data[++p] = c.b;
+				seismic.image.data[++p] = 255;
+			}
+		}
+		seismic.context.putImageData(seismic.image, 0, 0);
 		return this;
 	}
 
