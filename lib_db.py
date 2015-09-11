@@ -45,14 +45,12 @@ def get_all_items_user(entity, user):
     Returns entities that the user has permissions for
     """
 
-    default_items = entity.all().order("name")\
-                                .order("-date")\
-                                .filter("user =", admin_id)\
-                                .filter("user !=", user.user_id)\
-                                .fetch(1000)
+    default_items = entity.all()\
+                          .filter("user =", admin_id)\
+                          .filter("user !=", user.user_id)\
+                          .fetch(1000)
 
-    user_items = entity.all().order("name")\
-                             .filter("user =", user.user_id).fetch(1000)
+    user_items = entity.all().filter("user =", user.user_id).fetch(1000)
 
     group_items = [item for item in
                    (entity.all().order("name")

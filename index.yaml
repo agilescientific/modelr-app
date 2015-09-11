@@ -130,3 +130,13 @@ indexes:
   - name: user
   - name: date
     direction: desc
+
+- kind: ImageModel
+  properties:
+  - name: user
+  - name: user
+
+- kind: Rock
+  properties:
+  - name: user
+  - name: user
