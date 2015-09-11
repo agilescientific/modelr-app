@@ -411,35 +411,60 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       // Draw VD Horizon
       var xScale = $scope.vDPlot.xScale;
       var yScale = $scope.vDPlot.yScale;
-      $scope.vDHor = $scope.vDPlot.svg.append("line")
-        .style("stroke", "green")
-        .style("opacity", 1.5)
-        .attr("x1", xScale(0))
-        .attr("y1", yScale($scope.twt))
-        .attr("x2", xScale(data.seismic.length))
-        .attr("y2", yScale($scope.twt));
+
+      if(!$scope.vDHor){
+        $scope.vDHor = $scope.vDPlot.svg.append("line")
+          .style("stroke", "green")
+          .style("opacity", 1.5)
+          .attr("x1", xScale(0))
+          .attr("y1", yScale($scope.twt))
+          .attr("x2", xScale(data.seismic.length))
+          .attr("y2", yScale($scope.twt));
+      } else {
+        $scope.vDHor
+          .transition()
+          .duration(500)
+          .attr("y1", yScale($scope.twt))
+          .attr("y2", yScale($scope.twt));
+      }
 
       // Draw Offset Horizon
       xScale = $scope.oGPlot.xScale;
       yScale = $scope.oGPlot.yScale;
-      $scope.oGHor = $scope.oGPlot.svg.append("line")
-        .style("stroke", "green")
-        .style("opacity", 1.5)
-        .attr("x1", xScale(0))
-        .attr("y1", yScale($scope.twt))
-        .attr("x2", xScale(data.offset_gather.length))
-        .attr("y2", yScale($scope.twt));
+      if(!$scope.oGHor){
+        $scope.oGHor = $scope.oGPlot.svg.append("line")
+          .style("stroke", "green")
+          .style("opacity", 1.5)
+          .attr("x1", xScale(0))
+          .attr("y1", yScale($scope.twt))
+          .attr("x2", xScale(data.offset_gather.length))
+          .attr("y2", yScale($scope.twt));
+      } else {
+        $scope.oGHor
+          .transition()
+          .duration(500)
+          .attr("y1", yScale($scope.twt))
+          .attr("y2", yScale($scope.twt));
+      }
 
       // Draw Wavelet Horizon
       xScale = $scope.wGPlot.xScale;
       yScale = $scope.wGPlot.yScale;
-      $scope.wGHor = $scope.wGPlot.svg.append("line")
-        .style("stroke", "green")
-        .style("opacity", 1.5)
-        .attr("x1", xScale(0))
-        .attr("y1", yScale($scope.twt))
-        .attr("x2", xScale(data.wavelet_gather.length))
-        .attr("y2", yScale($scope.twt));
+      if(!$scope.wGHor){
+        $scope.wGHor = $scope.wGPlot.svg.append("line")
+          .style("stroke", "green")
+          .style("opacity", 1.5)
+          .attr("x1", xScale(0))
+          .attr("y1", yScale($scope.twt))
+          .attr("x2", xScale(data.wavelet_gather.length))
+          .attr("y2", yScale($scope.twt));
+      } else {
+        $scope.wGHor
+          .transition()
+          .duration(500)
+          .attr("y1", yScale($scope.twt))
+          .attr("y2", yScale($scope.twt));
+      }
     };
 
     $scope.makeEarthModelStruct = function(){
