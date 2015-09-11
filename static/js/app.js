@@ -147,6 +147,36 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
         .duration(500)
         .attr("y1", yScale($scope.twt))
         .attr("y2", yScale($scope.twt));
+
+      var aTArr = [];
+      var aTMin = 0;
+      var aTMax = 0;
+      for(var i=0; i < $scope.data.seismic.length; i++){
+        if($scope.data.seismic[i][$scope.twt] < aTMin){
+          aTMin = $scope.data.seismic[i][$scope.twt];
+        }
+        if($scope.data.seismic[i][$scope.twt] > aTMax){
+          aTMax = $scope.data.seismic[i][$scope.twt];
+        }
+        aTArr.push($scope.data.seismic[i][$scope.twt]);
+      }
+      var dom;
+      if(Math.abs(aTMax) > Math.abs(aTMin)){
+        dom = Math.abs(aTMax);
+      } else {
+        dom = Math.abs(aTMin);
+      }
+      console.log(dom);
+      $scope.aTPlot.reDraw(
+        [0, $scope.data.seismic.length], 
+        [-dom, dom], 
+        [0, $scope.data.seismic.length], 
+        [-dom, dom]
+      );
+
+      $scope.aTHor
+        .reDraw(aTArr);
+
     };
     $scope.changeTWTNum = function(){
       $scope.twtStr = String($scope.twt);
@@ -172,6 +202,35 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
         .duration(500)
         .attr("y1", yScale($scope.twt))
         .attr("y2", yScale($scope.twt));
+
+      var aTArr = [];
+      var aTMin = 0;
+      var aTMax = 0;
+      for(var i=0; i < $scope.data.seismic.length; i++){
+        if($scope.data.seismic[i][$scope.twt] < aTMin){
+          aTMin = $scope.data.seismic[i][$scope.twt];
+        }
+        if($scope.data.seismic[i][$scope.twt] > aTMax){
+          aTMax = $scope.data.seismic[i][$scope.twt];
+        }
+        aTArr.push($scope.data.seismic[i][$scope.twt]);
+      }
+      var dom;
+      if(Math.abs(aTMax) > Math.abs(aTMin)){
+        dom = Math.abs(aTMax);
+      } else {
+        dom = Math.abs(aTMin);
+      }
+      console.log(dom);
+      $scope.aTPlot.reDraw(
+        [0, $scope.data.seismic.length], 
+        [-dom, dom], 
+        [0, $scope.data.seismic.length], 
+        [-dom, dom]
+      );
+
+      $scope.aTHor
+        .reDraw(aTArr);
     }
     $scope.changeGainStr = function(){
       $scope.gain = Number($scope.gainStr);
@@ -317,28 +376,54 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       // Amplitude Trace
       width = $('.at_plot').width();
       height = 100;
+
+      var aTArr = [];
+      var aTMin = 0;
+      var aTMax = 0;
+      for(var i=0; i < data.seismic.length; i++){
+        if(data.seismic[i][$scope.twt] < aTMin){
+          aTMin = data.seismic[i][$scope.twt];
+        }
+        if(data.seismic[i][$scope.twt] > aTMax){
+          aTMax = data.seismic[i][$scope.twt];
+        }
+        aTArr.push(data.seismic[i][$scope.twt]);
+      }
+      var dom;
+      if(Math.abs(aTMax) > Math.abs(aTMin)){
+        dom = Math.abs(aTMax);
+      } else {
+        dom = Math.abs(aTMin);
+      }
+
       if(!$scope.aTPlot){
         $scope.aTPlot = g3.plot('.at_plot')
           .setHeight(height)
           .setYTitle("amplitude")
           .setWidth(width - 30)
+          .setYTicks(6)
           .toggleX2Axis(true)
           .toggleY2Axis(true)
           .setXTickFormat("")
           .setY2TickFormat("")
           .setMargin(5,10,40,40)
           .setXDomain([0, data.seismic.length])
-          .setYDomain([0, data.seismic[0].length])
+          .setYDomain([-dom, dom])
           .setX2Domain([0, data.seismic.length])
-          .setY2Domain([0, data.seismic[0].length])
+          .setY2Domain([-dom, dom])
           .draw();
       } else {
         $scope.aTPlot.reDraw(
           [0, data.seismic.length], 
-          [0, data.seismic[0].length], 
+          [-dom, dom], 
           [0, data.seismic.length], 
-          [0, data.seismic[0].length]
+          [-dom, dom]
         );
+      }
+
+      if(!$scope.aTHor){
+        $scope.aTHor = g3.horizon($scope.aTPlot, aTArr)
+          .draw();
       }
 
       // Amplitude Offset Plot

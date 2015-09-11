@@ -63,13 +63,22 @@ g3.horizon = function(plot, data, options){
 
 		this.svg = plot.svg.append('svg:path')
 			.attr('d', lineFunc(data))
-			.attr('stroke', 'blue')
-			.attr('stroke-width', 2)
+			.attr('stroke', 'green')
+			.attr('stroke-width', 1)
 			.attr('fill', 'none');
 		return this;
 	}
 
 	horizon.reDraw = function(){
+		var lineFunc = d3.svg.line()
+			.x(function (d, i) {
+				return plot.xScale(i + horizon.xMin);
+			})
+			.y(function (d) {
+				return plot.yScale(d);
+			})
+			.interpolate(this.interpolate);
+		
 		this.svg.transition()
 			.duration(500)
 			.attr('d', lineFunc(data));
