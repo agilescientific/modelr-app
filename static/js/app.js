@@ -146,16 +146,19 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
     	var height = 300;
     	var width = $('.vd_plot').width();
 
+      // Variable Density Plot
       if(!$scope.vDPlot){
       	$scope.vDPlot = g3.plot('.vd_plot')
           .setHeight(height)
           .setXTitle("spatial cross-section")
+          .setYTitle("time [ms]")
           .setWidth(width - 30)
           .toggleX2Axis(true)
           .toggleY2Axis(true)
           .setXTickFormat("")
+          .setX2TickFormat("")
           .setY2TickFormat("")
-          .setMargin(30,10,20,30)
+          .setMargin(30,10,5,40)
          	.setXDomain([0, data.seismic.length])
           .setYDomain([0, data.seismic[0].length])
           .setX2Domain([0, data.seismic.length])
@@ -187,6 +190,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
         $scope.seis.reDraw(data.seismic);
       }
 
+      // Offset Gather Plot
     	width = $('.og_plot').width();
       if(!$scope.oGPlot){
       	$scope.oGPlot = g3.plot('.og_plot')
@@ -197,9 +201,10 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setX2Ticks(6)
       		.toggleY2Axis(true)
       		.setXTickFormat("")
+          .setX2TickFormat("")
       		.setYTickFormat("")
       		.setY2TickFormat("")
-      		.setMargin(30,10,20,20)
+      		.setMargin(30,10,5,30)
       		.setXDomain([0, data.offset_gather.length])
       		.setYDomain([0, data.offset_gather[0].length])
       		.setX2Domain([0, data.offset_gather.length])
@@ -223,6 +228,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           $scope.og.reDraw(data.offset_gather);
         }
 
+      // Wavelet Gather Plot
       var width = $('.wg_plot').width();
       if(!$scope.wGPlot){
       	$scope.wGPlot = g3.plot('.wg_plot')
@@ -233,9 +239,10 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setX2Ticks(6)
       		.toggleY2Axis(true)
       		.setXTickFormat("")
+          .setX2TickFormat("")
       		.setYTickFormat("")
       		.setY2TickFormat("")
-      		.setMargin(30,10,20,10)
+      		.setMargin(30,10,5,20)
       		.setXDomain([0, data.wavelet_gather.length])
       		.setYDomain([0, data.wavelet_gather[0].length])
       		.setX2Domain([0, data.wavelet_gather.length])
@@ -258,6 +265,88 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       } else {
         $scope.wg.reDraw(data.wavelet_gather);
       }
+
+      // Amplitude Trace
+      var width = $('.at_plot').width();
+      var height = 100;
+      if(!$scope.aTPlot){
+        $scope.aTPlot = g3.plot('.at_plot')
+          .setHeight(height)
+          .setYTitle("amplitude")
+          .setWidth(width - 30)
+          .toggleX2Axis(true)
+          .toggleY2Axis(true)
+          .setXTickFormat("")
+          .setY2TickFormat("")
+          .setMargin(5,10,40,40)
+          .setXDomain([0, data.seismic.length])
+          .setYDomain([0, data.seismic[0].length])
+          .setX2Domain([0, data.seismic.length])
+          .setY2Domain([0, data.seismic[0].length])
+          .draw();
+        } else {
+          $scope.aTPlot.reDraw(
+            [0, data.seismic.length], 
+            [0, data.seismic[0].length], 
+            [0, data.seismic.length], 
+            [0, data.seismic[0].length]
+          );
+        }
+
+      // Amplitude Offset Plot
+      width = $('.ao_plot').width();
+      if(!$scope.aOPlot){
+        $scope.aOPlot = g3.plot('.ao_plot')
+          .setHeight(height)
+          .setWidth(width - 30)
+          .toggleX2Axis(true)
+          .setX2Ticks(6)
+          .toggleY2Axis(true)
+          .setXTickFormat("")
+          .setYTickFormat("")
+          .setY2TickFormat("")
+          .setMargin(5,10,40,30)
+          .setXDomain([0, data.offset_gather.length])
+          .setYDomain([0, data.offset_gather[0].length])
+          .setX2Domain([0, data.offset_gather.length])
+          .setY2Domain([0, data.offset_gather[0].length])
+          .draw();
+        } else {
+          $scope.aOPlot.reDraw(
+            [0, data.offset_gather.length], 
+            [0, data.offset_gather[0].length], 
+            [0, data.offset_gather.length], 
+            [0, data.offset_gather[0].length]
+          );
+        }
+
+      // Amplitude Freq Plot
+      var width = $('.af_plot').width();
+      if(!$scope.aFPlot){
+        $scope.aFPlot = g3.plot('.af_plot')
+          .setHeight(height)
+          .setWidth(width - 30)
+          .toggleX2Axis(true)
+          .setX2Ticks(6)
+          .toggleY2Axis(true)
+          .setXTickFormat("")
+          .setYTickFormat("")
+          .setY2TickFormat("")
+          .setMargin(5,10,40,20)
+          .setXDomain([0, data.wavelet_gather.length])
+          .setYDomain([0, data.wavelet_gather[0].length])
+          .setX2Domain([0, data.wavelet_gather.length])
+          .setY2Domain([0, data.wavelet_gather[0].length])
+          .draw();
+        } else {
+          $scope.aFPlot.reDraw(
+            [0, data.wavelet_gather.length], 
+            [0, data.wavelet_gather[0].length], 
+            [0, data.wavelet_gather.length], 
+            [0, data.wavelet_gather[0].length]
+          );
+        }
+
     };
 
     $scope.makeEarthModelStruct = function(){

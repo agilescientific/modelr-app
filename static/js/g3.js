@@ -1,4 +1,4 @@
-/*! g3 - v0.0.1 - 2015-09-10 - justinkheisler */
+/*! g3 - v0.0.1 - 2015-09-11 - justinkheisler */
 'use strict';
 ;(function (window) {
 
@@ -435,14 +435,14 @@ g3.plot = function(elem, options){
 		if(this.yTitle){
 
       if(this.yTickFormat === ""){
-        var margin = -10;
+        var yMargin = -10;
       } else {
-        var margin = -20;
+        var yMargin = -40;
       }
+
 			this.svg.append("text")
 				.attr("transform", "rotate(-90)")
-				//.attr("x", -15)
-				.attr("y", margin)
+				.attr("y", yMargin)
 				.attr("dy", "1em")
 				.style("text-anchor", "end")
 				.text(this.yTitle);
