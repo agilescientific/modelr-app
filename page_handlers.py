@@ -247,12 +247,17 @@ class DashboardHandler(ModelrPageRequest):
         for s in scenarios.fetch(100):
             logging.info((s.name, s))
 
-        default_image_models = ImageModel.all()\
-                                         .filter("user =", admin_id).fetch(100)
-
-        user_image_models = ImageModel.all().filter("user =", user.user_id)\
-                                            .fetch(100)
-
+        if user.user_id != admin_id:
+            default_image_models = ImageModel.all()\
+                                             .filter("user =", admin_id)\
+                                             .fetch(100)
+        else:
+            default_image_models = []
+        
+        user_image_models = ImageModel.all()\
+                                      .filter("user =", user.user_id)\
+                                      .fetch(100)
+        
         default_models = [{"image": images.get_serving_url(i.image,
                                                            size=200,
                                                            crop=False,
@@ -1310,14 +1315,19 @@ class ModelHandler(ModelrPageRequest):
 
         # Get the default models
         admin_user = User.all().filter("user_id =", admin_id).get()
-        default_models = ImageModel.all().ancestor(admin_user).fetch(100)
-
+        if user.user_id != admin_id:
+            default_models = ImageModel.all().ancestor(admin_user).fetch(100)
+        else:
+            default_models = []
+            
+        all_models = set(models + default_models)
+        
         # Create the serving urls
         imgs = [images.get_serving_url(i.image, size=1400,
                                        crop=False, secure_url=True)
-                for i in (models + default_models)]
+                for i in all_models]
 
-        keys = [str(i.key()) for i in (models + default_models)]
+        keys = [str(i.key()) for i in all_models]
 
         # Read in each image to get the RGB colours
         readers = [blobstore.BlobReader(i.image.key())

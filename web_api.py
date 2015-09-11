@@ -343,6 +343,15 @@ class ImageModelHandler(dbAPI):
         pass
         # models = ImageModel.all().ancestor(user).fetch(1000)
 
+    @authenticate
+    def delete(self, user):
+
+        image_key = self.request.get("image_key")
+
+        image = ImageModel.get(image_key)
+        
+        deep_delete(image)
+        
 
 class FluidHandler(dbAPI):
 
