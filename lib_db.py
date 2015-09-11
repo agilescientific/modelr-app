@@ -44,16 +44,23 @@ def get_all_items_user(entity, user):
     """
     Returns entities that the user has permissions for
     """
-    admin_items = entity.all().filter("user =", admin_id).fetch(1000)
-    user_items = entity.all().filter("user =", user.user_id).fetch(1000)
+
+    default_items = entity.all().order("name")\
+                                .order("-date")\
+                                .filter("user =", admin_id)\
+                                .filter("user !=", user.user_id)\
+                                .fetch(1000)
+
+    user_items = entity.all().order("name")\
+                             .filter("user =", user.user_id).fetch(1000)
 
     group_items = [item for item in
-                   (entity.all()
+                   (entity.all().order("name")
                     .ancestor(ModelrParent.all().get())
                     .filter("group =", group)
                     for group in user.group)]
 
-    uniq_items = set(admin_items + user_items + group_items)
+    uniq_items = set(default_items + user_items + group_items)
     return list(uniq_items)
 
 
@@ -184,10 +191,19 @@ class EarthModel(Item):
     @property
     def json(self):
 
+        output = {}
         data = json.loads(self.data)
-        data["image"] = images.get_serving_url(self.parent().image)
-        return data
+        
+        output["image"] = images.get_serving_url(
+            self.parent().image)
+        
+        output["name"] = self.name
 
+        output["mapping"] = [{"colour": key, "rock": item}
+                             for key, item in data["mapping"].iteritems()]
+
+        return output
+    
     def to_json(self):
         return self.data
 
@@ -212,7 +228,7 @@ class Rock(Item):
     """
 
     name = db.StringProperty(multiline=False)
-    
+
     vp = db.FloatProperty()
     vs = db.FloatProperty()
     rho = db.FloatProperty()
@@ -300,7 +316,6 @@ class Rock(Item):
 class Fluid(Item):
 
     name = db.StringProperty(multiline=False)
-    
 
     rho_hc = db.FloatProperty(default=250.)
     rho_w = db.FloatProperty(default=1040.)
