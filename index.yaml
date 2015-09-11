@@ -120,6 +120,11 @@ indexes:
   - name: name
 
 - kind: Fluid
+  properties:
+  - name: user
+  - name: user
+
+- kind: Fluid
   ancestor: yes
   properties:
   - name: name

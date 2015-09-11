@@ -21,7 +21,7 @@ function createAxis(scale, innerTickSize, orient, ticks){
 		.orient(orient)
 		.ticks(ticks);
 }
-g3.horizon = function(options, plot, data){
+g3.horizon = function(plot, data, options){
 
 	if(!data || !$.isArray(data)){ return 'Param: data is missing, An array required'; }
 	if(!plot){ return 'Param: plot is missing, a div to attach the svg is required'; }
@@ -57,7 +57,7 @@ g3.horizon = function(options, plot, data){
 				return plot.xScale(i + horizon.xMin);
 			})
 			.y(function (d) {
-				return plot.yScale(d / 1000);
+				return plot.yScale(d);
 			})
 			.interpolate(this.interpolate);
 
@@ -744,6 +744,9 @@ wiggle.reDraw = function(data, xDomain, yDomain){
     if(this.skip === 0 || k % this.skip === 0){
 			var mean = d3.mean(data[k]); 
       
+      plot.svg.select("#clip-below" + k)
+        .remove()
+
       // Line function
       var line = d3.svg.area()
         .interpolate('basis')
@@ -772,13 +775,13 @@ wiggle.reDraw = function(data, xDomain, yDomain){
 
       plot.svg.datum(data[k]);
 
-      plot.svg.select("#clip-below" + k)
-        .transition()
-        .duration(500)
-        .attr('d', area.x0(plot.width))
-        .ease('linear');
+      plot.svg.append('clipPath')
+        .attr('id', 'clip-below' + k)
+        .append('path')
+        .attr('d', area.x0(plot.width));
         
       plot.svg.select("#area-below" + k)
+        .attr('clip-path', 'url(#clip-below' + k)
         .transition()
         .duration(500)
         .attr('d', area.x0(function (d, i){ 
