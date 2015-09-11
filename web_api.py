@@ -81,7 +81,7 @@ class dbAPI(ModelrAPI):
             else:
                 output = json.dumps(items.json)
 
-        if ("all" in self.request.arguments()):
+        elif ("all" in self.request.arguments()):
             output = json.dumps([item.json
                                  for item in
                                  get_all_items_user(self.entity, user)])
