@@ -63,7 +63,7 @@ def get_all_items_user(entity, user):
                     for group in user.group)]
 
     # flatten the lists
-    return list(itertools.chain(*(default_items + user_items + group_items)))
+    return (default_items + user_items + list(itertools.chain(*group_items)))
 
 
 def check_read_permission(entity, user):
@@ -312,7 +312,7 @@ class Rock(Item):
         """
         Calculates and returns the bulk modulus
         """
-        return (self.M - (4.0/3)*self.mu)
+        return (self.M - (4.0 / 3) * self.mu)
 
 
 class Fluid(Item):
