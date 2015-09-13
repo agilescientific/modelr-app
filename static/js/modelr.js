@@ -329,6 +329,7 @@ Scenario.prototype.qs = function() {
     var args = this.arguments;
     query_str = '?script=' + this.script;
 
+    if(this.info){
     for (arg in this.info.arguments) {
 	argname=this.info.arguments[arg]['name'];
         if (this.info.arguments[arg]['type'] == 
@@ -359,6 +360,7 @@ Scenario.prototype.qs = function() {
 	    query_str += '&' + argname + '=' + encodeURIComponent(value);
         };
         
+    };
     };
 
     return query_str;
