@@ -496,19 +496,19 @@ $(document).ready(function () {
   seen by the user -->
   <datalist id="list_of_rocks">
     {% for rock in rocks %}
-    <option data-value="{{rock.key()}}"
+    <option data-value="{{rock.key().id()}}"
 	    data-name="{{rock.name}}">{{rock.name}}</option>
     {% endfor %}
   {% for group in group_rocks %}
   {% for rock in group.rocks %}
-  <option data-value="{{rock.key()}}"
+  <option data-value="{{rock.key().id()}}"
 	  data-name="{{rock.name}}">
     {{rock.name}}
   </option>
   {% endfor %}
   {% endfor %}
     {% for rock in default_rocks %}
-    <option data-value="{{rock.key()}}"
+    <option data-value="{{rock.key().id()}}"
 	    data-name="{{rock.name}}">{{rock.name}}</option>
     {% endfor %}
   </datalist>

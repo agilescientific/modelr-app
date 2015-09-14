@@ -36,6 +36,7 @@ def get_items_by_name_and_user(entity, name, user):
 
     out_items = [item for item in items if
                  item.user == user.user_id or
+                 item.user == admin_id or
                  item.group in user.group]
 
     return out_items
