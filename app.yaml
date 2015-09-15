@@ -1,5 +1,5 @@
-application: modelr-testing
-version: "1"
+application: agilemodelr
+version: "dev"
 runtime: python27
 api_version: 1
 threadsafe: yes
