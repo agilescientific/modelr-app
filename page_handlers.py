@@ -38,7 +38,7 @@ from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
 from lib_db import Rock, Scenario, User, ModelrParent, Group, \
     GroupRequest, ActivityLog, ModelServedCount,\
     ImageModel, Issue, EarthModel, Server, Fluid,\
-    get_all_items_user, get_by_id, get_items_by_name_user
+    get_all_items_user, get_by_id, get_items_by_name_and_user
 
 from lib_util import RGBToString
 
@@ -1471,6 +1471,8 @@ class FixModels(ModelrPageRequest):
 
         models = EarthModel.all().fetch(1000)
 
+        parent = ModelrParent.all().get()
+        failed = []
         for m in models:
 
             data = json.loads(m.data)
@@ -1480,13 +1482,36 @@ class FixModels(ModelrPageRequest):
 
                 rock_name = rock_data["name"]
 
+                rock_name = rock_name.replace(' Dolomite', ' dolomite')
+                rock_name = rock_name.replace('Gas Sand (', 'Gas sand (')
+                rock_name = rock_name.replace('Hard Shale', 'Hard shale')
+                rock_name = rock_name.replace('10% Porosity dolomite',
+                                              '10% porosity dolomite')
+                rock_name = rock_name.replace('Tight Limestone',
+                                              'Tight limestone')
+                rock_name = rock_name.replace('Bitumen Sand',
+                                              'Bitumen sand')
+                rock_name = rock_name.replace('Brine Sand',
+                                              'Brine sand')
                 try:
-                    rock = get_items_by_name_user(Rock, rock_name, m.user)
-                    cmap[color]["key"] = rock.key()
-                except:
-                    pass
+                    user = User.all().ancestor(parent)\
+                                     .filter("user_id =", m.user).get()
+                    if user:
+                        rock = Rock.all().filter("name", rock_name).get()
+                        if rock:
+                            cmap[color]["key"] = str(rock.key().id())
+                        else:
+                            failed.append((m.name, m.user))
+                            raise Exception(rock_name)
+                    else:
+                        m.delete()
+                        
+                except Exception as e:
+                    print e, m.user
+                    # failed.append(m.name)
             m.data = json.dumps(data).encode()
-        self.response.write("OK")
+            m.put()
+        self.response.write(json.dumps(failed))
 
 
 class FixDefaultRocks(ModelrPageRequest):
