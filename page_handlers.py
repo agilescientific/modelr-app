@@ -38,7 +38,7 @@ from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
 from lib_db import Rock, Scenario, User, ModelrParent, Group, \
     GroupRequest, ActivityLog, ModelServedCount,\
     ImageModel, Issue, EarthModel, Server, Fluid,\
-    get_all_items_user
+    get_all_items_user, get_by_id, get_items_by_name_user
 
 from lib_util import RGBToString
 
@@ -1441,8 +1441,6 @@ class FixScenarios(ModelrPageRequest):
 
         scenarios = Scenario.all().fetch(1000)
 
-        rocks = Rock.all().ancestor(ModelrParent.all().get())
-
         for s in scenarios:
 
             data = json.loads(s.data)
@@ -1453,11 +1451,10 @@ class FixScenarios(ModelrPageRequest):
 
                 if key.startswith("Rock"):
 
-                    rocks = Rock.all().ancestor(
-                        ModelrParent.all().get())
-                    rock = rocks.filter("name =", value).get()
+                    rock = get_by_id(Rock, value, s.user)
+
                     if(rock):
-                        args[key] = rock.key().id()
+                        args[key] = rock.key()
                     else:
                         args[key] = None
 
@@ -1484,11 +1481,8 @@ class FixModels(ModelrPageRequest):
                 rock_name = rock_data["name"]
 
                 try:
-                    rocks = Rock.all().ancestor(
-                        ModelrParent.all().get())
-
-                    rock = rocks.filter("name =", rock_name).get()
-                    cmap[color]["key"] = rock.key().id()
+                    rock = get_items_by_name_user(Rock, rock_name, m.user)
+                    cmap[color]["key"] = rock.key()
                 except:
                     pass
             m.data = json.dumps(data).encode()
