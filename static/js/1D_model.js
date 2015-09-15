@@ -71,7 +71,7 @@ setup1D = function(rock_div,
     $.ajax(server + "/data.json?type=seismic&script=fluid_sub.py",
        {type: "GET", data: {payload: JSON.stringify({seismic: seismic, earth_model: earth_model})},
         success: function success(data){
-
+          console.log(data);
             var width = 120;
             //Create VP Plot
             vpPlot = g3.plot('.plot')
