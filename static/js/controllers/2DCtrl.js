@@ -1,70 +1,56 @@
 
 app.controller('2DCtrl', function ($scope, $http, $alert) {
 
-    function getMax(a, b){
-      if(Math.abs(a) > Math.abs(b)){
-        return Math.abs(a);
-      } else {
-        return Math.abs(b);
-      }
+    $scope.setDefaults = function(){
+      $scope.zDomain = ['depth','time'];
+      $scope.zAxisDomain = 'depth';
+      $scope.zRange = 1000;
+
+      // TODO update from mouse over on seismic plots
+      $scope.trace = 10;
+      $scope.traceStr = "10";
+      $scope.offset = 3;
+      $scope.offsetStr = "3";
+      $scope.twt = 30;
+      $scope.twtStr = "30";
+
+      // TODO get from app before so we get the prod url
+      $scope.server = 'http://localhost:8081';
+
+      $scope.theta = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30];
+      $scope.popover = {
+       title: "Models",
+       content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
+      };
     };
 
+    $scope.fetchImageModels = function(){
+      $http.get('/image_model?all')
+        .then(function(response) {
+          $scope.images = response.data;
 
-    function getCrossSection(data, slice){
-      var arr = [];
-      console.log(data.length);
-      for(var i = 0; i < data.length; i++){
-        arr.push(data[i][slice]);
-      }
-      return arr;
-    }
+          if($scope.images.length > 0){
+            $scope.curImage = $scope.images[0];
 
-    $scope.zDomain = ['depth','time'];
-    $scope.zAxisDomain = 'depth';
-    $scope.zRange = 1000;
-
-    // TODO update from mouse over on seismic plots
-    $scope.trace = 10;
-    $scope.traceStr = "10";
-    $scope.offset = 3;
-    $scope.offsetStr = "3";
-    $scope.twt = 30;
-    $scope.twtStr = "30";
-
-    // TODO get from app before so we get the prod url
-    $scope.server = 'http://localhost:8081';
-
-    $scope.theta = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30];
-    $scope.popover = {
-	   title: "Models",
-	   content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
-    };
-
-    $http.get('/image_model?all')
-      .then(function(response) {
-        $scope.images = response.data;
-
-        if($scope.images.length > 0){
-          $scope.curImage = $scope.images[0];
-
-	  	    for(var i = 0; i < $scope.images.length; i++){
-	  	      $scope.images[i].rocks = [];
-	  	      for(var j = 0; j < $scope.images[i].colours.length; j++){
-	  	        var rand = $scope.rocks[Math.floor(Math.random() * $scope.rocks.length)];
-              $scope.images[i].rocks.push(rand);
-	  	      }
-	  	    }
+  	  	    for(var i = 0; i < $scope.images.length; i++){
+  	  	      $scope.images[i].rocks = [];
+  	  	      for(var j = 0; j < $scope.images[i].colours.length; j++){
+  	  	        var rand = $scope.rocks[Math.floor(Math.random() * $scope.rocks.length)];
+                $scope.images[i].rocks.push(rand);
+  	  	      }
+  	  	    }
+          }
         }
-      }
-    );
+      );
+    };
     
-    // populate the rocks
-    $http.get('/rock?all').
+    $scope.fetchRocks = function(){
+      $http.get('/rock?all').
         then(function(response) {
-            // this callback will be called asynchronously
-            // when the response is available
             $scope.rocks = response.data;
-        });
+        }
+      );
+    };
 
     $scope.loadSaved = function(){
       var array = $.map($scope.savedEarthModel.mapping, function(value, index) {
@@ -75,22 +61,13 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       for(var i = 0; i < array.length; i++){
         $scope.curImage.rocks.push(array[i]);
       }
-    }
-
-    $scope.changeRock = function(){
-      //console.log($scope.curImage);
     };
     
     $scope.slideClick = function(slider){
     	$scope.curImage = $scope.images[slider.element.currentSlide];
     };
 
-    $scope.updatePlot = function(){
-        $scope.update_data();
-    };
-
     $scope.update_data = function(){
-
       var earth_model = $scope.makeEarthModelStruct();
         
       var seismic = {
@@ -107,13 +84,14 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
 
       var payload = JSON.stringify(data);
         $http.get($scope.server + '/data.json?type=seismic&script=convolution_model.py&payload=' + payload)
-        .then(function(response){
-          $scope.plot(response.data);
-          $scope.maxTrace = String(response.data.seismic.length);
-          $scope.maxTWT = String(response.data.seismic[0].length);
-          $scope.maxOffset = String(response.data.offset_gather.length);
-          $scope.updateClicked = true;
-        });
+          .then(function(response){
+            $scope.plot(response.data);
+            $scope.maxTrace = String(response.data.seismic.length - 1);
+            $scope.maxTWT = String(response.data.seismic[0].length - 1);
+            $scope.maxOffset = String(response.data.offset_gather.length - 1);
+            $scope.updateClicked = true;
+          }
+        );
     };
 
     $scope.changeTraceStr = function(){
@@ -123,8 +101,8 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
         .setXMin($scope.trace)
         .reDraw(
           arr, 
-          [1, $scope.data.seismic.length], 
-          [1, $scope.data.seismic[0].length]
+          [0, $scope.data.seismic.length - 1], 
+          [0, $scope.data.seismic[0].length - 1]
         );
       var aTArr = getCrossSection($scope.data.seismic, $scope.twt);
 
@@ -139,54 +117,27 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
         .setXMin($scope.trace)
         .reDraw(
           arr, 
-          [1, $scope.data.seismic.length], 
-          [1, $scope.data.seismic[0].length]
+          [0, $scope.data.seismic.length - 1], 
+          [0, $scope.data.seismic[0].length - 1]
         );
       
       var aTArr = getCrossSection($scope.data.seismic, $scope.twt);
 
       $scope.aTHor
         .reDraw(aTArr);
-    }
+    };
+
     $scope.changeTWTStr = function(){
-
       $scope.twt = Number($scope.twtStr);
-
-      // Update Horizons
-      var yScale = $scope.vDPlot.yScale;
-      $scope.vDHor
-        .transition()
-        .duration(5)
-        .attr("y1", yScale($scope.twt))
-        .attr("y2", yScale($scope.twt));
-
-      yScale = $scope.oGPlot.yScale;
-      $scope.oGHor
-        .transition()
-        .duration(5)
-        .attr("y1", yScale($scope.twt))
-        .attr("y2", yScale($scope.twt));
-
-      yScale = $scope.wGPlot.yScale;
-      $scope.wGHor
-        .transition()
-        .duration(5)
-        .attr("y1", yScale($scope.twt))
-        .attr("y2", yScale($scope.twt));
-
-      var aTArr = getCrossSection($scope.data.seismic, $scope.twt);
-      $scope.aTHor
-        .reDraw(aTArr);
-
-      var aOArr = getCrossSection($scope.data.offset_gather, $scope.twt);
-      console.log(aOArr);
-      $scope.aOHor
-        .reDraw(aOArr);
+      $scope.updateTWT();
     };
 
     $scope.changeTWTNum = function(){
       $scope.twtStr = String($scope.twt);
+      $scope.updateTWT();
+    };
 
+    $scope.updateTWT = function(){
       // Update Horizons
       var yScale = $scope.vDPlot.yScale;
       $scope.vDHor
@@ -216,7 +167,8 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       var aOArr = getCrossSection($scope.data.offset_gather, $scope.twt);
       $scope.aOHor
         .reDraw(aOArr);
-    }
+    };
+
     $scope.changeGainStr = function(){
       $scope.gain = Number($scope.gainStr);
     };
@@ -230,8 +182,8 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
         .setXMin($scope.offset)
         .reDraw(
           arr, 
-          [1, $scope.data.offset_gather.length], 
-          [1, $scope.data.offset_gather[0].length]
+          [0, $scope.data.offset_gather.length - 1], 
+          [0, $scope.data.offset_gather[0].length - 1]
         );
     };
     $scope.changeOffsetNum = function(){
@@ -240,27 +192,16 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
         .setXMin($scope.offset)
         .reDraw(
           arr, 
-          [1, $scope.data.offset_gather.length], 
-          [1, $scope.data.offset_gather[0].length]
+          [0, $scope.data.offset_gather.length - 1], 
+          [0, $scope.data.offset_gather[0].length - 1]
         );
     }
 
-    $scope.plot = function(data){
-
-      $scope.data = data;
-    	var max;
-    	if(Math.abs(data.max) > Math.abs(data.min)){
-        max = Math.abs(data.max);
-    	} else {
-        max = Math.abs(data.min);
-    	}
-
-    	var height = 300;
-    	var width = $('.vd_plot').width();
-
+    $scope.plotSeismic = function(data, height, max){
       // Variable Density Plot
+      var width = $('.vd_plot').width();
       if(!$scope.vDPlot){
-      	$scope.vDPlot = g3.plot('.vd_plot')
+        $scope.vDPlot = g3.plot('.vd_plot')
           .setHeight(height)
           .setXTitle("spatial cross-section")
           .setYTitle("time [ms]")
@@ -272,113 +213,118 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setY2TickFormat("")
           .setDuration(5)
           .setMargin(30,10,5,40)
-         	.setXDomain([1, data.seismic.length])
-          .setYDomain([1, data.seismic[0].length])
-          .setX2Domain([1, data.seismic.length])
-          .setY2Domain([1, data.seismic[0].length])
+          .setXDomain([0, data.seismic.length - 1])
+          .setYDomain([0, data.seismic[0].length - 1])
+          .setX2Domain([0, data.seismic.length - 1])
+          .setY2Domain([0, data.seismic[0].length - 1])
           .draw();
       } else {
         $scope.vDPlot.reDraw(
-          [1, data.seismic.length], 
-          [1, data.seismic[0].length], 
-          [1, data.seismic.length], 
-          [1, data.seismic[0].length]
+          [0, data.seismic.length - 1], 
+          [0, data.seismic[0].length - 1], 
+          [0, data.seismic.length - 1], 
+          [0, data.seismic[0].length - 1]
         );
       }
 
       // Draw Seismic Image
       if(!$scope.seis){
-      	$scope.seis = g3.seismic($scope.vDPlot, data.seismic)
-  	    	.setMax(max)
-  	    	.setGain(1)
-  	    	.draw();
+        $scope.seis = g3.seismic($scope.vDPlot, data.seismic)
+          .setMax(max)
+          .setGain(1)
+          .draw();
       } else {
         $scope.seis.reDraw(data.seismic);
       }
+    };
 
+    $scope.plotOffset = function(data, height, max){
       // Offset Gather Plot
-    	width = $('.og_plot').width();
+      var width = $('.og_plot').width();
       if(!$scope.oGPlot){
-      	$scope.oGPlot = g3.plot('.og_plot')
-      		.setHeight(height)
-      		.setWidth(width - 30)
+        $scope.oGPlot = g3.plot('.og_plot')
+          .setHeight(height)
+          .setWidth(width - 30)
           .setDuration(5)
           .setXTitle("angle gather")
-      		.toggleX2Axis(true)
+          .toggleX2Axis(true)
           .setX2Ticks(6)
-      		.toggleY2Axis(true)
-      		.setXTickFormat("")
+          .toggleY2Axis(true)
+          .setXTickFormat("")
           .setX2TickFormat("")
-      		.setYTickFormat("")
-      		.setY2TickFormat("")
-      		.setMargin(30,10,5,30)
-      		.setXDomain([1, data.offset_gather.length])
-      		.setYDomain([1, data.offset_gather[0].length])
-      		.setX2Domain([1, data.offset_gather.length])
-      		.setY2Domain([1, data.offset_gather[0].length])
-      		.draw();
+          .setYTickFormat("")
+          .setY2TickFormat("")
+          .setMargin(30,10,5,30)
+          .setXDomain([0, data.offset_gather.length - 1])
+          .setYDomain([0, data.offset_gather[0].length - 1])
+          .setX2Domain([0, data.offset_gather.length - 1])
+          .setY2Domain([0, data.offset_gather[0].length - 1])
+          .draw();
       } else {
         $scope.oGPlot.reDraw(
-          [1, data.offset_gather.length], 
-          [1, data.offset_gather[0].length], 
-          [1, data.offset_gather.length], 
-          [1, data.offset_gather[0].length]
+          [0, data.offset_gather.length - 1], 
+          [0, data.offset_gather[0].length - 1], 
+          [0, data.offset_gather.length - 1], 
+          [0, data.offset_gather[0].length - 1]
         );
       }
 
       // Draw Offset Gather Image
       if(!$scope.og){
-      	$scope.og = g3.seismic($scope.oGPlot, data.offset_gather)
-      		.setMax(max)
-      		.setGain(100)
-      		.draw();
+        $scope.og = g3.seismic($scope.oGPlot, data.offset_gather)
+          .setMax(max)
+          .setGain(100)
+          .draw();
       } else {
         $scope.og.reDraw(data.offset_gather);
       }
+    };
 
+    $scope.plotWavelet = function(data, height, max){
       // Wavelet Gather Plot
-      width = $('.wg_plot').width();
+      var width = $('.wg_plot').width();
       if(!$scope.wGPlot){
-      	$scope.wGPlot = g3.plot('.wg_plot')
-      		.setHeight(height)
-      		.setWidth(width - 30)
+        $scope.wGPlot = g3.plot('.wg_plot')
+          .setHeight(height)
+          .setWidth(width - 30)
           .setDuration(5)
           .setXTitle("wavelet gather")
-      		.toggleX2Axis(true)
+          .toggleX2Axis(true)
           .setX2Ticks(6)
-      		.toggleY2Axis(true)
-      		.setXTickFormat("")
+          .toggleY2Axis(true)
+          .setXTickFormat("")
           .setX2TickFormat("")
-      		.setYTickFormat("")
-      		.setY2TickFormat("")
-      		.setMargin(30,10,5,20)
-      		.setXDomain([1, data.wavelet_gather.length])
-      		.setYDomain([1, data.wavelet_gather[0].length])
-      		.setX2Domain([1, data.wavelet_gather.length])
-      		.setY2Domain([1, data.wavelet_gather[0].length])
-      		.draw();
+          .setYTickFormat("")
+          .setY2TickFormat("")
+          .setMargin(30,10,5,20)
+          .setXDomain([0, data.wavelet_gather.length - 1])
+          .setYDomain([0, data.wavelet_gather[0].length - 1])
+          .setX2Domain([0, data.wavelet_gather.length - 1])
+          .setY2Domain([0, data.wavelet_gather[0].length - 1])
+          .draw();
       } else {
         $scope.wGPlot.reDraw(
-          [1, data.wavelet_gather.length], 
-          [1, data.wavelet_gather[0].length], 
-          [1, data.wavelet_gather.length], 
-          [1, data.wavelet_gather[0].length]
+          [0, data.wavelet_gather.length - 1], 
+          [0, data.wavelet_gather[0].length - 1], 
+          [0, data.wavelet_gather.length - 1], 
+          [0, data.wavelet_gather[0].length - 1]
         );
       }
 
       // Draw Wavelet Gather Image
       if(!$scope.wg){
-      	$scope.wg = g3.seismic($scope.wGPlot, data.wavelet_gather)
-      		.setMax(max)
-      		.setGain(100)
-      		.draw();
+        $scope.wg = g3.seismic($scope.wGPlot, data.wavelet_gather)
+          .setMax(max)
+          .setGain(100)
+          .draw();
       } else {
         $scope.wg.reDraw(data.wavelet_gather);
       }
+    };
 
+    $scope.plotAmplitudeTrace = function(data, height){
       // Amplitude Trace
-      width = $('.at_plot').width();
-      height = 100;
+      var width = $('.at_plot').width();
 
       if(!$scope.aTPlot){
         $scope.aTPlot = g3.plot('.at_plot')
@@ -392,9 +338,9 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setXTickFormat("")
           .setY2TickFormat("")
           .setMargin(5,10,40,40)
-          .setXDomain([1, $scope.data.seismic.length])
+          .setXDomain([0, $scope.data.seismic.length - 1])
           .setYDomain([1, -1])
-          .setX2Domain([1, $scope.data.seismic.length])
+          .setX2Domain([0, $scope.data.seismic.length - 1])
           .setY2Domain([1, -1])
           .draw();
       }
@@ -407,9 +353,11 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       } else {
         $scope.aTHor.reDraw(aTArr);
       }
+    };
 
+    $scope.plotAmplitudeOffset = function(data, height){
       // Amplitude Offset Plot
-      width = $('.ao_plot').width();
+      var width = $('.ao_plot').width();
       if(!$scope.aOPlot){
         $scope.aOPlot = g3.plot('.ao_plot')
           .setHeight(height)
@@ -422,16 +370,14 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setYTickFormat("")
           .setY2TickFormat("")
           .setMargin(5,10,40,30)
-          .setXDomain([1, data.offset_gather.length])
+          .setXDomain([0, data.offset_gather.length - 1])
           .setYDomain([1, -1])
-          .setX2Domain([1, data.offset_gather.length])
+          .setX2Domain([0, data.offset_gather.length - 1])
           .setY2Domain([1, -1])
           .draw();
       } 
 
-      //console.log($scope.data.offset_gather);
       var aOArr = getCrossSection($scope.data.offset_gather, $scope.twt);
-      //console.log(aOArr);
       if(!$scope.aOHor){
         $scope.aOHor = g3.horizon($scope.aOPlot, aOArr)
           .setDuration(5)
@@ -439,9 +385,11 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       } else {
         $scope.aOHor.reDraw(aOArr);
       }
+    };
 
+    $scope.plotAmplitudeFreq = function(data, height){
       // Amplitude Freq Plot
-      width = $('.af_plot').width();
+      var width = $('.af_plot').width();
       if(!$scope.aFPlot){
         $scope.aFPlot = g3.plot('.af_plot')
           .setHeight(height)
@@ -454,13 +402,15 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setYTickFormat("")
           .setY2TickFormat("")
           .setMargin(5,10,40,20)
-          .setXDomain([1, data.wavelet_gather.length])
-          .setYDomain([1, data.wavelet_gather[0].length])
-          .setX2Domain([1, data.wavelet_gather.length])
-          .setY2Domain([1, data.wavelet_gather[0].length])
+          .setXDomain([0, data.wavelet_gather.length - 1])
+          .setYDomain([0, data.wavelet_gather[0].length - 1])
+          .setX2Domain([0, data.wavelet_gather.length - 1])
+          .setY2Domain([0, data.wavelet_gather[0].length - 1])
           .draw();
       }
+    };
 
+    $scope.plotVDWiggle = function(data){
       // Draw VD Plot Wiggle
       var arr = [data.seismic[$scope.trace]];
       if(!$scope.vDLog){
@@ -474,22 +424,22 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setXMin($scope.trace)
           .reDraw(
             arr, 
-            [1, data.seismic.length], 
-            [1, data.seismic[0].length]
+            [0, data.seismic.length - 1], 
+            [0, data.seismic[0].length - 1]
           );
       }
+    };
 
-      // Draw VD Horizon
+    $scope.plotVDHorizon = function(data){
       var xScale = $scope.vDPlot.xScale;
       var yScale = $scope.vDPlot.yScale;
-
       if(!$scope.vDHor){
         $scope.vDHor = $scope.vDPlot.svg.append("line")
           .style("stroke", "green")
           .style("opacity", 1.5)
-          .attr("x1", xScale(1))
+          .attr("x1", xScale(0))
           .attr("y1", yScale($scope.twt))
-          .attr("x2", xScale(data.seismic.length))
+          .attr("x2", xScale(data.seismic.length - 1))
           .attr("y2", yScale($scope.twt));
       } else {
         $scope.vDHor
@@ -498,7 +448,9 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .attr("y1", yScale($scope.twt))
           .attr("y2", yScale($scope.twt));
       }
+    };
 
+    $scope.plotOffsetWiggle = function(data){
       // Draw Offset Wiggle
       var arr = [data.offset_gather[$scope.offset]];
       if(!$scope.oGLog){
@@ -512,21 +464,23 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setXMin($scope.offset)
           .reDraw(
             arr, 
-            [1, data.offset_gather.length], 
-            [1, data.offset_gather[0].length]
+            [0, data.offset_gather.length - 1], 
+            [0, data.offset_gather[0].length - 1]
           );
       }
+    };
 
+    $scope.plotOffsetHorizon = function(data){
       // Draw Offset Horizon
-      xScale = $scope.oGPlot.xScale;
-      yScale = $scope.oGPlot.yScale;
+      var xScale = $scope.oGPlot.xScale;
+      var yScale = $scope.oGPlot.yScale;
       if(!$scope.oGHor){
         $scope.oGHor = $scope.oGPlot.svg.append("line")
           .style("stroke", "green")
           .style("opacity", 1.5)
-          .attr("x1", xScale(1))
+          .attr("x1", xScale(0))
           .attr("y1", yScale($scope.twt))
-          .attr("x2", xScale(data.offset_gather.length))
+          .attr("x2", xScale(data.offset_gather.length - 1))
           .attr("y2", yScale($scope.twt));
       } else {
         $scope.oGHor
@@ -535,17 +489,19 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .attr("y1", yScale($scope.twt))
           .attr("y2", yScale($scope.twt));
       }
+    };
 
+    $scope.plotWaveletHorizon = function(data){
       // Draw Wavelet Horizon
-      xScale = $scope.wGPlot.xScale;
-      yScale = $scope.wGPlot.yScale;
+      var xScale = $scope.wGPlot.xScale;
+      var yScale = $scope.wGPlot.yScale;
       if(!$scope.wGHor){
         $scope.wGHor = $scope.wGPlot.svg.append("line")
           .style("stroke", "green")
           .style("opacity", 1.5)
-          .attr("x1", xScale(1))
+          .attr("x1", xScale(0))
           .attr("y1", yScale($scope.twt))
-          .attr("x2", xScale(data.wavelet_gather.length))
+          .attr("x2", xScale(data.wavelet_gather.length - 1))
           .attr("y2", yScale($scope.twt));
       } else {
         $scope.wGHor
@@ -554,6 +510,26 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .attr("y1", yScale($scope.twt))
           .attr("y2", yScale($scope.twt));
       }
+    };
+
+    $scope.plot = function(data){
+
+      $scope.data = data;
+    	var height = 300;
+      var max = getMax(data.max, data.min);
+      $scope.plotSeismic(data, height, max);
+      $scope.plotOffset(data, height, max);
+      $scope.plotWavelet(data, height, max);
+
+      height = 100;
+      $scope.plotAmplitudeTrace(data, height);
+      $scope.plotAmplitudeOffset(data, height);
+      $scope.plotAmplitudeFreq(data, height);
+      $scope.plotVDWiggle(data);
+      $scope.plotOffsetWiggle(data);
+      $scope.plotVDHorizon(data);
+      $scope.plotOffsetHorizon(data);
+      $scope.plotWaveletHorizon(data);
     };
 
     $scope.makeEarthModelStruct = function(){
@@ -595,4 +571,8 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           $scope.earthModelName = "";
       });
     };
+
+    $scope.setDefaults();
+    $scope.fetchImageModels();
+    $scope.fetchRocks();
 });

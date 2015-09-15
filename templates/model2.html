@@ -105,7 +105,7 @@
 				  </div>
 				</div>
 				<div class="col-xs-6 remove-padding">
-				  <button type="button" ng-click="updatePlot()" class="btn btn-primary col-xs-12">Update Plot</button>
+				  <button type="button" ng-click="update_data()" class="btn btn-primary col-xs-12">Update Plot</button>
 				</div>
 			</div>
 		</div>
@@ -141,45 +141,45 @@
 				      <div class="col-xs-4 col-md-5 remove-padding">
 								<div class="input-group">
 								  <span class="input-group-addon" id="basic-addon1">Trace</span>
-								  <input type="number" min="1" max="{[maxTrace]}" ng-change="changeTraceNum()" ng-model="trace" class="form-control"/>
+								  <input type="number" min="0" max="{[maxTrace]}" ng-change="changeTraceNum()" ng-model="trace" class="form-control"/>
 								</div>
 				      </div>
 				      <div class="col-xs-7 col-md-6 col-xs-offset-1 remove-padding">
 								<div>
-								  <input class="form-control" ng-mouseup="update_data()" ng-change="changeTraceStr()" ng-model="traceStr" min="1" max="{[maxTrace]}" type="range"/>
+								  <input class="form-control" ng-mouseup="update_data()" ng-change="changeTraceStr()" ng-model="traceStr" min="0" max="{[maxTrace]}" type="range"/>
 								</div>
 				      </div>
 				      <div class="col-xs-4 col-md-5 remove-padding">
 								<div class="input-group">
 								  <span class="input-group-addon" id="basic-addon1">TWT</span>
-								  <input type="number" min="1" max="{[maxTWT]}" ng-change="changeTWTNum()" ng-model="twt" class="form-control"/>
+								  <input type="number" min="0" max="{[maxTWT]}" ng-change="changeTWTNum()" ng-model="twt" class="form-control"/>
 								</div>
 				      </div>
 				      <div class="col-xs-7 col-md-6 col-xs-offset-1 remove-padding">
 								<div>
-								  <input class="form-control" min="1" max="{[maxTWT]}" ng-model="twtStr" ng-change="changeTWTStr()" type="range"/>
+								  <input class="form-control" min="0" max="{[maxTWT]}" ng-model="twtStr" ng-change="changeTWTStr()" type="range"/>
 								</div>
 				      </div>
 				      <div class="col-xs-4 col-md-5 remove-padding">
 								<div class="input-group">
 								  <span class="input-group-addon" id="basic-addon1">Gain</span>
-								  <input type="number" min="1" max="{[maxGain]}" ng-change="changeGainNum()" ng-model="gain" class="form-control"/>
+								  <input type="number" min="0" max="{[maxGain]}" ng-change="changeGainNum()" ng-model="gain" class="form-control"/>
 								</div>
 				      </div>
 				      <div class="col-xs-7 col-md-6 col-xs-offset-1 remove-padding">
 								<div>
-								  <input class="form-control" min="1" max="{[maxGain]}" ng-model="gainStr" ng-change="changeGainStr()" type="range"/>
+								  <input class="form-control" min="0" max="{[maxGain]}" ng-model="gainStr" ng-change="changeGainStr()" type="range"/>
 								</div>
 				      </div>
 				      <div class="col-xs-4 col-md-5 remove-padding">
 								<div class="input-group">
 								  <span class="input-group-addon" id="basic-addon1">Offset</span>
-								  <input type="number" min="1" max="{[maxOffset]}" ng-change="changeOffsetNum()" ng-model="offset" class="form-control"/>
+								  <input type="number" min="0" max="{[maxOffset]}" ng-change="changeOffsetNum()" ng-model="offset" class="form-control"/>
 								</div>
 				      </div>
 				      <div class="col-xs-7 col-md-6 col-xs-offset-1 remove-padding">
 								<div>
-								  <input class="form-control" ng-mouseup="update_data()" min="1" max="{[maxOffset]}" ng-model="offsetStr" ng-change="changeOffsetStr()" type="range"/>
+								  <input class="form-control" ng-mouseup="update_data()" min="0" max="{[maxOffset]}" ng-model="offsetStr" ng-change="changeOffsetStr()" type="range"/>
 								</div>
 				      </div>
 				    </div>
