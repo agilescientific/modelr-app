@@ -9,10 +9,11 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       }
     };
 
+
     function getCrossSection(data, slice){
       var arr = [];
       console.log(data.length);
-      for(var i=0; i < data.length; i++){
+      for(var i = 0; i < data.length; i++){
         arr.push(data[i][slice]);
       }
       return arr;
