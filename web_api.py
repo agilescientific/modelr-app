@@ -65,9 +65,14 @@ def get_items_by_name_and_user(entity, name, user):
     
     items = entity.all().filter("name =", name).fetch(1000)
 
+    if user is None:
+        user_id = -1
+    else:
+        user_id = user.user_id
+        
     out_items = [item for item in items
-                 if item.user == user.user_id or
-                 item.user == admin_id or
+                 if item.user == admin_id or
+                 item.user == user_id or
                  item.group in user.group]
 
     return out_items
