@@ -11,6 +11,10 @@
   top:4px;
 }
 
+input {
+  text-align: end;
+}
+
 .alert-success {
   width:50%;
   height: 60px;

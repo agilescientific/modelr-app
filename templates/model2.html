@@ -138,53 +138,97 @@
 				  </div>
 				  <div class="panel-body">
 				    <div class="col-xs-12 remove-padding">
-				      <div class="col-xs-4 col-md-5 remove-padding">
+				      <div class="col-xs-3 col-md-6 remove-padding">
 								<div class="input-group">
 								  <span class="input-group-addon" id="basic-addon1">Trace</span>
-								  <input type="number" min="0" max="{[maxTrace]}" ng-change="changeTraceNum()" ng-model="trace" class="form-control"/>
+								  <input type="number" ng-model="trace" class="form-control" readonly/>
 								</div>
 				      </div>
-				      <div class="col-xs-7 col-md-6 col-xs-offset-1 remove-padding">
+				      <div class="col-xs-8 col-md-5 col-xs-offset-1 remove-padding">
 								<div>
 								  <input class="form-control" ng-mouseup="update_data()" ng-change="changeTraceStr()" ng-model="traceStr" min="0" max="{[maxTrace]}" type="range"/>
 								</div>
 				      </div>
-				      <div class="col-xs-4 col-md-5 remove-padding">
+				      <div class="col-xs-3 col-md-6 remove-padding">
 								<div class="input-group">
 								  <span class="input-group-addon" id="basic-addon1">TWT</span>
-								  <input type="number" min="0" max="{[maxTWT]}" ng-change="changeTWTNum()" ng-model="twt" class="form-control"/>
+								  <input type="number" ng-model="twt" class="form-control" readonly/>
 								</div>
 				      </div>
-				      <div class="col-xs-7 col-md-6 col-xs-offset-1 remove-padding">
+				      <div class="col-xs-8 col-md-5 col-xs-offset-1 remove-padding">
 								<div>
 								  <input class="form-control" min="0" max="{[maxTWT]}" ng-model="twtStr" ng-change="changeTWTStr()" type="range"/>
 								</div>
 				      </div>
-				      <div class="col-xs-4 col-md-5 remove-padding">
+				      <div class="col-xs-3 col-md-6 remove-padding">
 								<div class="input-group">
 								  <span class="input-group-addon" id="basic-addon1">Gain</span>
-								  <input type="number" min="0" max="{[maxGain]}" ng-change="changeGainNum()" ng-model="gain" class="form-control"/>
+								  <input type="number" ng-model="gain" class="form-control" readonly/>
 								</div>
 				      </div>
-				      <div class="col-xs-7 col-md-6 col-xs-offset-1 remove-padding">
+				      <div class="col-xs-8 col-md-5 col-xs-offset-1 remove-padding">
 								<div>
-								  <input class="form-control" min="0" max="{[maxGain]}" ng-model="gainStr" ng-change="changeGainStr()" type="range"/>
+								  <input class="form-control" min="0" max="10" step="0.1" ng-model="gainStr" ng-change="changeGainStr()" ng-mouseup="update_data()" type="range"/>
 								</div>
 				      </div>
-				      <div class="col-xs-4 col-md-5 remove-padding">
+				      <div class="col-xs-3 col-md-6 remove-padding">
 								<div class="input-group">
 								  <span class="input-group-addon" id="basic-addon1">Offset</span>
-								  <input type="number" min="0" max="{[maxOffset]}" ng-change="changeOffsetNum()" ng-model="offset" class="form-control"/>
+								  <input type="number" ng-model="offset" class="form-control" readonly/>
 								</div>
 				      </div>
-				      <div class="col-xs-7 col-md-6 col-xs-offset-1 remove-padding">
+				      <div class="col-xs-8 col-md-5 col-xs-offset-1 remove-padding">
 								<div>
 								  <input class="form-control" ng-mouseup="update_data()" min="0" max="{[maxOffset]}" ng-model="offsetStr" ng-change="changeOffsetStr()" type="range"/>
 								</div>
 				      </div>
 				    </div>
 				  </div>
-				</div>    
+				</div>
+				<div class="panel panel-default">
+				  <div class="panel-heading">
+				    <h3 class="panel-title">
+				      Convolution model with synthetic wavelets
+				    </h3>
+				  </div>
+				  <div class="panel-body">
+				    <div class="col-xs-12 remove-padding">
+				      <div class="col-xs-3 col-md-6 remove-padding">
+								<div class="input-group">
+								  <span class="input-group-addon" id="basic-addon1">Freq</span>
+								  <input type="number" min="0" max="{[maxTrace]}" ng-change="changeTraceNum()" ng-model="trace" class="form-control"/>
+								</div>
+				      </div>
+				      <div class="col-xs-8 col-md-5 col-xs-offset-1 remove-padding">
+								<div>
+								  <input class="form-control" ng-mouseup="update_data()" ng-change="changeTraceStr()" ng-model="traceStr" min="0" max="{[maxTrace]}" type="range"/>
+								</div>
+				      </div>
+				      <div class="col-xs-3 col-md-6 remove-padding">
+								<div class="input-group">
+								  <span class="input-group-addon" id="basic-addon1">Phase</span>
+								  <input type="number" min="0" max="{[maxTWT]}" ng-change="changeTWTNum()" ng-model="twt" class="form-control"/>
+								</div>
+				      </div>
+				      <div class="col-xs-8 col-md-5 col-xs-offset-1 remove-padding">
+								<div>
+								  <input class="form-control" min="0" max="{[maxTWT]}" ng-model="twtStr" ng-change="changeTWTStr()" type="range"/>
+								</div>
+				      </div>
+				      <div class="col-xs-3 col-md-6 remove-padding">
+								<div class="input-group">
+								  <span class="input-group-addon" id="basic-addon1">Noise</span>
+								  <input type="number" min="0" max="{[maxGain]}" ng-change="changeGainNum()" ng-model="gain" class="form-control"/>
+								</div>
+				      </div>
+				      <div class="col-xs-8 col-md-5 col-xs-offset-1 remove-padding">
+								<div>
+								  <input class="form-control" min="0" max="{[maxGain]}" ng-model="gainStr" ng-change="changeGainStr()" type="range"/>
+								</div>
+				      </div>
+				    </div>
+				  </div>
+				</div>        
       </div>
     </div>
   </div>

@@ -13,6 +13,9 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       $scope.offsetStr = "3";
       $scope.twt = 30;
       $scope.twtStr = "30";
+      $scope.gain = 1;
+      $scope.gainStr = "1";
+      $scope.maxGain = "10";
 
       // TODO get from app before so we get the prod url
       $scope.server = 'http://localhost:8081';
@@ -110,30 +113,8 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
         .reDraw(aTArr);
     };
 
-    $scope.changeTraceNum = function(){
-      $scope.traceStr = String($scope.trace);
-      var arr = [$scope.data.seismic[$scope.trace]];
-      $scope.vDLog
-        .setXMin($scope.trace)
-        .reDraw(
-          arr, 
-          [0, $scope.data.seismic.length - 1], 
-          [0, $scope.data.seismic[0].length - 1]
-        );
-      
-      var aTArr = getCrossSection($scope.data.seismic, $scope.twt);
-
-      $scope.aTHor
-        .reDraw(aTArr);
-    };
-
     $scope.changeTWTStr = function(){
       $scope.twt = Number($scope.twtStr);
-      $scope.updateTWT();
-    };
-
-    $scope.changeTWTNum = function(){
-      $scope.twtStr = String($scope.twt);
       $scope.updateTWT();
     };
 
@@ -162,19 +143,20 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
 
       var aTArr = getCrossSection($scope.data.seismic, $scope.twt);
       $scope.aTHor
+        .setGain($scope.gain)
         .reDraw(aTArr);
 
       var aOArr = getCrossSection($scope.data.offset_gather, $scope.twt);
       $scope.aOHor
+        .setGain($scope.gain)
         .reDraw(aOArr);
     };
 
     $scope.changeGainStr = function(){
       $scope.gain = Number($scope.gainStr);
+      $scope.updateTWT();
     };
-    $scope.changeGainNum = function(){
-      $scope.gainStr = String($scope.gain);
-    }
+
     $scope.changeOffsetStr = function(){
       $scope.offset = Number($scope.offsetStr);
       var arr = [$scope.data.offset_gather[$scope.offset]];
@@ -186,16 +168,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           [0, $scope.data.offset_gather[0].length - 1]
         );
     };
-    $scope.changeOffsetNum = function(){
-      $scope.offsetStr = String($scope.offset);
-      $scope.oGLog
-        .setXMin($scope.offset)
-        .reDraw(
-          arr, 
-          [0, $scope.data.offset_gather.length - 1], 
-          [0, $scope.data.offset_gather[0].length - 1]
-        );
-    }
 
     $scope.plotSeismic = function(data, height, max){
       // Variable Density Plot
@@ -231,10 +203,12 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       if(!$scope.seis){
         $scope.seis = g3.seismic($scope.vDPlot, data.seismic)
           .setMax(max)
-          .setGain(1)
+          .setGain($scope.gain)
           .draw();
       } else {
-        $scope.seis.reDraw(data.seismic);
+        $scope.seis
+          .setGain($scope.gain)
+          .reDraw(data.seismic);
       }
     };
 
@@ -273,10 +247,12 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       if(!$scope.og){
         $scope.og = g3.seismic($scope.oGPlot, data.offset_gather)
           .setMax(max)
-          .setGain(100)
+          .setGain($scope.gain)
           .draw();
       } else {
-        $scope.og.reDraw(data.offset_gather);
+        $scope.og
+          .setGain($scope.gain)
+          .reDraw(data.offset_gather);
       }
     };
 
@@ -315,10 +291,12 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       if(!$scope.wg){
         $scope.wg = g3.seismic($scope.wGPlot, data.wavelet_gather)
           .setMax(max)
-          .setGain(100)
+          .setGain($scope.gain)
           .draw();
       } else {
-        $scope.wg.reDraw(data.wavelet_gather);
+        $scope.wg
+          .setGain($scope.gain)
+          .reDraw(data.wavelet_gather);
       }
     };
 
@@ -416,7 +394,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       if(!$scope.vDLog){
         $scope.vDLog = g3.wiggle($scope.vDPlot, arr)
           .setXMin($scope.trace)
-          .setGain(100)
+          .setGain(80)
           .setDuration(5)
           .draw();
       } else {
@@ -456,7 +434,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       if(!$scope.oGLog){
         $scope.oGLog = g3.wiggle($scope.oGPlot, arr)
           .setXMin($scope.offset)
-          .setGain(8)
+          .setGain(5)
           .setDuration(5)
           .draw();
       } else {
