@@ -10,12 +10,14 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       $scope.trace = 10;
       $scope.traceStr = "10";
       $scope.offset = 3;
+      $scope.offsetNum = 9;
       $scope.offsetStr = "3";
       $scope.twt = 30;
       $scope.twtStr = "30";
       $scope.gain = 1;
       $scope.gainStr = "1";
       $scope.maxGain = "10";
+      $scope.wavelet = 45;
 
       // TODO get from app before so we get the prod url
       $scope.server = 'http://localhost:8081';
@@ -74,7 +76,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       var earth_model = $scope.makeEarthModelStruct();
         
       var seismic = {
-        frequency: 20.0,
+        frequency: 20.48,
         wavelet: "ricker", dt: 0.001
       };
 
@@ -107,10 +109,10 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           [0, $scope.data.seismic.length - 1], 
           [0, $scope.data.seismic[0].length - 1]
         );
-      var aTArr = getCrossSection($scope.data.seismic, $scope.twt);
+      // var aTArr = getCrossSection($scope.data.seismic, $scope.twt);
 
-      $scope.aTHor
-        .reDraw(aTArr);
+      // $scope.aTHor
+      //   .reDraw(aTArr);
     };
 
     $scope.changeTWTStr = function(){
@@ -150,6 +152,11 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       $scope.aOHor
         .setGain($scope.gain)
         .reDraw(aOArr);
+
+      var aFArr = getCrossSection($scope.data.wavelet_gather, $scope.twt);
+      $scope.aFHor
+        .setGain($scope.gain)
+        .reDraw(aFArr);
     };
 
     $scope.changeGainStr = function(){
@@ -159,6 +166,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
 
     $scope.changeOffsetStr = function(){
       $scope.offset = Number($scope.offsetStr);
+      $scope.offsetNum = $scope.offset * 3;
       var arr = [$scope.data.offset_gather[$scope.offset]];
       $scope.oGLog
         .setXMin($scope.offset)
@@ -223,6 +231,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setXTitle("angle gather")
           .toggleX2Axis(true)
           .setX2Ticks(6)
+          .setXTicks(6)
           .toggleY2Axis(true)
           .setXTickFormat("")
           .setX2TickFormat("")
@@ -267,6 +276,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setXTitle("wavelet gather")
           .toggleX2Axis(true)
           .setX2Ticks(6)
+          .setXTicks(6)
           .toggleY2Axis(true)
           .setXTickFormat("")
           .setX2TickFormat("")
@@ -311,6 +321,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setDuration(5)
           .setWidth(width - 30)
           .setYTicks(6)
+          .setY2Ticks(6)
           .toggleX2Axis(true)
           .toggleY2Axis(true)
           .setXTickFormat("")
@@ -343,7 +354,11 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setDuration(5)
           .toggleX2Axis(true)
           .setX2Ticks(6)
+          .setXTicks(6)
           .toggleY2Axis(true)
+          .setX2TickFormat(function(d, i){
+            return $scope.data.theta[d];
+          })
           .setXTickFormat("")
           .setYTickFormat("")
           .setY2TickFormat("")
@@ -366,6 +381,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
     };
 
     $scope.plotAmplitudeFreq = function(data, height){
+
       // Amplitude Freq Plot
       var width = $('.af_plot').width();
       if(!$scope.aFPlot){
@@ -375,16 +391,30 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setDuration(5)
           .toggleX2Axis(true)
           .setX2Ticks(6)
+          .setXTicks(6)
           .toggleY2Axis(true)
+            .setX2TickFormat(function(d, i){
+            return Math.floor($scope.data.f[d]);
+          })
           .setXTickFormat("")
           .setYTickFormat("")
           .setY2TickFormat("")
           .setMargin(5,10,40,20)
-          .setXDomain([0, data.wavelet_gather.length - 1])
-          .setYDomain([0, data.wavelet_gather[0].length - 1])
-          .setX2Domain([0, data.wavelet_gather.length - 1])
-          .setY2Domain([0, data.wavelet_gather[0].length - 1])
+          .setXDomain([0, $scope.data.wavelet_gather.length - 1])
+          .setYDomain([1, -1])
+          .setX2Domain([0, $scope.data.wavelet_gather.length - 1])
+          .setY2Domain([1, -1])
           .draw();
+      }
+
+      var aFArr = getCrossSection($scope.data.wavelet_gather, $scope.twt);
+
+      if(!$scope.aFHor){
+        $scope.aFHor = g3.horizon($scope.aFPlot, aFArr)
+          .setDuration(5)
+          .draw();
+      } else {
+        $scope.aFHor.reDraw(aFArr);
       }
     };
 
@@ -448,6 +478,26 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       }
     };
 
+    $scope.plotWaveletWiggle = function(data){
+      // Draw Offset Wiggle
+      var arr = [data.wavelet_gather[$scope.wavelet]];
+      if(!$scope.wGLog){
+        $scope.wGLog = g3.wiggle($scope.wGPlot, arr)
+          .setXMin($scope.wavelet)
+          .setGain(22.7)
+          .setDuration(5)
+          .draw();
+      } else {
+        $scope.wGLog
+          .setXMin($scope.wavelet)
+          .reDraw(
+            arr, 
+            [0, data.wavelet_gather.length - 1], 
+            [0, data.wavelet_gather[0].length - 1]
+          );
+      }
+    };
+
     $scope.plotOffsetHorizon = function(data){
       // Draw Offset Horizon
       var xScale = $scope.oGPlot.xScale;
@@ -491,7 +541,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
     };
 
     $scope.plot = function(data){
-
+      console.log(data);
       $scope.data = data;
     	var height = 300;
       var max = getMax(data.max, data.min);
@@ -505,6 +555,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       $scope.plotAmplitudeFreq(data, height);
       $scope.plotVDWiggle(data);
       $scope.plotOffsetWiggle(data);
+      $scope.plotWaveletWiggle(data, height);
       $scope.plotVDHorizon(data);
       $scope.plotOffsetHorizon(data);
       $scope.plotWaveletHorizon(data);

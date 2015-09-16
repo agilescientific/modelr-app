@@ -173,8 +173,8 @@
 				      </div>
 				      <div class="col-xs-3 col-md-6 remove-padding">
 								<div class="input-group">
-								  <span class="input-group-addon" id="basic-addon1">Offset</span>
-								  <input type="number" ng-model="offset" class="form-control" readonly/>
+								  <span class="input-group-addon" id="basic-addon1">Angle</span>
+								  <input type="number" ng-model="offsetNum" class="form-control" readonly/>
 								</div>
 				      </div>
 				      <div class="col-xs-8 col-md-5 col-xs-offset-1 remove-padding">
@@ -196,12 +196,12 @@
 				      <div class="col-xs-3 col-md-6 remove-padding">
 								<div class="input-group">
 								  <span class="input-group-addon" id="basic-addon1">Freq</span>
-								  <input type="number" min="0" max="{[maxTrace]}" ng-change="changeTraceNum()" ng-model="trace" class="form-control"/>
+								  <input type="number" ng-model="frequency" class="form-control"/>
 								</div>
 				      </div>
 				      <div class="col-xs-8 col-md-5 col-xs-offset-1 remove-padding">
 								<div>
-								  <input class="form-control" ng-mouseup="update_data()" ng-change="changeTraceStr()" ng-model="traceStr" min="0" max="{[maxTrace]}" type="range"/>
+								  <input class="form-control" ng-mouseup="update_data()" ng-change="changeFrequencyStr()" ng-model="frequencyStr" min="0" max="50" type="range"/>
 								</div>
 				      </div>
 				      <div class="col-xs-3 col-md-6 remove-padding">
