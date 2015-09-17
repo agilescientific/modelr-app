@@ -564,10 +564,9 @@ g3.seismic = function(plot, data, options){
   seismic.draw = function(){
 
   	if(!seismic.color){
-  		console.log(this.max);
 		seismic.color = d3.scale.linear()
-			.domain([-this.max, 0, this.max])
-			.range(['#FF0000', '#FFF', '#0000FF']);
+		.domain([-this.max, 0, this.max])
+		.range(['#FF0000', '#FFF', '#0000FF']);
 	}
 
   	var elem = $(plot.elem);

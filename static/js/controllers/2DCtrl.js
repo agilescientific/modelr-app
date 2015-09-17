@@ -18,6 +18,8 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
     $scope.gainStr = "1";
     $scope.maxGain = "10";
     $scope.frequency = 20;
+    $scope.phase = 180.0;
+    $scope.snr = 3.0;
     $scope.frequencyNum = 20.72;
     $scope.colorDomain = [-1, 0, 1];
     $scope.colorRange = ['#FF0000', '#FFF', '#0000FF'];
