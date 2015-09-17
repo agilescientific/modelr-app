@@ -29,7 +29,8 @@ from lib_auth import verify, authenticate, send_message
 from lib_db import Rock, Scenario, User, ModelrParent,\
     ActivityLog, ModelServedCount,\
     ImageModel, EarthModel, Fluid, Item, \
-    get_items_by_name_and_user, get_all_items_user, deep_delete
+    get_items_by_name_and_user, get_all_items_user, deep_delete,\
+    get_by_id
 
 from lib_util import posterize
 
@@ -89,6 +90,10 @@ class dbAPI(ModelrAPI):
             item = get_items_by_name_and_user(self.entity, name, user)
             output = json.dumps(item[0].json)
 
+        elif ("id" in self.request.arguments()):
+            item_id = int(self.request.get("id"))
+            item = get_by_id(self.entity, item_id, user)
+            output = json.dumps(item.json)
         else:
             self.error(502)
             

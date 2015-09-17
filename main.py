@@ -55,7 +55,7 @@ if LOCAL is True:
     logging.debug("[*] Debug info activated")
     stripe.verify_ssl_certs = False
 else:
-    server.host = "https://www.modelr.org"
+    server.host = "https://www.modelr.org:8081"
 server.put()
 
 stripe.api_key = stripe_api_key
