@@ -120,6 +120,12 @@
 
       <!-- GRAPHS -->
       <div class="col-xs-12 col-sm-8">
+      	<div style="height: 25px;" class="col-xs-12 remove-padding">
+      		<div ng-repeat="color in colorRange track by $index">
+				    <div data-color="{[color]}" data-id="{[$index]}" class="seismic-color s-color-0 col-xs-2" ng-style="{'background-color': color}">
+				    </div>
+				  </div>
+      	</div>
 				<div class="col-xs-6 vd_plot remove-padding"></div>
 				<div class="col-xs-3 og_plot remove-padding"></div>
 				<div class="col-xs-3 wg_plot remove-padding"></div>

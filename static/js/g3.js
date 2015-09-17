@@ -562,9 +562,13 @@ g3.seismic = function(plot, data, options){
 	seismic.duration = 500;
 
   seismic.draw = function(){
-	seismic.color = d3.scale.linear()
-		.domain([-this.max, 0, this.max])
-		.range(['#FF0000', '#FFF', '#0000FF']);
+
+  	if(!seismic.color){
+  		console.log(this.max);
+		seismic.color = d3.scale.linear()
+			.domain([-this.max, 0, this.max])
+			.range(['#FF0000', '#FFF', '#0000FF']);
+	}
 
   	var elem = $(plot.elem);
     this.canvas = d3.select(plot.elem)
@@ -629,6 +633,11 @@ g3.seismic = function(plot, data, options){
 			}
 		}
 		seismic.context.putImageData(seismic.image, 0, 0);
+		return this;
+	}
+
+	seismic.setColor = function(colorScale){
+		this.color = colorScale;
 		return this;
 	}
 
