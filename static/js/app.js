@@ -26,7 +26,9 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       $scope.gain = 1;
       $scope.gainStr = "1";
       $scope.maxGain = "10";
-      $scope.frequency = 20;
+        $scope.frequency = 20;
+        $scope.phase = 180.0;
+        $scope.snr = 3.0;
       $scope.frequencyNum = 20.72;
 
       // TODO get from app before so we get the prod url
@@ -86,8 +88,11 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       var earth_model = $scope.makeEarthModelStruct();
         
       var seismic = {
-        frequency: $scope.frequency,
-        wavelet: "ricker", dt: 0.001
+          frequency: $scope.frequency,
+          wavelet: "ricker",
+          dt: 0.001,
+          phase: $scope.phase,
+          snr: $scope.snr
       };
 
       var data = {
