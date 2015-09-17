@@ -38,7 +38,8 @@ from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
 from lib_db import Rock, Scenario, User, ModelrParent, Group, \
     GroupRequest, ActivityLog, ModelServedCount,\
     ImageModel, Issue, EarthModel, Server, Fluid,\
-    get_all_items_user, get_by_id, get_items_by_name_and_user
+    get_all_items_user, get_by_id, get_items_by_name_and_user,\
+    clone_entity
 
 from lib_util import RGBToString
 
@@ -1464,6 +1465,86 @@ class FixScenarios(ModelrPageRequest):
 
         self.response.out.write("OK")
 
+class changeDefaultOwners(ModelrPageRequest):
+
+    def get(self):
+
+        rock_ids = [4795149255180288,
+                    5104595609059328,
+                    5255711483232256,
+                    5415948123111424,
+                    5463106864021504,
+                    5749095851360256,
+                    5757031206092800,
+                    5872528916480000,
+                    5921049162022912,
+                    6278871477387264,
+                    6289096049688576,
+                    6455648036323328,
+                    6499542602088448,
+                    6566200494522368]
+
+        for rid in rock_ids:
+            users = User.all().filter("user_id !=", admin_id).fetch(1000)
+
+            for user in users:
+                ems = EarthModel.all().filter("user =", user.user_id).fetch(1000)
+
+                for m in ems:
+
+                    data = json.loads(m.data)
+                    cmap = data["mapping"]
+
+                    for color, rock_data in cmap.iteritems():
+                        if int(str(rock_data["key"])) == rid:
+
+                            rock = get_by_id(Rock, int(rock_data["key"]),
+                                         user)
+                            print m.name, user.user_id
+    
+                            new_rock = Rock.all().filter("name =",rock.name)\
+                                                 .filter("user =", user.user_id).get()
+                            if not new_rock:
+                                new_rock = clone_entity(rock, parent=user)
+                                new_rock.user = user.user_id
+                                new_rock.put()
+                            cmap[color]["key"] = new_rock.key().id()
+                    m.data = json.dumps(data).encode()
+                    m.put()
+
+                scens = Scenario.all().filter("user =",
+                                              user.user_id).fetch(1000)
+                for s in scens:
+                    data = json.loads(s.data)
+
+                    args = data["arguments"]
+
+                    for key, value in args.iteritems():
+
+                        if key.startswith("Rock"):
+
+            
+                            if value == rid:
+                                rock = get_by_id(Rock, value, user)
+                                new_rock = Rock.all().filter("name =",rock.name)\
+                                                     .filter("user =", user.user_id).get()
+                                if not new_rock:
+                                    new_rock = clone_entity(rock, parent=user)
+                                    new_rock.user = user.user_id
+                                    new_rock.put()
+
+                                data["arguments"][key] = new_rock.key().id()
+                    s.data = json.dumps(data).encode()
+                    s.put()
+
+            rock = get_by_id(Rock, rid, User.all().filter("user_id =", admin_id).get())
+            print rid, rock
+            if rock:
+                print 'delete'
+                rock.delete()
+                    
+        
+                                                                    
 
 class FixModels(ModelrPageRequest):
 
@@ -1491,8 +1572,8 @@ class FixModels(ModelrPageRequest):
                                               'Tight limestone')
                 rock_name = rock_name.replace('Bitumen Sand',
                                               'Bitumen sand')
-                rock_name = rock_name.replace('Brine Sand',
-                                              'Brine sand')
+                #rock_name = rock_name.replace('Brine Sand',
+                #                              'Brine sand')
                 try:
                     user = User.all().ancestor(parent)\
                                      .filter("user_id =", m.user).get()
@@ -1512,6 +1593,7 @@ class FixModels(ModelrPageRequest):
             m.data = json.dumps(data).encode()
             m.put()
         self.response.write(json.dumps(failed))
+
 
 
 class FixDefaultRocks(ModelrPageRequest):
