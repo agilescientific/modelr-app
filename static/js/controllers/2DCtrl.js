@@ -17,7 +17,8 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       $scope.gain = 1;
       $scope.gainStr = "1";
       $scope.maxGain = "10";
-      $scope.wavelet = 45;
+      $scope.frequency = 20;
+      $scope.frequencyNum = 20.72;
 
       // TODO get from app before so we get the prod url
       $scope.server = 'http://localhost:8081';
@@ -76,7 +77,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       var earth_model = $scope.makeEarthModelStruct();
         
       var seismic = {
-        frequency: 20.48,
+        frequency: $scope.frequency,
         wavelet: "ricker", dt: 0.001
       };
 
@@ -109,10 +110,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           [0, $scope.data.seismic.length - 1], 
           [0, $scope.data.seismic[0].length - 1]
         );
-      // var aTArr = getCrossSection($scope.data.seismic, $scope.twt);
-
-      // $scope.aTHor
-      //   .reDraw(aTArr);
     };
 
     $scope.changeTWTStr = function(){
@@ -176,6 +173,20 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           [0, $scope.data.offset_gather[0].length - 1]
         );
     };
+
+    $scope.changeFrequencyStr = function(){
+      $scope.frequency = Number($scope.frequencyStr);
+            console.log($scope.frequency);
+      $scope.frequencyNum = $scope.data.f[$scope.frequency];
+      var arr = [$scope.data.wavelet_gather[$scope.frequency]];
+      $scope.wGLog
+        .setXMin($scope.frequency)
+        .reDraw(
+          arr, 
+          [0, $scope.data.wavelet_gather.length - 1], 
+          [0, $scope.data.wavelet_gather[0].length - 1]
+        );
+    }
 
     $scope.plotSeismic = function(data, height, max){
       // Variable Density Plot
@@ -322,6 +333,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setWidth(width - 30)
           .setYTicks(6)
           .setY2Ticks(6)
+          .setX2Title("trace")
           .toggleX2Axis(true)
           .toggleY2Axis(true)
           .setXTickFormat("")
@@ -353,6 +365,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setWidth(width - 30)
           .setDuration(5)
           .toggleX2Axis(true)
+          .setX2Title("\u03B8" + "\u00B0")
           .setX2Ticks(6)
           .setXTicks(6)
           .toggleY2Axis(true)
@@ -389,6 +402,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
           .setHeight(height)
           .setWidth(width - 30)
           .setDuration(5)
+          .setX2Title("centre frequency Hz")
           .toggleX2Axis(true)
           .setX2Ticks(6)
           .setXTicks(6)
@@ -480,16 +494,16 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
 
     $scope.plotWaveletWiggle = function(data){
       // Draw Offset Wiggle
-      var arr = [data.wavelet_gather[$scope.wavelet]];
+      var arr = [data.wavelet_gather[$scope.frequency]];
       if(!$scope.wGLog){
         $scope.wGLog = g3.wiggle($scope.wGPlot, arr)
-          .setXMin($scope.wavelet)
+          .setXMin($scope.frequency)
           .setGain(22.7)
           .setDuration(5)
           .draw();
       } else {
         $scope.wGLog
-          .setXMin($scope.wavelet)
+          .setXMin($scope.frequency)
           .reDraw(
             arr, 
             [0, data.wavelet_gather.length - 1], 

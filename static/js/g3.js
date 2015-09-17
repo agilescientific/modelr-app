@@ -1,4 +1,4 @@
-/*! g3 - v0.0.1 - 2015-09-16 - justinkheisler */
+/*! g3 - v0.0.1 - 2015-09-17 - justinkheisler */
 'use strict';
 ;(function (window) {
 
@@ -76,7 +76,7 @@ g3.horizon = function(plot, data, options){
 		this.svg = plot.svg.append('svg:path')
 			.attr('d', lineFunc(data))
 			.attr('stroke', 'green')
-			.attr('stroke-width', 1)
+			.attr('stroke-width', 1.5)
 			.attr('fill', 'none');
 		return this;
 	}
@@ -396,6 +396,9 @@ g3.plot = function(elem, options){
     	.domain(this.yDomain)
     	.range([0, this.height]);
 
+    var innerWidth = this.width - this.margin.left - this.margin.right,
+    innerHeight = this.height - this.margin.top - this.margin.bottom;
+
 	  // Append svg object to dom element
 	  this.svg = d3.select(elem).append('svg')
 	    .attr('class', 'log_plot')
@@ -443,20 +446,21 @@ g3.plot = function(elem, options){
 		    .call(this.y2Axis);
 	  }
 
-		if(this.xTitle){
+    if(this.xTitle){
       
       if(this.xTickFormat === ""){
         var margin = -10;
       } else {
         var margin = -30;
       }
-			this.svg.append("text")
-					.attr("x", (this.width) / 2)
-					.attr("y", margin)
-					.style("text-anchor", "middle")
-					.text(this.xTitle);
-		}
-		if(this.yTitle){
+      this.svg.append("text")
+          .attr("x", (this.width) / 2)
+          .attr("y", margin)
+          .style("text-anchor", "middle")
+          .style("font-size", 12)
+          .text(this.xTitle);
+    }
+    if(this.yTitle){
 
       if(this.yTickFormat === ""){
         var yMargin = -10;
@@ -464,13 +468,45 @@ g3.plot = function(elem, options){
         var yMargin = -40;
       }
 
-			this.svg.append("text")
-				.attr("transform", "rotate(-90)")
-				.attr("y", yMargin)
-				.attr("dy", "1em")
-				.style("text-anchor", "end")
-				.text(this.yTitle);
-		}
+      this.svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", yMargin)
+        .attr("dy", "1em")
+        .style("text-anchor", "end")
+        .style("font-size", 12)
+        .text(this.yTitle);
+    }
+    if(this.x2Title){
+      
+      if(this.x2TickFormat === ""){
+        var margin = 10;
+      } else {
+        var margin = 30;
+      }
+      this.svg.append("text")
+          .attr("transform", "translate(" + "0," + this.height + ")")
+        .attr("x", (this.width) / 2)
+          .attr("y", margin)
+          .style("text-anchor", "middle")
+          .style("font-size", 12)
+          .text(this.x2Title);
+    }
+    if(this.y2Title){
+
+      if(this.yTickFormat === ""){
+        var yMargin = -10;
+      } else {
+        var yMargin = -40;
+      }
+
+      this.svg.append("text")
+        .attr("transform", "translate(" + "0," + this.height + ")")
+        .attr("y", yMargin)
+        .attr("dy", "1em")
+        .style("text-anchor", "end")
+        .style("font-size", 12)
+        .text(this.y2Title);
+    }
 	  return this;
 	};
 
@@ -730,7 +766,7 @@ g3.wiggle = function(plot, data, options){
           .attr('class', 'line' + k)
           .attr('d', line(data[k]))
           .attr('stroke', 'black')
-          .attr('stroke-width', 0.25)
+          .attr('stroke-width', 0.50)
           .attr('fill', 'none');
 
         plot.svg.datum(data[k]);
@@ -743,7 +779,8 @@ g3.wiggle = function(plot, data, options){
         plot.svg.append('path')
           .attr('id', 'area-below' + k)
           .attr('clip-path', 'url(#clip-below' + wiggle.rand + k)
-          .attr('fill', 'grey')
+          .attr('fill', 'black')
+          .style('opacity', 0.4)
           .attr('d', area.x0(function (d, i){ 
             return plot.xScale(d * wiggle.gain + wiggle.xMin + k * wiggle.sampleRate);
           }));
