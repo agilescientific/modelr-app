@@ -19,24 +19,24 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
     $scope.zRange = 1000;
 
     // TODO update from mouse over on seismic plots
-    $scope.trace = 10;
-    $scope.traceStr = "10";
-    $scope.offset = 3;
-    $scope.offsetNum = 9;
-    $scope.offsetStr = "3";
-    $scope.twt = 30;
-    $scope.twtStr = "30";
+    $scope.trace = 1;
+    $scope.traceStr = "1";
+    $scope.offset = 1;
+    $scope.offsetNum = 3;
+    $scope.offsetStr = "1";
+    $scope.twt = 1;
+    $scope.twtStr = "1";
     $scope.gain = 1;
     $scope.gainStr = "1";
     $scope.maxGain = "10";
     $scope.frequency = 20;
     $scope.phase = 180.0;
     $scope.snr = 3.0;
+    $scope.snrStr = "3.0"
     $scope.frequencyNum = 20.72;
     $scope.colorDomain = [-1, 0, 1];
     $scope.colorRange = ['#FF0000', '#FFF', '#0000FF'];
-    $scope.colorScale = d3.scale.linear().domain($scope.colorDomain).range($scope.colorRange);
-
+    
     // TODO get from app before so we get the prod url
     $scope.server = 'http://localhost:8081';
 
@@ -112,7 +112,10 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
       
     var seismic = {
       frequency: $scope.frequency,
-      wavelet: "ricker", dt: 0.001
+      wavelet: "ricker", 
+      dt: 0.001,
+      phase: $scope.phase,
+      snr: $scope.snr
     };
 
     var data = {
@@ -125,6 +128,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
     var payload = JSON.stringify(data);
       $http.get($scope.server + '/data.json?type=seismic&script=convolution_model.py&payload=' + payload)
         .then(function(response){
+          console.log(response.data);
           $scope.plot(response.data);
           $scope.maxTrace = String(response.data.seismic.length - 1);
           $scope.maxTWT = String(response.data.seismic[0].length - 1);
@@ -210,7 +214,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
 
   $scope.changeFrequencyStr = function(){
     $scope.frequency = Number($scope.frequencyStr);
-          console.log($scope.frequency);
     $scope.frequencyNum = $scope.data.f[$scope.frequency];
     var arr = [$scope.data.wavelet_gather[$scope.frequency]];
     $scope.wGLog
@@ -220,7 +223,15 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
         [0, $scope.data.wavelet_gather.length - 1], 
         [0, $scope.data.wavelet_gather[0].length - 1]
       );
-  }
+  };
+
+  $scope.changePhaseStr = function(){
+    $scope.phase = Number($scope.phaseStr);
+  };
+
+  $scope.changeNoiseStr = function(){
+    $scope.snr = Number($scope.snrStr);
+  };
 
   $scope.plotSeismic = function(data, height, max){
     // Variable Density Plot
@@ -595,10 +606,11 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
   };
 
   $scope.plot = function(data){
-    console.log(data);
     $scope.data = data;
   	var height = 300;
     var max = getMax(data.max, data.min);
+    $scope.colorDomain = [-max, 0, max];
+    $scope.colorScale = d3.scale.linear().domain($scope.colorDomain).range($scope.colorRange);
     $scope.plotSeismic(data, height, max);
     $scope.plotOffset(data, height, max);
     $scope.plotWavelet(data, height, max);
