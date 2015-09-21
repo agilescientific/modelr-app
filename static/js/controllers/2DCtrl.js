@@ -1,5 +1,5 @@
 
-app.controller('2DCtrl', function ($scope, $http, $alert) {
+app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
 
   $scope.setDefaults = function(){
     $scope.zDomain = ['depth','time'];
@@ -23,7 +23,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
     $scope.snr = 3.0;
     $scope.snrStr = "3.0"
     $scope.frequencyNum = 20.72;
-    $scope.colorDomain = [-1, 0, 1];
     $scope.colorRange = ['#FF0000', '#FFF', '#0000FF'];
     
     // TODO get from app before so we get the prod url
@@ -37,21 +36,27 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
   };
 
   $scope.setColorPickers = function(){
-    $( document ).ready(function() {
       for(var i = 0; i < $scope.colorRange.length; i++){
         var colorp = $('.s-color-' + i).colorpicker()
           .on('changeColor.colorpicker', function(event){
-            var index = event.currentTarget.attributes["data-id"].value;
+            var index = event.currentTarget.attributes["data-index"].value;
             $(event.currentTarget).css('background-color', $scope.colorRange[index]);
             $scope.colorRange[index] = event.color.toHex();
-            $scope.colorScale = d3.scale.linear()
-              .domain($scope.colorDomain)
-              .range($scope.colorRange);
-            console.log($scope.colorScale);
+            console.log($scope.colorRange);
         });
       }
-    });
-  }
+  };
+
+  $scope.removeColor = function(index){
+    $scope.colorRange.splice(index, 1);
+    $scope.colorDomain.splice(index, 1);
+  };
+
+  $scope.addColor = function(){
+    $scope.colorRange.push('#FFF');
+    $scope.colorDomain.push(0);
+    $timeout($scope.setColorPickers, 300);
+  };
 
   $scope.fetchImageModels = function(){
     $http.get('/image_model?all')
@@ -440,6 +445,10 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
     }
   };
 
+  $scope.changeColor = function(index){
+    console.log($scope.colorDomain);
+  };
+
   $scope.plotAmplitudeOffset = function(data, height){
     // Amplitude Offset Plot
     var width = $('.ao_plot').width();
@@ -645,15 +654,20 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
 
   $scope.plot = function(data){
     $scope.data = data;
-  	var height = 300;
+  	var height = 450;
     var max = getMax(data.max, data.min);
-    $scope.colorDomain = [-max, 0, max];
+    max = Number(max.toFixed(2));
+
+    if(!$scope.colorDomain){
+      $scope.colorDomain = [-max, 0, max];
+    }
+
     $scope.colorScale = d3.scale.linear().domain($scope.colorDomain).range($scope.colorRange);
     $scope.plotSeismic(data, height, max);
     $scope.plotOffset(data, height, max);
     $scope.plotWavelet(data, height, max);
 
-    height = 100;
+    height = 150;
     $scope.plotAmplitudeTrace(data, height);
     $scope.plotAmplitudeOffset(data, height);
     $scope.plotAmplitudeFreq(data, height);
@@ -713,5 +727,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert) {
   $scope.setDefaults();
   $scope.fetchImageModels();
   $scope.fetchRocks();
-  $scope.setColorPickers();
+  $( document ).ready(function(){
+    $scope.setColorPickers();
+  });
 });
