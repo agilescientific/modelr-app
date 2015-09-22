@@ -117,7 +117,9 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
   };
 
   $scope.update_data = function(){
+    $('#loader').show();
     var earth_model = $scope.makeEarthModelStruct();
+    $("html, body").scrollTop($("#plot_header").offset().top);
       
     var seismic = {
       frequency: $scope.frequency,
@@ -137,12 +139,12 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     var payload = JSON.stringify(data);
       $http.get($scope.server + '/data.json?type=seismic&script=convolution_model.py&payload=' + payload)
         .then(function(response){
-          console.log(response.data);
           $scope.plot(response.data);
           $scope.maxTrace = String(response.data.seismic.length - 1);
           $scope.maxTWT = String(response.data.seismic[0].length - 1);
           $scope.maxOffset = String(response.data.offset_gather.length - 1);
           $scope.updateClicked = true;
+          $('#loader').hide();
         }
       );
   };
