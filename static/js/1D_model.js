@@ -56,16 +56,16 @@ setup1D = function(rock_div,
     
     var earth_model = rock_core.intervals();
 
-    // var vpPlot = undefined
-    // tPlot = undefined,
-    // rhoPlot = undefined,
-    // vPPlot = undefined,
-    // zPPlot = undefined,
-    // vpLog = undefined,
-    // vsLog = undefined,
-    // rhoLog = undefined,
-    // zPLog = undefined,
-    // synthLog = undefined;
+    var vpPlot = undefined
+    tPlot = undefined,
+    rhoPlot = undefined,
+    vPPlot = undefined,
+    zPPlot = undefined,
+    vpLog = undefined,
+    vsLog = undefined,
+    rhoLog = undefined,
+    zPLog = undefined,
+    synthLog = undefined;
     var vpPlot, tPlot, rhoPlot, vPPlot, VPPlot, vpLog, vsLog, rhoLog, zPLog, SynthLog;
 
     $.ajax(server + "/data.json?type=seismic&script=fluid_sub.py",
@@ -219,8 +219,6 @@ setup1D = function(rock_div,
         }
     });
 
-
-    //update_data();
 
     function update_data(){
         var offset = 10;

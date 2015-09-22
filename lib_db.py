@@ -3,6 +3,7 @@ from google.appengine.api import images
 from google.appengine.ext import blobstore
 from constants import admin_id
 import json
+import itertools
 
 """
 Authentication and permissions will be structured similar to linux
@@ -45,21 +46,24 @@ def get_all_items_user(entity, user):
     Returns entities that the user has permissions for
     """
 
-    default_items = entity.all()\
-                          .filter("user =", admin_id)\
-                          .filter("user !=", user.user_id)\
-                          .fetch(1000)
+    if user.user_id != admin_id:
+        default_items = entity.all().order("-date")\
+                                    .filter("user =", admin_id)\
+                                    .fetch(1000)
+    else:
+        default_items = []
 
-    user_items = entity.all().filter("user =", user.user_id).fetch(1000)
+    user_items = entity.all().order("name")\
+                             .filter("user =", user.user_id).fetch(1000)
 
     group_items = [item for item in
                    (entity.all().order("name")
                     .ancestor(ModelrParent.all().get())
-                    .filter("group =", group)
+                    .filter("group =", group).fetch(1000)
                     for group in user.group)]
 
-    uniq_items = set(default_items + user_items + group_items)
-    return list(uniq_items)
+    # flatten the lists
+    return (default_items + user_items + list(itertools.chain(*group_items)))
 
 
 def check_read_permission(entity, user):
@@ -308,7 +312,7 @@ class Rock(Item):
         """
         Calculates and returns the bulk modulus
         """
-        return (self.M - (4.0/3)*self.mu)
+        return (self.M - (4.0 / 3) * self.mu)
 
 
 class Fluid(Item):
