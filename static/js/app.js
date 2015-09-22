@@ -117,7 +117,10 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
   };
 
   $scope.update_data = function(){
-    $('#loader').show();
+    if($scope.updateClicked === undefined){
+      $('#loader').show();
+    }
+
     var earth_model = $scope.makeEarthModelStruct();
     $("html, body").scrollTop($("#plot_header").offset().top);
       
