@@ -66,6 +66,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         if($scope.images.length > 0){
           $scope.curImage = $scope.images[0];
 
+
 	  	    for(var i = 0; i < $scope.images.length; i++){
 	  	      $scope.images[i].rocks = [];
 	  	      for(var j = 0; j < $scope.images[i].colours.length; j++){
@@ -73,6 +74,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
               $scope.images[i].rocks.push(rand);
 	  	      }
 	  	    }
+                    console.log($scope.curImage.rocks);
         }
       }
     );
@@ -87,14 +89,16 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
   };
 
   $scope.loadSaved = function(){
+
     var array = $.map($scope.savedEarthModel.mapping, function(value, index) {
       return [value];
     });
 
     $scope.curImage.rocks = [];
     for(var i = 0; i < array.length; i++){
-      $scope.curImage.rocks.push(array[i]);
+      $scope.curImage.rocks.push(array[i].rock);
     }
+        console.log($scope.curImage.rocks);
   };
   
   $scope.slideClick = function(slider){

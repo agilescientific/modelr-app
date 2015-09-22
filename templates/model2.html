@@ -63,13 +63,13 @@
 				    </button>
 
 				    <!-- LOADED ROCKS -->
-				    <div ng-repeat="item in curImage.rocks track by $index">
-				      <div class="rock-color col-xs-2" ng-style="{'background-color': curImage.colours[$index]}">
-				      </div>
-				      <button type="button" ng-change="changeRock()" class="btn btn-default col-xs-9 model_select" placement="bottom-right" ng-model="curImage.rocks[$index]" bs-options="rock as rock.name for rock in rocks" bs-select>
-								<span class="caret">
-								</span>
-				      </button>
+						<div ng-repeat="item in curImage.rocks track by $index">
+      				<div class="rock-color col-xs-2" ng-style="{'background-color': curImage.colours[$index]}">
+      				</div>
+								<button type="button" class="btn btn-default col-xs-9 model_select" placement="bottom-right" ng-model="item.name" bs-options="rock.name as rock.name for rock in rocks" bs-select>								
+									<span class="caret">
+									</span>
+   						</button>
 				    </div>
 				  </div>
 				</div>
