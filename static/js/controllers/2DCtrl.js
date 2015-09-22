@@ -74,7 +74,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
               $scope.images[i].rocks.push(rand);
 	  	      }
 	  	    }
-                    console.log($scope.curImage.rocks);
         }
       }
     );
@@ -211,28 +210,28 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
   };
 
   $scope.updateAmpPlots = function(maxAll){
-      $scope.aTPlot
-        .reDraw(
-          [0, $scope.data.seismic.length - 1], 
-          [maxAll,-maxAll], 
-          [0, $scope.data.seismic.length - 1], 
-          [maxAll,-maxAll]
-        );
-      $scope.aOPlot
-        .reDraw(
-          [0, $scope.data.offset_gather.length - 1], 
-          [maxAll,-maxAll], 
-          [0, $scope.data.offset_gather.length - 1], 
-          [maxAll,-maxAll]
-        );
+    $scope.aTPlot
+      .reDraw(
+        [0, $scope.data.seismic.length - 1], 
+        [maxAll,-maxAll], 
+        [0, $scope.data.seismic.length - 1], 
+        [maxAll,-maxAll]
+      );
+    $scope.aOPlot
+      .reDraw(
+        [0, $scope.data.offset_gather.length - 1], 
+        [maxAll,-maxAll], 
+        [0, $scope.data.offset_gather.length - 1], 
+        [maxAll,-maxAll]
+      );
 
-      $scope.aFPlot
-        .reDraw(
-          [0, $scope.data.wavelet_gather.length - 1], 
-          [maxAll,-maxAll], 
-          [0, $scope.data.wavelet_gather.length - 1], 
-          [maxAll,-maxAll]
-        );
+    $scope.aFPlot
+      .reDraw(
+        [0, $scope.data.wavelet_gather.length - 1], 
+        [maxAll,-maxAll], 
+        [0, $scope.data.wavelet_gather.length - 1], 
+        [maxAll,-maxAll]
+      );
   };
 
   $scope.changeGainStr = function(){
@@ -710,6 +709,19 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
   
   $scope.saveModel = function(){
     var data = $scope.makeEarthModelStruct();
+
+    if($scope.earthModelName === '' || $scope.earthModelName === undefined){
+      var myAlert = $alert({
+        title: 'Alert:',
+        content: 'Model name is required.',
+        placement: 'alert-success',
+        type: 'danger',
+        duration: 5,
+        show: true
+      });
+      return;
+    }
+
     $http.post('/earth_model', data)
       .then(function(response){
         $scope.curImage.earth_models.push(response.data);
