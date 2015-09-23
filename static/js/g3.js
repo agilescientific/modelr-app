@@ -1,2 +1,850 @@
 /*! g3 - v0.0.1 - 2015-09-22 - justinkheisler */
-"use strict";(function(t){function i(){var t={};return t}function n(t,i,n,s){return d3.svg.axis().scale(t).innerTickSize(i).outerTickSize(3).tickPadding(5).orient(n).ticks(s)}"undefined"==typeof g3&&(t.g3=i()),g3.horizon=function(t,i){if(!i||!$.isArray(i))return"Param: data is missing, An array required";if(!t)return"Param: plot is missing, a div to attach the svg is required";var n={};return n.interpolate="basis",n.xInt=1,n.xMin=t.xDomain[0],n.yInt=1,n.yMin=t.yDomain[0],n.duration=500,n.gain=1,n.setInterpolate=function(t){return this.interpolate=t,this},n.setXMin=function(t){return this.xMin=t,this},n.setDuration=function(t){return this.duration=t,this},n.setGain=function(t){return this.gain=t,this},n.draw=function(){var s=d3.svg.line().x(function(i,s){return t.xScale(s+n.xMin)}).y(function(i){return t.yScale(i*n.gain)}).interpolate(this.interpolate);return this.svg=t.svg.append("svg:path").attr("d",s(i)).attr("stroke","green").attr("stroke-width",1.5).attr("fill","none"),this},n.reDraw=function(i){var s=d3.svg.line().x(function(i,s){return t.xScale(s+n.xMin)}).y(function(i){return t.yScale(i*n.gain)}).interpolate(this.interpolate);return this.svg.transition().duration(this.duration).attr("d",s(i)),this},n},g3.log=function(t,i){if(!i||!$.isArray(i))return"Param: data is missing, An array required";if(!t)return"Param: plot is missing, a div to attach the svg is required";var n={};n.xInt=1,n.xMin=t.xDomain[0],n.yInt=1,n.yMin=t.yDomain[0],n.color="blue",n.duration=500,n.setDuration=function(t){return this.duration=t,this},n.setYInt=function(t){return this.yInt=t,this},n.setYMin=function(t){return this.yMin=t,this},n.setXInt=function(t){return this.xInt=t,this},n.setXMin=function(t){return this.xMin=t,this},n.setData=function(t){return this.data=t,this},n.setColor=function(t){return this.color=t,this},n.draw=function(){return this.svg=t.svg.append("path").datum(i).attr("d",s).attr("stroke",this.color).attr("stroke-width",.25).attr("fill","none"),this};var s=d3.svg.line().x(function(i){return t.xScale(i)}).y(function(i,s){return t.yScale(s*n.yInt+n.yMin)}).interpolate("basis");return n.reDraw=function(t){return this.svg.transition().duration(this.duration).attr("d",s(t)).ease("linear"),this},n},g3.plot=function(t){if(!t)return"Param: elem is missing. A div to attach to is required";var i={};return i.margin={top:50,right:0,bottom:30,left:0},i.width=$(t).width()-i.margin.left,i.height=800,i.xDomain=[0,0],i.yDomain=[0,0],i.elem=t,i.xAxisVisible=!0,i.yAxisVisible=!0,i.x2AxisVisible=!1,i.y2AxisVisible=!1,i.xOrient="top",i.x2Orient="bottom",i.yOrient="left",i.y2Orient="right",i.duration=500,i.setDuration=function(t){return this.duration=t,this},i.setMargin=function(t,i,n,s){return this.margin={top:t,right:i,bottom:n,left:s},this},i.setWidth=function(t){return this.width=t,this},i.setHeight=function(t){return this.height=t,this},i.setXDomain=function(t){return this.xDomain=t,this},i.setYDomain=function(t){return this.yDomain=t,this},i.setX2Domain=function(t){return this.x2Domain=t,this},i.setY2Domain=function(t){return this.y2Domain=t,this},i.toggleXAxis=function(t){return this.xAxisVisible=t,this},i.toggleX2Axis=function(t){return this.x2AxisVisible=t,this},i.toggleYAxis=function(t){return this.yAxisVisible=t,this},i.toggleY2Axis=function(t){return this.y2AxisVisible=t,this},i.setXTicks=function(t){return this.xTicks=t,this},i.setYTicks=function(t){return this.yTicks=t,this},i.setX2Ticks=function(t){return this.x2Ticks=t,this},i.setY2Ticks=function(t){return this.y2Ticks=t,this},i.setYTitle=function(t){return this.yTitle=t,this},i.setXTitle=function(t){return this.xTitle=t,this},i.setY2Title=function(t){return this.y2Title=t,this},i.setX2Title=function(t){return this.x2Title=t,this},i.setXOrient=function(t){return this.xOrient=t,this},i.setX2Orient=function(t){return this.x2Orient=t,this},i.setYOrient=function(t){return this.yOrient=t,this},i.sety2Orient=function(t){return this.y2Orient=t,this},i.setXTickFormat=function(t){return this.xTickFormat=t,this},i.setYTickFormat=function(t){return this.yTickFormat=t,this},i.setX2TickFormat=function(t){return this.x2TickFormat=t,this},i.setY2TickFormat=function(t){return this.y2TickFormat=t,this},i.draw=function(){if(this.xScale=d3.scale.linear().domain(this.xDomain).range([0,this.width]),this.yScale=d3.scale.linear().domain(this.yDomain).range([0,this.height]),this.width-this.margin.left-this.margin.right,this.height-this.margin.top-this.margin.bottom,this.svg=d3.select(t).append("svg").attr("class","log_plot").attr("width",this.width+this.margin.right+this.margin.left).attr("height",this.height+this.margin.bottom+this.margin.top).append("g").attr("height",this.height).attr("transform","translate("+this.margin.left+","+this.margin.top+")"),this.xAxisVisible&&(this.xAxis=n(this.xScale,-this.height,this.xOrient,this.xTicks),this.xAxis.tickFormat(this.xTickFormat),this.svg.append("g").attr("class","x axis").call(this.xAxis)),this.yAxisVisible&&(this.yAxis=n(this.yScale,-this.width,this.yOrient,this.yTicks),this.yAxis.tickFormat(this.yTickFormat),this.svg.append("g").attr("class","y axis").call(this.yAxis)),this.x2AxisVisible&&(this.x2Scale=d3.scale.linear().domain(this.x2Domain).range([0,this.width]),this.x2Axis=n(this.x2Scale,-this.height,this.x2Orient,this.x2Ticks),this.x2Axis.tickFormat(this.x2TickFormat),this.svg.append("g").attr("class","x2 axis").attr("transform","translate(0,"+this.height+")").call(this.x2Axis)),this.y2AxisVisible&&(this.y2Scale=d3.scale.linear().domain(this.y2Domain).range([0,this.height]),this.y2Axis=n(this.y2Scale,-this.width,this.y2Orient,this.y2Ticks),this.y2Axis.tickFormat(this.y2TickFormat),this.svg.append("g").attr("class","y2 axis").attr("transform","translate("+this.width+",0)").call(this.y2Axis)),this.xTitle){if(""===this.xTickFormat)var i=-10;else var i=-30;this.svg.append("text").attr("x",this.width/2).attr("y",i).style("text-anchor","middle").style("font-size",12).text(this.xTitle)}if(this.yTitle){if(""===this.yTickFormat)var s=-10;else var s=-40;this.svg.append("text").attr("transform","rotate(-90)").attr("y",s).attr("dy","1em").style("text-anchor","end").style("font-size",12).text(this.yTitle)}if(this.x2Title){if(""===this.x2TickFormat)var i=10;else var i=30;this.svg.append("text").attr("transform","translate(0,"+this.height+")").attr("x",this.width/2).attr("y",i).style("text-anchor","middle").style("font-size",12).text(this.x2Title)}if(this.y2Title){if(""===this.yTickFormat)var s=-10;else var s=-40;this.svg.append("text").attr("transform","translate(0,"+this.height+")").attr("y",s).attr("dy","1em").style("text-anchor","end").style("font-size",12).text(this.y2Title)}return this},i.reDraw=function(t,i,n,s){t&&(this.xScale.domain(t),this.svg.select(".x.axis").transition().duration(this.duration).call(this.xAxis).ease("linear")),i&&(this.yScale.domain(i),this.svg.select(".y.axis").transition().duration(this.duration).call(this.yAxis).ease("linear")),n&&(this.x2Scale.domain(n),this.svg.select(".x2.axis").transition().duration(this.duration).call(this.x2Axis).ease("linear")),s&&(this.y2Scale.domain(s),this.svg.select(".y2.axis").transition().duration(this.duration).call(this.y2Axis).ease("linear"))},i},g3.seismic=function(t,i){if(!i||!$.isArray(i))return"Param: data is missing, An array required";if(!t)return"Param: plot is missing, a div to attach the svg is required";var n={};return n.max=1,n.gain=1,n.plot=t,n.data=i,n.duration=500,n.draw=function(){return n.color||(n.color=d3.scale.linear().domain([-this.max,0,this.max]).range(["#FF0000","#FFF","#0000FF"])),$(t.elem),this.canvas=d3.select(t.elem).append("canvas").attr("width",i.length).attr("height",i[0].length).style("width",t.width+"px").style("height",t.height+"px").style("opacity",.95).style("top",t.margin.top+"px").style("left",t.margin.left+"px").call(n.drawImage),this},n.reDraw=function(t){n.canvas.attr("width",t.length).attr("height",t[0].length).style("width",n.plot.width+"px").style("height",n.plot.height+"px"),n.context.clearRect(0,0,n.data.length,n.data[0].length),n.data=t;for(var i=t.length,s=t[0].length,a=n.context.createImageData(i,s),e=0,r=-1;s>e;++e)for(var h=0;i>h;++h){var o=d3.rgb(n.color(t[h][e]*n.gain));a.data[++r]=o.r,a.data[++r]=o.g,a.data[++r]=o.b,a.data[++r]=255}return n.context.putImageData(a,0,0),this},n.drawImage=function(t){n.context=t.node().getContext("2d");var i=n.data.length,s=n.data[0].length;n.image=n.context.createImageData(i,s);for(var a=0,e=-1;s>a;++a)for(var r=0;i>r;++r){var h=d3.rgb(n.color(n.data[r][a]*n.gain));n.image.data[++e]=h.r,n.image.data[++e]=h.g,n.image.data[++e]=h.b,n.image.data[++e]=255}return n.context.putImageData(n.image,0,0),this},n.setColor=function(t){return this.color=t,this},n.setDuration=function(t){return this.duration=t,this},n.setMax=function(t){return this.max=t,this},n.setGain=function(t){return this.gain=t,this},n},g3.wiggle=function(t,i){if(!i||!$.isArray(i))return"Param: data is missing, An array required";if(!t)return"Param: plot is missing, a div to attach the svg is required";var n={};return n.skip=0,n.gain=30,n.xInt=1,n.xMin=t.xDomain[0],n.yInt=1,n.yMin=t.yDomain[0],n.rand=Math.floor(100*Math.random()+1),n.sampleRate=1,n.duration=500,n.gain/n.max,n.setSkip=function(t){return this.skip=t,this},n.setGain=function(t){return this.gain=t,this},n.setMax=function(t){return this.max=t,this},n.setXMin=function(t){return this.xMin=t,this},n.setYMin=function(t){return this.yMin=t,this},n.setXInt=function(t){return this.xInt=t,this},n.setYInt=function(t){return this.yInt=t,this},n.setFillColor=function(t){return this.fillColor=t,this},n.setColor=function(t){return this.color=t,this},n.setStrokeWidth=function(t){return this.strokeWidth=t,this},n.setSampleRate=function(t){return this.sampleRate=t,this},n.setDuration=function(t){return this.duration=t,this},n.draw=function(){for(var s=i.length-1;s>=0;s--)if(0===this.skip||0===s%this.skip){var a=d3.mean(i[s]),e=d3.svg.area().interpolate("basis").x(function(i){return t.xScale(i*n.gain+n.xMin+s*n.sampleRate)}).y(function(i,s){return t.yScale(s*n.yInt+n.yMin)}),r=d3.svg.area().interpolate("basis").x(function(){return t.xScale(a*n.gain+n.xMin+s*n.sampleRate)}).y(function(i,s){return t.yScale(s*n.yInt+n.yMin)});t.svg.append("path").attr("class","line"+s).attr("d",e(i[s])).attr("stroke","black").attr("stroke-width",.5).attr("fill","none"),t.svg.datum(i[s]),t.svg.append("clipPath").attr("id","clip-below"+n.rand+s).append("path").attr("d",r.x0(t.width)),t.svg.append("path").attr("id","area-below"+s).attr("clip-path","url(#clip-below"+n.rand+s).attr("fill","black").style("opacity",.4).attr("d",r.x0(function(i){return t.xScale(i*n.gain+n.xMin+s*n.sampleRate)}))}return this},n.reDraw=function(i,s,a){t.xScale.domain(s),t.yScale.domain(a),t.svg.select(".x.axis").transition().duration(this.duration).call(t.xAxis).selectAll("text").style("text-anchor","start").attr("transform","rotate(-45)"),t.svg.select(".y.axis").transition().duration(this.duration).call(t.yAxis);for(var e=i.length-1;e>=0;e--)if(0===this.skip||0===e%this.skip){var r=d3.mean(i[e]);t.svg.select("#clip-below"+n.rand+e).remove();var h=d3.svg.area().interpolate("basis").x(function(i){return t.xScale(i*n.gain+n.xMin+e*n.sampleRate)}).y(function(i,s){return t.yScale(s*n.yInt+n.yMin)}),o=d3.svg.area().interpolate("basis").x(function(){return t.xScale(r*n.gain+n.xMin+e*n.sampleRate)}).y(function(i,s){return t.yScale(s*n.yInt+n.yMin)});t.svg.select(".line"+e).transition().duration(this.duration).attr("d",h(i[e])).ease("linear"),t.svg.datum(i[e]),t.svg.append("clipPath").attr("id","clip-below"+n.rand+e).append("path").attr("d",o.x0(t.width)),t.svg.select("#area-below"+e).attr("clip-path","url(#clip-below"+n.rand+e).transition().duration(this.duration).attr("d",o.x0(function(i){return t.xScale(i*n.gain+n.xMin+e*n.sampleRate)})).ease("linear")}return this},n}})(window);
+'use strict';
+;(function (window) {
+
+function defineg3() {
+	var g3 = {};
+	return g3;
+}
+if(typeof(g3) === 'undefined') {
+	window.g3 = defineg3();
+}
+
+const DEBUG = false;
+
+function createAxis(scale, innerTickSize, orient, ticks){
+	return d3.svg.axis()
+		.scale(scale)
+		.innerTickSize(innerTickSize)
+		.outerTickSize(3)
+		.tickPadding(5)
+		.orient(orient)
+		.ticks(ticks);
+}
+g3.horizon = function(plot, data){
+
+	if(!data || !$.isArray(data)){ return 'Param: data is missing, An array required'; }
+	if(!plot){ return 'Param: plot is missing, a div to attach the svg is required'; }
+
+	var horizon = {};
+	horizon.interpolate = 'basis';
+	horizon.xInt = 1;
+	horizon.xMin = plot.xDomain[0];
+	horizon.yInt = 1;
+	horizon.yMin = plot.yDomain[0];
+	horizon.duration = 500;
+	horizon.gain = 1;
+
+	horizon.setInterpolate = function(interpolate){
+		this.interpolate = interpolate;
+		return this;
+	};
+
+	horizon.setXMin = function(xMin){
+		this.xMin = xMin; 
+		return this;
+	};
+
+	horizon.setDuration = function(duration){
+		this.duration = duration;
+		return this;
+	};
+
+	horizon.setGain = function(gain){
+		this.gain = gain;
+		return this;
+	};
+
+	horizon.draw = function(){
+		var lineFunc = d3.svg.line()
+			.x(function (d, i) {
+				return plot.xScale(i + horizon.xMin);
+			})
+			.y(function (d) {
+				return plot.yScale(d * horizon.gain);
+			})
+			.interpolate(this.interpolate);
+
+		this.svg = plot.svg.append('svg:path')
+			.attr('d', lineFunc(data))
+			.attr('stroke', 'green')
+			.attr('stroke-width', 1.5)
+			.attr('fill', 'none');
+		return this;
+	};
+
+	horizon.reDraw = function(data){
+		var lineFunc = d3.svg.line()
+			.x(function (d, i) {
+				return plot.xScale(i + horizon.xMin);
+			})
+			.y(function (d) {
+				return plot.yScale(d * horizon.gain);
+			})
+			.interpolate(this.interpolate);
+		
+		this.svg.transition()
+			.duration(this.duration)
+			.attr('d', lineFunc(data));
+		return this;
+	};
+
+	return horizon;
+};
+
+g3.log = function(plot, data){
+	
+	if(!data || !$.isArray(data)){ return 'Param: data is missing, An array required'; }
+	if(!plot){ return 'Param: plot is missing, a div to attach the svg is required'; }
+
+	var log = {};
+	log.xInt = 1;
+	log.xMin = plot.xDomain[0];
+	log.yInt = 1;
+	log.yMin = plot.yDomain[0];
+	log.color = "blue";
+	log.duration = 500;
+
+	// Setters
+	log.setDuration = function(duration){
+		this.duration = duration;
+		return this;
+	};
+
+	log.setYInt = function(yInt){
+		this.yInt = yInt;
+		return this;
+	};
+
+	log.setYMin = function(yMin){
+		this.yMin = yMin;
+		return this;
+	};
+
+	log.setXInt = function(xInt){
+		this.xInt = xInt;
+		return this;
+	};
+
+	log.setXMin = function(xMin){
+		this.xMin = xMin;
+		return this;
+	};
+
+	log.setData = function(data){
+		this.data = data;
+		return this;
+	};
+
+	log.setColor = function(color){
+		this.color = color;
+		return this;
+	};
+
+  log.draw = function(){
+    this.svg = plot.svg.append("path")  
+      .datum(data)
+      .attr("d", lineFunc)
+      .attr("stroke", this.color)
+      .attr("stroke-width", 0.25)
+      .attr("fill", "none");
+
+    // var sorted = data.sort(function(a, b) {
+    //   return a - b;
+    // });
+
+    // var focus = plot.svg.append("g")
+    //     .attr("class", "focus")
+    //     .style("display", "none");
+
+    // focus.append("circle")
+    //     .attr("r", 4.5);
+
+    // focus.append("text")
+    //     .attr("x", 9)
+    //     .attr("dy", ".35em");
+    //     var bisectDate = d3.bisector(function(d) { return d; }).left;
+    // plot.svg.append("rect")
+    //     .attr("class", "overlay")
+    //     .attr("width", plot.width)
+    //     .attr("height", plot.height)
+    //     .on("mouseover", function() { focus.style("display", null); })
+    //     .on("mouseout", function() { focus.style("display", "none"); })
+    //     .on("mousemove", mousemove);
+
+    // function mousemove() {
+    //   var x0 = plot.xScale.invert(d3.mouse(this)[0]),
+    //       i = bisectDate(data, x0, 1),
+    //       d0 = data[i - 1],
+    //       d1 = data[i],
+    //       d = x0 - d0 > d1 - x0 ? d1 : d0;
+    //   focus.attr("transform", "translate(" + plot.xScale(d) + "," + plot.yScale(d) + ")");
+    //   focus.select("text").text(d);
+    // };
+    return this;
+  };
+
+	var lineFunc = d3.svg.line()
+	.x(function (d) {
+		return plot.xScale(d);
+	})
+	.y(function (d, i){
+		return plot.yScale(i * log.yInt + log.yMin);
+	})
+	.interpolate('basis');
+
+	log.reDraw = function(data){
+
+		this.svg.transition()
+			.duration(this.duration)
+			.attr('d', lineFunc(data))
+			.ease('linear');
+		return this;
+	};
+	return log;
+};
+
+g3.plot = function(elem){
+  
+  if(!elem){ return 'Param: elem is missing. A div to attach to is required'; }
+
+	var plot = {};
+	plot.margin = {top: 50, right: 0, bottom: 30, left: 0};
+	plot.width = $(elem).width() - plot.margin.left;
+	plot.height = 800;
+	plot.xDomain = [0,0];
+	plot.yDomain = [0,0];
+	plot.elem = elem;
+	plot.xAxisVisible = true;
+	plot.yAxisVisible = true;
+	plot.x2AxisVisible = false;
+	plot.y2AxisVisible = false;
+	plot.xOrient = 'top';
+	plot.x2Orient = 'bottom';
+	plot.yOrient = 'left';
+	plot.y2Orient = 'right';
+  plot.duration = 500;
+
+  plot.setDuration = function(duration){
+    this.duration = duration;
+    return this;
+  };
+
+  plot.setMargin = function(top, right, bottom, left){
+  	this.margin = {top: top, right: right, bottom: bottom, left: left};
+  	return this;
+  };
+
+  plot.setWidth = function(width){
+  	this.width = width;
+  	return this;
+  };
+
+  plot.setHeight = function(height){
+  	this.height = height;
+  	return this;
+  };
+
+  plot.setXDomain = function(domain){
+  	this.xDomain = domain;
+  	return this;
+  };
+
+  plot.setYDomain = function(domain){
+  	this.yDomain = domain;
+  	return this;
+  };
+
+  plot.setX2Domain = function(domain){
+  	this.x2Domain = domain;
+  	return this;
+  };
+
+  plot.setY2Domain = function(domain){
+  	this.y2Domain = domain;
+  	return this;
+  };
+
+  plot.toggleXAxis = function(bool){
+  	this.xAxisVisible = bool;
+  	return this;
+  };
+
+  plot.toggleX2Axis = function(bool){
+  	this.x2AxisVisible = bool;
+  	return this;
+  };
+
+  plot.toggleYAxis = function(bool){
+  	this.yAxisVisible = bool;
+  	return this;
+  };
+
+  plot.toggleY2Axis = function(bool){
+  	this.y2AxisVisible = bool;
+  	return this;
+  };
+
+  plot.setXTicks = function(ticks){
+  	this.xTicks = ticks;
+  	return this;
+  };
+
+  plot.setYTicks = function(ticks){
+  	this.yTicks = ticks;
+  	return this;
+  };
+
+  plot.setX2Ticks = function(ticks){
+  	this.x2Ticks = ticks;
+  	return this;
+  };
+
+  plot.setY2Ticks = function(ticks){
+  	this.y2Ticks = ticks;
+  	return this;
+  };
+
+  plot.setYTitle = function(title){
+  	this.yTitle = title;
+  	return this;
+  };
+
+  plot.setXTitle = function(title){
+  	this.xTitle = title;
+  	return this;
+  };
+
+  plot.setY2Title = function(title){
+  	this.y2Title = title;
+  	return this;
+  };
+
+  plot.setX2Title = function(title){
+  	this.x2Title = title;
+  	return this;
+  };
+
+  plot.setXOrient = function(orient){
+  	this.xOrient = orient;
+  	return this;
+  };
+
+  plot.setX2Orient = function(orient){
+  	this.x2Orient = orient;
+  	return this;
+  };
+
+  plot.setYOrient = function(orient){
+  	this.yOrient = orient;
+  	return this;
+  };
+
+  plot.sety2Orient = function(orient){
+  	this.y2Orient = orient;
+  	return this;
+  };
+
+  plot.setXTickFormat = function(format){
+  	this.xTickFormat = format;
+  	return this;
+  };
+  
+  plot.setYTickFormat = function(format){
+  	this.yTickFormat = format;
+  	return this;
+  };
+  
+  plot.setX2TickFormat = function(format){
+  	this.x2TickFormat = format;
+  	return this;
+  };
+
+  plot.setY2TickFormat = function(format){
+  	this.y2TickFormat = format;
+  	return this;
+  };
+
+  plot.draw = function() {
+	  this.xScale = d3.scale.linear()
+    	.domain(this.xDomain)
+    	.range([0, this.width]);
+    this.yScale = d3.scale.linear()
+    	.domain(this.yDomain)
+    	.range([0, this.height]);
+
+    var innerWidth = this.width - this.margin.left - this.margin.right,
+    innerHeight = this.height - this.margin.top - this.margin.bottom;
+
+	  // Append svg object to dom element
+	  this.svg = d3.select(elem).append('svg')
+	    .attr('class', 'log_plot')
+	    .attr('width', this.width + this.margin.right + this.margin.left)
+	    .attr('height', this.height + this.margin.bottom + this.margin.top) 
+	    .append('g')
+	    .attr('height', this.height)
+	    .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
+
+	  // Set axis
+	  if(this.xAxisVisible){
+	  	this.xAxis = createAxis(this.xScale, -this.height, this.xOrient, this.xTicks);
+	  	this.xAxis.tickFormat(this.xTickFormat);
+	  	this.svg.append('g')
+	    	.attr('class', 'x axis')
+	    	.call(this.xAxis);
+	  }
+	  if(this.yAxisVisible){
+	  	this.yAxis = createAxis(this.yScale, -this.width, this.yOrient, this.yTicks);
+	  	this.yAxis.tickFormat(this.yTickFormat);
+	  	this.svg.append('g')
+		    .attr('class', 'y axis')
+		    .call(this.yAxis);
+	  }
+	  if(this.x2AxisVisible){
+	  	this.x2Scale = d3.scale.linear()
+	    	.domain(this.x2Domain)
+	    	.range([0, this.width]);
+	  	this.x2Axis = createAxis(this.x2Scale, -this.height, this.x2Orient, this.x2Ticks);
+	  	this.x2Axis.tickFormat(this.x2TickFormat);
+	  	this.svg.append('g')
+	    	.attr('class', 'x2 axis')
+		    .attr("transform", "translate(" + "0," + this.height + ")")
+	    	.call(this.x2Axis);
+	  }
+	 	if(this.y2AxisVisible){
+	 		this.y2Scale = d3.scale.linear()
+	    	.domain(this.y2Domain)
+	    	.range([0, this.height]);
+	  	this.y2Axis = createAxis(this.y2Scale, -this.width, this.y2Orient, this.y2Ticks);
+	  	this.y2Axis.tickFormat(this.y2TickFormat);
+	  	this.svg.append('g')
+		    .attr('class', 'y2 axis')
+		    .attr("transform", "translate(" + this.width + ",0)")
+		    .call(this.y2Axis);
+	  }
+
+    if(this.xTitle){
+      
+      if(this.xTickFormat === ""){
+        var margin = -10;
+      } else {
+        var margin = -30;
+      }
+      this.svg.append("text")
+          .attr("x", (this.width) / 2)
+          .attr("y", margin)
+          .style("text-anchor", "middle")
+          .style("font-size", 12)
+          .text(this.xTitle);
+    }
+    if(this.yTitle){
+
+      if(this.yTickFormat === ""){
+        var yMargin = -10;
+      } else {
+        var yMargin = -40;
+      }
+
+      this.svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", yMargin)
+        .attr("dy", "1em")
+        .style("text-anchor", "end")
+        .style("font-size", 12)
+        .text(this.yTitle);
+    }
+    if(this.x2Title){
+      
+      if(this.x2TickFormat === ""){
+        var margin = 10;
+      } else {
+        var margin = 30;
+      }
+      this.svg.append("text")
+          .attr("transform", "translate(" + "0," + this.height + ")")
+        .attr("x", (this.width) / 2)
+          .attr("y", margin)
+          .style("text-anchor", "middle")
+          .style("font-size", 12)
+          .text(this.x2Title);
+    }
+    if(this.y2Title){
+
+      if(this.yTickFormat === ""){
+        var yMargin = -10;
+      } else {
+        var yMargin = -40;
+      }
+
+      this.svg.append("text")
+        .attr("transform", "translate(" + "0," + this.height + ")")
+        .attr("y", yMargin)
+        .attr("dy", "1em")
+        .style("text-anchor", "end")
+        .style("font-size", 12)
+        .text(this.y2Title);
+    }
+	  return this;
+	};
+
+  plot.reDraw = function(xDomain, yDomain, x2Domain, y2Domain){    
+    if(xDomain){
+      this.xScale.domain(xDomain);
+      this.svg.select('.x.axis')
+        .transition()
+        .duration(this.duration)
+        .call(this.xAxis)
+        .ease('linear');
+    }
+
+    if(yDomain){
+      this.yScale.domain(yDomain);
+      this.svg.select('.y.axis')
+        .transition()
+        .duration(this.duration)
+        .call(this.yAxis)
+        .ease('linear');
+    }
+
+    if(x2Domain){
+      this.x2Scale.domain(x2Domain);
+      this.svg.select('.x2.axis')
+        .transition()
+        .duration(this.duration)
+        .call(this.x2Axis)
+        .ease('linear');
+    }
+
+    if(y2Domain){
+      this.y2Scale.domain(y2Domain);
+      this.svg.select('.y2.axis')
+        .transition()
+        .duration(this.duration)
+        .call(this.y2Axis)
+        .ease('linear');
+    }
+  };
+
+	return plot;
+}
+g3.seismic = function(plot, data, options){
+	if(!data || !$.isArray(data)){ return 'Param: data is missing, An array required'; }
+	if(!plot){ return 'Param: plot is missing, a div to attach the svg is required'; }
+	
+	var seismic = {};
+	seismic.max = 1;
+	seismic.gain = 1;
+	seismic.plot = plot;
+	seismic.data = data;
+	seismic.duration = 500;
+
+  seismic.draw = function(){
+
+  	if(!seismic.color){
+		seismic.color = d3.scale.linear()
+		.domain([-this.max, 0, this.max])
+		.range(['#FF0000', '#FFF', '#0000FF']);
+	}
+
+  	var elem = $(plot.elem);
+    this.canvas = d3.select(plot.elem)
+      .append('canvas')
+      .attr('width', data.length)
+      .attr('height', data[0].length)
+      .style('width', plot.width +  'px')
+      .style('height', plot.height + 'px')
+      .style('opacity', 0.95)
+      .style('top', plot.margin.top + 'px')
+      .style('left', plot.margin.left + 'px')
+      .call(seismic.drawImage);
+    return this;
+  };
+
+	seismic.reDraw = function(data){
+
+  	// Update the Canvas Attributes
+  	seismic.canvas
+      .attr('width', data.length)
+      .attr('height', data[0].length)
+      .style('width', seismic.plot.width +  'px')
+      .style('height', seismic.plot.height + 'px');
+
+    // Wipe the old canvas, the new size can be different
+  	seismic.context.clearRect(0, 0, seismic.data.length, seismic.data[0].length);
+
+  	seismic.data = data;
+		var x = data.length,
+		y = data[0].length;
+		var image = seismic.context.createImageData(x,y);
+
+		// Paint the image
+		for(var i = 0, p = -1; i < y; ++ i){
+			for(var j = 0; j < x; ++j){
+				var c = d3.rgb(seismic.color(data[j][i] * seismic.gain));
+				image.data[++p] = c.r;
+				image.data[++p] = c.g;
+				image.data[++p] = c.b;
+				image.data[++p] = 255;
+			}
+		}
+
+		// Dump image to canvas
+		seismic.context.putImageData(image, 0, 0);
+	  return this;
+  };
+
+	seismic.drawImage = function(canvas){
+		seismic.context = canvas.node().getContext('2d');
+		var x = seismic.data.length,
+		y = seismic.data[0].length;
+		seismic.image = seismic.context.createImageData(x,y);
+
+		for(var i = 0, p = -1; i < y; ++ i){
+			for(var j = 0; j < x; ++j){
+				var c = d3.rgb(seismic.color(seismic.data[j][i] * seismic.gain));
+				seismic.image.data[++p] = c.r;
+				seismic.image.data[++p] = c.g;
+				seismic.image.data[++p] = c.b;
+				seismic.image.data[++p] = 255;
+			}
+		}
+		seismic.context.putImageData(seismic.image, 0, 0);
+		return this;
+	};
+
+	seismic.setColor = function(colorScale){
+		this.color = colorScale;
+		return this;
+	};
+
+	seismic.setDuration = function(duration){
+		this.duration = duration;
+		return this;
+	};
+
+	seismic.setMax = function(max){
+		this.max = max;
+		return this;
+	};
+
+	seismic.setGain = function(gain){
+		this.gain = gain;
+		return this;
+	};
+
+	return seismic;
+}
+g3.wiggle = function(plot, data, options){
+
+	if(!data || !$.isArray(data)){ return 'Param: data is missing, An array required'; }
+	if(!plot){ return 'Param: plot is missing, a div to attach the svg is required'; }
+
+	var wiggle = {};
+	wiggle.skip = 0;
+	wiggle.gain = 30;
+	wiggle.xInt = 1;
+	wiggle.xMin = plot.xDomain[0];
+	wiggle.yInt = 1;
+	wiggle.yMin = plot.yDomain[0];
+	wiggle.rand = Math.floor((Math.random() * 100) + 1);
+	wiggle.sampleRate = 1;
+	wiggle.duration = 500;
+
+	var s = wiggle.gain / wiggle.max;
+
+	wiggle.setSkip = function(skip){
+		this.skip = skip;
+		return this;
+	};
+
+	wiggle.setGain = function(gain){
+		this.gain = gain;
+		return this;
+	};
+
+	wiggle.setMax = function(max){
+		this.max = max;
+		return this;
+	};
+
+	wiggle.setXMin = function(xMin){
+		this.xMin = xMin;
+		return this;
+	};
+
+	wiggle.setYMin = function(yMin){
+		this.yMin = yMin;
+		return this;
+	};
+
+	wiggle.setXInt = function(xInt){
+		this.xInt = xInt;
+		return this;
+	};
+
+	wiggle.setYInt = function(yInt){
+		this.yInt = yInt;
+		return this;
+	};
+
+	wiggle.setFillColor = function(color){
+		this.fillColor = color;
+		return this;
+	};
+
+	wiggle.setColor = function(color){
+		this.color = color;
+		return this;
+	};
+
+	wiggle.setStrokeWidth = function(strokeWidth){
+		this.strokeWidth = strokeWidth;
+		return this;
+	};
+
+	wiggle.setSampleRate = function(sampleRate){
+		this.sampleRate = sampleRate;
+		return this;
+	};
+
+	wiggle.setDuration = function(duration){
+		this.duration = duration;
+		return this;
+	};
+
+	wiggle.test = function(){
+		console.log(d3.event);
+		// var position = [d3.event.x, d3.event.y];
+		wiggle.cir
+			.attr("cx", d3.event.x)
+			.attr("cy", d3.event.y);
+	}
+
+	wiggle.draw = function() {
+
+		for(var k = data.length - 1; k >= 0; k--){
+	    if(this.skip === 0 || k % this.skip === 0){
+	      var mean = d3.mean(data[k]); 
+
+	      // Line function
+		    var line = d3.svg.area()
+		      .interpolate('basis')
+		      .x(function (d) {
+		        return plot.xScale(d * wiggle.gain + wiggle.xMin + k * wiggle.sampleRate);
+		      })
+		      .y(function (d, i){
+		        return plot.yScale(i * wiggle.yInt + wiggle.yMin);
+		      });
+
+		    // Clip path area function
+		    var area = d3.svg.area()
+		      .interpolate('basis')
+		      .x(function (d, i) {
+		        return plot.xScale(mean * wiggle.gain + wiggle.xMin + k * wiggle.sampleRate);
+		      })
+		      .y(function (d, i){
+		        return plot.yScale(i * wiggle.yInt + wiggle.yMin);
+		      });
+
+        plot.svg.append('path')
+          .attr('class', 'line' + k)
+          .attr('d', line(data[k]))
+          .attr('stroke', 'black')
+          .attr('stroke-width', 0.50)
+          .attr('fill', 'none');
+
+        plot.svg.datum(data[k]);
+
+        plot.svg.append('clipPath')
+          .attr('id', 'clip-below' + wiggle.rand + k)
+          .append('path')
+          .attr('d', area.x0(plot.width));
+
+        plot.svg.append('path')
+          .attr('id', 'area-below' + k)
+          .attr('clip-path', 'url(#clip-below' + wiggle.rand + k)
+          .attr('fill', 'black')
+          .style('opacity', 0.4)
+          .attr('d', area.x0(function (d, i){ 
+            return plot.xScale(d * wiggle.gain + wiggle.xMin + k * wiggle.sampleRate);
+          }));
+	    }
+	  }
+	  return this;
+	};
+
+	wiggle.reDraw = function(data, xDomain, yDomain){
+
+		// Redraw the Axis
+		plot.xScale.domain(xDomain);
+		plot.yScale.domain(yDomain);
+			
+		plot.svg.select('.x.axis')
+			.transition()
+			.duration(this.duration)
+			.call(plot.xAxis)
+			.selectAll("text")  
+			.style("text-anchor", "start")
+	    	.attr("transform", "rotate(-45)" );
+
+		plot.svg.select('.y.axis')
+			.transition()
+			.duration(this.duration)
+			.call(plot.yAxis);
+
+	  for(var k = data.length - 1; k >= 0; k--){
+	    if(this.skip === 0 || k % this.skip === 0){
+				var mean = d3.mean(data[k]); 
+	      
+	      plot.svg.select("#clip-below" + wiggle.rand + k)
+	        .remove()
+
+	      // Line function
+	      var line = d3.svg.area()
+	        .interpolate('basis')
+	        .x(function (d) {
+	          return plot.xScale(d * wiggle.gain + wiggle.xMin + k * wiggle.sampleRate);
+	        })
+	        .y(function (d, i){
+	          return plot.yScale(i * wiggle.yInt + wiggle.yMin);
+	        });
+
+	      // Clip path area function
+	      var area = d3.svg.area()
+	        .interpolate('basis')
+	        .x(function (d, i) {
+	          return plot.xScale(mean * wiggle.gain + wiggle.xMin + k * wiggle.sampleRate);
+	        })
+	        .y(function (d, i){
+	          return plot.yScale(i * wiggle.yInt + wiggle.yMin);
+	        });
+
+	      plot.svg.select(".line" + k)
+	        .transition()
+	        .duration(this.duration)
+	        .attr('d', line(data[k]))
+	        .ease("linear");
+
+	      plot.svg.datum(data[k]);
+
+	      plot.svg.append('clipPath')
+	        .attr('id', 'clip-below' + wiggle.rand + k)
+	        .append('path')
+	        .attr('d', area.x0(plot.width));
+	        
+	      plot.svg.select("#area-below" + k)
+	        .attr('clip-path', 'url(#clip-below' + wiggle.rand + k)
+	        .transition()
+	        .duration(this.duration)
+	        .attr('d', area.x0(function (d, i){ 
+	          return plot.xScale(d * wiggle.gain + wiggle.xMin + k * wiggle.sampleRate);
+	        }))
+	        .ease('linear');
+	    	} 
+  		}
+    return this;
+  };
+	return wiggle;
+};
+
+} (window));

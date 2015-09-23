@@ -72,6 +72,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
 	  	      for(var j = 0; j < $scope.images[i].colours.length; j++){
 	  	        var rand = $scope.rocks[Math.floor(Math.random() * $scope.rocks.length)];
               $scope.images[i].rocks.push(rand);
+              console.log(rand);
 	  	      }
 	  	    }
         }
@@ -89,15 +90,18 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
 
   $scope.loadSaved = function(){
 
-    var array = $.map($scope.savedEarthModel.mapping, function(value, index) {
+    var arr = $.map($scope.savedEarthModel.mapping, function(value, index) {
       return [value];
     });
 
     $scope.curImage.rocks = [];
-    for(var i = 0; i < array.length; i++){
-      $scope.curImage.rocks.push(array[i].rock);
+    for(var i = 0; i < arr.length; i++){
+      for(var j = 0; j < $scope.rocks.length; j++){
+        if(arr[i].rock.name === $scope.rocks[j].name){
+          $scope.curImage.rocks.push($scope.rocks[j]);
+        }
+      }
     }
-        console.log($scope.curImage.rocks);
   };
   
   $scope.slideClick = function(slider){
@@ -130,6 +134,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     var payload = JSON.stringify(data);
       $http.get($scope.server + '/data.json?type=seismic&script=convolution_model.py&payload=' + payload)
         .then(function(response){
+          console.log(response.data);
           $scope.plot(response.data);
           $scope.maxTrace = String(response.data.seismic.length - 1);
           $scope.maxTWT = String(response.data.seismic[0].length - 1);
@@ -299,6 +304,17 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         .setX2Domain([0, data.seismic.length - 1])
         .setY2Domain([0, data.seismic[0].length - 1])
         .draw();
+
+        var drag = d3.behavior.drag()  // capture mouse drag event
+        .on('drag', vDCirRedraw);
+
+        var position = [$scope.trace, 100];
+        $scope.cir = $scope.vDPlot.svg.append('circle')
+          .attr("r", 10)
+          .attr("cx", position[0])
+          .attr("cy", position[1])
+          .call(drag);
+
     } else {
       $scope.vDPlot.reDraw(
         [0, data.seismic.length - 1], 
@@ -306,6 +322,13 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         [0, data.seismic.length - 1], 
         [0, data.seismic[0].length - 1]
       );
+    }
+
+    function vDCirRedraw(){
+            console.log("HERE");
+      $scope.cir
+        .attr("cx", d3.event.x)
+        .attr("cy", d3.event.y);
     }
 
     // Draw Seismic Image
@@ -547,6 +570,8 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         .setGain(80)
         .setDuration(5)
         .draw();
+
+      console.log($scope.vDLog);
     } else {
       $scope.vDLog
         .setXMin($scope.trace)
@@ -696,7 +721,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     var image = $scope.curImage;
     var mapping = {};
     for(var i=0; i < image.rocks.length; i++){
-        mapping[image.colours[i]] = image.rocks[i];
+      mapping[image.colours[i]] = image.rocks[i];
     }
     
     var data = {
