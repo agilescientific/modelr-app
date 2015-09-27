@@ -249,9 +249,43 @@
 				      </div>
 						</div>
 				  </div>
-				</div>    
+				</div>
       </div>
     </div>
   </div>
+  <div class="panel panel-default">
+		<div class="panel-heading">
+		  <div ng-click="exportCSV()" style="float:right; margin-top:-2px;"><a class="btn btn-default btn-xs">Export CSV</a></div>
+			<h3 class="panel-title">Metadata</h3>
+		</div>
+		<div class="panel-body"> 
+		<table id="model_metadata" class="table table-striped">
+			<thead>
+				<tr>
+					<th></th>
+					<th class="text-right" style="padding:0 8px 0 0;">Z<br/><span style="color:lightgrey; font-weight:normal;">Pa·s·m<sup>−1</sup></span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">PR<br/><span></span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">E<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">&lambda;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">&mu;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">K<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">M<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr class="text-right" ng-repeat="(key,value) in data.metadata.moduli track by $index">
+					<td>{[ key ]}</td>
+					<td>{[ (value.imp / 1000000).toFixed(2) ]}</td>
+					<td>{[ value.pr.toFixed(2) ]}</td>
+					<td>{[ (value.youngs / 1000000000).toFixed(2) ]}</td>
+					<td>{[ (value.lam / 1000000000).toFixed(2) ]}</td>
+					<td>{[ (value.mu / 1000000000).toFixed(2) ]}</td>
+					<td>{[ (value.bulk / 1000000000).toFixed(2) ]}</td>
+					<td>{[ (value.pmod / 1000000000).toFixed(2) ]}</td>
+				</tr>
+			</tbody>
+		</table> 
+		</div>
+	</div>
 </div>
 {% endblock %}

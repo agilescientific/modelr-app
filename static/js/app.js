@@ -78,13 +78,11 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         if($scope.images.length > 0){
           $scope.curImage = $scope.images[0];
 
-
 	  	    for(var i = 0; i < $scope.images.length; i++){
 	  	      $scope.images[i].rocks = [];
 	  	      for(var j = 0; j < $scope.images[i].colours.length; j++){
 	  	        var rand = $scope.rocks[Math.floor(Math.random() * $scope.rocks.length)];
               $scope.images[i].rocks.push(rand);
-              console.log(rand);
 	  	      }
 	  	    }
         }
@@ -925,6 +923,30 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
   $( document ).ready(function(){
     $scope.setColorPickers();
   });
+
+  $scope.exportCSV = function(){
+    var csv = [];
+    $.each($scope.data.metadata.moduli, function(key, value) {
+      csv.push('"' + key + '"');
+      $.each(value, function(k, v) {
+        if(k === 'imp'){
+          v = (v / 1000000).toFixed(2);
+        } else if(k === 'pr'){
+          v = v.toFixed(2);
+        } else {
+          v = (v / 1000000000).toFixed(2);
+        }
+        csv.push(',"' + v + '"')
+      });
+      csv.push('\r\n');
+    });
+    csv = csv.join("");
+    var hiddenElement = document.createElement('a');
+    hiddenElement.href = 'data:attachment/csv,' + encodeURI(csv);
+    hiddenElement.target = '_blank';
+    hiddenElement.download = 'export.csv';
+    hiddenElement.click();
+  };
 });
 
 // <-- HELPER FUNCTIONS --> //
