@@ -337,27 +337,78 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         .attr("x2", xScale(data.seismic.length - 1))
         .attr("y2", yScale($scope.twt));
 
-        var drag = d3.behavior.drag()  // capture mouse drag event
-          .on('drag', vDCirRedraw);
+        // var drag = d3.behavior.drag()  // capture mouse drag event
+        //   .on('drag', vDCirRedraw);
 
-        var position = [$scope.vDPlot.xScale($scope.trace), $scope.vDPlot.yScale($scope.twt)];
-        $scope.vDCir = $scope.vDPlot.svg.append('circle')
-          .attr("class", "vdcir")
-          .attr("r", 5)
-          .attr("cx", position[0])
-          .attr("cy", position[1])
-          .style("opacity", 0.5)
-          .call(drag);
+        // var position = [$scope.vDPlot.xScale($scope.trace), $scope.vDPlot.yScale($scope.twt)];
+        // $scope.vDCir = $scope.vDPlot.svg.append('circle')
+        //   .attr("class", "vdcir")
+        //   .attr("r", 5)
+        //   .attr("cx", position[0])
+        //   .attr("cy", position[1])
+        //   .style("opacity", 0.5)
+        //   .call(drag);
 
-        $(".vdcir").mouseup(function(e){
+        // $(".vdcir").mouseup(function(e){
+        //   e.preventDefault();
+        //   $scope.update_data();
+        // });
+
+        // Register drag trigger for wGWigLine
+        var wigLineDrag = d3.behavior.drag()
+          .on('drag', vDWigLineRedraw);
+
+        // Register drag trigger for wGHorLine
+        var horLineDrag = d3.behavior.drag()
+          .on('drag', vDHorLineRedraw);
+
+        // Draw invisible line
+        $scope.vDWigLine = $scope.vDPlot.svg.append('line')
+          .attr("class", "vdwigline")
+          .style("stroke-width", 10)
+          .style("stroke", "black")
+          .style("cursor", "pointer")
+          .style("opacity", 0)
+          .attr("x1", xScale($scope.trace))
+          .attr("y1", yScale(data.seismic[0].length - 1))
+          .attr("x2", xScale($scope.trace))
+          .attr("y2", yScale(0))
+          .call(wigLineDrag);
+
+        // Draw invisible horizon line
+        $scope.vDHorLine = $scope.vDPlot.svg.append('line')
+          .style("stroke-width", 10)
+          .style("stroke", "green")
+          .style("cursor", "pointer")
+          .style("opacity", 0)
+          .attr("x1", xScale(0))
+          .attr("y1", yScale($scope.twt))
+          .attr("x2", xScale(data.seismic.length - 1))
+          .attr("y2", yScale($scope.twt))
+          .call(horLineDrag);
+
+        // Register mouseup trigger for wgline
+        $(".vdwigline").mouseup(function(e){
           e.preventDefault();
           $scope.update_data();
         });
     } else {
-      position = [$scope.vDPlot.xScale($scope.trace), $scope.vDPlot.yScale($scope.twt)];
-      $scope.vDCir
-        .attr("cx", position[0])
-        .attr("cy", position[1]);
+      // position = [$scope.vDPlot.xScale($scope.trace), $scope.vDPlot.yScale($scope.twt)];
+      // $scope.vDCir
+      //   .attr("cx", position[0])
+      //   .attr("cy", position[1]);
+
+      // Redraw the invisible line
+      $scope.vDWigLine
+        .attr("x1", xScale($scope.trace))
+        .attr("y1", yScale(data.seismic[0].length - 1))
+        .attr("x2", xScale($scope.trace))
+        .attr("y2", yScale(0));
+
+      // Redraw invisible horizon
+      $scope.vDHorLine
+        .attr("y1", yScale($scope.twt))
+        .attr("y2", yScale($scope.twt));
 
       $scope.vDHor
         .transition()
@@ -367,16 +418,29 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     }
   };
 
-  function vDCirRedraw(){
-    var x = Math.floor($scope.vDPlot.xScale.invert(d3.event.x));
-    var y = Math.floor($scope.vDPlot.yScale.invert(d3.event.y));
+  function vDWigLineRedraw(){
+    var xScale = $scope.vDPlot.xScale;
+    var yScale = $scope.vDPlot.yScale;
+    var x = Math.floor(xScale.invert(d3.event.x));
 
-    // Check to make sure we are within the boundaries
     if(x < 0){
       x = 0;
-    } else if(x > $scope.data.seismic.length - 1) {
+    } else if(x > $scope.data.seismic.length - 1){
       x = $scope.data.seismic.length - 1;
     }
+
+    $scope.traceStr = x.toString();
+    $scope.changeTraceStr();
+    
+    $scope.vDWigLine
+      .attr("x1", xScale($scope.trace))
+      .attr("x2", xScale($scope.trace));
+  }
+
+  function vDHorLineRedraw(){
+    var xScale = $scope.vDPlot.xScale;
+    var yScale = $scope.vDPlot.yScale;
+    var y = Math.floor(yScale.invert(d3.event.y));
 
     if(y < 0){
       y = 0;
@@ -384,18 +448,42 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
       y = $scope.data.seismic[0].length - 1;
     }
 
-    $scope.traceStr = x.toString();
     $scope.twtStr = y.toString();
-    $scope.changeTraceStr();
     $scope.changeTWTStr();
-    $scope.wGCir
-      .attr("cy", $scope.wGPlot.yScale($scope.twt));
-    $scope.oGCir
-      .attr("cy", $scope.oGPlot.yScale($scope.twt));
-    $scope.vDCir
-      .attr("cx", $scope.vDPlot.xScale($scope.trace))
-      .attr("cy", $scope.vDPlot.yScale($scope.twt));
-  };
+    
+    $scope.vDHorLine
+      .attr("y1", yScale($scope.twt))
+      .attr("y2", yScale($scope.twt));
+  }
+  // function vDCirRedraw(){
+  //   var x = Math.floor($scope.vDPlot.xScale.invert(d3.event.x));
+  //   var y = Math.floor($scope.vDPlot.yScale.invert(d3.event.y));
+
+  //   // Check to make sure we are within the boundaries
+  //   if(x < 0){
+  //     x = 0;
+  //   } else if(x > $scope.data.seismic.length - 1) {
+  //     x = $scope.data.seismic.length - 1;
+  //   }
+
+  //   if(y < 0){
+  //     y = 0;
+  //   } else if(y > $scope.data.seismic[0].length - 1){
+  //     y = $scope.data.seismic[0].length - 1;
+  //   }
+
+  //   $scope.traceStr = x.toString();
+  //   $scope.twtStr = y.toString();
+  //   $scope.changeTraceStr();
+  //   $scope.changeTWTStr();
+  //   $scope.wGCir
+  //     .attr("cy", $scope.wGPlot.yScale($scope.twt));
+  //   $scope.oGCir
+  //     .attr("cy", $scope.oGPlot.yScale($scope.twt));
+  //   $scope.vDCir
+  //     .attr("cx", $scope.vDPlot.xScale($scope.trace))
+  //     .attr("cy", $scope.vDPlot.yScale($scope.twt));
+  // };
 
   $scope.plotOffset = function(data, height, max){
     // Offset Gather Plot
@@ -538,7 +626,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     }
   };
 
-    function oGWigLineRedraw(){
+  function oGWigLineRedraw(){
     var xScale = $scope.oGPlot.xScale;
     var yScale = $scope.oGPlot.yScale;
     var x = Math.floor(xScale.invert(d3.event.x));
