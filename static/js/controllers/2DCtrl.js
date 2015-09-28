@@ -457,65 +457,154 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         .attr("x2", xScale(data.offset_gather.length - 1))
         .attr("y2", yScale($scope.twt));
 
-        var drag = d3.behavior.drag()  // capture mouse drag event
-          .on('drag', oGCirRedraw);
+        // var drag = d3.behavior.drag()  // capture mouse drag event
+        //   .on('drag', oGCirRedraw);
 
-        var position = [$scope.oGPlot.xScale($scope.offset), $scope.oGPlot.yScale($scope.twt)];
-        $scope.oGCir = $scope.oGPlot.svg.append('circle')
-          .attr("class", "ogcir")
-          .attr("r", 5)
-          .attr("cx", position[0])
-          .attr("cy", position[1])
-          .style("opacity", 0.5)
-          .call(drag);
+        // Register drag trigger for wGWigLine
+        var wigLineDrag = d3.behavior.drag()
+          .on('drag', oGWigLineRedraw);
 
-        $(".ogcir").mouseup(function(e){
+        // Register drag trigger for wGHorLine
+        var horLineDrag = d3.behavior.drag()
+          .on('drag', oGHorLineRedraw);
+
+        // Draw invisible line
+        $scope.oGWigLine = $scope.oGPlot.svg.append('line')
+          .attr("class", "ogwigline")
+          .style("stroke-width", 10)
+          .style("stroke", "black")
+          .style("cursor", "pointer")
+          .style("opacity", 0)
+          .attr("x1", xScale($scope.offset))
+          .attr("y1", yScale(data.offset_gather[0].length - 1))
+          .attr("x2", xScale($scope.offset))
+          .attr("y2", yScale(0))
+          .call(wigLineDrag);
+
+        // Draw invisible horizon line
+        $scope.oGHorLine = $scope.oGPlot.svg.append('line')
+          .style("stroke-width", 10)
+          .style("stroke", "green")
+          .style("cursor", "pointer")
+          .style("opacity", 0)
+          .attr("x1", xScale(0))
+          .attr("y1", yScale($scope.twt))
+          .attr("x2", xScale(data.offset_gather.length - 1))
+          .attr("y2", yScale($scope.twt))
+          .call(horLineDrag);
+
+        // Register mouseup trigger for wgline
+        $(".ogwigline").mouseup(function(e){
           e.preventDefault();
           $scope.update_data();
         });
+
+        // var position = [$scope.oGPlot.xScale($scope.offset), $scope.oGPlot.yScale($scope.twt)];
+        // $scope.oGCir = $scope.oGPlot.svg.append('circle')
+        //   .attr("class", "ogcir")
+        //   .attr("r", 5)
+        //   .attr("cx", position[0])
+        //   .attr("cy", position[1])
+        //   .style("opacity", 0.5)
+        //   .call(drag);
+
+        // $(".ogcir").mouseup(function(e){
+        //   e.preventDefault();
+        //   $scope.update_data();
+        // });
     } else {
-      position = [$scope.oGPlot.xScale($scope.offset), $scope.oGPlot.yScale($scope.twt)];
-      $scope.oGCir
-        .attr("cx", position[0])
-        .attr("cy", position[1]);
+      // position = [$scope.oGPlot.xScale($scope.offset), $scope.oGPlot.yScale($scope.twt)];
+      // $scope.oGCir
+      //   .attr("cx", position[0])
+      //   .attr("cy", position[1]);
 
       $scope.oGHor
         .transition()
         .duration(5)
         .attr("y1", yScale($scope.twt))
         .attr("y2", yScale($scope.twt));
+
+      // Redraw the invisible line
+      $scope.oGWigLine
+        .attr("x1", xScale($scope.offset))
+        .attr("y1", yScale(data.offset_gather[0].length - 1))
+        .attr("x2", xScale($scope.offset))
+        .attr("y2", yScale(0));
+
+      // Redraw invisible horizon
+      $scope.oGHorLine
+        .attr("y1", yScale($scope.twt))
+        .attr("y2", yScale($scope.twt));
     }
   };
 
-  function oGCirRedraw(){
-    var x = Math.floor($scope.oGPlot.xScale.invert(d3.event.x));
-    var y = Math.floor($scope.oGPlot.yScale.invert(d3.event.y));
+    function oGWigLineRedraw(){
+    var xScale = $scope.oGPlot.xScale;
+    var yScale = $scope.oGPlot.yScale;
+    var x = Math.floor(xScale.invert(d3.event.x));
 
-    // Check to make sure we are within the boundaries
     if(x < 0){
       x = 0;
-    } else if(x > $scope.data.offset_gather.length - 1) {
+    } else if(x > $scope.data.offset_gather.length - 1){
       x = $scope.data.offset_gather.length - 1;
     }
 
+    $scope.offsetStr = x.toString();
+    $scope.changeOffsetStr();
+    
+    $scope.oGWigLine
+      .attr("x1", xScale($scope.offset))
+      .attr("x2", xScale($scope.offset));
+  }
+
+  function oGHorLineRedraw(){
+    var xScale = $scope.oGPlot.xScale;
+    var yScale = $scope.oGPlot.yScale;
+    var y = Math.floor(yScale.invert(d3.event.y));
+
     if(y < 0){
       y = 0;
-    } else if(y > $scope.data.seismic[0].length - 1){
-      y = $scope.data.seismic[0].length - 1;
+    } else if(y > $scope.data.offset_gather[0].length - 1){
+      y = $scope.data.offset_gather[0].length - 1;
     }
 
-    $scope.offsetStr = x.toString();
     $scope.twtStr = y.toString();
-    $scope.changeOffsetStr();
     $scope.changeTWTStr();
-    $scope.wGCir
-      .attr("cy", $scope.wGPlot.yScale($scope.twt));
-    $scope.vDCir
-      .attr("cy", $scope.vDPlot.yScale($scope.twt));
-    $scope.oGCir
-      .attr("cx", $scope.oGPlot.xScale($scope.offset))
-      .attr("cy", $scope.oGPlot.yScale($scope.twt));
-  };
+    
+    $scope.oGHorLine
+      .attr("y1", yScale($scope.twt))
+      .attr("y2", yScale($scope.twt));
+  }
+
+  // function oGCirRedraw(){
+  //   var x = Math.floor($scope.oGPlot.xScale.invert(d3.event.x));
+  //   var y = Math.floor($scope.oGPlot.yScale.invert(d3.event.y));
+
+  //   // Check to make sure we are within the boundaries
+  //   if(x < 0){
+  //     x = 0;
+  //   } else if(x > $scope.data.offset_gather.length - 1) {
+  //     x = $scope.data.offset_gather.length - 1;
+  //   }
+
+  //   if(y < 0){
+  //     y = 0;
+  //   } else if(y > $scope.data.seismic[0].length - 1){
+  //     y = $scope.data.seismic[0].length - 1;
+  //   }
+
+  //   $scope.offsetStr = x.toString();
+  //   $scope.twtStr = y.toString();
+  //   $scope.changeOffsetStr();
+  //   $scope.changeTWTStr();
+  //   $scope.wGCir
+  //     .attr("cy", $scope.wGPlot.yScale($scope.twt));
+  //   $scope.vDCir
+  //     .attr("cy", $scope.vDPlot.yScale($scope.twt));
+  //   $scope.oGCir
+  //     .attr("cx", $scope.oGPlot.xScale($scope.offset))
+  //     .attr("cy", $scope.oGPlot.yScale($scope.twt));
+  // };
 
   $scope.plotWavelet = function(data, height, max){
     // Wavelet Gather Plot
