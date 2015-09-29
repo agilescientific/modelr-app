@@ -217,15 +217,15 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     }
 
     $scope.aTHor
-      .setGain($scope.gain)
+      .gain($scope.gain)
       .reDraw($scope.aTArr);
 
     $scope.aOHor
-      .setGain($scope.gain)
+      .gain($scope.gain)
       .reDraw($scope.aOArr);
 
     $scope.aFHor
-      .setGain($scope.gain)
+      .gain($scope.gain)
       .reDraw($scope.aFArr);
   };
 
@@ -950,8 +950,9 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
 
     if(!$scope.aTHor){
       $scope.aTHor = g3.horizon($scope.aTPlot, $scope.aTArr)
-        .setDuration(5)
+        .duration(5)
         .draw();
+      console.log($scope.aTHor);
     } else {
       $scope.aTHor.reDraw($scope.aTArr);
     }
@@ -994,7 +995,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
 
     if(!$scope.aOHor){
       $scope.aOHor = g3.horizon($scope.aOPlot, $scope.aOArr)
-        .setDuration(5)
+        .duration(5)
         .draw();
     } else {
       $scope.aOHor.reDraw($scope.aOArr);
@@ -1035,7 +1036,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
 
     if(!$scope.aFHor){
       $scope.aFHor = g3.horizon($scope.aFPlot, $scope.aFArr)
-        .setDuration(5)
+        .duration(5)
         .draw();
     } else {
       $scope.aFHor.reDraw($scope.aFArr);
