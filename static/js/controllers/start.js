@@ -4,7 +4,6 @@ var app = angular.module('modelr',
 	'ngAnimate',
 	'angular-flexslider']);
 
- 
 app.config(['$interpolateProvider', function($interpolateProvider) {
   $interpolateProvider.startSymbol('{[');
   $interpolateProvider.endSymbol(']}');
