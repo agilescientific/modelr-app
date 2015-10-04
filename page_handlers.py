@@ -1356,7 +1356,7 @@ class ModelHandler(ModelrPageRequest):
         if self.request.get("error"):
             params.update(error="Invalid image file")
 
-        template = env.get_template('model.html')
+        template = env.get_template('model2.html')
         html = template.render(params)
         self.response.out.write(html)
 

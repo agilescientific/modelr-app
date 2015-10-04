@@ -7,15 +7,12 @@
   tspan {
   font-size: 9px;
   }
-
-
   table{
   table-layout: fixed;
   
   margin-left: 20px;
   margin-right: 20px;
   }
-
   model-plot {
   font: 16px sans-serif;
   }
@@ -27,15 +24,12 @@
   .y-label {
   font: 16px sans-serif;
   }
-
   .menu-label {
   font: 12px sans-serif;
   }
-
   .intervalRow {
   vertical-align: middle;
   }
-
   .wiggle-fill {
   fill: grey;
   stroke-width: 0;
@@ -46,24 +40,19 @@
   stroke-width: 1;
   stroke: black;
   }
-
-
   .deleteBtn{
   margin: 10px 0 0 0;
   vertical-align: top;
   color:red;
   }
-
   .menuSelect{
   vertical-align: top;
   margin: 6px 0 0 0;
   }
-
   .cblock {   
   font-size: 200%;
   margin-right: 8px;
   }
-
   .domain { 
   fill:none; 
   stroke: #000; 
@@ -85,7 +74,6 @@
     var db_rocks = {{db_rocks}};
     var colour_map = {{colour_map}};
     var db_fluids = {{db_fluids}};
-
     setup1D("#rock-model-container",db_rocks, db_fluids,
       colour_map, 10000, "#rock-menu", "#plot-container",
   "#reflectivity-menu", "#seismic-menu","{{HOSTNAME}}");
@@ -114,19 +102,18 @@
            class="col-md-offset-6 col-md-6">
          <label>
 	         Frequency
-	 </label>
-	 <input type="range" min="3" max="100" id="frequency"
-                value="30">
-	 <label id="frequency-label">
-	   30 Hz
-	 </label>
+      	 </label>
+      	 <input type="range" min="3" max="100" id="frequency"
+                      value="30">
+      	 <label id="frequency-label">
+      	   30 Hz
+      	 </label>
       </div>
     </div>
     <div class="row">
       <div id="rock-menu" class="col-md-12" title="Interval menu">
       </div>
     </div>
-
   </div> <!-- End of panel -->
 </div>
 
