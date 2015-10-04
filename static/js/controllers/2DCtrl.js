@@ -42,7 +42,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
             var index = event.currentTarget.attributes["data-index"].value;
             $(event.currentTarget).css('background-color', $scope.colorRange[index]);
             $scope.colorRange[index] = event.color.toHex();
-            console.log($scope.colorRange);
         });
       }
   };
@@ -66,7 +65,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         if($scope.images.length > 0){
           $scope.curImage = $scope.images[0];
 
-
 	  	    for(var i = 0; i < $scope.images.length; i++){
 	  	      $scope.images[i].rocks = [];
 	  	      for(var j = 0; j < $scope.images[i].colours.length; j++){
@@ -89,15 +87,18 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
 
   $scope.loadSaved = function(){
 
-    var array = $.map($scope.savedEarthModel.mapping, function(value, index) {
+    var arr = $.map($scope.savedEarthModel.mapping, function(value, index) {
       return [value];
     });
 
     $scope.curImage.rocks = [];
-    for(var i = 0; i < array.length; i++){
-      $scope.curImage.rocks.push(array[i].rock);
+    for(var i = 0; i < arr.length; i++){
+      for(var j = 0; j < $scope.rocks.length; j++){
+        if(arr[i].rock.name === $scope.rocks[j].name){
+          $scope.curImage.rocks.push($scope.rocks[j]);
+        }
+      }
     }
-        console.log($scope.curImage.rocks);
   };
   
   $scope.slideClick = function(slider){
@@ -105,7 +106,12 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
   };
 
   $scope.update_data = function(){
+    if($scope.updateClicked === undefined){
+      $('#loader').show();
+    }
+
     var earth_model = $scope.makeEarthModelStruct();
+    $("html, body").scrollTop($("#plot_header").offset().top);
       
     var seismic = {
       frequency: $scope.frequency,
@@ -131,6 +137,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
           $scope.maxTWT = String(response.data.seismic[0].length - 1);
           $scope.maxOffset = String(response.data.offset_gather.length - 1);
           $scope.updateClicked = true;
+          $('#loader').hide();
         }
       );
   };
@@ -139,7 +146,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.trace = Number($scope.traceStr);
     var arr = [$scope.data.seismic[$scope.trace]];
     $scope.vDLog
-      .setXMin($scope.trace)
+      .xMin($scope.trace)
       .reDraw(
         arr, 
         [0, $scope.data.seismic.length - 1], 
@@ -152,86 +159,27 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.updateTWT();
   };
 
-  $scope.getMaxAll = function(){
-    var max = [];
-    var maxT = getMax(d3.max($scope.aTArr) * $scope.gain, d3.min($scope.aTArr) * $scope.gain);
-    max.push(maxT);
-    var maxO = getMax(d3.max($scope.aOArr) * $scope.gain, d3.min($scope.aOArr) * $scope.gain);
-    max.push(maxO);
-    var maxF = getMax(d3.max($scope.aFArr) * $scope.gain, d3.min($scope.aFArr) * $scope.gain);
-    max.push(maxF);
-    return d3.max(max);
-  };
-
   $scope.updateTWT = function(){
     // Update Horizons
-    var yScale = $scope.vDPlot.yScale;
-    $scope.vDHor
-      .transition()
-      .duration(5)
-      .attr("y1", yScale($scope.twt))
-      .attr("y2", yScale($scope.twt));
+    var arr = [];
+    for(var i = 0; i < $scope.data.seismic.length; i++){ arr.push($scope.twt); }
+    $scope.vDHor.reDraw(arr);
 
-    yScale = $scope.oGPlot.yScale;
-    $scope.oGHor
-      .transition()
-      .duration(5)
-      .attr("y1", yScale($scope.twt))
-      .attr("y2", yScale($scope.twt));
+    arr = [];
+    for(var i = 0; i < $scope.data.offset_gather.length; i++){ arr.push($scope.twt); }
+    $scope.oGHor.reDraw(arr);
 
-    yScale = $scope.wGPlot.yScale;
-    $scope.wGHor
-      .transition()
-      .duration(5)
-      .attr("y1", yScale($scope.twt))
-      .attr("y2", yScale($scope.twt));
+    arr = [];
+    for(var i = 0; i < $scope.data.wavelet_gather.length; i++){ arr.push($scope.twt); }
+    $scope.wGHor.reDraw(arr);
 
     $scope.aTArr = getCrossSection($scope.data.seismic, $scope.twt);
     $scope.aOArr = getCrossSection($scope.data.offset_gather, $scope.twt);
     $scope.aFArr = getCrossSection($scope.data.wavelet_gather, $scope.twt);
-    
-    var maxAll = $scope.getMaxAll();
 
-    if(maxAll > 1){
-      $scope.updateAmpPlots(maxAll);
-    }
-
-    $scope.aTHor
-      .setGain($scope.gain)
-      .reDraw($scope.aTArr);
-
-    $scope.aOHor
-      .setGain($scope.gain)
-      .reDraw($scope.aOArr);
-
-    $scope.aFHor
-      .setGain($scope.gain)
-      .reDraw($scope.aFArr);
-  };
-
-  $scope.updateAmpPlots = function(maxAll){
-    $scope.aTPlot
-      .reDraw(
-        [0, $scope.data.seismic.length - 1], 
-        [maxAll,-maxAll], 
-        [0, $scope.data.seismic.length - 1], 
-        [maxAll,-maxAll]
-      );
-    $scope.aOPlot
-      .reDraw(
-        [0, $scope.data.offset_gather.length - 1], 
-        [maxAll,-maxAll], 
-        [0, $scope.data.offset_gather.length - 1], 
-        [maxAll,-maxAll]
-      );
-
-    $scope.aFPlot
-      .reDraw(
-        [0, $scope.data.wavelet_gather.length - 1], 
-        [maxAll,-maxAll], 
-        [0, $scope.data.wavelet_gather.length - 1], 
-        [maxAll,-maxAll]
-      );
+    $scope.aTHor.reDraw($scope.aTArr);
+    $scope.aOHor.reDraw($scope.aOArr);
+    $scope.aFHor.reDraw($scope.aFArr);
   };
 
   $scope.changeGainStr = function(){
@@ -244,7 +192,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.offsetNum = $scope.offset * 3;
     var arr = [$scope.data.offset_gather[$scope.offset]];
     $scope.oGLog
-      .setXMin($scope.offset)
+      .xMin($scope.offset)
       .reDraw(
         arr, 
         [0, $scope.data.offset_gather.length - 1], 
@@ -257,7 +205,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.frequencyNum = $scope.data.f[$scope.frequency];
     var arr = [$scope.data.wavelet_gather[$scope.frequency]];
     $scope.wGLog
-      .setXMin($scope.frequency)
+      .xMin($scope.frequency)
       .reDraw(
         arr, 
         [0, $scope.data.wavelet_gather.length - 1], 
@@ -278,44 +226,110 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     var width = $('.vd_plot').width();
     if(!$scope.vDPlot){
       $scope.vDPlot = g3.plot('.vd_plot')
-        .setHeight(height)
-        .setXTitle("spatial cross-section")
-        .setYTitle("time [ms]")
-        .setWidth(width - 30)
-        .toggleX2Axis(true)
-        .toggleY2Axis(true)
-        .setXTickFormat("")
-        .setX2TickFormat("")
-        .setY2TickFormat("")
-        .setDuration(5)
-        .setMargin(20,10,5,40)
-        .setXDomain([0, data.seismic.length - 1])
-        .setYDomain([0, data.seismic[0].length - 1])
-        .setX2Domain([0, data.seismic.length - 1])
-        .setY2Domain([0, data.seismic[0].length - 1])
+        .height(height)
+        .xTitle("spatial cross-section")
+        .yTitle("time [ms]")
+        .width(width - 30)
+        .xTickFormat("")
+        .x2TickFormat("")
+        .y2TickFormat("")
+        .margin(20,10,5,40)
+        .xDomain([0, data.seismic.length - 1])
+        .yDomain([0, data.seismic[0].length - 1])
         .draw();
     } else {
       $scope.vDPlot.reDraw(
         [0, data.seismic.length - 1], 
-        [0, data.seismic[0].length - 1], 
-        [0, data.seismic.length - 1], 
         [0, data.seismic[0].length - 1]
       );
     }
-
     // Draw Seismic Image
     if(!$scope.seis){
       $scope.seis = g3.seismic($scope.vDPlot, data.seismic)
-        .setMax(max)
-        .setColor($scope.colorScale)
-        .setGain($scope.gain)
+        .max(max)
+        .colorScale($scope.colorScale)
+        .gain($scope.gain)
         .draw();
     } else {
       $scope.seis
-        .setGain($scope.gain)
-        .setColor($scope.colorScale)
+        .gain($scope.gain)
+        .colorScale($scope.colorScale)
         .reDraw(data.seismic);
     }
+  };
+  
+  $scope.plotVDHorizon = function(data){
+    var xScale = $scope.vDPlot.xScale();
+    var yScale = $scope.vDPlot.yScale();
+    var arr = [];
+    for(var i = 0; i < data.seismic.length; i++){
+      arr.push($scope.twt);
+    }
+    if(!$scope.vDHor){ 
+      $scope.vDHor = g3.horizon($scope.vDPlot, arr).draw();
+
+      // Register drag trigger for wGWigLine
+      var wigLineDrag = d3.behavior.drag()
+        .on('drag', vDWigLineRedraw);
+
+      // Register drag trigger for wGHorLine
+      var horLineDrag = d3.behavior.drag()
+      .on('drag', vDHorLineRedraw);
+
+      // Draw invisible line
+      $scope.vDWigLine = g3.handle.line(
+        $scope.vDPlot, 
+        $scope.trace, 
+        data.seismic[0].length - 1,
+        $scope.trace,
+        0)
+        .class('vdwigline')
+        .draw();
+      $scope.vDWigLine.line().call(wigLineDrag);
+
+      // Draw invisible horizon line
+      $scope.vDHorLine = g3.handle.line($scope.vDPlot, 0, 
+        $scope.twt, data.seismic.length - 1, $scope.twt).draw();
+      $scope.vDHorLine.line().call(horLineDrag);
+
+      // Register mouseup trigger for wgline
+      $(".vdwigline").mouseup(function(e){
+        e.preventDefault();
+        $scope.update_data();
+      });
+    } else {
+      // Redraw the invisible line
+      $scope.vDWigLine.reDraw($scope.trace, data.seismic[0].length - 1, $scope.trace, 0);
+      // Redraw invisible horizon
+      $scope.vDHorLine.reDraw(0, $scope.twt, data.seismic.length - 1, $scope.twt);
+      $scope.vDHor.reDraw(arr);
+    }
+  };
+
+  function vDWigLineRedraw(){
+    var xScale = $scope.vDPlot.xScale();
+    var x = Math.floor(xScale.invert(d3.event.x));
+
+    if(x < 0){ x = 0; } 
+    else if(x > $scope.data.seismic.length - 1){ x = $scope.data.seismic.length - 1; }
+
+    $scope.traceStr = x.toString();
+    $scope.changeTraceStr();
+    $scope.vDWigLine.reDraw($scope.trace, $scope.data.seismic[0].length - 1, $scope.trace, 0);
+  }
+
+  function vDHorLineRedraw(){
+    var yScale = $scope.vDPlot.yScale();
+    var y = Math.floor(yScale.invert(d3.event.y));
+
+    if(y < 0){ y = 0; } 
+    else if(y > $scope.data.seismic[0].length - 1){ y = $scope.data.seismic[0].length - 1; }
+
+    $scope.twtStr = y.toString();
+    $scope.changeTWTStr();
+    $scope.wGHorLine.reDraw(0, $scope.twt, $scope.data.wavelet_gather.length - 1, $scope.twt);
+    $scope.oGHorLine.reDraw(0, $scope.twt, $scope.data.offset_gather.length - 1, $scope.twt);
+    $scope.vDHorLine.reDraw(0, $scope.twt, $scope.data.seismic.length - 1, $scope.twt);
   };
 
   $scope.plotOffset = function(data, height, max){
@@ -323,28 +337,21 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     var width = $('.og_plot').width();
     if(!$scope.oGPlot){
       $scope.oGPlot = g3.plot('.og_plot')
-        .setHeight(height)
-        .setWidth(width - 30)
-        .setDuration(5)
-        .setXTitle("angle gather")
-        .toggleX2Axis(true)
-        .setX2Ticks(6)
-        .setXTicks(6)
-        .toggleY2Axis(true)
-        .setXTickFormat("")
-        .setX2TickFormat("")
-        .setYTickFormat("")
-        .setY2TickFormat("")
-        .setMargin(20,10,5,30)
-        .setXDomain([0, data.offset_gather.length - 1])
-        .setYDomain([0, data.offset_gather[0].length - 1])
-        .setX2Domain([0, data.offset_gather.length - 1])
-        .setY2Domain([0, data.offset_gather[0].length - 1])
+        .height(height)
+        .width(width - 30)
+        .xTitle("angle gather")
+        .xTicks(6)
+        .x2Ticks(6)
+        .xTickFormat("")
+        .x2TickFormat("")
+        .yTickFormat("")
+        .y2TickFormat("")
+        .margin(20,10,5,30)
+        .xDomain([0, data.offset_gather.length - 1])
+        .yDomain([0, data.offset_gather[0].length - 1])
         .draw();
     } else {
       $scope.oGPlot.reDraw(
-        [0, data.offset_gather.length - 1], 
-        [0, data.offset_gather[0].length - 1], 
         [0, data.offset_gather.length - 1], 
         [0, data.offset_gather[0].length - 1]
       );
@@ -353,16 +360,107 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     // Draw Offset Gather Image
     if(!$scope.og){
       $scope.og = g3.seismic($scope.oGPlot, data.offset_gather)
-        .setMax(max)
-        .setColor($scope.colorScale)
-        .setGain($scope.gain)
+        .max(max)
+        .colorScale($scope.colorScale)
+        .gain($scope.gain)
         .draw();
     } else {
       $scope.og
-        .setGain($scope.gain)
-        .setColor($scope.colorScale)
+        .gain($scope.gain)
+        .colorScale($scope.colorScale)
         .reDraw(data.offset_gather);
     }
+  };
+
+  $scope.plotOffsetHorizon = function(data){
+    // Draw Offset Horizon
+    var xScale = $scope.oGPlot.xScale();
+    var yScale = $scope.oGPlot.yScale();
+
+    var arr = [];
+    for(var i = 0; i < data.offset_gather.length; i++){
+      arr.push($scope.twt);
+    }
+
+    if(!$scope.oGHor){
+      $scope.oGHor = g3.horizon($scope.oGPlot, arr).draw();
+
+        // Register drag trigger for wGWigLine
+        var wigLineDrag = d3.behavior.drag()
+          .on('drag', oGWigLineRedraw);
+
+        // Register drag trigger for wGHorLine
+        var horLineDrag = d3.behavior.drag()
+          .on('drag', oGHorLineRedraw);
+
+        // Draw invisible line
+        $scope.oGWigLine = g3.handle.line(
+          $scope.oGPlot, 
+          $scope.offset, 
+          data.offset_gather[0].length - 1,
+          $scope.offset,
+          0)
+          .class('ogwigline')
+          .draw();
+        $scope.oGWigLine.line().call(wigLineDrag);
+
+        // Draw invisible horizon line
+        $scope.oGHorLine = g3.handle.line(
+          $scope.oGPlot, 
+          0, 
+          $scope.twt,
+          data.offset_gather.length - 1,
+          $scope.twt)
+          .draw();
+
+        $scope.oGHorLine.line().call(horLineDrag);
+
+        // Register mouseup trigger for wgline
+        $(".ogwigline").mouseup(function(e){
+          e.preventDefault();
+          $scope.update_data();
+        });
+
+    } else {
+      $scope.oGHor.reDraw(arr);
+      // Redraw the invisible line
+      $scope.oGWigLine.reDraw($scope.offset, data.offset_gather[0].length - 1, $scope.offset, 0);
+      // Redraw invisible horizon
+      $scope.oGHorLine.reDraw(0, $scope.twt, data.offset_gather.length - 1, $scope.twt);
+    }
+  };
+
+  function oGWigLineRedraw(){
+    var xScale = $scope.oGPlot.xScale();
+    var yScale = $scope.oGPlot.yScale();
+    var x = Math.floor(xScale.invert(d3.event.x));
+
+    if(x < 0){ x = 0; } 
+    else if(x > $scope.data.offset_gather.length - 1){
+      x = $scope.data.offset_gather.length - 1;
+    }
+
+    $scope.offsetStr = x.toString();
+    $scope.changeOffsetStr();
+    $scope.oGWigLine.reDraw($scope.offset, $scope.data.offset_gather[0].length - 1,
+      $scope.offset,0);
+  }
+
+  function oGHorLineRedraw(){
+    var xScale = $scope.oGPlot.xScale();
+    var yScale = $scope.oGPlot.yScale();
+    var y = Math.floor(yScale.invert(d3.event.y));
+
+    if(y < 0){ y = 0; } 
+    else if(y > $scope.data.offset_gather[0].length - 1){ 
+      y = $scope.data.offset_gather[0].length - 1;
+    }
+
+    $scope.twtStr = y.toString();
+    $scope.changeTWTStr();
+    $scope.wGHorLine.reDraw(0, $scope.twt, $scope.data.wavelet_gather.length - 1, $scope.twt);
+    $scope.oGHorLine.reDraw(0, $scope.twt, $scope.data.offset_gather.length - 1, $scope.twt);
+    $scope.vDHorLine.reDraw(0, $scope.twt, $scope.data.seismic.length - 1, $scope.twt);
   };
 
   $scope.plotWavelet = function(data, height, max){
@@ -370,28 +468,21 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     var width = $('.wg_plot').width();
     if(!$scope.wGPlot){
       $scope.wGPlot = g3.plot('.wg_plot')
-        .setHeight(height)
-        .setWidth(width - 30)
-        .setDuration(5)
-        .setXTitle("wavelet gather")
-        .toggleX2Axis(true)
-        .setX2Ticks(6)
-        .setXTicks(6)
-        .toggleY2Axis(true)
-        .setXTickFormat("")
-        .setX2TickFormat("")
-        .setYTickFormat("")
-        .setY2TickFormat("")
-        .setMargin(20,10,5,20)
-        .setXDomain([0, data.wavelet_gather.length - 1])
-        .setYDomain([0, data.wavelet_gather[0].length - 1])
-        .setX2Domain([0, data.wavelet_gather.length - 1])
-        .setY2Domain([0, data.wavelet_gather[0].length - 1])
+        .height(height)
+        .width(width - 30)
+        .xTitle("wavelet gather")
+        .xTicks(6)
+        .x2Ticks(6)
+        .xTickFormat("")
+        .x2TickFormat("")
+        .yTickFormat("")
+        .y2TickFormat("")
+        .margin(20,10,5,20)
+        .xDomain([0, data.wavelet_gather.length - 1])
+        .yDomain([0, data.wavelet_gather[0].length - 1])
         .draw();
     } else {
       $scope.wGPlot.reDraw(
-        [0, data.wavelet_gather.length - 1], 
-        [0, data.wavelet_gather[0].length - 1], 
         [0, data.wavelet_gather.length - 1], 
         [0, data.wavelet_gather[0].length - 1]
       );
@@ -400,17 +491,103 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     // Draw Wavelet Gather Image
     if(!$scope.wg){
       $scope.wg = g3.seismic($scope.wGPlot, data.wavelet_gather)
-        .setMax(max)
-        .setColor($scope.colorScale)
-        .setGain($scope.gain)
+        .max(max)
+        .colorScale($scope.colorScale)
+        .gain($scope.gain)
         .draw();
     } else {
       $scope.wg
-        .setColor($scope.colorScale)
-        .setGain($scope.gain)
+        .colorScale($scope.colorScale)
+        .gain($scope.gain)
         .reDraw(data.wavelet_gather);
     }
   };
+
+  $scope.plotWaveletHorizon = function(data){
+    var arr = [];
+    for(var i = 0; i < data.wavelet_gather.length; i++){
+      arr.push($scope.twt);
+    }
+
+    if(!$scope.wGHor){
+      // Draw horizon line
+      $scope.wGHor = g3.horizon($scope.wGPlot, arr).draw();
+      
+      // Register drag trigger for wGWigLine
+      var wigLineDrag = d3.behavior.drag()
+        .on('drag', wGWigLineRedraw);
+
+      // Register drag trigger for wGHorLine
+      var horLineDrag = d3.behavior.drag()
+        .on('drag', wGHorLineRedraw);
+
+      // Draw invisible line
+      $scope.wGWigLine = g3.handle.line(
+        $scope.wGPlot, 
+        $scope.frequency, 
+        data.wavelet_gather[0].length - 1,
+        $scope.frequency,
+        0)
+        .class('wgwigline')
+        .draw();
+      $scope.wGWigLine.line().call(wigLineDrag);
+
+      $scope.wGHorLine = g3.handle.line(
+        $scope.wGPlot, 
+        0, 
+        $scope.twt,
+        data.wavelet_gather.length - 1,
+        $scope.twt)
+        .draw();
+      $scope.wGHorLine.line().call(horLineDrag);
+
+      // Register mouseup trigger for wgline
+      $(".wgwigline").mouseup(function(e){
+        e.preventDefault();
+        $scope.update_data();
+      });
+
+    } else {
+      // Redraw the invisible line
+      $scope.wGWigLine.reDraw($scope.frequency, data.wavelet_gather[0].length - 1, 
+        $scope.frequency, 0);
+      // Redraw invisible horizon
+      $scope.wGHorLine.reDraw(0, $scope.twt, data.wavelet_gather.length - 1, $scope.twt);
+      // Redraw horizon
+      $scope.wGHor.reDraw(arr);
+    }
+  };
+
+  function wGWigLineRedraw(){
+    var xScale = $scope.wGPlot.xScale();
+    var x = Math.floor(xScale.invert(d3.event.x));
+
+    if(x < 0){ x = 0; } 
+    else if(x > $scope.data.wavelet_gather.length - 1){
+      x = $scope.data.wavelet_gather.length - 1;
+    }
+
+    $scope.frequencyStr = x.toString();
+    $scope.changeFrequencyStr();
+    $scope.wGWigLine.reDraw($scope.frequency, $scope.data.wavelet_gather[0].length - 1, 
+        $scope.frequency, 0);
+  }
+
+  function wGHorLineRedraw(){
+    var yScale = $scope.wGPlot.yScale();
+    var y = Math.floor(yScale.invert(d3.event.y));
+
+    if(y < 0){ y = 0; } 
+    else if(y > $scope.data.wavelet_gather[0].length - 1){
+      y = $scope.data.wavelet_gather[0].length - 1;
+    }
+
+    $scope.twtStr = y.toString();
+    $scope.changeTWTStr();
+    $scope.wGHorLine.reDraw(0, $scope.twt, $scope.data.wavelet_gather.length - 1, $scope.twt);
+    $scope.oGHorLine.reDraw(0, $scope.twt, $scope.data.offset_gather.length - 1, $scope.twt);
+    $scope.vDHorLine.reDraw(0, $scope.twt, $scope.data.seismic.length - 1, $scope.twt);
+  }
 
   $scope.plotAmplitudeTrace = function(data, height){
     // Amplitude Trace
@@ -418,31 +595,25 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
 
     if(!$scope.aTPlot){
       $scope.aTPlot = g3.plot('.at_plot')
-        .setHeight(height)
-        .setYTitle("amplitude")
-        .setDuration(5)
-        .setWidth(width - 30)
-        .setYTicks(6)
-        .setY2Ticks(6)
-        .setX2Title("trace")
-        .toggleX2Axis(true)
-        .toggleY2Axis(true)
-        .setXTickFormat("")
-        .setY2TickFormat("")
-        .setMargin(5,10,40,40)
-        .setXDomain([0, $scope.data.seismic.length - 1])
-        .setYDomain([1, -1])
-        .setX2Domain([0, $scope.data.seismic.length - 1])
-        .setY2Domain([1, -1])
+        .height(height)
+        .yTitle("amplitude")
+        .width(width - 30)
+        .yTicks(6)
+        .y2Ticks(6)
+        .xTickFormat("")
+        .y2TickFormat("")
+        .x2Title("trace")
+        .margin(5,10,40,40)
+        .xDomain([0, data.seismic.length - 1])
+        .yDomain([1, -1])
         .draw();
+        console.log($scope.aTPlot);
     }
 
-    $scope.aTArr = getCrossSection($scope.data.seismic, $scope.twt);
+    $scope.aTArr = getCrossSection(data.seismic, $scope.twt);
 
     if(!$scope.aTHor){
-      $scope.aTHor = g3.horizon($scope.aTPlot, $scope.aTArr)
-        .setDuration(5)
-        .draw();
+      $scope.aTHor = g3.horizon($scope.aTPlot, $scope.aTArr).draw();
     } else {
       $scope.aTHor.reDraw($scope.aTArr);
     }
@@ -457,36 +628,29 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     var width = $('.ao_plot').width();
     if(!$scope.aOPlot){
       $scope.aOPlot = g3.plot('.ao_plot')
-        .setHeight(height)
-        .setWidth(width - 30)
-        .setDuration(5)
-        .toggleX2Axis(true)
-        .setX2Title("\u03B8" + "\u00B0")
-        .setY2Ticks(6)
-        .setYTicks(6)
-        .setXTicks(6)
-        .setX2Ticks(6)
-        .toggleY2Axis(true)
-        .setX2TickFormat(function(d, i){
+        .height(height)
+        .width(width - 30)
+        .x2Title("\u03B8" + "\u00B0")
+        .yTicks(6)
+        .y2Ticks(6)
+        .xTicks(6)
+        .x2Ticks(6)
+        .xTickFormat("")
+        .yTickFormat("")
+        .y2TickFormat("")
+        .x2TickFormat(function(d, i){
           return $scope.data.theta[d];
         })
-        .setXTickFormat("")
-        .setYTickFormat("")
-        .setY2TickFormat("")
-        .setMargin(5,10,40,30)
-        .setXDomain([0, data.offset_gather.length - 1])
-        .setYDomain([1, -1])
-        .setX2Domain([0, data.offset_gather.length - 1])
-        .setY2Domain([1, -1])
+        .margin(5,10,40,30)
+        .xDomain([0, data.offset_gather.length - 1])
+        .yDomain([1, -1])
         .draw();
     } 
 
     $scope.aOArr = getCrossSection($scope.data.offset_gather, $scope.twt);
 
     if(!$scope.aOHor){
-      $scope.aOHor = g3.horizon($scope.aOPlot, $scope.aOArr)
-        .setDuration(5)
-        .draw();
+      $scope.aOHor = g3.horizon($scope.aOPlot, $scope.aOArr).draw();
     } else {
       $scope.aOHor.reDraw($scope.aOArr);
     }
@@ -498,36 +662,29 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     var width = $('.af_plot').width();
     if(!$scope.aFPlot){
       $scope.aFPlot = g3.plot('.af_plot')
-        .setHeight(height)
-        .setWidth(width - 30)
-        .setDuration(5)
-        .setX2Title("centre frequency Hz")
-        .toggleX2Axis(true)
-        .setY2Ticks(6)
-        .setYTicks(6)
-        .setXTicks(6)
-        .setX2Ticks(6)
-        .toggleY2Axis(true)
-          .setX2TickFormat(function(d, i){
+        .height(height)
+        .width(width - 30)
+        .x2Title("centre frequency Hz")
+        .yTicks(6)
+        .y2Ticks(6)
+        .xTicks(6)
+        .x2Ticks(6)
+        .xTickFormat("")
+        .yTickFormat("")
+        .y2TickFormat("")
+        .x2TickFormat(function(d, i){
           return Math.floor($scope.data.f[d]);
         })
-        .setXTickFormat("")
-        .setYTickFormat("")
-        .setY2TickFormat("")
-        .setMargin(5,10,40,20)
-        .setXDomain([0, $scope.data.wavelet_gather.length - 1])
-        .setYDomain([1, -1])
-        .setX2Domain([0, $scope.data.wavelet_gather.length - 1])
-        .setY2Domain([1, -1])
+        .margin(5,10,40,20)
+        .xDomain([0, $scope.data.wavelet_gather.length - 1])
+        .yDomain([1, -1])
         .draw();
     }
 
     $scope.aFArr = getCrossSection($scope.data.wavelet_gather, $scope.twt);
 
     if(!$scope.aFHor){
-      $scope.aFHor = g3.horizon($scope.aFPlot, $scope.aFArr)
-        .setDuration(5)
-        .draw();
+      $scope.aFHor = g3.horizon($scope.aFPlot, $scope.aFArr).draw();
     } else {
       $scope.aFHor.reDraw($scope.aFArr);
     }
@@ -538,13 +695,14 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     var arr = [data.seismic[$scope.trace]];
     if(!$scope.vDLog){
       $scope.vDLog = g3.wiggle($scope.vDPlot, arr)
-        .setXMin($scope.trace)
-        .setGain(80)
-        .setDuration(5)
+        .xMin($scope.trace)
+        .gain(80)
+        .duration(5)
         .draw();
+
     } else {
       $scope.vDLog
-        .setXMin($scope.trace)
+        .xMin($scope.trace)
         .reDraw(
           arr, 
           [0, data.seismic.length - 1], 
@@ -553,38 +711,17 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     }
   };
 
-  $scope.plotVDHorizon = function(data){
-    var xScale = $scope.vDPlot.xScale;
-    var yScale = $scope.vDPlot.yScale;
-    if(!$scope.vDHor){
-      $scope.vDHor = $scope.vDPlot.svg.append("line")
-        .style("stroke", "green")
-        .style("opacity", 1.5)
-        .attr("x1", xScale(0))
-        .attr("y1", yScale($scope.twt))
-        .attr("x2", xScale(data.seismic.length - 1))
-        .attr("y2", yScale($scope.twt));
-    } else {
-      $scope.vDHor
-        .transition()
-        .duration(5)
-        .attr("y1", yScale($scope.twt))
-        .attr("y2", yScale($scope.twt));
-    }
-  };
-
   $scope.plotOffsetWiggle = function(data){
     // Draw Offset Wiggle
     var arr = [data.offset_gather[$scope.offset]];
     if(!$scope.oGLog){
       $scope.oGLog = g3.wiggle($scope.oGPlot, arr)
-        .setXMin($scope.offset)
-        .setGain(5)
-        .setDuration(5)
+        .xMin($scope.offset)
+        .gain(5)
         .draw();
     } else {
       $scope.oGLog
-        .setXMin($scope.offset)
+        .xMin($scope.offset)
         .reDraw(
           arr, 
           [0, data.offset_gather.length - 1], 
@@ -598,60 +735,17 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     var arr = [data.wavelet_gather[$scope.frequency]];
     if(!$scope.wGLog){
       $scope.wGLog = g3.wiggle($scope.wGPlot, arr)
-        .setXMin($scope.frequency)
-        .setGain(22.7)
-        .setDuration(5)
+        .xMin($scope.frequency)
+        .gain(22.7)
         .draw();
     } else {
       $scope.wGLog
-        .setXMin($scope.frequency)
+        .xMin($scope.frequency)
         .reDraw(
           arr, 
           [0, data.wavelet_gather.length - 1], 
           [0, data.wavelet_gather[0].length - 1]
         );
-    }
-  };
-
-  $scope.plotOffsetHorizon = function(data){
-    // Draw Offset Horizon
-    var xScale = $scope.oGPlot.xScale;
-    var yScale = $scope.oGPlot.yScale;
-    if(!$scope.oGHor){
-      $scope.oGHor = $scope.oGPlot.svg.append("line")
-        .style("stroke", "green")
-        .style("opacity", 1.5)
-        .attr("x1", xScale(0))
-        .attr("y1", yScale($scope.twt))
-        .attr("x2", xScale(data.offset_gather.length - 1))
-        .attr("y2", yScale($scope.twt));
-    } else {
-      $scope.oGHor
-        .transition()
-        .duration(5)
-        .attr("y1", yScale($scope.twt))
-        .attr("y2", yScale($scope.twt));
-    }
-  };
-
-  $scope.plotWaveletHorizon = function(data){
-    // Draw Wavelet Horizon
-    var xScale = $scope.wGPlot.xScale;
-    var yScale = $scope.wGPlot.yScale;
-    if(!$scope.wGHor){
-      $scope.wGHor = $scope.wGPlot.svg.append("line")
-        .style("stroke", "green")
-        .style("opacity", 1.5)
-        .attr("x1", xScale(0))
-        .attr("y1", yScale($scope.twt))
-        .attr("x2", xScale(data.wavelet_gather.length - 1))
-        .attr("y2", yScale($scope.twt));
-    } else {
-      $scope.wGHor
-        .transition()
-        .duration(5)
-        .attr("y1", yScale($scope.twt))
-        .attr("y2", yScale($scope.twt));
     }
   };
 
@@ -669,7 +763,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.plotSeismic(data, height, max);
     $scope.plotOffset(data, height, max);
     $scope.plotWavelet(data, height, max);
-
     height = 150;
     $scope.plotAmplitudeTrace(data, height);
     $scope.plotAmplitudeOffset(data, height);
@@ -680,18 +773,13 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.plotVDHorizon(data);
     $scope.plotOffsetHorizon(data);
     $scope.plotWaveletHorizon(data);
-    var maxAll = $scope.getMaxAll();
-
-    if(maxAll > 1){
-      $scope.updateAmpPlots(maxAll);
-    }
   };
 
   $scope.makeEarthModelStruct = function(){
     var image = $scope.curImage;
     var mapping = {};
     for(var i=0; i < image.rocks.length; i++){
-        mapping[image.colours[i]] = image.rocks[i];
+      mapping[image.colours[i]] = image.rocks[i];
     }
     
     var data = {
@@ -746,4 +834,28 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
   $( document ).ready(function(){
     $scope.setColorPickers();
   });
+
+  $scope.exportCSV = function(){
+    var csv = [];
+    $.each($scope.data.metadata.moduli, function(key, value) {
+      csv.push('"' + key + '"');
+      $.each(value, function(k, v) {
+        if(k === 'imp'){
+          v = (v / 1000000).toFixed(2);
+        } else if(k === 'pr'){
+          v = v.toFixed(2);
+        } else {
+          v = (v / 1000000000).toFixed(2);
+        }
+        csv.push(',"' + v + '"')
+      });
+      csv.push('\r\n');
+    });
+    csv = csv.join("");
+    var hiddenElement = document.createElement('a');
+    hiddenElement.href = 'data:attachment/csv,' + encodeURI(csv);
+    hiddenElement.target = '_blank';
+    hiddenElement.download = 'export.csv';
+    hiddenElement.click();
+  };
 });

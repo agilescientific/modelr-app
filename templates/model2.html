@@ -66,7 +66,7 @@
 						<div ng-repeat="item in curImage.rocks track by $index">
       				<div class="rock-color col-xs-2" ng-style="{'background-color': curImage.colours[$index]}">
       				</div>
-								<button type="button" class="btn btn-default col-xs-9 model_select" placement="bottom-right" ng-model="item.name" bs-options="rock.name as rock.name for rock in rocks" bs-select>								
+								<button type="button" class="btn btn-default col-xs-9 model_select" placement="bottom-right" ng-model="curImage.rocks[$index]" ng-change="testing()" bs-options="rock as rock.name for rock in rocks" bs-select>								
 									<span class="caret">
 									</span>
    						</button>
@@ -112,12 +112,12 @@
 	</div>
 
   <!-- RESULTS PANEL -->
-  <div class="panel panel-default">
+  <div class="panel panel-default" id="plot_header">
     <div class="panel-heading">
       <h3 class="panel-title">Result</h3>
     </div>
     <div class="panel-body">
-
+   		<img class="col-xs-12" style="height: 300px; display:none;" id="loader" src="/static/img/ajax-loader.gif" />
       <!-- GRAPHS -->
       <div class="col-xs-12 col-sm-8">
 				<div class="col-xs-6 vd_plot remove-padding"></div>
@@ -146,6 +146,7 @@
 				      </div>
 				      <div class="col-xs-8 col-md-5 col-xs-offset-1 remove-padding">
 								<div>
+									<p>{[traceStr]}</p>
 								  <input class="form-control" ng-mouseup="update_data()" ng-change="changeTraceStr()" ng-model="traceStr" min="0" max="{[maxTrace]}" type="range"/>
 								</div>
 				      </div>
@@ -248,9 +249,43 @@
 				      </div>
 						</div>
 				  </div>
-				</div>    
+				</div>
       </div>
     </div>
   </div>
+  <div class="panel panel-default" ng-show="updateClicked">
+		<div class="panel-heading">
+		  <div ng-click="exportCSV()" style="float:right; margin-top:-2px;"><a class="btn btn-default btn-xs">Export CSV</a></div>
+			<h3 class="panel-title">Metadata</h3>
+		</div>
+		<div class="panel-body"> 
+		<table id="model_metadata" class="table table-striped">
+			<thead>
+				<tr>
+					<th></th>
+					<th class="text-right" style="padding:0 8px 0 0;">Z<br/><span style="color:lightgrey; font-weight:normal;">Pa·s·m<sup>−1</sup></span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">PR<br/><span></span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">E<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">&lambda;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">&mu;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">K<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">M<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr class="text-right" ng-repeat="(key,value) in data.metadata.moduli track by $index">
+					<td>{[ key ]}</td>
+					<td>{[ (value.imp / 1000000).toFixed(2) ]}</td>
+					<td>{[ value.pr.toFixed(2) ]}</td>
+					<td>{[ (value.youngs / 1000000000).toFixed(2) ]}</td>
+					<td>{[ (value.lam / 1000000000).toFixed(2) ]}</td>
+					<td>{[ (value.mu / 1000000000).toFixed(2) ]}</td>
+					<td>{[ (value.bulk / 1000000000).toFixed(2) ]}</td>
+					<td>{[ (value.pmod / 1000000000).toFixed(2) ]}</td>
+				</tr>
+			</tbody>
+		</table> 
+		</div>
+	</div>
 </div>
 {% endblock %}
