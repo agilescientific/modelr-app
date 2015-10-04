@@ -31,7 +31,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.phase = 180.0;
     $scope.phaseStr = "180";
     $scope.snr = 3.0;
-    $scope.snrStr = "3.0"
+    $scope.snrStr = "3.0";
     $scope.frequencyNum = 20.72;
     $scope.colorRange = ['#FF0000', '#FFF', '#0000FF'];
     
