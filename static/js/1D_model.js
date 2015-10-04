@@ -24,17 +24,17 @@ setup1D = function(rock_div,
     var core_y = heightScale(0.1);
 
     var axisPlot = g3.plot('.plot')
-            .setHeight(core_height)
-            .setWidth(5)
-            .setYTitle("depth [m]")
+            .height(core_height)
+            .width(5)
+            .yTitle("depth [m]")
             .toggleXAxis(false)
             .toggleYAxis(false)
             .toggleY2Axis(true)
-            .setY2Domain([0, 1000])
-            .setMargin(core_y,30,30,widthScale(.18))
+            .y2Domain([0, 1000])
+            .margin(core_y,30,30,widthScale(.18))
             .draw();
 
-    var canvas = d3.select(axisPlot.svg.node().parentNode);
+    var canvas = d3.select(axisPlot._svg.node().parentNode);
     var core_group = canvas.append("g")
             .attr("transform", "translate(" + core_x.toString() +"," +
                   core_y.toString()+ ")");
@@ -46,7 +46,7 @@ setup1D = function(rock_div,
                                  rock_menu_div,
                                  onchange=update_data);
 
-    var offset = 10;
+    var off = 10;
     var frequency = $("#frequency").val();
 
     var seismic = {frequency: frequency,
@@ -56,7 +56,7 @@ setup1D = function(rock_div,
     
     var earth_model = rock_core.intervals();
 
-    var vpPlot = undefined
+    var vpPlot = undefined,
     tPlot = undefined,
     rhoPlot = undefined,
     vPPlot = undefined,
@@ -66,7 +66,8 @@ setup1D = function(rock_div,
     rhoLog = undefined,
     zPLog = undefined,
     synthLog = undefined;
-    var vpPlot, tPlot, rhoPlot, vPPlot, VPPlot, vpLog, vsLog, rhoLog, zPLog, SynthLog;
+    var vpPlot, tPlot, rhoPlot, vPPlot, VPPlot,
+        vpLog, vsLog, rhoLog, zPLog, SynthLog;
 
     $.ajax(server + "/data.json?type=seismic&script=fluid_sub.py",
        {type: "GET", data: {payload: JSON.stringify({seismic: seismic, earth_model: earth_model})},
@@ -75,153 +76,153 @@ setup1D = function(rock_div,
             var width = 120;
             //Create VP Plot
             vpPlot = g3.plot('.plot')
-                .setXTicks(3)
-                .setHeight(core_height)
-                .setWidth(width)
-                .setXTitle("Vp")
-                .setMargin(core_y,10,30,10)
-                .setYTickFormat("")
-                .setYDomain(data["z_lim"])
-                .setXDomain(data["vp_lim"])
+                .xTicks(3)
+                .height(core_height)
+                .width(width)
+                .xTitle("Vp")
+                .margin(core_y,10,30,10)
+                .yTickFormat("")
+                .yDomain(data["z_lim"])
+                .xDomain(data["vp_lim"])
                 .draw();
 
             // Creat VPsub Log
             vpSubLog = g3.log(vpPlot, data["vp_sub"])
-              .setColor("#CC0099")
+              .color("#CC0099")
               .draw();
 
             // Create VP Log 
             vpLog = g3.log(vpPlot, data["vp"])
-            .setColor("red")
+            .color("red")
             .draw();
 
             // Create VS Plot
             vsPlot = g3.plot('.plot')
-              .setXTicks(3)
-              .setHeight(core_height)
-              .setWidth(width)
-              .setXTitle("Vs")
-              .setMargin(core_y,10,30,10)
-              .setYTickFormat("")
-              .setYDomain(data["z_lim"])
-              .setXDomain(data["vs_lim"])
+              .xTicks(3)
+              .height(core_height)
+              .width(width)
+              .xTitle("Vs")
+              .margin(core_y,10,30,10)
+              .yTickFormat("")
+              .yDomain(data["z_lim"])
+              .xDomain(data["vs_lim"])
               .draw();
 
             // Create VS Sub Log
             vsSubLog = g3.log(vsPlot, data["vs_sub"])
-              .setColor("#0099FF")
+              .color("#0099FF")
               .draw();
 
             // Create VS Log
             vsLog = g3.log(vsPlot, data["vs"])
-              .setColor("blue")
+              .color("blue")
               .draw();
 
             // Create Rho Plot
             rhoPlot = g3.plot('.plot')
-              .setXTicks(3)
-              .setHeight(core_height)
-              .setWidth(width)
-              .setMargin(core_y,10,30,10)
-              .setXTitle("\u03C1")
-              .setYTickFormat("")
-              .setYDomain(data["z_lim"])
-              .setXDomain(data["rho_lim"])
+              .xTicks(3)
+              .height(core_height)
+              .width(width)
+              .margin(core_y,10,30,10)
+              .xTitle("\u03C1")
+              .yTickFormat("")
+              .yDomain(data["z_lim"])
+              .xDomain(data["rho_lim"])
               .draw();
 
             // Create Rho Sub
             rhoSubLog = g3.log(rhoPlot, data["rho_sub"])
-              .setColor("#00FF00")
+              .color("#00FF00")
               .draw();
 
             // Create Rho Log
             rhoLog = g3.log(rhoPlot, data["rho"])
-              .setColor("green")
+              .color("green")
               .draw();
 
             // Create T Plot
             tPlot = g3.plot('.plot')
-              .setMargin(core_y,30,30,30)
-              .setHeight(core_height)
-              .setWidth(5)
-              .setYTitle("time [s]")
-              .setYTickFormat("")
+              .margin(core_y,30,30,30)
+              .height(core_height)
+              .width(5)
+              .yTitle("time [s]")
+              .yTickFormat("")
               .toggleYAxis(false)
               .toggleY2Axis(true)
-              .setY2Domain(data["t_lim"])
+              .y2Domain(data["t_lim"])
               .draw();
 
             // Create Zp Plot
             zPPlot = g3.plot('.plot')
-              .setXTicks(3)
-              .setHeight(core_height)
-              .setMargin(core_y,10,30,10)
-              .setWidth(width)
-              .setXTitle("Zp")
-              .setYTickFormat("")
-              .setXDomain(data["rpp_lim"])
-              .setYDomain(data["t_lim"])
+              .xTicks(3)
+              .height(core_height)
+              .margin(core_y,10,30,10)
+              .width(width)
+              .xTitle("Zp")
+              .yTickFormat("")
+              .xDomain(data["rpp_lim"])
+              .yDomain(data["t_lim"])
               .draw();
 
             // Create Zp Sub
             zPSubLog = g3.log(zPPlot, data["rpp_sub"])
-              .setYInt(data["dt"])
-              .setColor("grey")
+              .yInt(data["dt"])
+              .color("grey")
               .draw();
 
             // Create Zp Log
             zPLog = g3.log(zPPlot, data["rpp"])
-              .setYInt(data["dt"])
-              .setColor("black")
+              .yInt(data["dt"])
+              .color("black")
               .draw();
 
             // Create Synth Plot
             var synthLim = [d3.min(data["theta"]) - 10, d3.max(data["theta"]) + 10];
             var sub = 0;
             var synthPlot = g3.plot('.plot')
-                .setXTicks(3)
-                .setHeight(core_height)
-                .setMargin(core_y,10,30,10)
-                .setWidth(width)
-                .setXTitle("F\u2080 synthetic")
-                .setYTickFormat("")
-                .setXDomain(synthLim)
-                .setYDomain(data["t_lim"])
+                .xTicks(3)
+                .height(core_height)
+                .margin(core_y,10,30,10)
+                .width(width)
+                .xTitle("F\u2080 synthetic")
+                .yTickFormat("")
+                .xDomain(synthLim)
+                .yDomain(data["t_lim"])
                 .draw();
 
             // Create Synth Sub Plot
             var synthSubPlot = g3.plot('.plot')
-                .setXTicks(3)
-                .setHeight(core_height)
-                .setMargin(core_y,10,30,10)
-                .setWidth(width)
-                .setXTitle("Fs synthetic")
-                .setYTickFormat("")
-                .setXDomain(synthLim)
-                .setYDomain(data["t_lim"])
+                .xTicks(3)
+                .height(core_height)
+                .margin(core_y,10,30,10)
+                .width(width)
+                .xTitle("Fs synthetic")
+                .yTickFormat("")
+                .xDomain(synthLim)
+                .yDomain(data["t_lim"])
                 .draw();
 
             // Create Synth Sub Log
             synthSubLog = g3.wiggle(synthSubPlot, data["synth_sub"])
-              .setYInt(data["dt"])
-              .setXMin(0)
-              .setSampleRate(3)
-              .setGain(50)
+              .yInt(data["dt"])
+              .xMin(0)
+              .sampleRate(3)
+              .gain(50)
               .draw();
 
             // Create Synth Log
             synthLog = g3.wiggle(synthPlot, data["synth"])
-              .setYInt(data["dt"])
-              .setXMin(0)
-              .setSampleRate(3)
-              .setGain(50)
+              .yInt(data["dt"])
+              .xMin(0)
+              .sampleRate(3)
+              .gain(50)
               .draw();
         }
     });
 
 
     function update_data(){
-        var offset = 10;
+        var off = 10;
         var frequency = $("#frequency").val();
 
         var seismic = {frequency: frequency,
@@ -256,7 +257,7 @@ setup1D = function(rock_div,
             var delay=600;
             var synthLim = [d3.min(data["theta"]) - 10, d3.max(data["theta"]) + 10];
             // Put a delay on the more complex operation so it doesn't affect the animation too bad
-            setTimeout(function(){
+            Timeout(function(){
               synthLog.reDraw(data["synth"], synthLim, data["t_lim"]);
               synthSubLog.reDraw(data["synth_sub"], synthLim, data["t_lim"]);
             }, delay); 
@@ -265,3 +266,17 @@ setup1D = function(rock_div,
       );
     }; // end of function update_data
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -117,6 +117,12 @@ indexes:
 - kind: Fluid
   properties:
   - name: user
+  - name: date
+    direction: desc
+
+- kind: Fluid
+  properties:
+  - name: user
   - name: name
 
 - kind: Fluid
@@ -131,6 +137,12 @@ indexes:
 
 - kind: Fluid
   ancestor: yes
+  properties:
+  - name: user
+  - name: date
+    direction: desc
+
+- kind: ImageModel
   properties:
   - name: user
   - name: date

@@ -54,11 +54,11 @@ def get_all_items_user(entity, user):
     else:
         default_items = []
 
-    user_items = entity.all().order("name")\
+    user_items = entity.all().order("-date")\
                              .filter("user =", user.user_id).fetch(1000)
 
     group_items = [item for item in
-                   (entity.all().order("name")
+                   (entity.all().order("-date")
                     .ancestor(ModelrParent.all().get())
                     .filter("group =", group).fetch(1000)
                     for group in user.group)]
