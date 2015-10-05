@@ -12,16 +12,16 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.offset = 1;
     $scope.offsetNum = 3;
     $scope.offsetStr = "1";
-    $scope.twt = 1;
-    $scope.twtStr = "1";
+    $scope.twt = 10;
+    $scope.twtStr = "10";
     $scope.gain = 1;
     $scope.gainStr = "1";
     $scope.maxGain = "10";
     $scope.frequency = 20;
     $scope.phase = 180.0;
     $scope.phaseStr = "180";
-    $scope.snr = 3.0;
-    $scope.snrStr = "3.0"
+    $scope.snr = 50;
+    $scope.snrStr = "50"
     $scope.frequencyNum = 20.72;
     $scope.colorRange = ['#FF0000', '#FFF', '#0000FF'];
     
@@ -114,7 +114,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $("html, body").scrollTop($("#plot_header").offset().top);
       
     var seismic = {
-      frequency: $scope.frequency,
+      frequency: $scope.frequencyNum,
       wavelet: "ricker", 
       dt: 0.001,
       phase: $scope.phase,
@@ -696,13 +696,14 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     if(!$scope.vDLog){
       $scope.vDLog = g3.wiggle($scope.vDPlot, arr)
         .xMin($scope.trace)
-        .gain(80)
+        .gain(80 * $scope.gain)
         .duration(5)
         .draw();
 
     } else {
       $scope.vDLog
         .xMin($scope.trace)
+        .gain(80 * $scope.gain)
         .reDraw(
           arr, 
           [0, data.seismic.length - 1], 
@@ -717,10 +718,11 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     if(!$scope.oGLog){
       $scope.oGLog = g3.wiggle($scope.oGPlot, arr)
         .xMin($scope.offset)
-        .gain(5)
+        .gain(5 * $scope.gain)
         .draw();
     } else {
       $scope.oGLog
+        .gain(5 * $scope.gain)
         .xMin($scope.offset)
         .reDraw(
           arr, 
@@ -732,15 +734,17 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
 
   $scope.plotWaveletWiggle = function(data){
     // Draw Offset Wiggle
+    $scope.frequencyNum = $scope.data.f[$scope.frequency];
     var arr = [data.wavelet_gather[$scope.frequency]];
     if(!$scope.wGLog){
       $scope.wGLog = g3.wiggle($scope.wGPlot, arr)
-        .xMin($scope.frequency)
-        .gain(22.7)
+        .xMin($scope.frequencyNum)
+        .gain(22.7 * $scope.gain)
         .draw();
     } else {
       $scope.wGLog
         .xMin($scope.frequency)
+        .gain(22.7 * $scope.gain)
         .reDraw(
           arr, 
           [0, data.wavelet_gather.length - 1], 
