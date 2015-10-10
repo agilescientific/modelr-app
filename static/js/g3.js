@@ -484,10 +484,10 @@ log.prototype.lineFunc = function(){
 
 	return d3.svg.line()
 		.x(function (d) {
-			return plot.xScale(d);
+			return plot._xScale(d);
 		})
 		.y(function (d, i){
-			return plot.yScale(i * yInt + yMin);
+			return plot._yScale(i * yInt + yMin);
 		})
 		.interpolate(interpolate);
 };
@@ -546,8 +546,8 @@ plot.prototype._xDomain = [0,0];
 plot.prototype._yDomain = [0,0];
 plot.prototype._xAxisVisible = true;
 plot.prototype._yAxisVisible = true;
-plot.prototype._x2AxisVisible = true;
-plot.prototype._y2AxisVisible = true;
+plot.prototype._x2AxisVisible = false;
+plot.prototype._y2AxisVisible = false;
 plot.prototype._xOrient = 'top';
 plot.prototype._x2Orient = 'bottom';
 plot.prototype._yOrient = 'left';
@@ -821,7 +821,8 @@ plot.prototype.setAxis = function(){
       .attr("transform", "translate(" + "0," + this._height + ")")
       .call(this._x2Axis);
   }
-  if(this._y2AxisVisible){
+    if(this._y2AxisVisible){
+        
     this._y2Axis = this.createAxis(this._y2Scale, -this._width, this._y2Orient, this._y2Ticks);
     this._y2Axis.tickFormat(this._y2TickFormat);
     this._svg.append('g')
@@ -925,22 +926,33 @@ plot.prototype.reDraw = function(xDomain, yDomain, x2Domain, y2Domain){
   if(x2Domain === undefined){
       x2Domain = xDomain;
   }
-  this._x2Scale.domain(x2Domain);
-  this._svg.select('.x2.axis')
-    .transition()
-    .duration(this._duration)
-    .call(this._x2Axis)
-    .ease('linear');
+  if(x2Domain){
+      this._x2Scale.domain(x2Domain);
+  }
+
+  if(this._x2AxisVisible){
+      this._svg.select('.x2.axis')
+          .transition()
+          .duration(this._duration)
+          .call(this._x2Axis)
+          .ease('linear');
+  }
 
   if(y2Domain === undefined){
     y2Domain = yDomain;
   }
-  this._y2Scale.domain(y2Domain);
-  this._svg.select('.y2.axis')
-    .transition()
-    .duration(this._duration)
-    .call(this._y2Axis)
-    .ease('linear');
+    
+  if(y2Domain){
+      this._y2Scale.domain(y2Domain);
+  }
+
+    if(this._y2AxisVisible){
+      this._svg.select('.y2.axis')
+          .transition()
+          .duration(this._duration)
+          .call(this._y2Axis)
+          .ease('linear');
+  }
 };
 
 // Attach seismic creation function to g3

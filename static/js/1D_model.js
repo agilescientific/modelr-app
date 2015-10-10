@@ -254,13 +254,15 @@ setup1D = function(rock_div,
             zPLog.reDraw(data["rpp"]);
             zPSubLog.reDraw(data["rpp_sub"]);
             
-            var delay=600;
+            var delay=100;
             var synthLim = [d3.min(data["theta"]) - 10, d3.max(data["theta"]) + 10];
-            // Put a delay on the more complex operation so it doesn't affect the animation too bad
-            Timeout(function(){
+
+              // Put a delay on the more complex operation so it
+              // doesn't affect the animation too bad
+           setTimeout(function(){
               synthLog.reDraw(data["synth"], synthLim, data["t_lim"]);
               synthSubLog.reDraw(data["synth_sub"], synthLim, data["t_lim"]);
-            }, delay); 
+           }, delay); 
           }
         }
       );
