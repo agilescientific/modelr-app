@@ -44,21 +44,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
       content: "Choose a model framework from the carousel below, or use the buttons to the right to upload an image or create a new model with the model builder. then assign the model's rocks and other parameters in the panel to the right."
     };
   };
-
-  $scope.setDefaultImageModel = function(){
-
-    var hash = window.location.hash.substring(1);
-    if (hash != ''){
-      var params = hash.split('&');
-      var image_key = params[0].split('=')[1];
-      for(var i=0; i<$scope.images.length; i++){
-
-        if($scope.images[i].key === image_key){
-          $scope.curImage = $scope.images[i];
-        }
-      }
-    }
-  };
   
   $scope.setColorPickers = function(){
     for(var i = 0; i < $scope.colorRange.length; i++){
@@ -88,6 +73,10 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     if (hash != ''){
       var params = hash.split('&');
       var image_key = params[0].split('=')[1];
+
+      if(params.length > 1){
+        var name = params[1].split('=')[1];
+      }
     }
     
     $http.get('/image_model?all')
@@ -115,6 +104,16 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
 	    }
 	  }
           $scope.curImage = $scope.images[0];
+        }
+        if(name){
+          for(var i=0; $scope.curImage.earth_models; i++){
+            
+            var em = $scope.curImage.earth_models[i];
+            if(em.name === name){
+              $scope.savedEarthModel = em;
+              $scope.loadSaved();
+            }
+          }
         }
       }
            );
