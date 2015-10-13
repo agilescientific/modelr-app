@@ -1,14 +1,13 @@
 'use strict';
 var app = angular.module('modelr', 
-  ['mgcrea.ngStrap', 
-  'ngAnimate',
-  'angular-flexslider']);
+	['mgcrea.ngStrap', 
+	'ngAnimate',
+	'angular-flexslider']);
 
 app.config(['$interpolateProvider', function($interpolateProvider) {
   $interpolateProvider.startSymbol('{[');
   $interpolateProvider.endSymbol(']}');
 }]);
-
 app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
 
   $scope.setDefaults = function(){
@@ -617,7 +616,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         .xDomain([0, data.seismic.length - 1])
         .yDomain([1, -1])
         .draw();
-        console.log($scope.aTPlot);
     }
 
     $scope.aTArr = getCrossSection(data.seismic, $scope.twt);
@@ -627,10 +625,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     } else {
       $scope.aTHor.reDraw($scope.aTArr);
     }
-  };
-
-  $scope.changeColor = function(index){
-    console.log($scope.colorDomain);
   };
 
   $scope.plotAmplitudeOffset = function(data, height){
@@ -873,7 +867,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     hiddenElement.click();
   };
 });
-
 // <-- HELPER FUNCTIONS --> //
 // Take two numbers and return the abs max of the two
 function getMax(a, b){
@@ -885,8 +878,9 @@ function getMax(a, b){
 }
 
 // Get a row from a columnar matrix
-function getCrossSection(matrix, rowIndex){
-  var arr = [];
+function getCrossSection(matrix, value){  
+    var arr = [];
+    var rowIndex = Math.floor(value);
   for(var i = 0; i < matrix.length; i++){
     arr.push(matrix[i][rowIndex]);
   }

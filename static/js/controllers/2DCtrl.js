@@ -606,7 +606,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         .xDomain([0, data.seismic.length - 1])
         .yDomain([1, -1])
         .draw();
-        console.log($scope.aTPlot);
     }
 
     $scope.aTArr = getCrossSection(data.seismic, $scope.twt);
@@ -616,10 +615,6 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     } else {
       $scope.aTHor.reDraw($scope.aTArr);
     }
-  };
-
-  $scope.changeColor = function(index){
-    console.log($scope.colorDomain);
   };
 
   $scope.plotAmplitudeOffset = function(data, height){

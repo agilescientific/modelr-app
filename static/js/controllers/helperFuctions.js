@@ -9,9 +9,9 @@ function getMax(a, b){
 }
 
 // Get a row from a columnar matrix
-function getCrossSection(matrix, value, sampleRate){
+function getCrossSection(matrix, value){  
     var arr = [];
-    var rowIndex = Math.floor(value / sampleRate);
+    var rowIndex = Math.floor(value);
   for(var i = 0; i < matrix.length; i++){
     arr.push(matrix[i][rowIndex]);
   }
