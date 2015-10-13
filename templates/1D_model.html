@@ -76,12 +76,7 @@
     var db_fluids = {{db_fluids}};
     setup1D("#rock-model-container",db_rocks, db_fluids,
       colour_map, 10000, "#rock-menu", "#plot-container",
-  "#reflectivity-menu", "#seismic-menu","{{HOSTNAME}}");
-
-  $("#frequency").on("input", function (){
-  $("#frequency-label").text($("#frequency").val() + " Hz")
-  }
-  );
+      "#reflectivity-menu", "#seismic-menu","{{HOSTNAME}}");
   });
 </script>
 
@@ -93,27 +88,26 @@
     <div class="panel-body">
       <p class="lead"> Drag tops to move them. Click to insert new tops.</p>
       <div class="model-plot"> <!-- Helps with CSS -->
-        <div class="col-md-12 plot" id="plot-container">
+        <div class="plot" id="plot-container">
         </div>
       </div> <!-- End of model-plot -->
     </div> <!-- End of panel body -->
     <div class="row">
-      <div id="seismic-menu" title="Seismic menu"
-           class="col-md-offset-6 col-md-6">
+      <div id="seismic-menu" title="Seismic menu" class="col-md-offset-5 col-md-6">
          <label>
-	         Frequency
-      	 </label>
-      	 <input type="range" min="3" max="100" id="frequency"
-                      value="30">
-      	 <label id="frequency-label">
-      	   30 Hz
-      	 </label>
+           Frequency
+         </label>
+         <input type="range" min="3" max="100" id="frequency" value="30">
+         <label id="frequency-label">
+           30 Hz
+         </label>
       </div>
     </div>
     <div class="row">
       <div id="rock-menu" class="col-md-12" title="Interval menu">
       </div>
     </div>
+
   </div> <!-- End of panel -->
 </div>
 

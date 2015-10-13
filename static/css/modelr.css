@@ -101,10 +101,6 @@ svg {
   font: 10px sans-serif;
 }
 
-div.plot {
-  padding:0;
-}
-
 #seismic_menu {
   margin-top:-40px; 
   margin-bottom: 20px;
