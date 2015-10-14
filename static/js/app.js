@@ -30,7 +30,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.phase = 180.0;
     $scope.phaseStr = "180";
     $scope.snr = 50;
-    $scope.snrStr = "50"
+    $scope.snrStr = "50";
     $scope.frequencyNum = 20.72;
     $scope.colorRange = ['#FF0000', '#FFF', '#0000FF'];
     
@@ -867,6 +867,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     hiddenElement.click();
   };
 });
+
 // <-- HELPER FUNCTIONS --> //
 // Take two numbers and return the abs max of the two
 function getMax(a, b){

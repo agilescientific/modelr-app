@@ -156,7 +156,7 @@
 	      <span style="color:#bbb; font-size:100%; vertical-align:middle; left:6px; top:-2px;"
 		    class="glyphicon glyphicon-info-sign"
 		    id="rock_desc_{{ slug }}" data-container="body"
-		    data-toggle="popover" data-placement="right"
+		    data-toggle="popover" data-placement="left"
 		    data-content="{{ rock.description }}">
 	    </td>
 
@@ -189,7 +189,7 @@
 	   $('#rock_desc_{{ slug }}').popover({
              trigger: 'hover click',
              html: true,
-             placement: 'right',
+             placement: 'left',
              container: 'body',
              delay: { show: 500, hide: 1000 }
 	   });
@@ -307,6 +307,7 @@
 		<div class="col-sm-9">
 		  <input class="form-control" type="text" name="name"
 			 id="edit-rock-name"
+                         style="text-align:left;"
 			 value="{{current_rock.name}}" />
 		</div>
               </div>
@@ -523,7 +524,7 @@
 	      <span style="color:#bbb; font-size:100%; vertical-align:middle; left:6px; top:-2px;"
 		    class="glyphicon glyphicon-info-sign"
 		    id="fluid_desc_{{ slug }}" data-container="body"
-		    data-toggle="popover" data-placement="right"
+		    data-toggle="popover" data-placement="left"
 		    data-content="{{ fluid.description }}">
 	    </td>
 	    <td>{{fluid.rho_w}}</td>
@@ -551,7 +552,7 @@
 	   $('#fluid_desc_{{ slug }}').popover({
 	     trigger: 'hover click',
 	     html: true,
-	     placement: 'right',
+	     placement: 'left',
 	     container: 'body',
 	     delay: { show: 500, hide: 1000 }
 	   });
@@ -660,6 +661,7 @@
 		<div class="col-sm-9">
 		  <input class="form-control" type="text" name="name"
 			 id="edit-fluid-name"
+                         style="text-align:left;"
 			 value="{{current_fluid.name}}" />
 		</div>
 	      </div>
