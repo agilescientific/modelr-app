@@ -75,7 +75,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
       var image_key = params[0].split('=')[1];
 
       if(params.length > 1){
-        var name = params[1].split('=')[1];
+        var name = decodeURIComponent(params[1].split('=')[1]);
       }
     }
     
