@@ -128,17 +128,21 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     );
   };
 
-  $scope.loadSaved = function(){
+   $scope.loadSaved = function(){
 
     var arr = $.map($scope.savedEarthModel.mapping, function(value, index) {
       return [value];
     });
 
     $scope.curImage.rocks = [];
-    for(var i = 0; i < arr.length; i++){
-      for(var j = 0; j < $scope.rocks.length; j++){
-        if(arr[i].rock.name === $scope.rocks[j].name){
-          $scope.curImage.rocks.push($scope.rocks[j]);
+    for(var h =0; h < $scope.curImage.colours.length; h++){
+      var curColour = $scope.curImage.colours[h];
+      for(var i = 0; i < arr.length; i++){
+        for(var j = 0; j < $scope.rocks.length; j++){
+          if((arr[i].rock.name === $scope.rocks[j].name) &&
+             (arr[i].colour === curColour)){
+            $scope.curImage.rocks.push($scope.rocks[j]);
+          }
         }
       }
     }
