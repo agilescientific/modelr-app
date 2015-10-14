@@ -56,25 +56,59 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $timeout($scope.setColorPickers, 300);
   };
 
+
   $scope.fetchImageModels = function(){
+
+    var hash = window.location.hash.substring(1);
+    if (hash != ''){
+      var params = hash.split('&');
+      var image_key = params[0].split('=')[1];
+
+      if(params.length > 1){
+        var name = params[1].split('=')[1];
+      }
+    }
+    
     $http.get('/image_model?all')
       .then(function(response) {
-        $scope.images = response.data;
+        var images = response.data;
+        
+        $scope.images = [];
 
-        if($scope.images.length > 0){
+        if(images.length > 0){
+
+	  for(var i = 0; i < images.length; i++){
+
+            var loopIndex = i;
+            if(image_key && images[i].key === image_key){
+              $scope.images.unshift(images[i]);
+              loopIndex = 0;
+            } else{
+              $scope.images.push(images[i]);
+            };
+            
+	    $scope.images[loopIndex].rocks = [];
+	    for(var j = 0; j < $scope.images[loopIndex].colours.length; j++){
+	      var rand = $scope.rocks[Math.floor(Math.random() * $scope.rocks.length)];
+              $scope.images[loopIndex].rocks.push(rand);
+	    }
+	  }
           $scope.curImage = $scope.images[0];
-
-          for(var i = 0; i < $scope.images.length; i++){
-            $scope.images[i].rocks = [];
-            for(var j = 0; j < $scope.images[i].colours.length; j++){
-              var rand = $scope.rocks[Math.floor(Math.random() * $scope.rocks.length)];
-              $scope.images[i].rocks.push(rand);
+        }
+        if(name){
+          for(var i=0; $scope.curImage.earth_models; i++){
+            
+            var em = $scope.curImage.earth_models[i];
+            if(em.name === name){
+              $scope.savedEarthModel = em;
+              $scope.loadSaved();
             }
           }
         }
       }
-    );
+           );
   };
+ 
   
   $scope.fetchRocks = function(){
     $http.get('/rock?all').
