@@ -395,22 +395,6 @@ $('#script_info').popover({
    scenario.name = scenario_name;
    scenario.get();
 }
-
-// Load an earth model based on its name and corresponding image key
-function load_earthmodel(image_key, name){
-
-   $.get('/earth_model', {image_key: image_key, 
-			  name: name},
-	 function callback(data){
-       data = JSON.parse(data);
-
-       if(data["failed"]){
-	 alert("model not found");
-       } 
-       else{}
-     });
- };
-
  
 // START OF DISPLAY METADATA *****
 function display_metadata(data){
@@ -485,12 +469,4 @@ by the user -->
   <!--[if IE 9]></select><![endif]-->
 </datalist>
 
-<datalist id="list_of_models">
-
-{% for model in earth_models %}
-  <option data-value='{{model["image_key"]}}' 
-	  data-name='{{model["name"]}}'>
-  </option>
-{% endfor %}
-</datalist>
 {% endblock %}

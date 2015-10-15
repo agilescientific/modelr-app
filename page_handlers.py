@@ -61,7 +61,9 @@ class ModelrPageRequest(webapp2.RequestHandler):
         else:
             email_hash = ''
 
-        hostname = Server.all().ancestor(ModelrParent.all().get()).get().host
+        hostname = Server.all()\
+                         .ancestor(ModelrParent.all().get()).get().host
+        
         default_rock = dict(vp=0, vs=0, rho=0, vp_std=0,
                             rho_std=0, vs_std=0,
                             description='description',
@@ -1435,39 +1437,6 @@ class AdminHandler(ModelrPageRequest):
             self.response.out.write(html)
 
 
-class FixScenarios(ModelrPageRequest):
-
-    def get(self):
-
-        scenarios = Scenario.all().fetch(1000)
-
-        rocks = Rock.all().ancestor(ModelrParent.all().get())
-
-        for s in scenarios:
-
-            data = json.loads(s.data)
-
-            args = data["arguments"]
-
-            for key, value in args.iteritems():
-
-                if key.startswith("Rock"):
-
-                    rocks = Rock.all().ancestor(
-                        ModelrParent.all().get())
-                    rock = rocks.filter("name =", value).get()
-                    if(rock):
-                        args[key] = rock.key().id()
-                    else:
-                        args[key] = None
-
-            data["arguments"] = args
-            s.data = json.dumps(data).encode()
-            s.put()
-
-        self.response.out.write("OK")
-
-
 class FixModels(ModelrPageRequest):
 
     def get(self):
@@ -1476,6 +1445,7 @@ class FixModels(ModelrPageRequest):
 
         for m in models:
 
+            print m.name
             data = json.loads(m.data)
             cmap = data["mapping"]
 
@@ -1488,7 +1458,8 @@ class FixModels(ModelrPageRequest):
                         ModelrParent.all().get())
 
                     rock = rocks.filter("name =", rock_name).get()
-                    cmap[color]["key"] = rock.key().id()
+                    cmap[color]["db_key"] = str(rock.key())
+                    
                 except:
                     pass
             m.data = json.dumps(data).encode()

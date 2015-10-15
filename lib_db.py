@@ -4,6 +4,7 @@ from google.appengine.ext import blobstore
 from constants import admin_id
 import json
 import itertools
+import os
 
 """
 Authentication and permissions will be structured similar to linux
@@ -342,4 +343,14 @@ class Fluid(Item):
 
 class Server(db.Model):
 
-    host = db.StringProperty()
+    live_host = db.StringProperty()
+    dev_host = db.StringProperty()
+
+    @property
+    def host(self):
+        
+        if 'dev' in os.environ['CURRENT_VERSION_ID']:
+            return self.dev_host
+        else:
+            return self.live_host
+

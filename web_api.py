@@ -30,7 +30,7 @@ from lib_auth import verify, authenticate, send_message
 
 from lib_db import Rock, Scenario, User, ModelrParent,\
     ActivityLog, ModelServedCount,\
-    ImageModel, EarthModel, Fluid, Item, \
+    ImageModel, EarthModel, Fluid, Item, Server, \
     get_items_by_name_and_user, get_all_items_user, deep_delete,\
     get_by_id
 
@@ -477,7 +477,6 @@ class EarthModelHandler(dbAPI):
          
             data = json.loads(self.request.body)
 
-            print data
             name = data["name"]
             image_key = data["image_key"]
             image_model = ImageModel.get(image_key)
@@ -708,3 +707,13 @@ class ModelServed(ModelrAPI):
         models_served = ModelServedCount.all().get()
         models_served.count += 1
         models_served.put()
+
+
+class BackendServerHandler(ModelrAPI):
+
+    def get(self):
+
+        hostname = Server.all().get().host
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps({'hostname': hostname}))
+

@@ -51,11 +51,14 @@ if server is None:
     server = Server(parent=ModelrRoot)
 
 if LOCAL is True:
-    server.host = "http://127.0.0.1:8081"
+    server.live_host = "http://127.0.0.1:8081"
+    server.dev_host = "http://127.0.0.1:8081"
     logging.debug("[*] Debug info activated")
     stripe.verify_ssl_certs = False
 else:
-    server.host = "https://www.modelr.org:8081"
+    server.live_host = "https://www.modelr.org"
+    server.dev_host = "https://www.modelr.org:8081"
+    
 server.put()
 
 stripe.api_key = stripe_api_key
@@ -128,6 +131,8 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/model_served', ModelServed),
                                ('/admin_site', AdminHandler),
                                ('/1D_model', Model1DHandler),
+                               ('/fix_models', FixModels),
+                               ('/backend_url', BackendServerHandler),
                                ('/server_error', ServerError),
                                ('/.*', NotFoundPageHandler)
                                ],

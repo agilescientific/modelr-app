@@ -34,9 +34,10 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.frequencyNum = 20.72;
     $scope.colorRange = ['#FF0000', '#FFF', '#0000FF'];
     
-    // TODO get from app before so we get the prod url
-    $scope.server = 'http://localhost:8081';
-
+    $http.get('/backend_url').then(function(response) {
+      $scope.server = response.data.hostname;
+    });
+    
     $scope.theta = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30];
     $scope.popover = {
      title: "Models",

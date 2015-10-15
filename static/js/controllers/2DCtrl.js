@@ -24,9 +24,10 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.frequencyNum = 20.72;
     $scope.colorRange = ['#FF0000', '#FFF', '#0000FF'];
     
-    // TODO get from app before so we get the prod url
-    $scope.server = 'http://localhost:8081';
-
+    $http.get('/backend_url').then(function(response) {
+      $scope.server = response.data.hostname;
+    });
+    
     $scope.theta = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30];
     $scope.popover = {
      title: "Models",
@@ -129,7 +130,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
       var curColour = $scope.curImage.colours[h];
       for(var i = 0; i < arr.length; i++){
         for(var j = 0; j < $scope.rocks.length; j++){
-          if((arr[i].rock.name === $scope.rocks[j].name) &&
+          if((arr[i].rock.db_key === $scope.rocks[j].db_key) &&
              (arr[i].colour === curColour)){
             $scope.curImage.rocks.push($scope.rocks[j]);
           }
