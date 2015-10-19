@@ -661,7 +661,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         .draw();
     }
 
-    $scope.aTArr = getCrossSection(data.seismic, $scope.twt);
+    $scope.aTArr = getCrossSection(data.seismic, $scope.twt, $scope.data.dt);
 
     if(!$scope.aTHor){
       $scope.aTHor = g3.horizon($scope.aTPlot, $scope.aTArr).draw();
@@ -694,7 +694,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         .draw();
     } 
 
-    $scope.aOArr = getCrossSection($scope.data.offset_gather, $scope.twt);
+    $scope.aOArr = getCrossSection($scope.data.offset_gather, $scope.twt, $scope.data.dt);
 
     if(!$scope.aOHor){
       $scope.aOHor = g3.horizon($scope.aOPlot, $scope.aOArr).draw();
@@ -728,7 +728,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         .draw();
     }
 
-    $scope.aFArr = getCrossSection($scope.data.wavelet_gather, $scope.twt);
+    $scope.aFArr = getCrossSection($scope.data.wavelet_gather, $scope.twt, $scope.data.dt);
 
     if(!$scope.aFHor){
       $scope.aFHor = g3.horizon($scope.aFPlot, $scope.aFArr).draw();
