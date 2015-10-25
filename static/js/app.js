@@ -24,6 +24,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.twt = 0;
     $scope.twtStr = "0";
     $scope.gain = 1;
+    $scope.twt = 0;
     $scope.gainStr = "1";
     $scope.maxGain = "10";
     $scope.frequency = 20;
@@ -174,6 +175,12 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     var payload = JSON.stringify(data);
       $http.get($scope.server + '/data.json?type=seismic&script=convolution_model.py&payload=' + payload)
         .then(function(response){
+
+          // set better horizon defaults
+          if($scope.updateClicked === undefined){
+            
+             $scope.twt = (response.data.seismic.length / 2) * response.data.dt;
+          };
           console.log(response.data);
           $scope.plot(response.data);
           $scope.maxTrace = String(response.data.seismic.length - 1);
@@ -821,6 +828,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
       $scope.colorDomain = [-max, 0, max];
     }
 
+    
     $scope.colorScale = d3.scale.linear().domain($scope.colorDomain).range($scope.colorRange);
     $scope.plotSeismic(data, height, max);
     $scope.plotOffset(data, height, max);
