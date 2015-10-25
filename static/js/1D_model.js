@@ -7,6 +7,7 @@ setup1D = function(
   var rock_title = "Rock core";
   var fluid_title = "Fluid core";
 
+  
   // total canvas dimensions
   var width = 900;
   var height = 600;
@@ -46,7 +47,13 @@ setup1D = function(
     rock_menu_div, onchange=update_data);
 
   var offset = 10;
+
+  // set slider behaviour
+  $("#frequency").on("input change", function(){
+    $("#frequency-label").text($("#frequency").val());
+  });
   var frequency = $("#frequency").val();
+
 
   var seismic = {
     frequency: frequency,
