@@ -319,12 +319,13 @@ $('#script_info').popover({
     */
    var hash = window.location.hash.substring(1);
    
-   if (hash != ''){
-     scenario.name = hash;
+ if (hash != ''){
+     var hash_decode =  decodeURIComponent(hash);
+     scenario.name = hash_decode;
      
      // Get the scenario from google app engine.
      scenario.get();
-     $('input#scenario_name').val(hash);
+     $('input#scenario_name').val(hash_decode);
      server.update_img(scenario);
    }
    
