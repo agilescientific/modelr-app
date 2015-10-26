@@ -587,7 +587,7 @@ $("select.model_selector option").filter(function() {
  * data-value='VALUE' />
  */
 function get_rocks(datalist) {
-    list_of_rocks = $(datalist).find('option');
+    var list_of_rocks = $(datalist).find('option');
 
     var rcks = {};
     list_of_rocks.each(function(index) {
@@ -601,16 +601,16 @@ function get_rocks(datalist) {
 };
 
 function get_models(datalist) {
-    list_of_models = $(datalist).find('option');
+    var list_of_models = $(datalist).find('option');
 
     var models = [];
     list_of_models.each(function(index) {
         var name = $(list_of_models[index]).attr('data-name');
-	var image_key = $(list_of_models[index]).attr('data-value');
+	var key = $(list_of_models[index]).attr('data-value');
         
-	$.get('/earth_model', {name: name, image_key: image_key},
+	$.get('/earth_model', {keys: key},
 	      function callback(data){
-		  models[name] = JSON.parse(data);
+		  models[name] = data;
 	      });
     });   
     
@@ -622,7 +622,7 @@ function rock_to_string(data){
     return data.vp.toString() +','+ data.vs.toString() + 
 	','+data.rho.toString() + ','+ data.vp_std.toString() +
 	','+data.vs_std.toString() + 
-	','+data.rho_std.toString()
+    ','+data.rho_std.toString();
 }
 
 

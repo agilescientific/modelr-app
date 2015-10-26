@@ -469,4 +469,12 @@ by the user -->
   <!--[if IE 9]></select><![endif]-->
 </datalist>
 
+<datalist id="list_of_models">
+
+{% for model in earth_models %}
+  <option data-value='{{model["key"]}}'
+	  data-name='{{model["name"]}}'>
+  </option>
+{% endfor %}
+</datalist>
 {% endblock %}

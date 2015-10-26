@@ -161,19 +161,9 @@ class ScenarioPageHandler(ModelrPageRequest):
         if scen:
             scenarios += scen
 
-        model_data = EarthModel.all()\
-                               .filter("user =", admin_id).fetch(1000)
+        model_data = get_all_items_user(EarthModel, user)
 
-        # Get the models from uploaded images
-        if user:
-            user_data = EarthModel.all()\
-                                  .filter("user =", user.user_id)\
-                                  .fetch(1000)
-
-            model_data = model_data + user_data
-
-        earth_models = [{"image_key": str(i.parent_key()),
-                         "name": i.name} for i in model_data]
+        earth_models = [m.simple_json for m in model_data]
 
         template_params = self.get_base_params(user=user, rocks=rocks,
                                                default_rocks=default_rocks,
