@@ -1453,6 +1453,7 @@ class FixModels(ModelrPageRequest):
                 except:
                     pass
             m.data = json.dumps(data).encode()
+            m.put()
         self.response.write("OK")
 
 
