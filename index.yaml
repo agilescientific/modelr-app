@@ -127,6 +127,13 @@ indexes:
   - name: date
     direction: desc
 
+- kind: EarthModel
+  ancestor: yes
+  properties:
+  - name: group
+  - name: date
+    direction: desc
+
 - kind: Fluid
   properties:
   - name: user

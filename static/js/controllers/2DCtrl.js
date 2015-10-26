@@ -121,14 +121,17 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
       return [value];
     });
 
-    $scope.curImage.rocks = [];
     for(var h =0; h < $scope.curImage.colours.length; h++){
       var curColour = $scope.curImage.colours[h];
+
+      dataloop:
       for(var i = 0; i < arr.length; i++){
+        rockloop:
         for(var j = 0; j < $scope.rocks.length; j++){
           if((arr[i].rock.db_key === $scope.rocks[j].db_key) &&
              (arr[i].colour === curColour)){
-            $scope.curImage.rocks.push($scope.rocks[j]);
+            $scope.curImage.rocks[h] = $scope.rocks[j];
+            break dataloop;
           }
         }
       }
@@ -907,7 +910,7 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
         } else {
           v = (v / 1000000000).toFixed(2);
         }
-        csv.push(',"' + v + '"')
+        csv.push(',"' + v + '"');
       });
       csv.push('\r\n');
     });
