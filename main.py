@@ -131,7 +131,6 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/model_served', ModelServed),
                                ('/admin_site', AdminHandler),
                                ('/1D_model', Model1DHandler),
-                               ('/fix_models', FixModels),
                                ('/backend_url', BackendServerHandler),
                                ('/server_error', ServerError),
                                ('/.*', NotFoundPageHandler)
