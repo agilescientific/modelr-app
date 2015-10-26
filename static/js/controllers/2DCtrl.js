@@ -18,8 +18,8 @@ app.controller('2DCtrl', function ($scope, $http, $alert, $timeout) {
     $scope.gainStr = "1";
     $scope.maxGain = "10";
     $scope.frequency = 20;
-    $scope.phase = 180.0;
-    $scope.phaseStr = "180";
+    $scope.phase = 0.0;
+    $scope.phaseStr = "0";
     $scope.snr = 50;
     $scope.snrStr = "50";
     $scope.frequencyNum = 20.72;
