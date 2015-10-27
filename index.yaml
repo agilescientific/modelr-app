@@ -56,6 +56,13 @@ indexes:
   - name: date
     direction: desc
 
+- kind: ImageModel
+  ancestor: yes
+  properties:
+  - name: group
+  - name: date
+    direction: desc
+
 - kind: Issue
   ancestor: yes
   properties:
@@ -114,10 +121,41 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
+- kind: EarthModel
+  properties:
+  - name: user
+  - name: date
+    direction: desc
+
+- kind: EarthModel
+  ancestor: yes
+  properties:
+  - name: group
+  - name: date
+    direction: desc
+
+- kind: Fluid
+  properties:
+  - name: user
+  - name: date
+    direction: desc
+
 - kind: Fluid
   properties:
   - name: user
   - name: name
+
+- kind: Fluid
+  properties:
+  - name: user
+  - name: user
+
+- kind: Fluid
+  ancestor: yes
+  properties:
+  - name: group
+  - name: date
+    direction: desc
 
 - kind: Fluid
   ancestor: yes
@@ -128,5 +166,28 @@ indexes:
   ancestor: yes
   properties:
   - name: user
+  - name: date
+    direction: desc
+
+- kind: ImageModel
+  properties:
+  - name: user
+  - name: date
+    direction: desc
+
+- kind: ImageModel
+  properties:
+  - name: user
+  - name: user
+
+- kind: Rock
+  properties:
+  - name: user
+  - name: user
+
+- kind: Rock
+  ancestor: yes
+  properties:
+  - name: group
   - name: date
     direction: desc

@@ -156,7 +156,7 @@
 	      <span style="color:#bbb; font-size:100%; vertical-align:middle; left:6px; top:-2px;"
 		    class="glyphicon glyphicon-info-sign"
 		    id="rock_desc_{{ slug }}" data-container="body"
-		    data-toggle="popover" data-placement="right"
+		    data-toggle="popover" data-placement="left"
 		    data-content="{{ rock.description }}">
 	    </td>
 
@@ -172,13 +172,13 @@
             <td><button class="btn btn-success btn-xs"
 			type="button"
 			id="edit-rock-button"
-			onclick='edit_rock("{{rock.name}}")'>
+			onclick='edit_rock("{{rock.key()}}")'>
 	      edit
 	    </button>
 
 	    &nbsp;&nbsp;&nbsp;&nbsp;
 	    <button class="btn btn-danger btn-xs" type="button"
-		    onclick='delete_rock("{{rock.name}}")'>
+		    onclick='delete_rock("{{rock.key()}}")'>
 	      delete
 	    </button>
 	    </td>
@@ -189,7 +189,7 @@
 	   $('#rock_desc_{{ slug }}').popover({
              trigger: 'hover click',
              html: true,
-             placement: 'right',
+             placement: 'left',
              container: 'body',
              delay: { show: 500, hide: 1000 }
 	   });
@@ -307,6 +307,7 @@
 		<div class="col-sm-9">
 		  <input class="form-control" type="text" name="name"
 			 id="edit-rock-name"
+                         style="text-align:left;"
 			 value="{{current_rock.name}}" />
 		</div>
               </div>
@@ -437,10 +438,10 @@
 			None
 		      </option>
                       {% for fluid in fluids + default_fluids %}
-		      {% if current_rock.fluid_key and current_rock.fluid_id == fluid.key().id() %}
-                      <option value="{{current_rock.fluid}}" selected>
+		      {% if current_rock.fluid_key and current_rock.fluid_key == fluid.key() %}
+                      <option value="{{fluid.fluid_key}}" selected>
 			{% else %}
-			<option value="{{fluid.key().id()}}">
+			<option value="{{fluid.key()}}">
 			  {% endif %}
 
 			  {{fluid.name}}</option>
@@ -523,7 +524,7 @@
 	      <span style="color:#bbb; font-size:100%; vertical-align:middle; left:6px; top:-2px;"
 		    class="glyphicon glyphicon-info-sign"
 		    id="fluid_desc_{{ slug }}" data-container="body"
-		    data-toggle="popover" data-placement="right"
+		    data-toggle="popover" data-placement="left"
 		    data-content="{{ fluid.description }}">
 	    </td>
 	    <td>{{fluid.rho_w}}</td>
@@ -534,13 +535,13 @@
 	    <td><button class="btn btn-success btn-xs"
 			type="button"
 			id="edit-fluid-button"
-			onclick='edit_fluid("{{fluid.key().id()}}")'>
+			onclick='edit_fluid("{{fluid.key()}}")'>
 	      edit
 	    </button>
 
 	    &nbsp;&nbsp;&nbsp;&nbsp;
 	    <button class="btn btn-danger btn-xs" type="button"
-		    onclick='delete_fluid("{{fluid.key().id()}}")'>
+		    onclick='delete_fluid("{{fluid.key()}}")'>
 	      delete
 	    </button>
 	    </td>
@@ -551,7 +552,7 @@
 	   $('#fluid_desc_{{ slug }}').popover({
 	     trigger: 'hover click',
 	     html: true,
-	     placement: 'right',
+	     placement: 'left',
 	     container: 'body',
 	     delay: { show: 500, hide: 1000 }
 	   });
@@ -660,6 +661,7 @@
 		<div class="col-sm-9">
 		  <input class="form-control" type="text" name="name"
 			 id="edit-fluid-name"
+                         style="text-align:left;"
 			 value="{{current_fluid.name}}" />
 		</div>
 	      </div>
@@ -897,22 +899,21 @@
    $("html, body").scrollTop($("#fluid-form").offset().top);
    cb = function(data){
 
-     data = JSON.parse(data);
      $("#edit-fluid-name").attr("value", data.name);
      $("#edit-fluid-desc").attr("value", data.description);
      $("#edit-fluid-kw").attr("value", data.k_w);
      $("#edit-fluid-key").attr("value", data.db_key);
      $("#edit-fluid-rho-w").attr("value", data.rho_w);
-     $("#edit-fluid-rho-HC").attr("value", data.rho_hc);
+     $("#edit-fluid-rho-hc").attr("value", data.rho_hc);
      $("#edit-fluid-khc").attr("value", data.k_hc);
      $("#edit-fluid-sw").attr("value", data.sw);
    };
 
-   $.ajax('/fluid?key=' + key,
+   $.ajax('/fluid?keys=' + key,
 	  {type: "GET", success: cb});
  }
 
- function edit_rock(name){
+ function edit_rock(key){
    document.getElementById("submit-rock-button").onclick = put_rock;
    button = $("#submit-rock-button");
    button.text("Update rock");
@@ -923,8 +924,7 @@
    $("html, body").scrollTop($("#rock-form").offset().top);
    cb = function(data){
 
-     data = JSON.parse(data);
-     $("#edit-rock-name").attr("value",name);
+     $("#edit-rock-name").attr("value",data.name);
      $("#edit-rock-desc").attr("value", data.description);
      $("#edit-vp").attr("value", data.vp);
      $("#edit-vs").attr("value", data.vs);
@@ -933,12 +933,16 @@
      $("#edit-vs-std").attr("value",data.vs_std);
      $("#edit-rho-std").attr("value",data.rho_std);
      $("#edit-rock-key").attr("value", data.db_key);
-     $("#edit-porosity").attr("value", data.porosity);
+     $("#edit-porosity").attr("value", data.phi);
      $("#edit-vclay").attr("value", data.vclay);
 
-     $("#edit-rock-fluid").val(data.fluid_id);
+     if(data.fluid){
+ $("#edit-rock-fluid").val(data.fluid.db_key);
+ } else{
+ $("#edit-rock-fluid").val("None");
+ };
    };
-   $.ajax('/rock?name=' + name,
+   $.ajax('/rock?keys=' + key,
 	  {type: "GET", success: cb});
  }
 
@@ -951,12 +955,12 @@
 				success: cb});
  }
 
- function delete_rock(name){
+ function delete_rock(key){
    cb = function(data){
      location.reload(true);
    };
 
-   $.ajax('/rock?name=' + name, {type: "DELETE",
+   $.ajax('/rock?key=' + key, {type: "DELETE",
 				 success: cb});
  }
 

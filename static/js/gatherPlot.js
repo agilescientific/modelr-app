@@ -9,7 +9,7 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 
 
     var tScale = d3.scale.linear()
-	.range([0, 3.5]);
+	.range([0, height]);
 
     var thetaAxisScale = d3.scale.linear()
 	.range([0,90]).domain([0,30]);
@@ -47,19 +47,16 @@ function gatherPlot(svg_group, offset,height, key, label,seis_menu){
 
 
 
-    this.update_plot = function update_plot(data, theta_in,t,t_scale,
-					    height){
+    this.update_plot = function update_plot(data, theta_in,t){
 	
 
 	// Clear the plot
 	plot.selectAll("path").remove();
 
 	// Set the time and theta scales
-	tScale.domain(t);
+	tScale.domain([t[0], t[t.length-1]]);
 	thetaScale.domain(theta_in);
 
-
-	tScale.range(t_scale);
 
 	for(var wiggle_hack=0;wiggle_hack<2;wiggle_hack++){
 	    // Plot each trace in the data

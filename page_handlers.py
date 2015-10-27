@@ -2,8 +2,6 @@
 Handler classes for serving html webpages
 """
 
-
-from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext import blobstore
 from google.appengine.ext import webapp as webapp2
 from google.appengine.api import users
@@ -17,13 +15,7 @@ from PIL import Image
 
 import urllib
 import urllib2
-
-from jinja2 import Environment, FileSystemLoader
-
-
 import time
-from os.path import join, dirname
-import os
 
 import hashlib
 import logging
@@ -32,22 +24,21 @@ import stripe
 
 import json
 import base64
-import re
-import StringIO
 
 from xml.etree import ElementTree
 
-from constants import admin_id, env, LOCAL, PRICE, UR_STATUS_DICT, \
-     tax_dict, stripe_api_key, stripe_public_key, usgs_colours
+from constants import admin_id, env, PRICE, UR_STATUS_DICT, \
+    tax_dict, stripe_public_key, usgs_colours
 
 from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
-     verify, authenticate, verify_signup, initialize_user,\
-     reset_password, \
-     forgot_password, send_message, make_user, cancel_subscription
-     
+    verify, authenticate, verify_signup, initialize_user,\
+    reset_password, \
+    forgot_password, send_message, make_user, cancel_subscription
+
 from lib_db import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Issue, EarthModel, Server, Fluid
+    GroupRequest, ActivityLog, ModelServedCount,\
+    ImageModel, Issue, EarthModel, Server, Fluid,\
+    get_all_items_user
 
 from lib_util import RGBToString
 
@@ -58,33 +49,32 @@ class ModelrPageRequest(webapp2.RequestHandler):
     to be inherited to other pages.
     """
 
-    
     def get_base_params(self, **kwargs):
         '''
         get the default parameters used in base_template.html
         '''
-        
-        user=self.verify()
-        
+
+        user = self.verify()
+
         if user:
             email_hash = hashlib.md5(user.email).hexdigest()
         else:
-            email_hash=''
+            email_hash = ''
 
-
-        hostname = Server.all().ancestor(ModelrParent.all().get()).get().host
-        default_rock = dict(vp=0,vs=0, rho=0, vp_std=0,
+        hostname = Server.all()\
+                         .ancestor(ModelrParent.all().get()).get().host
+        
+        default_rock = dict(vp=0, vs=0, rho=0, vp_std=0,
                             rho_std=0, vs_std=0,
                             description='description',
                             name='name', group='public')
-        
+
         params = dict(logout=users.create_logout_url(self.request.uri),
                       HOSTNAME=hostname,
-                      current_rock = default_rock,
+                      current_rock=default_rock,
                       email_hash=email_hash)
-        
+
         params.update(kwargs)
-        
         return params
 
     def verify(self):
@@ -101,11 +91,10 @@ class ModelrPageRequest(webapp2.RequestHandler):
             user, password = cookie.split('|')
         except ValueError:
             return
-        
-        return verify(user, password, ModelrParent.all().get())
-        
 
-    
+        return verify(user, password, ModelrParent.all().get())
+
+
 class MainHandler(ModelrPageRequest):
     '''
     main page
@@ -116,7 +105,7 @@ class MainHandler(ModelrPageRequest):
         user = self.verify()
         if user:
             self.redirect('/dashboard')
-        
+
         template_params = self.get_base_params()
         template = env.get_template('index.html')
         html = template.render(template_params)
@@ -135,14 +124,14 @@ class ScenarioPageHandler(ModelrPageRequest):
 
         self.response.headers['Content-Type'] = 'text/html'
         self.response.headers['Access-Control-Allow-Origin'] = '*'
-        self.response.headers['Access-Control-Allow-Headers'] = \
-          'X-Request, X-Requested-With'
+        hdrs = 'X-Request, X-Requested-With'
+        self.response.headers['Access-Control-Allow-Headers'] = hdrs
 
         # Get the default rocks
         default_rocks = Rock.all().order('name')
         default_rocks.filter("user =", admin_id)
         default_rocks = default_rocks.fetch(100)
-        
+
         # Get the user rocks
         if user:
             rocks = Rock.all().order('name').ancestor(user).fetch(100)
@@ -150,17 +139,17 @@ class ScenarioPageHandler(ModelrPageRequest):
             # Get the group rocks
             group_rocks = []
             for group in user.group:
-            
-                g_rocks = \
-                  Rock.all().order('name').ancestor(ModelrParent.all().get()).filter("group =",
-                                                         group)
+                g_rocks = Rock.all()\
+                              .order('name')\
+                              .ancestor(ModelrParent.all().get())\
+                              .filter("group =", group)
                 group_rocks.append({"name": group.capitalize(),
                                     "rocks": g_rocks.fetch(100)})
-                
+
             # Get the users scenarios
             scenarios = \
-                Scenario.all().ancestor(user).filter("user =",
-                                            user.user_id).fetch(100)
+                Scenario.all().ancestor(user)\
+                              .filter("user =", user.user_id).fetch(100)
         else:
             rocks = []
             group_rocks = []
@@ -169,33 +158,19 @@ class ScenarioPageHandler(ModelrPageRequest):
         # Get Evan's default scenarios (user id from modelr database)
         scen = Scenario.all().ancestor(ModelrParent.all().get())
         scen = scen.filter("user =", admin_id).fetch(100)
-        if scen: 
+        if scen:
             scenarios += scen
 
+        model_data = get_all_items_user(EarthModel, user)
 
-        model_data = earth_models = EarthModel.all().filter("user =",
-                                            admin_id).fetch(1000)
-        # Get the models from uploaded images
-        if user:
-            user_data = EarthModel.all().filter("user =",
-                                             user.user_id).fetch(1000)
-            
-            model_data = model_data + user_data
-            
-        earth_models = [{"image_key": str(i.parent_key()),
-                         "name": i.name} for i in model_data]
+        earth_models = [m.simple_json for m in model_data]
 
-            
-        
-            
-        
-        template_params = \
-          self.get_base_params(user=user,rocks=rocks,
-                               default_rocks=default_rocks,
-                               group_rocks=group_rocks,
-                               scenarios=scenarios,
-                               earth_models=earth_models)
-                
+        template_params = self.get_base_params(user=user, rocks=rocks,
+                                               default_rocks=default_rocks,
+                                               group_rocks=group_rocks,
+                                               scenarios=scenarios,
+                                               earth_models=earth_models)
+
         template = env.get_template('scenario.html')
 
         html = template.render(template_params)
@@ -205,8 +180,8 @@ class ScenarioPageHandler(ModelrPageRequest):
             ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
-        
         self.response.out.write(html)
+
 
 class DashboardHandler(ModelrPageRequest):
     '''
@@ -214,9 +189,9 @@ class DashboardHandler(ModelrPageRequest):
     '''
     @authenticate
     def get(self, user):
-        
+
         template_params = self.get_base_params(user=user)
-        
+
         self.response.headers['Content-Type'] = 'text/html'
 
         # Get all the rocks
@@ -231,9 +206,8 @@ class DashboardHandler(ModelrPageRequest):
         rock_groups = []
         for name in user.group:
             dic = {'name': name.capitalize(),
-                   'rocks':
-                    Rock.all().ancestor(ModelrParent.all().get()).filter("group =",
-                                                    name).fetch(100)}
+                   'rocks': Rock.all().ancestor(ModelrParent.all().get())
+                   .filter("group =", name).fetch(100)}
             rock_groups.append(dic)
 
         # Get all the fluids
@@ -248,9 +222,8 @@ class DashboardHandler(ModelrPageRequest):
         fluid_groups = []
         for name in user.group:
             dic = {'name': name.capitalize(),
-                   'fluids':
-                    Fluid.all().ancestor(ModelrParent.all().get()).filter("group =",
-                                                    name).fetch(100)}
+                   'fluids': Fluid.all().ancestor(ModelrParent.all().get())
+                   .filter("group =", name).fetch(100)}
             fluid_groups.append(dic)
 
         # Get all the user scenarios
@@ -259,39 +232,46 @@ class DashboardHandler(ModelrPageRequest):
             scenarios.ancestor(user)
         else:
             scenarios.ancestor(ModelrParent.all().get())
-            
+
         scenarios.filter("user =", user.user_id)
         scenarios.order("-date")
-        
+
         for s in scenarios.fetch(100):
             logging.info((s.name, s))
 
-    
-        default_image_models = \
-          ImageModel.all().filter("user =", admin_id).fetch(100)
-
-        user_image_models = \
-          ImageModel.all().filter("user =", user.user_id).fetch(100)
-
+        if user.user_id != admin_id:
+            default_image_models = ImageModel.all()\
+                                             .filter("user =", admin_id)\
+                                             .fetch(100)
+        else:
+            default_image_models = []
+        
+        user_image_models = ImageModel.all()\
+                                      .filter("user =", user.user_id)\
+                                      .fetch(100)
+        
         default_models = [{"image": images.get_serving_url(i.image,
                                                            size=200,
-                                                          crop=False,
-                                                          secure_url=True),
+                                                           crop=False,
+                                                           secure_url=True),
                            "image_key": str(i.key()),
                            "editable": False,
-                           "models": EarthModel.all().ancestor(i).filter("user =", user.user_id).fetch(100)}
-                                      for i in default_image_models]
+                           "models": EarthModel.all().ancestor(i)
+                           .filter("user =", user.user_id).fetch(100)}
+                          for i in default_image_models]
 
         user_models = [{"image": images.get_serving_url(i.image,
                                                         size=200,
                                                         crop=False,
                                                         secure_url=True),
-                           "image_key": str(i.key()),
-                           "editable": True,
-                           "models": EarthModel.all().ancestor(i).filter("user =", user.user_id).fetch(100)}
-                                      for i in user_image_models]
+                        "image_key": str(i.key()),
+                        "editable": True,
+                        "models": EarthModel.all().ancestor(i)
+                        .filter("user =", user.user_id).fetch(100)}
+                       for i in user_image_models]
+
         models = user_models + default_models
-        
+
         template_params.update(rocks=rocks.fetch(100),
                                scenarios=scenarios.fetch(100),
                                default_rocks=default_rocks.fetch(100),
@@ -317,15 +297,14 @@ class DashboardHandler(ModelrPageRequest):
             current_rock.vp_std = 50.0
             current_rock.vs_std = 50.0
             current_rock.rho_std = 50.0
-            
-            template_params['current_rock'] = current_rock
-        
 
-         # Check if a fluid is being edited
+            template_params['current_rock'] = current_rock
+
+        # Check if a fluid is being edited
         if self.request.get("selected_fluid"):
             fluid_id = self.request.get("selected_fluid")
             current_fluid = Fluid.get_by_id(int(fluid_id),
-                                          parent=user)
+                                            parent=user)
             template_params['current_fluid'] = current_fluid
         else:
             current_fluid = Fluid()
@@ -333,7 +312,7 @@ class DashboardHandler(ModelrPageRequest):
             current_fluid.description = "description"
             current_fluid.vp = 1500.0
             current_fluid.K = 200.0
-            
+
         template_params['current_fluid'] = current_fluid
         template = env.get_template('dashboard.html')
         html = template.render(template_params)
@@ -343,7 +322,7 @@ class DashboardHandler(ModelrPageRequest):
                     activity=activity,
                     parent=ModelrParent.all().get()).put()
         self.response.out.write(html)
-        
+
 # class AboutHandler(ModelrPageRequest):
 #     def get(self):
 
@@ -522,11 +501,11 @@ class FeedbackHandler(ModelrPageRequest):
 
         template_params = self.get_base_params(user=user)
 
-        # Get the list of issues from GitHub. 
+        # Get the list of issues from GitHub.
         # First, set up the request.
         gh_api_key = 'token 89c9d30cddd95358b1465d1dacb1b64597b42f89'
         url = 'https://api.github.com/repos/kwinkunks/modelr_app/issues'
-        params = {'labels':'wishlist', 'state':'open'}
+        params = {'labels': 'wishlist', 'state': 'open'}
         query = urllib.urlencode(params)
         full_url = '{0}?{1}'.format(url, query)
 
@@ -538,9 +517,10 @@ class FeedbackHandler(ModelrPageRequest):
             resp = urllib2.urlopen(req)
             raw_json = resp.read()
             git_data = json.loads(raw_json)
-            
+
         except:
-            err_msg = 'Failed to retrieve issues from GitHub. Please check back later.'
+            err_msg = ('Failed to retrieve issues from GitHub. ' +
+                       'Please check back later.')
             git_data = {}
 
         else:
@@ -558,7 +538,7 @@ class FeedbackHandler(ModelrPageRequest):
                         status = user_issue.vote
                     else:
                         Issue(parent=user, issue_id=issue["id"]).put()
-                        
+
                 up, down = 0, 0
 
                 if status == 1:
@@ -570,11 +550,14 @@ class FeedbackHandler(ModelrPageRequest):
                              up=up,
                              down=down)
 
-                # Get the count. We have to read the database twice. 
-                down_votes = Issue.all().ancestor(ModelrParent.all().get()).filter("issue_id =", issue["id"]).filter("vote =", -1).count()
-                up_votes = Issue.all().ancestor(ModelrParent.all().get()).filter("issue_id =", issue["id"]).filter("vote =", 1).count()
+                # Get the count. We have to read the database twice.
+                down_votes = Issue.all().ancestor(ModelrParent.all().get())\
+                                        .filter("issue_id =", issue["id"])\
+                                        .filter("vote =", -1).count()
+                up_votes = Issue.all().ancestor(ModelrParent.all().get())\
+                                      .filter("issue_id =", issue["id"])\
+                                      .filter("vote =", 1).count()
                 count = up_votes - down_votes
-
 
                 issue.update(up_votes=up_votes,
                              down_votes=down_votes,
@@ -589,13 +572,12 @@ class FeedbackHandler(ModelrPageRequest):
         html = template.render(template_params)
         self.response.out.write(html)
 
-
     @authenticate
     def post(self, user):
 
         # This should never happen, because voting
         # links are disabled for non-logged-in users.
-        
+
         # Get the data from the ajax call.
         issue_id = int(self.request.get('id'))
         up = self.request.get('up')
@@ -609,7 +591,6 @@ class FeedbackHandler(ModelrPageRequest):
         else:
             issue_status = 0
 
-
         # Put it in the database.
         issue = Issue.all().ancestor(user).filter("issue_id =",
                                                   issue_id).get()
@@ -617,6 +598,7 @@ class FeedbackHandler(ModelrPageRequest):
         issue.put()
 
         # TODO log in the activity log
+
 
 class PricingHandler(ModelrPageRequest):
     def get(self):
@@ -626,15 +608,15 @@ class PricingHandler(ModelrPageRequest):
         template = env.get_template('pricing.html')
         html = template.render(template_params)
         activity = "pricing"
-        
+
         if user:
             ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
-                        
-        self.response.out.write(html)          
-   
-   
+
+        self.response.out.write(html)
+
+
 class HelpHandler(ModelrPageRequest):
     def get(self, subpage):
 
@@ -642,46 +624,45 @@ class HelpHandler(ModelrPageRequest):
             page = subpage
         else:
             page = 'help'
-        page+= '.html'
-        
+        page += '.html'
+
         user = self.verify()
         template_params = self.get_base_params(user=user)
         template = env.get_template(page)
         html = template.render(template_params)
         activity = "help"
-        
+
         if user:
             ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
-                        
-        self.response.out.write(html)   
-               
+
+        self.response.out.write(html)
+
     def post(self, subpage):
 
         email = self.request.get('email')
         message = self.request.get('message')
 
-        
         user = self.verify()
-        
+
         try:
             send_message("User message %s" % email, message)
             template = env.get_template('message.html')
-            msg = ("Thank you for your message. " + 
+            msg = ("Thank you for your message. " +
                    "We'll be in touch shortly.")
             html = template.render(success=msg, user=user)
             self.response.out.write(html)
-            
+
         except:
             template = env.get_template('message.html')
             msg = ('Your message was not sent.&nbsp;&nbsp; ' +
-                   '<button class="btn btn-default" '+
+                   '<button class="btn btn-default" ' +
                    'onclick="goBack()">Go back and retry</button>')
             html = template.render(warning=msg, user=user)
             self.response.out.write(html)
-   
-                                                                     
+
+
 class TermsHandler(ModelrPageRequest):
     def get(self):
 
@@ -690,15 +671,15 @@ class TermsHandler(ModelrPageRequest):
         template = env.get_template('terms.html')
         html = template.render(template_params)
         activity = "terms"
-        
+
         if user:
             ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
-        
-        self.response.out.write(html)          
-                                    
-          
+
+        self.response.out.write(html)
+
+
 class PrivacyHandler(ModelrPageRequest):
     def get(self):
 
@@ -707,32 +688,31 @@ class PrivacyHandler(ModelrPageRequest):
         template = env.get_template('privacy.html')
         html = template.render(template_params)
         activity = "privacy"
-        
+
         if user:
             ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
-        
-        self.response.out.write(html)          
-                                    
-          
+
+        self.response.out.write(html)
+
+
 class ProfileHandler(ModelrPageRequest):
 
     @authenticate
     def get(self, user):
 
-        groups=[]
+        groups = []
         for group in user.group:
-            g = Group.all().ancestor(ModelrParent.all().get()).filter("name =",
-                                                        group)
+            g = Group.all().ancestor(ModelrParent.all().get())\
+                           .filter("name =", group)
             g = g.fetch(1)
             if g:
                 groups.append(g[0])
-        
-        template_params = \
-          self.get_base_params(user=user, groups=groups,
-                               stripe_key=stripe_public_key)
-        
+
+        template_params = self.get_base_params(user=user, groups=groups,
+                                               stripe_key=stripe_public_key)
+
         if self.request.get("createfailed"):
             create_error = "Group name exists"
             template_params.update(create_error=create_error)
@@ -741,27 +721,24 @@ class ProfileHandler(ModelrPageRequest):
             template_params.update(join_error=join_error)
 
         # Get the user permission requests
-        req = \
-          GroupRequest.all().ancestor(ModelrParent.all().get()).filter("user =",
-                                                         user.user_id)
+        req = GroupRequest.all().ancestor(ModelrParent.all().get())\
+                                .filter("user =", user.user_id)
         if req:
             template_params.update(requests=req)
 
         # Get the users adminstrative requests
-        admin_groups = \
-          Group.all().ancestor(ModelrParent.all().get()).filter("admin =",
-                                                  user.user_id)
+        admin_groups = Group.all().ancestor(ModelrParent.all().get())\
+                                  .filter("admin =", user.user_id)
         admin_groups = admin_groups.fetch(100)
         req = []
         for group in admin_groups:
             # Check for a request
             g_req = GroupRequest.all().ancestor(ModelrParent.all().get())
             g_req = g_req.filter("group =", group.name).fetch(100)
-            req = req + \
-              [{'group': group.name,
-                'user': User.all().filter("user_id =", i.user).get()}
-               for i in g_req]
-        
+            req = req + [{'group': group.name,
+                          'user': User.all().filter("user_id =", i.user).get()}
+                         for i in g_req]
+
         template_params.update(admin_req=req)
         template = env.get_template('profile.html')
         html = template.render(template_params)
@@ -786,7 +763,7 @@ class ProfileHandler(ModelrPageRequest):
             try:
                 group = Group.all().ancestor(ModelrParent.all().get())
                 group = group.filter("name =", join_group).fetch(1)[0]
-                if user.user_id in group.allowed_users: 
+                if user.user_id in group.allowed_users:
                     if group.name not in user.group:
                         user.group.append(group.name)
                         user.put()
@@ -794,11 +771,10 @@ class ProfileHandler(ModelrPageRequest):
                     GroupRequest(user=user.user_id,
                                  group=group.name,
                                  parent=ModelrParent.all().get()).put()
-            
+
             except IndexError:
                 err_string.append("joinfailed=1")
 
-            
         # Leave a group
         group = self.request.get("selected_group")
         if group in user.group:
@@ -813,8 +789,8 @@ class ProfileHandler(ModelrPageRequest):
         group = self.request.get("create_group")
 
         if group:
-            if not Group.all().ancestor(ModelrParent.all().get()).filter("name =",
-                                                    group).fetch(1):
+            if not Group.all().ancestor(ModelrParent.all().get())\
+                              .filter("name =", group).fetch(1):
                 Group(name=group, admin=user.user_id,
                       allowed_users=[user.user_id],
                       parent=ModelrParent.all().get()).put()
@@ -829,7 +805,6 @@ class ProfileHandler(ModelrPageRequest):
 
         # Handle a group request
         request_user = self.request.get("request_user")
-       
         if request_user:
             user_id = int(request_user)
             group = self.request.get("request_group")
@@ -866,7 +841,7 @@ class SettingsHandler(ModelrPageRequest):
         template_params = self.get_base_params(user=user)
         template = env.get_template('settings.html')
         html = template.render(template_params)
-        self.response.out.write(html)        
+        self.response.out.write(html)
 
 
 class ForgotHandler(webapp2.RequestHandler):
@@ -911,10 +886,10 @@ class ResetHandler(ModelrPageRequest):
         template = env.get_template('profile.html')
 
         try:
-            reset_password(user,current_pword,new_password,
+            reset_password(user, current_pword, new_password,
                            verify)
             msg = ("You reset your password.")
-            html = template.render(user=user,success=msg)
+            html = template.render(user=user, success=msg)
             self.response.out.write(html)
         except AuthExcept as e:
             html = template.render(user=user, error=e.msg)
@@ -946,15 +921,15 @@ class DeleteHandler(ModelrPageRequest):
         template = env.get_template('message.html')
 
         try:
-            cancel_subscription(user) 
+            cancel_subscription(user)
             msg = "Unsubscribed from Modelr"
             html = template.render(user=user, msg=msg)
             self.response.write(html)
-            
+
         except AuthExcept as e:
             html = template.render(user=user, error=e.msg)
             self.response.write(html)
-            
+
 
 class SignUp(webapp2.RequestHandler):
     """
@@ -970,9 +945,9 @@ class SignUp(webapp2.RequestHandler):
             html = template.render(error=error_msg)
         else:
             html = template.render()
-        
+
         self.response.out.write(html)
-        
+
     def post(self):
 
         email = self.request.get('email')
@@ -985,12 +960,12 @@ class SignUp(webapp2.RequestHandler):
             html = template.render(email=email,
                                    error=msg)
             self.response.out.write(html)
-            
+
         else:
             try:
                 signup(email, password,
                        parent=ModelrParent.all().get())
-                
+
                 # Show the message page with "Success!"
                 template = env.get_template('message.html')
                 msg = ("Please check your inbox and spam folder " +
@@ -998,7 +973,7 @@ class SignUp(webapp2.RequestHandler):
                        "in the email.")
                 html = template.render(success=msg)
                 self.response.out.write(html)
-                
+
             except AuthExcept as e:
                 template = env.get_template('signup.html')
                 msg = e.msg
@@ -1011,20 +986,20 @@ class EmailAuthentication(ModelrPageRequest):
     """
     This is where billing and user account creation takes place
     """
-    
+
     def get(self):
 
         user_id = self.request.get("user_id")
-        
+
         try:
             # Change this to check the user can be validated and
             # get temp_user
             user = verify_signup(user_id, ModelrParent.all().get())
-            
-        except AuthExcept as e:
+
+        except AuthExcept:
             self.redirect('/signup?error=auth_failed')
             return
-            
+
         msg = "Thank you for verifying your email address."
         params = self.get_base_params(user=user,
                                       stripe_key=stripe_public_key)
@@ -1038,11 +1013,10 @@ class EmailAuthentication(ModelrPageRequest):
         """
         email = self.request.get('stripeEmail')
         price = PRICE # set at head of this file
-            
 
         # Secret API key for Canada Post postal lookup
         cp_prod = "3a04462597330c85:46c19862981c734ff8f7b2"
-        cp_dev = "09b48e3a40e710ed:bb6f209fdecff9af3ec10d"
+        # cp_dev = "09b48e3a40e710ed:bb6f209fdecff9af3ec10d"
         cp_key = base64.b64encode(cp_prod)
 
         # Get the credit card details submitted by the form
@@ -1050,24 +1024,24 @@ class EmailAuthentication(ModelrPageRequest):
 
         # Create the customer account
         try:
-            customer = stripe.Customer.create(card=token,
-                                              email=email,
-                                              description="New Modelr customer")
+            customer = stripe.Customer\
+                             .create(card=token,
+                                     email=email,
+                                     description="New Modelr customer")
         except:
             # The card has been declined
             # Let the user know and DON'T UPGRADE USER
             self.redirect('/signin?verified=false')
             return
-        
+
         # Check the country to see if we need to charge tax
         country = self.request.get('stripeBillingAddressCountry')
         if country == "Canada":
-            
+
             # Get postal code for canada post request
-            postal_code = \
-              self.request.get('stripeBillingAddressZip').replace(" ",
-                                                                  "")
-              
+            postal_code = self.request.get('stripeBillingAddressZip')\
+                                      .replace(" ", "")
+
             # Hook up to the web api
             params = urllib.urlencode({"d2po": "True",
                                        "postalCode": postal_code,
@@ -1086,7 +1060,7 @@ class EmailAuthentication(ModelrPageRequest):
                 # This is super hacky, but the only way I could get the
                 # XML out
                 province = []
-                for i in xml_root.iter('{http://www.canadapost.ca/ws/'+
+                for i in xml_root.iter('{http://www.canadapost.ca/ws/' +
                                        'postoffice}province'):
                     province.append(i.text)
                     tax_code = province[0]
@@ -1095,19 +1069,19 @@ class EmailAuthentication(ModelrPageRequest):
 
                 # Add the tax to the invoice
                 stripe.InvoiceItem.create(customer=customer.id,
-                                              amount = int(tax),
-                                              currency="usd",
-                                              description="Canadian Taxes")
+                                          amount=int(tax),
+                                          currency="usd",
+                                          description="Canadian Taxes")
 
             except:
 
-                send_message(subject="taxation failed for %s" %customer.id)
+                send_message(subject="taxation failed for %s" % customer.id)
                 tax = 0
 
         else:
             tax_code = country
             tax = 0
-            
+
         # Create the charge on Stripe's servers -
         # this will charge the user's card
         try:
@@ -1127,8 +1101,8 @@ class EmailAuthentication(ModelrPageRequest):
 
             send_message(subject="Registration Failed",
                          message=("Failed to register user %s to " +
-                        "Modelr but was billed by Stripe. " +
-                        "Customer ID: %s") %(email, customer.id))
+                                  "Modelr but was billed by Stripe. " +
+                                  "Customer ID: %s") % (email, customer.id))
             self.redirect('/signin?verified=false')
             raise
 
@@ -1137,19 +1111,19 @@ class EmailAuthentication(ModelrPageRequest):
 
 class SignIn(webapp2.RequestHandler):
 
-    def get(self):       
+    def get(self):
 
         status = self.request.get("verified")
         redirect = self.request.get('redirect')
 
         if status == "true":
             msg = ("Your account has been created and your card has "
-                   "been charged. Welcome to Modelr!" )
+                   "been charged. Welcome to Modelr!")
             error_msg = None
 
         elif status == "false":
             error_msg = ("Failed to create account. Your credit card will "
-                   "not be charged.")
+                         "not be charged.")
             msg = None
         else:
             msg = None
@@ -1221,8 +1195,8 @@ class ManageGroup(ModelrPageRequest):
 
         users = []
         for user_id in group.allowed_users:
-            u = User.all().ancestor(ModelrParent.all().get()).filter("user_id =",
-                                                        user_id)
+            u = User.all().ancestor(ModelrParent.all().get())\
+                          .filter("user_id =", user_id)
             u = u.fetch(1)
             if u:
                 users.append(u[0])
@@ -1234,8 +1208,8 @@ class ManageGroup(ModelrPageRequest):
 
         activity = "manage_group"
         ActivityLog(user_id=user.user_id,
-                        activity=activity,
-                        parent=ModelrParent.all().get()).put()
+                    activity=activity,
+                    parent=ModelrParent.all().get()).put()
         self.response.out.write(html)
 
     @authenticate
@@ -1299,7 +1273,7 @@ class ModelBuilder(ModelrPageRequest):
         self.response.out.write('All OK!!')
 
         bucket = '/modelr_live_bucket/'
-        filename = bucket + str(user.user_id) +'/' + str(time.time())
+        filename = bucket + str(user.user_id) + '/' + str(time.time())
 
         encoded_image = self.request.get('image').split(',')[1]
         pic = base64.b64decode(encoded_image)
@@ -1326,22 +1300,26 @@ class ModelHandler(ModelrPageRequest):
 
         # Make the upload url
         upload_url = blobstore.create_upload_url('/upload')
-        
+
         # Get the model images
         models = ImageModel.all().ancestor(user).order("-date")
         models = models.fetch(100)
 
         # Get the default models
         admin_user = User.all().filter("user_id =", admin_id).get()
-        default_models = \
-          ImageModel.all().ancestor(admin_user).fetch(100)
-
+        if user.user_id != admin_id:
+            default_models = ImageModel.all().ancestor(admin_user).fetch(100)
+        else:
+            default_models = []
+            
+        all_models = set(models + default_models)
+        
         # Create the serving urls
         imgs = [images.get_serving_url(i.image, size=1400,
                                        crop=False, secure_url=True)
-                for i in (models + default_models)]
+                for i in all_models]
 
-        keys = [str(i.key()) for i in (models + default_models)]
+        keys = [str(i.key()) for i in all_models]
 
         # Read in each image to get the RGB colours
         readers = [blobstore.BlobReader(i.image.key())
@@ -1361,23 +1339,23 @@ class ModelHandler(ModelrPageRequest):
         params = self.get_base_params(user=user,
                                       images=imgs,
                                       colors=colors,
-                                      keys = keys,
+                                      keys=keys,
                                       rocks=rocks.fetch(100),
-                            default_rocks=default_rocks.fetch(100),
+                                      default_rocks=default_rocks.fetch(100),
                                       upload_url=upload_url)
 
         # Check if there was an upload error (see Upload handler)
         if self.request.get("error"):
             params.update(error="Invalid image file")
-        
-        template = env.get_template('model.html')
+
+        template = env.get_template('model2.html')
         html = template.render(params)
         self.response.out.write(html)
 
 
 class NotFoundPageHandler(ModelrPageRequest):
     def get(self):
-        self.error(404)        
+        self.error(404)
         template = env.get_template('404.html')
         html = template.render()
         self.response.out.write(html)
@@ -1387,8 +1365,8 @@ class AdminHandler(ModelrPageRequest):
 
     @authenticate
     def get(self, user):
-            
-        if not "admin" in user.group:
+
+        if "admin" not in user.group:
             self.redirect('/')
 
         template = env.get_template('admin_site.html')
@@ -1397,24 +1375,21 @@ class AdminHandler(ModelrPageRequest):
 
     @authenticate
     def post(self, user):
-
-        if not "admin" in user.group:
+        if "admin" not in user.group:
             self.redirect('/')
 
-
         template = env.get_template('admin_site.html')
-        
+
         host = self.request.get('host')
         if (len(host) > 0):
             server = Server.all().ancestor(ModelrParent.all().get()).get()
             server.host = self.request.get('host')
             server.put()
             html = template.render(
-                     self.get_base_params(success="Updated Host"))
+                self.get_base_params(success="Updated Host"))
             self.response.write(html)
             return
 
-        
         email = self.request.get('email')
         password = self.request.get('password')
         verify = self.request.get('verify')
@@ -1424,130 +1399,32 @@ class AdminHandler(ModelrPageRequest):
                 template = env.get_template('admin_site.html')
                 msg = "Password mismatch"
                 html = template.render(email=email,
-                                   error=msg)
+                                       error=msg)
                 self.response.out.write(html)
                 return
-            
+
             else:
                 try:
-                    new_user = make_user(email=email,
-                                         password=password,
-                                         parent=ModelrParent.all().get())
+                    make_user(email=email,
+                              password=password,
+                              parent=ModelrParent.all().get())
                     template = env.get_template('admin_site.html')
                     html = template.render(success="Added User",
                                            email=email, user=user)
                     self.response.out.write(html)
                     return
-                
+
                 except AuthExcept as e:
                     template = env.get_template('admin_site.html')
                     html = template.render(error=e.msg, user=user,
                                            email=email)
                     self.response.out.write(html)
                     return
-        
+
         else:
             template = env.get_template('admin_site.html')
             html = template.render()
             self.response.out.write(html)
-
-
-class FixScenarios(ModelrPageRequest):
-
-    def get(self):
-
-        scenarios = Scenario.all().fetch(1000)
-
-        rocks = Rock.all().ancestor(ModelrParent.all().get())
-
-        for s in scenarios:
-
-            data = json.loads(s.data)
-
-            args = data["arguments"]
-
-            for key, value in args.iteritems():
-
-                if key.startswith("Rock"):
-
-                    rocks = Rock.all().ancestor(
-                        ModelrParent.all().get())
-                    rock = rocks.filter("name =", value).get()
-                    if(rock):
-                        args[key] = rock.key().id()
-                    else:
-                        args[key] = None
-
-            data["arguments"] = args
-            s.data = json.dumps(data).encode()
-            s.put()
-
-        self.response.out.write("OK")
-
-
-class FixModels(ModelrPageRequest):
-
-    def get(self):
-
-        models = EarthModel.all().fetch(1000)
-
-        for m in models:
-
-            data = json.loads(m.data)
-            cmap = data["mapping"]
-
-            for color, rock_data in cmap.iteritems():
-
-                rock_name = rock_data["name"]
-
-                try:
-                    rocks = Rock.all().ancestor(
-                        ModelrParent.all().get())
-
-                    rock = rocks.filter("name =", rock_name).get()
-                    cmap[color]["key"] = rock.key().id()
-                except:
-                    pass
-            m.data = json.dumps(data).encode()
-        self.response.write("OK")
-
-
-class FixDefaultRocks(ModelrPageRequest):
-    ## Used to fix rocks in the database
-    def get(self):
-
-        from default_rocks import default_rocks
-        ModelrRoot = ModelrParent.all().get()
-        admin_user = User.all().ancestor(ModelrRoot).filter("user_id =",
-                                                            admin_id).get()
-        for i in default_rocks:
-
-            rocks = Rock.all()
-            rocks.filter("user =", admin_id)
-            rocks.filter("name =", i['name'])
-            rocks = rocks.fetch(100)
-
-            for r in rocks:
-                r.delete()
-
-            rock = Rock(parent=admin_user)
-            rock.user = admin_id
-            rock.name = i['name']
-            rock.group = 'public'
-
-            rock.description = i['description']
-
-            rock.vp = float(i['vp'])
-            rock.vs = float(i['vs'])
-            rock.rho = float(i['rho'])
-
-            rock.vp_std = float(i['vp_std'])
-            rock.vs_std = float(i['vs_std'])
-            rock.rho_std = float(i['rho_std'])
-
-            rock.Parent = admin_user
-            rock.put()
-        self.response.out.write("oK")
 
 
 class ServerError(ModelrPageRequest):
@@ -1562,60 +1439,21 @@ class Model1DHandler(ModelrPageRequest):
     @authenticate
     def get(self, user):
 
-        admin_rocks = Rock.all().order("name").filter("user =",
-                                                        admin_id)
-        admin_rocks = admin_rocks.fetch(100)
+        all_rocks = get_all_items_user(Rock, user)
 
-        user_rocks = Rock.all().order("name").ancestor(user)
-        user_rocks = user_rocks.fetch(100)
-        
-        group_rocks = []
-        for group in user.group:
-            g_rocks = \
-            Rock.all().order('name').ancestor(ModelrParent.all().get()).filter("group =",
-                                                         group)
-            group_rocks = group_rocks + g_rocks.fetch(100)
+        rock_json = json.dumps([rock.json for rock in all_rocks])
+      
+        all_fluids = get_all_items_user(Fluid, user)
+        fluid_json = json.dumps([fluid.json for fluid in all_fluids])
 
-        all_rocks = user_rocks + group_rocks + admin_rocks
-        
-        rock_json = []
-        colour_map = {}
-        test=[]
-        for i, rock in enumerate(all_rocks):
-            rock_json.append(rock.json)
-            colour_map[rock.name] = RGBToString(usgs_colours[i])
-            test.append({"name":rock.name,
-                         "db_key": rock.key().id()})
-
-        # Fluids. This should be refactored into a function
-        admin_fluids = Fluid.all().order("name").filter("user =",
-                                                      admin_id)
-        admin_fluids = admin_fluids.fetch(100)
-
-        user_fluids = Fluid.all().order("name").ancestor(user)
-        user_fluids = user_fluids.fetch(100)
-
-        group_fluids = []
-        for group in user.group:
-            g_fluids = \
-            Fluid.all().order('name').ancestor(ModelrParent.all().get()).filter("group =",
-                                                         group)
-            group_fluids = group_fluids + g_fluids.fetch(100)
-
-        all_fluids = user_fluids + group_fluids + admin_fluids
-        fluid_json = []
-        test=[]
-        for i, fluid in enumerate(all_fluids):
-            fluid_json.append(fluid.json)
-            colour_map[fluid.name] = RGBToString(usgs_colours[-i])
-            test.append({"name":fluid.name,
-                         "db_key": fluid.key().id()})
+        colour_map = {item.name: RGBToString(colour)
+                      for (item, colour) in
+                      zip(all_rocks + all_fluids, usgs_colours)}
 
         colour_map = json.dumps(colour_map)
         params = self.get_base_params(user=user,
                                       db_rocks=rock_json,
                                       db_fluids=fluid_json,
-                                      test=test,
                                       colour_map=colour_map)
 
         template = env.get_template('1D_model.html')

@@ -1,12 +1,102 @@
 from google.appengine.ext import db
+from google.appengine.api import images
 from google.appengine.ext import blobstore
-
+from constants import admin_id
 import json
+import itertools
+import os
+
 """
 Authentication and permissions will be structured similar to linux
 wuth groups and users. Group permissions can be added to an item to
 allow other users permission to view and edit the item.
 """
+
+
+def get_user(user_id):
+
+    return User.all().filter("user_id =", user_id).get()
+
+
+def get_by_id(entity, db_id, user):
+    """
+    Finds by id. Searches under the user, admin user
+    """
+    # See if user owns it
+    item = entity.get_by_id(db_id, parent=user)
+
+    # See if admin owns it
+    if not item:
+        item = entity.get_by_id(db_id, parent=get_user(admin_id))
+
+    return item
+
+
+def get_items_by_name_and_user(entity, name, user):
+    
+    items = entity.all().filter("name =", name).fetch(1000)
+
+    if user is None:
+        out_items = [item for item in items if item.user == admin_id]
+    else:
+        out_items = [item for item in items if
+                     item.user == user.user_id or
+                     item.user == admin_id or
+                     item.group in user.group]
+
+    return out_items
+
+
+def get_all_items_user(entity, user):
+    """
+    Returns entities that the user has permissions for
+    """
+
+    if user is None or user.user_id != admin_id:
+        default_items = entity.all().order("-date")\
+                                    .filter("user =", admin_id)\
+                                    .fetch(1000)
+    else:
+        default_items = []
+
+    if user:
+        user_items = entity.all().order("-date")\
+                                 .filter("user =", user.user_id).fetch(1000)
+
+        group_items = [item for item in
+                       (entity.all().order("-date")
+                        .ancestor(ModelrParent.all().get())
+                        .filter("group =", group).fetch(1000)
+                        for group in user.group)]
+    else:
+        user_items = []
+        group_items = []
+
+    # flatten the lists
+    return (default_items + user_items + list(itertools.chain(*group_items)))
+
+
+def check_read_permission(entity, user):
+
+    if((entity.user_id == admin_id) or
+       (entity.user_id == user.user_id) or
+       (entity.group in user.group)):
+
+        return True
+    else:
+        return False
+
+
+def filter_on_read_permission(entities, user):
+    return [item for item in entities if check_read_permission(item)]
+
+
+def deep_delete(obj):
+    
+    [deep_delete(item) for item in
+     db.query_descendants(obj).fetch(1000)]
+
+    obj.delete()
 
 
 class ModelrParent(db.Model):
@@ -69,6 +159,15 @@ class Item(db.Model):
     user = db.IntegerProperty()
     group = db.StringProperty()
     date = db.DateTimeProperty(auto_now_add=True)
+    description = db.StringProperty(multiline=True)
+
+    @property
+    def simple_json(self):
+
+        payload = {"name": self.name,
+                   "description": self.description,
+                   "key": str(self.key())}
+        return payload
 
 
 class Group(db.Model):
@@ -87,10 +186,13 @@ class GroupRequest(db.Model):
 class ImageModel(Item):
     image = blobstore.BlobReferenceProperty()
 
-
-class FluidModel(Item):
-    image = blobstore.BlobReferenceProperty()
+    
+class Model1D(Item):
     name = db.StringProperty(multiline=False)
+    data = db.BlobProperty()
+
+    def to_json(self):
+        return self.data
 
 
 class EarthModel(Item):
@@ -98,13 +200,30 @@ class EarthModel(Item):
     name = db.StringProperty(multiline=False)
     data = db.BlobProperty()
 
+    @property
+    def json(self):
 
-class Forward2DModel(Item):
+        output = {}
+        data = json.loads(self.data)
+        
+        output["image"] = images.get_serving_url(
+            self.parent().image)
+        
+        output["name"] = self.name
 
-    name = db.StringProperty(multiline=False)
-    input_model_key = db.StringProperty()
-    output_image = blobstore.BlobReferenceProperty()
-    data = db.BlobProperty()
+        output["mapping"] = [{"colour": key, "rock": item}
+                             for key, item in data["mapping"].iteritems()]
+
+        return output
+    
+    def to_json(self):
+        return self.data
+
+    @property
+    def simple_json(self):
+        return {"name": self.name,
+                "description": 'empty',
+                "key": str(self.key())}
 
 
 class Scenario(Item):
@@ -121,7 +240,6 @@ class Rock(Item):
     """
 
     name = db.StringProperty(multiline=False)
-    description = db.StringProperty(multiline=True)
 
     vp = db.FloatProperty()
     vs = db.FloatProperty()
@@ -143,34 +261,46 @@ class Rock(Item):
     def fluid(self):
 
         try:
-            name = self.fluid_key.name
-            return name
-        except Exception as e:
-            return ""
+            fluid = self.fluid_key
+        except:
+            # Fluid no longer exists
+            fluid = None
+            self.fluid_key = None
+
+        return fluid
 
     @property
     def fluid_id(self):
         try:
             fid = self.fluid_key.key().id()
             return fid
-        except Exception as e:
+        except Exception:
+            return None
+
+    @property
+    def fluid_payload(self):
+        fluid = self.fluid
+        if self.fluid:
+            return fluid.json
+        else:
             return None
 
     @property
     def json(self):
 
-        return json.dumps({"vp": self.vp, "vs": self.vs,
-                           "rho": self.rho,
-                           "porosity": self.porosity,
-                           "vclay": self.vclay,
-                           "vp_std": self.vp_std,
-                           "vs_std": self.vs_std,
-                           "rho_std": self.rho_std,
-                           "description": self.description,
-                           "fluid": self.fluid,
-                           "fluid_id": self.fluid_id,
-                           "name": self.name,
-                           "db_key": self.key().id()})
+        return {"vp": self.vp, "vs": self.vs,
+                "rho": self.rho,
+                "phi": self.porosity,
+                "vclay": self.vclay,
+                "kclay": self.kclay,
+                "kqtz": self.kqtz,
+                "vp_std": self.vp_std,
+                "vs_std": self.vs_std,
+                "rho_std": self.rho_std,
+                "description": self.description,
+                "fluid": self.fluid_payload,
+                "name": self.name,
+                "db_key": str(self.key())}
 
     @property
     def mu(self):
@@ -192,13 +322,12 @@ class Rock(Item):
         """
         Calculates and returns the bulk modulus
         """
-        return (self.M - (4.0/3)*self.mu)
+        return (self.M - (4.0 / 3) * self.mu)
 
 
 class Fluid(Item):
 
     name = db.StringProperty(multiline=False)
-    description = db.StringProperty(multiline=True)
 
     rho_hc = db.FloatProperty(default=250.)
     rho_w = db.FloatProperty(default=1040.)
@@ -210,16 +339,26 @@ class Fluid(Item):
 
     @property
     def json(self):
-        return json.dumps({"k_hc": self.khc,
-                           "k_w": self.kw,
-                           "rho_hc": self.rho_hc,
-                           "rho_w": self.rho_w,
-                           "sw": self.sw,
-                           "name": self.name,
-                           "description": self.description,
-                           "db_key": self.key().id()})
+        return {"k_hc": self.khc,
+                "k_w": self.kw,
+                "rho_hc": self.rho_hc,
+                "rho_w": self.rho_w,
+                "sw": self.sw,
+                "name": self.name,
+                "description": self.description,
+                "db_key": str(self.key())}
 
 
 class Server(db.Model):
 
-    host = db.StringProperty()
+    live_host = db.StringProperty()
+    dev_host = db.StringProperty()
+
+    @property
+    def host(self):
+        
+        if 'dev' in os.environ['CURRENT_VERSION_ID']:
+            return self.dev_host
+        else:
+            return self.live_host
+

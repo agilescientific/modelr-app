@@ -7,13 +7,13 @@ functions can be called as web apis
 from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext import blobstore
 from google.appengine.ext import webapp as webapp2
-from google.appengine.ext import db
+
+from google.appengine.api import images
 
 # For image serving
 import cloudstorage as gcs
 
 from PIL import Image
-import numpy as np
 
 import time
 
@@ -22,60 +22,19 @@ import logging
 import stripe
 
 import json
-import base64
 import StringIO
 
-from constants import admin_id, LOCAL, PRICE, UR_STATUS_DICT, \
-     tax_dict
+from constants import admin_id, PRICE, tax_dict
 
-from lib_auth import AuthExcept, get_cookie_string, signup, signin, \
-     verify, authenticate, verify_signup, initialize_user,\
-     reset_password, \
-     forgot_password, send_message, make_user, cancel_subscription
-     
-from lib_db import Rock, Scenario, User, ModelrParent, Group, \
-     GroupRequest, ActivityLog, VerifyUser, ModelServedCount,\
-     ImageModel, Issue, EarthModel, Server, Fluid
+from lib_auth import verify, authenticate, send_message
 
-from lib_util import posterize, depth2time, akirichards, zoeppritz, ricker
+from lib_db import Rock, Scenario, User, ModelrParent,\
+    ActivityLog, ModelServedCount,\
+    ImageModel, EarthModel, Fluid, Item, Server, \
+    get_items_by_name_and_user, get_all_items_user, deep_delete,\
+    get_by_id
 
-from fluidsub import smith_fluidsub
-
-
-def get_user(user_id):
-
-    return User.all().filter("user_id =", user_id).get()
-
-def get_by_id(entity, db_id, user):
-    """
-    Finds by id. Searches under the user, admin user
-    """
-    # See if user owns it
-    item = entity.get_by_id(db_id, parent=user)
-
-    # See if admin owns it
-    admin = get_user(admin_id)
-    if not item:
-        item = entity.get_by_id(db_id, parent=get_user(admin_id))
-
-
-    return item
-
-def get_items_by_name_and_user(entity, name, user):
-    
-    items = entity.all().filter("name =", name).fetch(1000)
-
-    if user is None:
-        user_id = -1
-    else:
-        user_id = user.user_id
-        
-    out_items = [item for item in items
-                 if item.user == admin_id or
-                 item.user == user_id or
-                 item.group in user.group]
-
-    return out_items
+from lib_util import posterize, RGBToString
 
 
 class ModelrAPI(webapp2.RequestHandler):
@@ -99,18 +58,92 @@ class ModelrAPI(webapp2.RequestHandler):
             user, password = cookie.split('|')
         except ValueError:
             return
-        
         return verify(user, password, ModelrParent.all().get())
 
-class ScenarioHandler(ModelrAPI):
-    
-    def get(self):
 
-        # Get the user but don't redirect. Any can play with public
+class dbAPI(ModelrAPI):
+
+    entity = Item
+
+    def get(self):
+        """
+        Get the requested item(s) from the user's database
+        """
+
+        self.response.headers['Content-Type'] = 'application/json'
+        user = self.verify()
+
+        if ("keys" in self.request.arguments()):
+            keys = self.request.get("keys")
+            items = self.entity.get(keys)
+            if type(items) is list:
+                output = json.dumps([item.json
+                                     for item in items])
+            else:
+                output = json.dumps(items.json)
+
+        elif ("all" in self.request.arguments()):
+            output = json.dumps([item.json
+                                 for item in
+                                 get_all_items_user(self.entity, user)])
+       
+        elif ("ls" in self.request.arguments()):
+            output = json.dumps([item.simple_json
+                                 for item in get_all_items_user(self.entity,
+                                                                user)])
+
+        elif ("name" in self.request.arguments()):
+            name = self.request.get("name")
+            item = get_items_by_name_and_user(self.entity, name, user)
+            output = json.dumps(item[0].json)
+
+        elif ("id" in self.request.arguments()):
+            item_id = int(self.request.get("id"))
+            item = get_by_id(self.entity, item_id, user)
+            output = json.dumps(item.json)
+        else:
+            self.error(502)
+            
+        self.response.out.write(output)
+
+    @authenticate
+    def delete(self, user):
+
+        try:
+
+            key = self.request.get('key')
+
+            item = self.entity.get(key)
+
+            if item.user != user.user_id:
+                raise Exception
+
+            # delete item and all its children
+            deep_delete(item)
+            
+            activity = "removed_item"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrParent.all().get()).put()
+            
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.out.write('All OK!!')
+        
+        except Exception as e:
+            print e
+            self.error(502)
+
+
+class ScenarioHandler(ModelrAPI):
+    """
+    API to the scenario database
+    """
+    def get(self):
+        self.response.headers['Content-Type'] = 'application/json'
+
+        # Get the user but don't redirect. Anyone can play with public
         # scenarios.
         user = self.verify()
-        
-        self.response.headers['Content-Type'] = 'application/json'
         name = self.request.get('name')
 
         if user:
@@ -120,19 +153,19 @@ class ScenarioHandler(ModelrAPI):
             scenarios.filter("name =", name)
             scenarios = scenarios.fetch(1)
         else:
-            scenarios=[]
+            scenarios = []
 
         # Get Evan's default scenarios (created with the admin)
-        scen = Scenario.all().ancestor(ModelrParent.all().get()).filter("user_id =",
-                                                          admin_id)
-        scen = Scenario.all().filter("name =",name).fetch(100)
+        scen = Scenario.all()\
+                       .ancestor(ModelrParent.all().get())\
+                       .filter("user_id =", admin_id)
+        scen = Scenario.all().filter("name =", name).fetch(100)
         if scen:
             scenarios += scen
 
         if scenarios:
             logging.info(scenarios[0])
             logging.info(scenarios[0].data)
-        
             scenario = scenarios[0]
             self.response.out.write(scenario.data)
         else:
@@ -143,20 +176,18 @@ class ScenarioHandler(ModelrAPI):
             ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
-        return 
+        return
 
     @authenticate
     def delete(self, user):
 
         name = self.request.get('name')
-        
         scenarios = Scenario.all()
         scenarios.ancestor(user)
         scenarios.filter("user =", user.user_id)
         scenarios.filter("name =", name)
         scenarios = scenarios.fetch(100)
 
-        
         for scenario in scenarios:
             scenario.delete()
 
@@ -168,18 +199,16 @@ class ScenarioHandler(ModelrAPI):
         # Output for successful post reception
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
-        
 
     @authenticate
     def post(self, user):
-        
+
         # Output for successful post reception
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('All OK!!')
 
         name = self.request.get('name')
         group = self.request.get('group')
-        
         logging.info(('name', name))
         data = self.request.get('json')
 
@@ -209,74 +238,17 @@ class ScenarioHandler(ModelrAPI):
                     parent=ModelrParent.all().get()).put()
 
 
-       
-class RockHandler(ModelrAPI):
+class RockHandler(dbAPI):
 
+    entity = Rock
 
-    def get(self):
-        """
-        Get the requested rock from the user's database
-        """
-
-        name = self.request.get('name')
-        key = self.request.get('key')
-
-        user = self.verify()
-        
-        if(name):
-
-            rock = get_items_by_name_and_user(Rock, name, user)
-            data = rock[0].json
-            
-        elif(key):
-        
-            rock = get_by_id(Rock,int(key), user)
-            data = rock.json
-        else:
-            raise Exception
-        
-        self.response.out.write(data)
-        
-
-    @authenticate
-    def delete(self, user):
-
-
-        selected_rock = Rock.all()
-        selected_rock.ancestor(user)
-        selected_rock.filter("user =", user.user_id)
-        selected_rock.filter("name =",
-                             self.request.get('name'))
-
-        activity = "removed_rock"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrParent.all().get()).put()
-
-        # Delete the rock if it exists
-        try:
-            rock = selected_rock.fetch(1)[0]
-            rock.delete()
-        except:
-            pass 
-
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!')
-            
     @authenticate
     def post(self, user):
         # Adds a rock to the database, will throw an error
         # if the rock name already exists
-        
         try:
-            
             name = self.request.get("name")
-        
-            rocks = Rock.all()
-            rocks.ancestor(user)
-            rocks.filter("user =", user.user_id)
-            rocks.filter("name =", name)
-            rocks = rocks.fetch(1)
+            rocks = get_items_by_name_and_user(self.entity, name, user)
 
             # Rewrite if the rock exists
             if rocks:
@@ -302,18 +274,10 @@ class RockHandler(ModelrAPI):
             rock.name = self.request.get('name')
             rock.group = self.request.get('group')
 
-            try:
-                fluid_id = self.request.get("rock-fluid")
+            fluid_key = self.request.get("rock-fluid")
 
-                if fluid_id != "None":
-        
-                    fluid = get_by_id(Fluid, int(fluid_id), user)
-                    rock.fluid_key = fluid.key()
-                else:
-                    rock.fluid_key = None
-                    
-            except Exception as e:
-                print e
+            if fluid_key != "None":
+                rock.fluid_key = Fluid.get(str(fluid_key)).key()
 
             # Save in the database
             rock.put()
@@ -322,12 +286,13 @@ class RockHandler(ModelrAPI):
             ActivityLog(user_id=user.user_id,
                         activity=activity,
                         parent=ModelrParent.all().get()).put()
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.out.write('All OK!!')
+
         except Exception as e:
             # send error
             print e
-        
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!') 
+            self.error(502)
 
     @authenticate
     def put(self, user):
@@ -338,8 +303,8 @@ class RockHandler(ModelrAPI):
 
             key = self.request.get("db_key")
 
-            rock = Rock.get_by_id(int(key), parent=user)
-        
+            rock = Rock.get(key)
+
             # Update the rock
             rock.vp = float(self.request.get('vp'))
             rock.vs = float(self.request.get('vs'))
@@ -351,43 +316,219 @@ class RockHandler(ModelrAPI):
 
             rock.porosity = float(self.request.get('porosity'))
             rock.vclay = float(self.request.get('vclay'))
-            
+
             rock.description = self.request.get('description')
             rock.name = self.request.get('name')
             rock.group = self.request.get('group')
-         
+
+            fluid_key = self.request.get("rock-fluid")
+
+            # This makes sure the fluid exists
             try:
-            
-                fluid_id = self.request.get("rock-fluid")
-
-                if fluid_id != "None":
-                    fluid = get_by_id(Fluid, int(fluid_id),user)
-                    fluid_key = fluid.key
-                else:
-                    fluid_key = None
-
-                rock.fluid_key = fluid_key
-                
+                rock.fluid_key = Fluid.get(fluid_key).key()
             except:
-                pass
+                rock.fluid_key = None
             
             rock.name = self.request.get('name')
-         
+
             rock.put()
 
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.out.write('All OK!!')
+
+        except Exception as e:
+            # Write out error message
+            print e
+
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!')
+        return
+
+
+class ImageModelHandler(dbAPI):
+
+    @authenticate
+    def get(self, user):
+
+        if "all" in self.request.arguments():
+            models = get_all_items_user(ImageModel, user)
+
+            data = [{"colours": [RGBToString(j[1]) for j in
+                                 Image.open(
+                                     blobstore.BlobReader(i.image.key()))
+                                 .convert('RGB').getcolors()],
+                     "image": images.get_serving_url(i.image),
+                     "key": str(i.key()),
+                     "earth_models": [j.json for j in
+                                      EarthModel.all().ancestor(i)
+                                      .filter("user =",
+                                              user.user_id).fetch(1000)]}
+                    for i in models]
+
+        else:
+            self.error(502)
+
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(data))
+
+    @authenticate
+    def delete(self, user):
+
+        image_key = self.request.get("image_key")
+
+        image = ImageModel.get(image_key)
+        
+        deep_delete(image)
+        
+
+class FluidHandler(dbAPI):
+
+    entity = Fluid
+
+    @authenticate
+    def post(self, user):
+
+        try:
+            name = self.request.get("name")
+
+            fluids = get_items_by_name_and_user(self.entity, name, user)
+
+            # Rewrite if the rock exists
+            if fluids:
+                raise Exception
+            else:
+                fluid = Fluid(parent=user)
+                fluid.user = user.user_id
+
+            fluid.rho_w = float(self.request.get('rho_w'))
+            fluid.rho_hc = float(self.request.get('rho_hc'))
+
+            fluid.kw = float(self.request.get('kw'))
+            fluid.khc = float(self.request.get('khc'))
+
+            fluid.sw = float(self.request.get('sw'))
             
+            fluid.name = name
+            fluid.description = self.request.get("description")
+            fluid.group = self.request.get("group")
+            fluid.put()
+            
+            activity = "added_fluid"
+            ActivityLog(user_id=user.user_id,
+                        activity=activity,
+                        parent=ModelrParent.all().get()).put()
+
+        except Exception as e:
+            # Handle error
+            print e
+            self.error(502)
+
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('All OK!!')
+
+    @authenticate
+    def put(self, user):
+
+        # Get the database key from the request
+        try:
+
+            key = self.request.get("db_key")
+
+            fluid = Fluid.get(key)
+
+            # Update the fluid
+            fluid.rho_w = float(self.request.get('rho_w'))
+            fluid.rho_hc = float(self.request.get('rho_hc'))
+
+            fluid.kw = float(self.request.get('kw'))
+            fluid.khc = float(self.request.get('khc'))
+
+            fluid.sw = float(self.request.get('sw'))
+
+            fluid.description = self.request.get('description')
+            fluid.name = self.request.get('name')
+            fluid.group = self.request.get('group')
+
+            fluid.name = self.request.get('name')
+
+            fluid.put()
+
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.out.write('All OK!!')
+
         except Exception as e:
             # Write out error message
             print e
             pass
         
         self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!') 
+        self.response.out.write('All OK!!')
         return
 
+
+class EarthModelHandler(dbAPI):
+
+    entity = EarthModel
+
+    @authenticate
+    def post(self, user):
+
+        try:
+         
+            data = json.loads(self.request.body)
+
+            name = data["name"]
+            image_key = data["image_key"]
+            image_model = ImageModel.get(image_key)
+
+            # See if we are overwriting
+            earth_model = EarthModel.all().ancestor(image_model)
+            earth_model = earth_model.filter('user =', user.user_id)
+            earth_model = earth_model.filter('name =', name).get()
+       
+            if earth_model:
+                earth_model.data = json.dumps(data)
+                
+            else:
+                earth_model = EarthModel(user=user.user_id,
+                                         data=json.dumps(data),
+                                         name=name,
+                                         parent=image_model)
+            earth_model.put()
         
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.out.write(json.dumps(earth_model.json))
+
+        except Exception as e:
+            # TODO Handle failure
+            print "KLASJFDAJLKFSDA", e
+            self.error(502)
+
+    @authenticate
+    def delete(self, user):
+
+        try:
+            # Get the root of the model
+            input_model_key = self.request.get('input_image_id')
+
+            name = self.request.get('name')
+
+            image_model = ImageModel.get(input_model_key)
+
+            model = EarthModel.all().ancestor(image_model)
+
+            model = model.filter("user =", user.user_id)
+            model = model.filter("name =", name).get()
+
+            if model:
+                model.delete()
+
+            self.response.out.write(json.dumps({'success': True}))
+        except Exception as e:
+            print e
+            self.response.out.write(json.dumps({'success': False}))
+            
+
 class StripeHandler(ModelrAPI):
     '''
     Handle webhook POSTs from Stripe
@@ -401,18 +542,18 @@ class StripeHandler(ModelrAPI):
         # anybody can post, doing it this way is more secure
         # event_id = event_json["id"]
 
-        #event = stripe.Event.retrieve(event_id)
+        # event = stripe.Event.retrieve(event_id)
 
         if event["type"] == "invoice.payment_succeeded":
 
             # For testing, change it to a known user in stripe
             # and use the webhooks testings
-            #event["data"]["object"]["customer"] = \
+            # event["data"]["object"]["customer"] = \
             # "cus_3ZL6yHJqE8DfTx"
-            #event["data"]["object"]["total"] = price
-            
+            # event["data"]["object"]["total"] = price
+
             stripe_id = event["data"]["object"]["customer"]
-            amount = PRICE 
+            amount = PRICE
             event_id = event["data"]["object"]["id"]
             user = User.all().ancestor(ModelrParent.all().get())
             user = user.filter("stripe_id =", stripe_id).fetch(1)
@@ -422,13 +563,13 @@ class StripeHandler(ModelrAPI):
             if not user:
                 message = ("Failed to find modelr user for stripe " +
                            "user %s, but was invoiced by stripe "
-                            % (stripe_id))
+                           % (stripe_id))
                 send_message(subject="Non-existent user invoiced",
                              message=message)
-                
+
                 self.response.write("ALL OK")
                 return
-            
+
             tax = tax_dict.get(user[0].tax_code, None)
             if not tax:
                 self.response.write("ALL OK")
@@ -436,13 +577,12 @@ class StripeHandler(ModelrAPI):
 
             # Tax them up
             stripe.InvoiceItem.create(customer=stripe_id,
-                                      amount = int(amount * tax),
+                                      amount=int(amount * tax),
                                       currency="usd",
                                       description="Canadian Taxes")
 
             self.response.write("ALL OK")
 
-    
         elif (event["type"] == 'customer.subscription.deleted'):
 
             # for stripe
@@ -483,9 +623,7 @@ class StripeHandler(ModelrAPI):
             #             message=message)
             self.response.write("ALL OK")
 
-        
 
-    
 class Upload(blobstore_handlers.BlobstoreUploadHandler,
              ModelrAPI):
     """
@@ -503,12 +641,11 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
 
         # All this is in a try incase the image format isn't accepted
         try:
-            
             # Read the image file
             reader = blobstore.BlobReader(blob_info.key())
 
             im = Image.open(reader, 'r')
-            im = im.convert('RGB').resize((350,350))
+            im = im.convert('RGB').resize((350, 350))
 
             im = posterize(im)
             
@@ -516,7 +653,7 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
             im.save(output, format='PNG')
             
             bucket = '/modelr_live_bucket/'
-            output_filename = (bucket + str(user.user_id) +'/2' +
+            output_filename = (bucket + str(user.user_id) + '/2' +
                                str(time.time()))
         
             gcsfile = gcs.open(output_filename, 'w')
@@ -538,489 +675,11 @@ class Upload(blobstore_handlers.BlobstoreUploadHandler,
         except Exception as e:
             print e
             self.redirect('/model?error=True')
-        
-
-
-
-class ModelData1DHandler(ModelrAPI):
-
-    @authenticate
-    def post(self, user):
-
-        # 1 meter spacing
-        dz = 1
-
-        rock_data = json.loads(self.request.get('rock_data'))
-  
-        # all the workings for fluid sub
-        min_depth = rock_data[0]["depth"]
-        max_depth = rock_data[-1]["depth"] + \
-          rock_data[-1]["thickness"]
-
-        # Get the well log properties for the rock
-        z = np.arange(min_depth, max_depth, dz)
-        vp = np.zeros(z.size)
-        vs = np.zeros(z.size)
-        rho = np.zeros(z.size)
-        vp_sub = np.zeros(z.size)
-        vs_sub = np.zeros(z.size)
-        rho_sub = np.zeros(z.size)
-        phi = np.zeros(z.size)
-        vclay = np.zeros(z.size)
-        kclay = np.zeros(z.size)
-        kqtz  = np.zeros(z.size)
-
-        # Initial fluid properties
-        sw0 = np.zeros(z.size)
-        rhow0 = np.zeros(z.size)
-        rhohc0 = np.zeros(z.size)
-        kw0 = np.zeros(z.size)
-        khc0 = np.zeros(z.size)
-
-        # New fluid properties
-        swnew = np.zeros(z.size)
-        rhownew = np.zeros(z.size)
-        rhohcnew = np.zeros(z.size)
-        kwnew = np.zeros(z.size)
-        khcnew = np.zeros(z.size)
-        
-        # Seismic properties
-        offset = float(self.request.get("offset"))
-        frequency = float(self.request.get("frequency"))
-
-        
-        dt = 1./(10*frequency)
-        
-        # Loop through each rock layer
-        end_index = 0
-        for layer in rock_data:
-
-            rock_id = int(layer["rock"]["db_key"])
-            rock_name = layer["rock"]["name"]
-            rock = get_by_id(Rock, rock_id, user)
-            if not rock:
-                rock = get_items_by_name_and_user(Rock,rock_name,
-                                                  user)[0]
-            if not rock: raise Exception
-
-      
-            start_index = end_index
-            end_index = start_index + np.ceil(layer["thickness"]/dz)
-            if end_index > rho.size:
-                end_index = rho.size
-            
-
-            vp[start_index:end_index] = rock.vp + \
-              np.random.randn(end_index-start_index)*rock.vp_std
-            vs[start_index:end_index] = rock.vs + \
-              np.random.randn(end_index-start_index)*rock.vs_std
-            rho[start_index:end_index] = rock.rho + \
-              np.random.randn(end_index-start_index)*rock.rho_std
-            phi[start_index:end_index] = rock.porosity
-            vclay[start_index:end_index] = rock.vclay
-            kqtz[start_index:end_index] = rock.kqtz
-            kclay[start_index:end_index] = rock.kclay
-
-            # Set the initial fluid
-            try:
-                rock_fluid = rock.fluid_key
-            
-                sw0[start_index:end_index] = rock_fluid.sw
-                rhow0[start_index:end_index] = rock_fluid.rho_w
-                rhohc0[start_index:end_index] = rock_fluid.rho_hc
-                kw0[start_index:end_index] = rock_fluid.kw
-                khc0[start_index:end_index] = rock_fluid.khc
-
-                fluid_end = start_index
-                for subfluid in layer['subfluids']:
-
-                    fluid_start = fluid_end
-
-                    fluid_end = fluid_start + \
-                      np.ceil(subfluid["thickness"]/dz)
-
-                    fluid = subfluid["fluid"]
-                
-                    swnew[fluid_start:fluid_end] = fluid["sw"]
-                    rhownew[fluid_start:fluid_end] = fluid["rho_w"]
-                    rhohcnew[fluid_start:fluid_end] = fluid["rho_hc"]
-                    kwnew[fluid_start:fluid_end] = fluid["k_w"]
-                    khcnew[fluid_start:fluid_end] = fluid["k_hc"]
-
-                    (vp_sub[start_index:end_index],
-                     vs_sub[start_index:end_index],
-                     rho_sub[start_index:end_index]) = \
-                     smith_fluidsub(vp[start_index:end_index],
-                                    vs[start_index:end_index],
-                                    rho[start_index:end_index],
-                                    phi[start_index:end_index],
-                                    rhow0[start_index:end_index],
-                                    rhohc0[start_index:end_index],
-                                    sw0[start_index:end_index],
-                                    swnew[start_index:end_index],
-                                    kw0[start_index:end_index],
-                                    khc0[start_index:end_index],
-                                    kclay[start_index:end_index],
-                                    kqtz[start_index:end_index],
-                                    vclay[start_index:end_index],
-                                    rhownew[start_index:end_index],
-                                    rhohcnew[start_index:end_index],
-                                    kwnew[start_index:end_index],
-                                    khcnew[start_index:end_index])
-        
-            except:                # No Fluid
-                vp_sub[start_index:end_index] = \
-                       vp[start_index:end_index]
-                vs_sub[start_index:end_index] = \
-                       vs[start_index:end_index]
-                rho_sub[start_index:end_index] = \
-                        rho[start_index:end_index]                                 
-          
-
-
-
-        vpt, vst, rhot,sw0t, t = depth2time(z, vp, vs, rho,sw0,dt)
-        vpt_sub, vst_sub, rhot_sub, swt_sub, tsub = \
-          depth2time(z, vp_sub, vs_sub, rho_sub,swnew,t)
-
-
-        # Super hacky. We shouldn't be sending the image height
-        # to the backend
-        t_scale = int(self.request.get("height")) * t / np.amax(t)
-        z_scale = int(self.request.get("height")) * z / np.amax(z)
-
-        offset = np.linspace(0,30,10)
-
-        #algo = zoeppritz
-        algo = akirichards
-
-        ref = [np.nan_to_num(algo(vpt[0:-1], vst[0:-1],
-                                         rhot[0:-1],
-                                         vpt[1:], vst[1:], rhot[1:],
-                                         theta))
-                                        for theta in offset]
-        
-        ref_sub = [np.nan_to_num(algo(vpt_sub[0:-1],
-                                            vst_sub[0:-1],
-                                            rhot_sub[0:-1],vpt_sub[1:],
-                                            vst_sub[1:],
-                                            rhot_sub[1:],theta))
-                                            for theta in offset]
-
-        wavelet = ricker(0.1, dt, frequency)
-
-        synth = np.dstack([np.convolve(ref_t,wavelet, mode="same")
-                 for ref_t in ref]).squeeze()
-        synth_sub = np.dstack([np.convolve(ref_t,wavelet, mode="same")
-                     for ref_t in ref_sub]).squeeze()
-
-        # Acoustic impedences
-        ai = rhot * vpt
-        ai_sub = rhot_sub * vpt_sub
-
-        log_data = np.dstack((z, vp,vp_sub,vs,vs_sub,
-                                  rho, rho_sub)).squeeze()
-
-
-        ai_data = np.dstack((t[0:-1], ai[0:-1],
-                            ai_sub[:-1])).squeeze()
-
-       
-        synth = np.concatenate((np.expand_dims(t[0:-1],1),
-                                synth),1).squeeze()
-        synth_sub = np.concatenate((np.expand_dims(t[0:-1],1),
-                               synth_sub),1).squeeze() 
-        
-         
-        output = {"log_data": log_data.tolist(),
-                  "scale": t_scale.tolist(),
-                  "z_scale": z_scale.tolist(),
-                  "synth": synth.tolist(),
-                  "synth_sub": synth_sub.tolist(),
-                  "theta": offset.tolist(),
-                  "ai_data": ai_data.tolist(),
-                  "t": t.tolist(),
-                  "z": z.tolist()}
-
-        self.response.write(json.dumps(output))
-        
-
-class ImageModelHandler(ModelrAPI):
-
-    @authenticate
-    def get(self, user):
-        
-        models = ImageModel.all().ancestor(user).fetch(1000)
-
-    @authenticate
-    def delete(self, user):
-
-        image_key = self.request.get("image_key")
-
-        image = ImageModel.get(image_key)
-        for i in db.Query().ancestor(image).fetch(1000):
-            i.delete()
-        
-        image.delete()
-
-
-class FluidHandler(ModelrAPI):
-
-    @authenticate
-    def get(self, user):
-
-        key = self.request.get('key')
-        fluid = get_by_id(Fluid, int(key), user)
-        
-        if not fluid:
-            raise Exception
-
-        data = fluid.json
-
-        self.response.out.write(data)
-        
-    @authenticate
-    def post(self, user):
-
-        try:
-            name = self.request.get("name")
-
-            fluids = Fluid.all()
-            fluids.ancestor(user)
-            fluids.filter("user =", user.user_id)
-            fluids.filter("name =", name)
-            fluids = fluids.fetch(1)
-
-            # Rewrite if the rock exists
-            if fluids:
-                # write out error message
-                return
-            else:
-                fluid = Fluid(parent=user)
-                fluid.user = user.user_id
-
-            fluid.rho_w = float(self.request.get('rho_w'))
-            fluid.rho_hc = float(self.request.get('rho_hc'))
-
-            fluid.kw = float(self.request.get('kw'))
-            fluid.khc = float(self.request.get('khc'))
-
-            fluid.sw = float(self.request.get('sw'))
-            
-            fluid.name = name
-            fluid.description = self.request.get("description")
-            fluid.group = self.request.get("group")
-            fluid.put()
-            
-            activity = "added_fluid"
-            ActivityLog(user_id=user.user_id,
-                        activity=activity,
-                        parent=ModelrParent.all().get()).put()
-
-        except Exception as e:
-            # Handle error
-            print e
-            self.error(500)
-
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!')
-
-    @authenticate
-    def put(self, user):
-
-          # Get the database key from the request
-        try:
-
-            key = self.request.get("db_key")
-
-            fluid = Fluid.get_by_id(int(key), parent=user)
-        
-            # Update the fluid
-            fluid.rho_w = float(self.request.get('rho_w'))
-            fluid.rho_hc = float(self.request.get('rho_hc'))
-
-            fluid.kw = float(self.request.get('kw'))
-            fluid.khc = float(self.request.get('khc'))
-
-            fluid.sw = float(self.request.get('sw'))
-          
-            fluid.description = self.request.get('description')
-            fluid.name = self.request.get('name')
-            fluid.group = self.request.get('group')
-
-            fluid.name = self.request.get('name')
-         
-            fluid.put()
-
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.out.write('All OK!!')
-            
-        except Exception as e:
-            # Write out error message
-            print e
-            pass 
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!') 
-        return
-
-    @authenticate
-    def delete(self,user):
-      
-        key = int(self.request.get("key"))
-        selected_fluid = Fluid.get_by_id(key, parent=user)
-
-        try:
-            selected_fluid.delete()
-        except:
-            pass
-        
-        activity = "removed_fluid"
-        ActivityLog(user_id=user.user_id,
-                    activity=activity,
-                    parent=ModelrParent.all().get()).put()
-
-
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('All OK!!')
-        
-class EarthModelHandler(ModelrAPI):
-
-    
-    def get(self):
-
-
-        user = self.verify()
-        
-        try:
-            
-            # Get the root of the model
-            input_model_key = self.request.get('image_key')
-            input_model = ImageModel.get(str(input_model_key))
-
-            name = self.request.get('name')
-
-            # If the name is provided, return the model, otherwise
-            # return a list of the earth model names associated
-            # with the model.
-            if name:
-
-                earth_model = EarthModel.all().ancestor(input_model)
-
-                if user:
-                # Check first for a user model with the right name
-                    earth_model = earth_model.filter("user =",
-                                                     user.user_id)
-                    earth_model = earth_model.filter("name =",
-                                                 name)
-
-                    earth_model = earth_model.get()
-                else:
-                    earth_model = None
-
-
-                if not earth_model:
-                    # Check in the defaults
-                    earth_model = \
-                      EarthModel.all().ancestor(input_model)
-
-                    earth_model = earth_model.filter("user =",
-                                                       admin_id)
-                    earth_model = earth_model.filter("name =",
-                                                       name).get()
-
-                    
-                self.response.out.write(earth_model.data)
-
-            else:
-
-                
-                earth_models = EarthModel.all().ancestor(input_model)
-
-                def_models = EarthModel.all().ancestor(input_model)
-                
-                earth_models = earth_models.filter("user =",
-                                                  user.user_id)
-                def_models = def_models.filter("user =",
-                                                 admin_id)
-                earth_models.order('-date')
-                def_models.order('-date')
-                
-                earth_models = (earth_models.fetch(100) +
-                                def_models.fetch(100))
-
-                output = json.dumps([em.name for em in earth_models])
-                self.response.out.write(output)
-            
-        except Exception as e:
-            print e
-            self.response.out.write(json.dumps({'failed':True}))
-
-    @authenticate
-    def post(self, user):
-
-        try:
-            # Get the root of the model
-            input_model_key = self.request.get('image_key')
-            image_model = ImageModel.get(input_model_key)
-
-            
-            name = self.request.get('name')
-
-            # Get the rest of data
-            data = self.request.get('json')
-
-            # See if we are overwriting
-            earth_model = EarthModel.all().ancestor(image_model)
-            earth_model = earth_model.filter('user =', user.user_id)
-            earth_model = earth_model.filter('name =', name).get()
-
-            if earth_model:
-                earth_model.data = data.encode()
-            else:
-                earth_model = EarthModel(user=user.user_id,
-                                         data=data.encode(),
-                                         name=name,
-                                         parent=image_model)
-            earth_model.put()
-        
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.out.write('All OK!!')
-
-        except Exception as e:
-            # TODO Handle failure
-            pass
-
-    @authenticate
-    def delete(self, user):
-
-        try:
-            # Get the root of the model
-            input_model_key = self.request.get('input_image_id')
-
-            name = self.request.get('name')
-
-            image_model = ImageModel.get(input_model_key)
-
-            
-            model = EarthModel.all().ancestor(image_model)
-            
-            model = model.filter("user =", user.user_id)
-            model = model.filter("name =", name).get()
-
-            if model:
-                model.delete()
-                
-            self.response.out.write(json.dumps({'success':True}))
-        except Exception as e:
-            print e
-            self.response.out.write(json.dumps({'success':False}))
-
 
 
 class UpdateCreditCardHandler(ModelrAPI):
     @authenticate
     def post(self, user):
-
 
         try:
             card_token = self.request.get("card_token")
@@ -1034,12 +693,13 @@ class UpdateCreditCardHandler(ModelrAPI):
             customer.default_source = card
             customer.save()
 
-            self.response.write(json.dumps({"message": "successfully updated card"}))
-                                
+            self.response.write(json.dumps({"message":
+                                            "successfully updated card"}))
+
         except stripe.InvalidRequestError as e:
-            
-            self.response.write(json.dumps({"message":e.msg}))
-            
+            self.response.write(json.dumps({"message": e.msg}))
+
+
 class ModelServed(ModelrAPI):
 
     def post(self):
@@ -1047,3 +707,13 @@ class ModelServed(ModelrAPI):
         models_served = ModelServedCount.all().get()
         models_served.count += 1
         models_served.put()
+
+
+class BackendServerHandler(ModelrAPI):
+
+    def get(self):
+
+        hostname = Server.all().get().host
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps({'hostname': hostname}))
+

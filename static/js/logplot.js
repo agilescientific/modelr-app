@@ -15,7 +15,7 @@ function logPlot(log_group, properties, label,
         .text(label);
 
     // Do the plot!
-    this.update_plot = function update_plot(data, z, z_scale){
+    this.update_plot = function update_plot(data, z){
 
     var subbed = false;
 
@@ -53,8 +53,8 @@ function logPlot(log_group, properties, label,
         .domain([min_val, max_val]);   // INPUT data
     
     var zScale = d3.scale.linear()
-        .range(z_scale)                // OUTPUT position
-        .domain(z);                    // INPUT data
+            .range([0, height])                // OUTPUT position
+            .domain([z[0], z[z.length-1]]); // INPUT data
 
     // Clear old plot
     plot.selectAll("path").remove();

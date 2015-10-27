@@ -91,13 +91,13 @@ EarthStructure.prototype.pull_rocks =function(){
     // fill rock properties from the front-end server
 
     cb = (function(data){
-	this.mapping[i].property = rock_to_string(JSON.parse(data));
+	this.mapping[i].property = rock_to_string(data);
     }).bind(this)
 
     for (var i in this.mapping){
 
 	rock_key = this.mapping[i].key
-	$.ajax("/rock?key="+rock_key, {type: "GET",
+	$.ajax("/rock?id="+rock_key, {type: "GET",
 				     async: false,
 				     success: cb})
     };
@@ -329,6 +329,7 @@ Scenario.prototype.qs = function() {
     var args = this.arguments;
     query_str = '?script=' + this.script;
 
+    if(this.info){
     for (arg in this.info.arguments) {
 	argname=this.info.arguments[arg]['name'];
         if (this.info.arguments[arg]['type'] == 
@@ -337,7 +338,7 @@ Scenario.prototype.qs = function() {
             var rock_name = this.rocks[args[argname]];
 	    if (rock_name){
 		cb = function(data){
-		    data = JSON.parse(data);
+		    // data = data;
 		    //We should send the json object, but would
 		    //break other apps
 		    value = rock_to_string(data);
@@ -359,6 +360,7 @@ Scenario.prototype.qs = function() {
 	    query_str += '&' + argname + '=' + encodeURIComponent(value);
         };
         
+    };
     };
 
     return query_str;
@@ -585,7 +587,7 @@ $("select.model_selector option").filter(function() {
  * data-value='VALUE' />
  */
 function get_rocks(datalist) {
-    list_of_rocks = $(datalist).find('option');
+    var list_of_rocks = $(datalist).find('option');
 
     var rcks = {};
     list_of_rocks.each(function(index) {
@@ -599,16 +601,16 @@ function get_rocks(datalist) {
 };
 
 function get_models(datalist) {
-    list_of_models = $(datalist).find('option');
+    var list_of_models = $(datalist).find('option');
 
     var models = [];
     list_of_models.each(function(index) {
         var name = $(list_of_models[index]).attr('data-name');
-	var image_key = $(list_of_models[index]).attr('data-value');
+	var key = $(list_of_models[index]).attr('data-value');
         
-	$.get('/earth_model', {name: name, image_key: image_key},
+	$.get('/earth_model', {keys: key},
 	      function callback(data){
-		  models[name] = JSON.parse(data);
+		  models[name] = data;
 	      });
     });   
     
@@ -620,7 +622,7 @@ function rock_to_string(data){
     return data.vp.toString() +','+ data.vs.toString() + 
 	','+data.rho.toString() + ','+ data.vp_std.toString() +
 	','+data.vs_std.toString() + 
-	','+data.rho_std.toString()
+    ','+data.rho_std.toString();
 }
 
 

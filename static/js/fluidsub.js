@@ -1,41 +1,42 @@
+
 function FluidSub(canvas, core_width, core_height,
 		  rocks, fluids, rock_cmap, fluid_cmap,
 		  menu_div,onchange){
 
     // Make convenience scale for arranging plot
     var xScale = d3.scale.linear()
-	.domain([0,1])
-	.range([0, core_width]);
+	    .domain([0,1])
+	    .range([0, core_width]);
     var yScale = d3.scale.linear()
-	.domain([0,1])
-	.range([0, core_height]);
+	    .domain([0,1])
+	    .range([0, core_height]);
 
     // Set various vars
     var max_depth = 10000.0;
     var total_depth = max_depth * 0.10;
     var y_offset = 0.00;
-    var x_offset = xScale(0.30);
+    var x_offset = xScale(-0.25);
     var intervals = [];
     var rock_width = xScale(0.3);
     var fluid_width = xScale(0.15);
 
     // Make the y scales
     var scale = d3.scale.linear()
-        .domain([0,total_depth]) 
-        .range([0, core_height]);
+            .domain([0,total_depth]) 
+            .range([0, core_height]);
 
     // For adjusting the maximum depth of the scale
     var max_scale = d3.scale.linear()
-        .domain([0, max_depth])
-        .range([y_offset, core_height]);
-
+            .domain([0, max_depth])
+            .range([y_offset, core_height]);
+  
     var drag = d3.behavior.drag()
-	.on("drag", dragResize)
-	.on("dragend", onchange);
+	    .on("drag", dragResize)
+	    .on("dragend", onchange);
 
     var fluidtop_drag = d3.behavior.drag()
-	.on("drag", fluidDrag)
-	.on("dragend", onchange);
+	    .on("drag", fluidDrag)
+	    .on("dragend", onchange);
 
     //------ Main canvas -------------------------//    
     canvas.append("text")
@@ -54,8 +55,8 @@ function FluidSub(canvas, core_width, core_height,
 
     // Make the rock element grouping
     var rgroup = canvas.append("g")
-	.attr("transform", "translate(" + 
-              x_offset.toString() + ",0)");
+	    .attr("transform", "translate(" + 
+                  x_offset.toString() + ",0)");
 
     // Title/plot label
     rgroup.append("text")
@@ -88,27 +89,28 @@ function FluidSub(canvas, core_width, core_height,
         .attr("dy", ".7em")
         .text("S");
 
-    var yAxis = d3.svg.axis()
-        .scale(scale)
-        .orient("right")
-        .ticks(5);
+    // var yAxis = d3.svg.axis()
+    //         .scale(scale)
+    //         .orient("right")
+    //         .ticks(5);
 
-    rgroup.call(yAxis);
+    // rgroup.call(yAxis);
 
     // These groups are made in this order for specifically for 
     // layering order
     var rock_offset = xScale(0.3);
     var rock_intervals = rgroup.append("g")
-	.attr("transform", "translate("+rock_offset.toString() +",0)");
+	    .attr("transform", "translate("+rock_offset.toString() +",0)");
     var rock_tops = rgroup.append("g")
-	.attr("transform", "translate("+rock_offset.toString() +",0)"); 
+	    .attr("transform", "translate("+rock_offset.toString() +",0)"); 
     
     initialize_menu(menu_div);
+    
     // Load up to intervals
     add_interval(0,0,total_depth);
     add_interval(1, total_depth/2,total_depth/2);
 
-  
+    
 
     // --------------- end of init --------------------------- //
 
@@ -127,8 +129,8 @@ function FluidSub(canvas, core_width, core_height,
             interval.thickness = thickness;
 	}
 	
-	if(interval.rock.fluid !== ""){
-            interval.fluid_colour = fluid_cmap[interval.rock.fluid];
+	if(interval.rock.fluid){
+            interval.fluid_colour = fluid_cmap[interval.rock.fluid.name];
 
             var fluid_ind = i % fluids.length;
             var subfluid = {depth: depth,
@@ -157,7 +159,7 @@ function FluidSub(canvas, core_width, core_height,
 
 	// Depth of model
 	var end_point = intervals[intervals.length-1].depth +
-            intervals[intervals.length-1].thickness;
+                intervals[intervals.length-1].thickness;
 
 	// calculation thickness based on depths of tops
 	for (var i=0; i<intervals.length-1; i++) {    
@@ -207,7 +209,7 @@ function FluidSub(canvas, core_width, core_height,
 
 	// Update the menu
 	var menu_row = d3.select("tbody")
-	    .selectAll(".intervalRow").data(intervals);
+	        .selectAll(".intervalRow").data(intervals);
 
 	menu_row.each(update_table_row);
 
@@ -219,7 +221,7 @@ function FluidSub(canvas, core_width, core_height,
 	// -------------------- Rock Graphics --------------//
 
 	var interval = rock_intervals.selectAll("g")
-            .data(intervals);
+                .data(intervals);
 
 	// update the existing graphic blocks
 	interval.selectAll("#rock")
@@ -229,13 +231,13 @@ function FluidSub(canvas, core_width, core_height,
             .attr("height",update_thickness);
 
 	var rock_fluid = interval.selectAll("#rock_fluid")
-            .data(function(d){
-		if (d.rock.fluid){
-		    return [d];
-		} else {
-		    return [];
-		}
-            });
+                .data(function(d){
+		    if (d.rock.fluid){
+		        return [d];
+		    } else {
+		        return [];
+		    }
+                });
 
 	rock_fluid.attr("y", update_depth)
             .attr("fill", function(d){
@@ -256,13 +258,13 @@ function FluidSub(canvas, core_width, core_height,
 	rock_fluid.exit().remove();
 	
 	var fluidsub = interval.selectAll("#subfluid")
-            .data(function(d){
-		if (d.rock.fluid){
-		    return d.subfluids;
-		} else {
-		    return [];
-		}
-	    });
+                .data(function(d){
+		    if (d.rock.fluid){
+		        return d.subfluids;
+		    } else {
+		        return [];
+		    }
+	        });
 
 	fluidsub.attr("fill", function(d)
 		      { return d.colour; })
@@ -284,13 +286,13 @@ function FluidSub(canvas, core_width, core_height,
 
 	// fluid sub tops
 	var fluid_tops = interval.selectAll("#fluidtop")
-            .data(function(d){
-		if (d.rock.fluid){
-		    return d.subfluids.slice(1,d.subfluids.length);
-		} else {
-		    return [];
-		}
-	    });
+                .data(function(d){
+		    if (d.rock.fluid){
+		        return d.subfluids.slice(1,d.subfluids.length);
+		    } else {
+		        return [];
+		    }
+	        });
 
 	fluid_tops.attr("y1", update_depth)
             .attr("y2", update_depth);
@@ -371,7 +373,7 @@ function FluidSub(canvas, core_width, core_height,
 
 	// Rock Tops
 	var top = rock_tops.selectAll("line")
-            .data(intervals.slice(1, intervals.length));
+                .data(intervals.slice(1, intervals.length));
 	
 	// existing
 	top.attr("y1", update_depth)
@@ -486,8 +488,8 @@ function FluidSub(canvas, core_width, core_height,
     } // end of function
 
 
-function delete_fluidsub(interval,i){
-   
+    function delete_fluidsub(interval,i){
+        
 	// delete sub fluid
 	// always keep one layer
         if (interval.subfluids.length > 1){
@@ -539,11 +541,11 @@ function delete_fluidsub(interval,i){
 
 		var thickness0 = intervals[i-1].thickness;
 		var new_thickness = d.depth + d.thickness - 
-		    intervals[i-1].depth;
+		        intervals[i-1].depth;
 		var squish = new_thickness / thickness0;
 		rescale_subfluids(intervals[i-1], squish);
             } 
-        
+            
             intervals.splice(i,1);
 
 	    if (i==0){
@@ -579,19 +581,19 @@ function delete_fluidsub(interval,i){
     }
 
     function update_table_row(d,i){
-    
+        
 	var div  = d3.select(this);
 	div.html("");
 
         var rock_div = div.append("td");
-          
+        
 	
 	var btn =  rock_div.append("span")
-	    .attr("class", 
-		  "glyphicon glyphicon-remove-sign deleteBtn btn btn-xs")
-	    .attr("id", "deleteBtn")
-	    .attr("style", "color: grey");
-	   
+	        .attr("class", 
+		      "glyphicon glyphicon-remove-sign deleteBtn btn btn-xs")
+	        .attr("id", "deleteBtn")
+	        .attr("style", "color: grey");
+	
 
 	if(intervals.length >2){
 	    btn.attr("style", "color: red")
@@ -603,13 +605,13 @@ function delete_fluidsub(interval,i){
             .attr("class", "glyphicon glyphicon-stop cblock")
             .attr("id", "rock_colour")
 	    .attr("style", "color:" +
-			 d.colour);
+		  d.colour);
 
 
 	var rock_ind = rocks.indexOf(d.rock);
         var select = rock_div.append("select")
-	    .attr("class", "menuSelect")
-            .on("change", update_rock)
+	        .attr("class", "menuSelect")
+                .on("change", update_rock);
 
         select.selectAll("option").data(rocks)
             .enter().append("option")
@@ -625,10 +627,10 @@ function delete_fluidsub(interval,i){
 
 	    fluid_div.append("span")
 		.attr("class", "glyphicon glyphicon-stop cblock")
-		.attr("style", "color:" + fluid_cmap[d.rock.fluid]);
-	    fluid_div.append("label").text(d.rock.fluid)
+		.attr("style", "color:" + fluid_cmap[d.rock.fluid.name]);
+	    fluid_div.append("label").text(d.rock.fluid.name)
 		.attr("style", "vertical-align: top; margin: 8px 0 0 0;");
-	 
+	    
 	} else {
             fluid_div.html("");
 	}
@@ -639,22 +641,22 @@ function delete_fluidsub(interval,i){
 	fluidsub_div.html("");
 
 	var fluidsub_row = fluidsub_div.selectAll(".row")
-            .data(function(){
-		if(d.rock.fluid){
-		    return d.subfluids;
-		} else {
-		    return [];
-		}
-            })
-            .enter()
-            .append("div")
-            .attr("class","row");
+                .data(function(){
+		    if(d.rock.fluid){
+		        return d.subfluids;
+		    } else {
+		        return [];
+		    }
+                })
+                .enter()
+                .append("div")
+                .attr("class","row");
 
 
 	var deleteFluidBtn = fluidsub_row.append("span")
-	    .attr("class",  
-		  "glyphicon glyphicon-remove-sign deleteBtn btn btn-xs")
-	    .attr("style", "color: grey;");
+	        .attr("class",  
+		      "glyphicon glyphicon-remove-sign deleteBtn btn btn-xs")
+	        .attr("style", "color: grey;");
 
 	if(d.subfluids.length > 1){
 	    deleteFluidBtn.attr("cursor", "pointer")
@@ -669,22 +671,22 @@ function delete_fluidsub(interval,i){
 		    d.colour});
 
 	var fluidsub_select = fluidsub_row.append("select")
-	    .attr("class", "menuSelect")
-            .on("change", update_fluid);
+	        .attr("class", "menuSelect")
+                .on("change", update_fluid);
 
 	var option = fluidsub_select.selectAll("option")
-            .data(fluids).enter().append("option")
-            .text(function(d){return d.name;})
-            .attr("value", function(d,i){
-		return i;
-            })
-            .property("selected", function(d){
-		if (this.parentNode.__data__.fluid.name == d.name){
-		    return true;
-		} else {
-		    return false;
-		}
-            });
+                .data(fluids).enter().append("option")
+                .text(function(d){return d.name;})
+                .attr("value", function(d,i){
+		    return i;
+                })
+                .property("selected", function(d){
+		    if (this.parentNode.__data__.fluid.name == d.name){
+		        return true;
+		    } else {
+		        return false;
+		    }
+                });
 
 
 	if(d.subfluids.length == 0){
@@ -701,7 +703,7 @@ function delete_fluidsub(interval,i){
 	d.colour = rock_cmap[rock.name];
 
 	if(d.rock.fluid){
-            d.fluid_colour = fluid_cmap[d.rock.fluid];
+            d.fluid_colour = fluid_cmap[d.rock.fluid.name];
 
             if (d.subfluids.length === 0){
 		var subfluid ={depth: d.depth,
@@ -719,7 +721,6 @@ function delete_fluidsub(interval,i){
 	d.fluid = fluid;
 	d.colour = fluid_cmap[fluid.name];
 
-
 	draw();
     } 
 
@@ -731,9 +732,56 @@ function delete_fluidsub(interval,i){
 	var menu_item = d3.select(menu).html(html);
     };// end of function declaration
 
-    return {intervals:intervals};
+    function payload(){
 
+        var payload = {dz: 1};
+        var layers = [];
 
+        for(var i = 0; i < intervals.length; i++){
+
+            var layer = {};
+            interval = intervals[i];
+            layer.rock = interval.rock;
+            layer.thickness = interval.thickness;
+            
+            //$.ajax('/rock',{type: "GET", async: false,
+            //                data: {keys: JSON.stringify([interval.rock.key])},
+            //                success: function (data){
+            //                    layer.rock = data;
+            //                    layer.thickness = interval.thickness;
+            //                }
+            //               });
+            
+
+            layer.subfluids = [];
+            for(var j=0; j<interval.subfluids.length;j++){
+
+                var subinterval = intervals[i].subfluids[j];
+                var subfluid = {};
+                subfluid.fluid = subinterval.fluid;
+                subfluid.thickness = subinterval.thickness;
+                layer.subfluids.push(subfluid);
+                
+                //$.ajax('/fluid', {type: "GET", async: false,
+                //                  data: {keys: subinterval.fluid.key},
+                //                  success: function (data){
+                //                      var subfluid = {};
+                //                      subfluid.fluid = data;
+                //                      subfluid.thickness = subinterval.thickness;
+                //                      layer.subfluids.push(subfluid);
+                //                  }
+                //                 }
+                //     );
+            }
+
+            layers.push(layer);
+        }
+
+        payload.layers = layers
+        return payload;
+    }
+            
+    return {intervals:payload};
 }
 
 

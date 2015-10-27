@@ -190,8 +190,10 @@ $('#script_info').popover({
 	    <div class="panel-body">
           <div style="position:relative;">
             <!-- Updated by the  create_image button above-->
-            <img class="img-thumbnail" id="plot_image" href=URL alt="" src="/static/img/placeholder_model_image.png" />
-	        <img style="position:absolute;top:0;left:0" id="loader" src="/static/img/ajax-loader.gif" />
+            <img class="img-thumbnail" id="plot_image" href=URL alt=""
+                 src="/static/img/placeholder_model_image.png" />
+	    <img style="position:absolute;top:0;left:0" id="loader"
+                 src="/static/img/ajax-loader.gif" />
           </div>
         </div> <!-- end of panel-body -->
       
@@ -317,12 +319,13 @@ $('#script_info').popover({
     */
    var hash = window.location.hash.substring(1);
    
-   if (hash != ''){
-     scenario.name = hash;
+ if (hash != ''){
+     var hash_decode =  decodeURIComponent(hash);
+     scenario.name = hash_decode;
      
      // Get the scenario from google app engine.
      scenario.get();
-     $('input#scenario_name').val(hash);
+     $('input#scenario_name').val(hash_decode);
      server.update_img(scenario);
    }
    
@@ -393,22 +396,6 @@ $('#script_info').popover({
    scenario.name = scenario_name;
    scenario.get();
 }
-
-// Load an earth model based on its name and corresponding image key
-function load_earthmodel(image_key, name){
-
-   $.get('/earth_model', {image_key: image_key, 
-			  name: name},
-	 function callback(data){
-       data = JSON.parse(data);
-
-       if(data["failed"]){
-	 alert("model not found");
-       } 
-       else{}
-     });
- };
-
  
 // START OF DISPLAY METADATA *****
 function display_metadata(data){
@@ -486,7 +473,7 @@ by the user -->
 <datalist id="list_of_models">
 
 {% for model in earth_models %}
-  <option data-value='{{model["image_key"]}}' 
+  <option data-value='{{model["key"]}}'
 	  data-name='{{model["name"]}}'>
   </option>
 {% endfor %}

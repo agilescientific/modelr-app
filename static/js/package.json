@@ -1,0 +1,29 @@
+{
+  "name": "modelr",
+  "version": "1.0.0",
+  "description": "Modelr App",
+  "main": "app.yaml",
+  "dependencies": {
+    "gulp": "^3.9.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-jshint": "^1.11.2",
+    "gulp-watch": "^4.3.5",
+    "jshint-stylish": "^2.0.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "justinkheisler, benbougher",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kwinkunks/modelr_app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kwinkunks/modelr_app/issues"
+  },
+  "homepage": "https://github.com/kwinkunks/modelr_app#readme"
+}
