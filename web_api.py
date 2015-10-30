@@ -32,7 +32,7 @@ from lib_db import Rock, Scenario, User, ModelrParent,\
     ActivityLog, ModelServedCount,\
     ImageModel, EarthModel, Fluid, Item, Server, \
     get_items_by_name_and_user, get_all_items_user, deep_delete,\
-    get_by_id
+    get_by_id, get_user
 
 from lib_util import posterize, RGBToString
 
@@ -71,7 +71,7 @@ class dbAPI(ModelrAPI):
         """
 
         self.response.headers['Content-Type'] = 'application/json'
-        user = self.verify()
+        user = get_user(admin_id)
 
         if ("keys" in self.request.arguments()):
             keys = self.request.get("keys")
