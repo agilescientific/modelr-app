@@ -1,3 +1,6 @@
+modelr 0.3 October 26th
+Major revisions, ported 2D to d3, 1D to g3
+
 modelr 02.2.6.1 Aguust 26th
 same as previous with updated yaml
 
