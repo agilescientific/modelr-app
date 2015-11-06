@@ -75,7 +75,7 @@ def get_all_items_user(entity, user):
     # flatten the lists
     return (default_items + user_items + list(itertools.chain(*group_items)))
 
-
+            
 def check_read_permission(entity, user):
 
     if((entity.user_id == admin_id) or

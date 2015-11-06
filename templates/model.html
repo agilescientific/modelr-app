@@ -618,9 +618,10 @@ $('#model_info').popover({
   		               maxlength="20">
   	            </div>
   	            <div class="col-sm-offset-10">
-  	              <button class="btn btn-default" 
+  	              <button class="btn btn-default"  
   		               onclick="save_earthmodel()"
-  		               type="button" id="saveearthbutton">
+  		               type="button" id="saveearthbutton"
+                              {% if not user %}disabled {% endif %}>
   	                save
   	              </button>
   	            </div>

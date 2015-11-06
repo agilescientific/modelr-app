@@ -82,6 +82,16 @@
 
 <div class="container">
   <div class="panel panel-default">
+    {% if not user %}
+    
+    <div class="alert alert-warning" 
+	 style="margin-bottom: 35px" >
+      <strong>Demo mode.</strong> <a href="/signup">
+	Sign up
+      </a> 
+      to create rocks and save scenarios!
+    </div>
+    {% endif %}
     <div class="panel-heading">
       <h3 class="panel-title">Model</h3>
     </div>

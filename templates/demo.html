@@ -1,0 +1,53 @@
+{% extends "base_template.html" %}
+
+{% block title %}Modelr &middot; Demo Mode{% endblock %}
+{% block content %}
+
+
+<div class="container">
+              
+  <h1>Demo Mode</h1>
+  
+  <p>
+  Explore our tools for free. Subscribe to build a model with your own rocks and fluids.
+  </p>
+  
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-4 col-md-3">
+          <div class="panel panel-default text-center">
+            <div class="panel-heading">
+              <h3><a href="1D_model">1D Modeling </a></h3>
+            </div>
+            <div class="panel-body">
+              1D fluid substitution modeling.
+            </div>
+          </div>          
+        </div>
+        <div class="col-sm-4 col-md-3">
+          <div class="panel panel-default text-center">
+            <div class="panel-heading">
+              <h3><a href="/model">2D Modeling</a></h3>
+            </div>
+            <div class="panel-body">
+              <p>Build a synthetic from a 2D earth model.</p>
+            </div>
+          </div>          
+        </div>
+        <div class="col-sm-4 col-md-3">
+          <div class="panel panel-default text-center">
+            <div class="panel-heading">
+              <h3><a href="/scenario"> Scenario </a></h3>
+            </div>
+            <div class="panel-body">
+              <p>Script based modeling of different wedge and AVO scenarios.</p>
+            </div>
+          </div>          
+        </div>
+ 
+      </div>
+    </div> 
+                
+</div>
+
+{% endblock %}

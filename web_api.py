@@ -347,9 +347,9 @@ class RockHandler(dbAPI):
 
 class ImageModelHandler(dbAPI):
 
-    @authenticate
-    def get(self, user):
+    def get(self):
 
+        user = self.verify()
         if "all" in self.request.arguments():
             models = get_all_items_user(ImageModel, user)
 
@@ -362,7 +362,8 @@ class ImageModelHandler(dbAPI):
                      "earth_models": [j.json for j in
                                       EarthModel.all().ancestor(i)
                                       .filter("user =",
-                                              user.user_id).fetch(1000)]}
+                                              user.user_id if user else None)
+                                      .fetch(1000)]}
                     for i in models]
 
         else:

@@ -1,3 +1,4 @@
+
 setup1D = function(
   rock_div,
   rocks, fluids, rock_colour_map, max_depth,
@@ -50,7 +51,7 @@ setup1D = function(
 
   // set slider behaviour
   $("#frequency").on("input change", function(){
-    $("#frequency-label").text($("#frequency").val());
+    $("#frequency-label").text($("#frequency").val().toString() + " Hz");
   });
   var frequency = $("#frequency").val();
 
