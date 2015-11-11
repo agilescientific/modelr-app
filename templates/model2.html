@@ -4,17 +4,16 @@
 {% block content %}
 
 <div ng-cloak class="container" ng-controller="2DCtrl">
+
+  <!-- banner notice about demo mode if no-one is signed in -->
+  {% if not user %}
+  <div class="alert alert-warning" style="margin-bottom: 20px" >
+    <strong>You are in demo mode.</strong> <a href="/signup">Sign up</a> to create earth models, make custom rocks and fluids, and save scenarios. Pricing starts at just $9 per month.
+  </div>
+  {% endif %}
+
+  <!-- main panel -->
   <div class="panel panel-default">
-       {% if not user %}
-       
-       <div class="alert alert-warning" 
-	    style="margin-bottom: 35px" >
-	 <strong>Demo mode.</strong> <a href="/signup">
-	   Sign up
-	 </a> 
-	 to create rocks and save scenarios!
-       </div>
-       {% endif %}
     <div class="panel-heading">
       <h3 class="panel-title">Model</h3>
     </div>
@@ -27,7 +26,7 @@
 
 				  <!-- INFO SPAN -->
 				  <span title="{[popover.title]}" data-content="{[popover.content]}"
-					class="glyphicon glyphicon-info-sign model_info" data-animation="am-flip-x"
+					class="glyphicon glyphicon-info-sign model_info" data-animation="am-fade"
 					data-auto-close="1" data-trigger="hover" bs-popover>
 				  </span>
 
@@ -37,10 +36,10 @@
 				      <input type="submit" name="submit" value="Submit" id="submit">
 				      <input id="file" type="file" name="file" ng-model="file" onchange="$('#submit').click()"/>
 				    </div>
-				    <div class="btn btn-info" id="upload_btn" onclick="$('#file').click()"
+				    <button class="btn btn-info" id="upload_btn" onclick="$('#file').click()"
                                          {% if not user %} disabled {% endif %}>
 				      Upload image
-				    </div> 
+				    </button> 
 				    <button type="button" class="btn btn-info" 
 					    onclick="window.location.href='/model_builder'"
                                             {% if not user %} disabled {% endif %}>
@@ -128,7 +127,7 @@
   <!-- RESULTS PANEL -->
   <div class="panel panel-default" id="plot_header">
     <div class="panel-heading">
-      <h3 class="panel-title">Result (Drag the wiggles or horizons)</h3>
+      <h3 class="panel-title">Result — drag the wiggles or horizons!</h3>
     </div>
     <div class="panel-body">
    		<img class="col-xs-12" style="height: 300px; display:none;" id="loader" src="/static/img/ajax-loader.gif" />
@@ -278,7 +277,7 @@
 				<tr>
 					<th></th>
 					<th class="text-right" style="padding:0 8px 0 0;">Z<br/><span style="color:lightgrey; font-weight:normal;">Pa·s·m<sup>−1</sup></span></th>
-					<th style="text-align:right; padding:0 8px 0 0;">PR<br/><span></span></th>
+					<th style="text-align:right; padding:0 8px 0 0;">PR<br/><span>&nbsp;</span></th>
 					<th style="text-align:right; padding:0 8px 0 0;">E<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>
 					<th style="text-align:right; padding:0 8px 0 0;">&lambda;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>
 					<th style="text-align:right; padding:0 8px 0 0;">&mu;<br /><span style="color:lightgrey; font-weight:normal;">GPa</span></th>

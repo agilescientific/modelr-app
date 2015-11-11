@@ -115,6 +115,10 @@ svg {
 }
 /**************/
 
+h1 {
+  margin-bottom: 24px;
+}
+
 .ribbon-banner {
    display: block;
    position: absolute;

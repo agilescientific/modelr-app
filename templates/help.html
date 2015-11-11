@@ -157,7 +157,7 @@
   </div>
 </div>
 
-<div style="margin-top:36px;"></div>
+<div class="row">
 <h4>More help</h4>
 <ul>
 <li><a href="/help/drawing">Help with drawing models</a></li>
@@ -165,8 +165,36 @@
 <li><a href="http://subsurfwiki.org/wiki/Category:Modelr">Pages about Modelr in SubSurfWiki</a></li>
 <li>To come: videos</li>
 </ul>
+</div>
 
-<div style="margin-top:36px;"></div>
+<div class="row">
+<h4>Sign up for occasional news about Modelr</h4>
+
+    <!-- Begin MailChimp Signup Form -->
+    <div class="form-group col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3" style="margin-top:2.5em; margin-bottom:2em;">
+    <div class="form-inline">
+      <form action="https://agilegeoscience.us6.list-manage.com/subscribe/post?u=3e1e2cd71eeb0422366e88354&amp;id=3a00d839f5" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="form-horizontal" target="_blank" novalidate>
+      <div class="col-xs-8 col-sm-10">
+            <div class="input-group">
+              <span class="input-group-addon"><span class="glyphicon glyphicon-envelope" style="color:gray;"></span></span>
+          <input type="email" value="" name="EMAIL" class="form-control email" id="mce-EMAIL" placeholder="Keep in touch!" required>
+          </div>
+
+          <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+          <div style="position: absolute; left: -5000px;">
+            <input type="text" name="b_3e1e2cd71eeb0422366e88354_3a00d839f5" value="">
+          </div>
+        </div>
+        <div class="col-xs-offset-8 col-sm-offset-10">
+        <input type="submit" value="Get notified" style="color:gray;" name="subscribe" id="mc-embedded-subscribe" class="btn btn-default">
+      </div>
+     </form>
+       </div>
+   </div><!-- end of form-group -->
+   <!--End mc_embed_signup-->
+   </div>
+
+<div class="row">
 <h4>Can't figure something out? Got a bright idea? Get in touch...</h4>
 
 <div class="col-md-8" style="margin-top:18px;">
@@ -177,7 +205,7 @@
     <label for="name" class="col-sm-2 control-label">Email</label>
     <div class="col-sm-offset-2">
       <input class="form-control" type="email" name="email"  
-	     value={{user.email}}>
+       value={{user.email}}>
     </div>
     </div>
     
@@ -191,13 +219,15 @@
   <div class="form-group">
   <div class="col-sm-offset-2">
     <input class="btn btn-primary btn-lg" type="submit" 
-	   value="Send your message">
+     value="Send your message">
   </div>
   </div>
 
+</form>
 </div>
-</div>
-</div>
+</div><!-- end of this block -->
+
+</div><!-- end of main container -->
 
 {% endblock %}
 

@@ -81,17 +81,17 @@
 </script>
 
 <div class="container">
+
+  <!-- banner notice about demo mode if no-one is signed in -->
+  {% if not user %}
+  <div class="alert alert-warning" style="margin-bottom: 20px" >
+    <strong>You are in demo mode.</strong> <a href="/signup">Sign up</a> to create custom rocks and fluids. Pricing starts at just $9 per month.
+  </div>
+  {% endif %}
+
+  <!-- main panel -->
   <div class="panel panel-default">
-    {% if not user %}
-    
-    <div class="alert alert-warning" 
-	 style="margin-bottom: 35px" >
-      <strong>Demo mode.</strong> <a href="/signup">
-	Sign up
-      </a> 
-      to create rocks and save scenarios!
-    </div>
-    {% endif %}
+
     <div class="panel-heading">
       <h3 class="panel-title">Model</h3>
     </div>
