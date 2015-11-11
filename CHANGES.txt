@@ -1,3 +1,6 @@
+modelr 0.3.1 Nov 11 2015
+Opened up 2D and 1D modelling in Demo mode
+
 modelr 0.3 October 26th
 Major revisions, ported 2D to d3, 1D to g3
 
