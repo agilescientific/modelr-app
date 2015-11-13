@@ -36,13 +36,14 @@
 				      <input type="submit" name="submit" value="Submit" id="submit">
 				      <input id="file" type="file" name="file" ng-model="file" onchange="$('#submit').click()"/>
 				    </div>
-				    <button class="btn btn-info" id="upload_btn" onclick="$('#file').click()"
-                                         {% if not user %} disabled {% endif %}>
+				    <button type="button" class="btn btn-info" id="upload_btn" 
+				    	onclick="$('#file').click()"
+             	{% if not user %} disabled {% endif %}>
 				      Upload image
-				    </button> 
+				    </button>
 				    <button type="button" class="btn btn-info" 
 					    onclick="window.location.href='/model_builder'"
-                                            {% if not user %} disabled {% endif %}>
+              {% if not user %} disabled {% endif %}>
 				      Make a wedge
 				    </button>
 				  </form>
