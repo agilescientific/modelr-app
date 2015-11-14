@@ -37,6 +37,8 @@
 				      <input id="file" type="file" name="file" ng-model="file" onchange="$('#submit').click()"/>
 				    </div>
 				    <button class="btn btn-info" id="upload_btn" onclick="$('#file').click()"
+                                            type="button"
+
                                          {% if not user %} disabled {% endif %}>
 				      Upload image
 				    </button> 
