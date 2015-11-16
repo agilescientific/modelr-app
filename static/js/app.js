@@ -981,7 +981,6 @@ app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 	var line, x, y;
 	$scope.editLines = true;
 
-
 	$scope.paths = [
 		[{"x":0, "y":height - topHeight},
 	    {"x":width * 0.25,"y":height - topHeight},
@@ -1050,7 +1049,9 @@ app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 	function drawTops(){
 		$scope.tops = [];
 		for(var i = $scope.paths.length - 1; i >= 0; i--){
-			var top = vis.append('g').attr('class', i);
+			var top = vis.append('g')
+			.attr('class', i)
+			.on('click', function(d,i){ test(this);});
 
 			top.color = $scope.pathColors[i];
 			top.append('path')
@@ -1058,21 +1059,43 @@ app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 				.attr('d', area($scope.paths[i]))
 				.style('stroke-width', 1)
 				.attr('fill', $scope.pathColors[i])
-				.style('stroke', 'black');
+				.style('stroke', function(d, j){
+					if(i === $scope.paths.length - 1){
+						return 'black';
+					} else {
+						return 'none';
+					}
+				});
 
 			top.selectAll("circle" + i)
 				.data($scope.paths[i])
 				.enter().append("circle")
 				.style('fill', 'black')
 				.attr('class', function(d, j){ return j;})
+				.attr('id', function(d, j){ return 'circle' + i;})
 				.attr('cx', function(d){ return d.x; })
 				.attr('cy', function(d){ return d.y; })
 				.attr('r', 7)
 				.style('cursor', 'move')
+				.style('display', function(d, j){
+					if(i === $scope.paths.length - 1){
+						return 'block';
+					} else {
+						return 'none';
+					}
+				})
 				.call(drag);
 
 			$scope.tops.push(top);
 		}
+	};
+
+	function test(elem){
+		elem = d3.select(elem);
+		d3.selectAll('circle').style('display', 'none');
+		d3.selectAll('path').style('stroke', 'none');
+		d3.selectAll('#circle' + elem.attr('class')).style('display', 'block');
+		d3.selectAll('#top' + elem.attr('class')).style('stroke', 'black');
 	};
 
 	$scope.saveModel = function(){
