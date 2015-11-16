@@ -1271,7 +1271,7 @@ class ModelBuilder(ModelrPageRequest):
     def get(self, user):
 
         params = self.get_base_params(user=user)
-        template = env.get_template('model_builder.html')
+        template = env.get_template('model_builder2.html')
         html = template.render(params)
         self.response.out.write(html)
 
