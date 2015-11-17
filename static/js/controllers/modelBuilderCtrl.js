@@ -64,19 +64,25 @@ app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 	  .y0(height)
 	  .y1(function(d) { return d.y; });
 
-	// Drag function
-	var drag = d3.behavior.drag()
+	// Drag functions
+	var circleDrag = d3.behavior.drag()
 	  .origin(Object)
-	  .on("drag", redraw);
+	  .on("drag", moveCircle);
+
+	var nsDrag = d3.behavior.drag()
+		.on('drag', nsResize);
 
 	drawTops();
 
 	function drawTops(){
 		$scope.tops = [];
+		d3.selectAll('g').remove();
 		for(var i = $scope.paths.length - 1; i >= 0; i--){
+			console.log(i);
 			var top = vis.append('g')
 			.attr('class', i)
-			.on('click', function(d,i){ test(this);});
+			.on('click', function(d,i){ selectLayer(this);});
+
 
 			top.color = $scope.pathColors[i];
 			top.append('path')
@@ -90,7 +96,8 @@ app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 					} else {
 						return 'none';
 					}
-				});
+				})
+				.call(nsDrag);;
 
 			top.selectAll("circle" + i)
 				.data($scope.paths[i])
@@ -109,18 +116,20 @@ app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 						return 'none';
 					}
 				})
-				.call(drag);
+				.call(circleDrag);
 
 			$scope.tops.push(top);
 		}
 	};
 
-	function test(elem){
+	function selectLayer(elem){
 		elem = d3.select(elem);
 		d3.selectAll('circle').style('display', 'none');
 		d3.selectAll('path').style('stroke', 'none');
 		d3.selectAll('#circle' + elem.attr('class')).style('display', 'block');
 		d3.selectAll('#top' + elem.attr('class')).style('stroke', 'black');
+
+		elem.attr('cursor', 'ns-resize')
 	};
 
 	$scope.saveModel = function(){
@@ -166,7 +175,34 @@ app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 		drawTops();
 	};
 
-	function redraw(){
+	function nsResize(){
+		var m = d3.mouse(this);
+		var parent = d3.select(this.parentNode);
+		var index = parent.attr('class');
+		var arr = [];
+
+		// Get average y value
+		for(var i = 0; i < $scope.paths[index].length; i++){
+			arr.push($scope.paths[index][i].y);
+		}
+		var mean = d3.mean(arr);
+		var change = mean - m[1];
+		console.log(index);
+		for(var i = 0; i < $scope.paths[index].length; i++){
+			$scope.paths[index][i].y -= change;
+		}
+		var path = d3.select('#top' + index);
+		path.transition().duration(5).attr('d', area($scope.paths[index])).ease('linear');
+		
+		var circles = d3.selectAll('#circle' + index);
+		circles.data($scope.paths[index])
+			.transition()
+			.duration(5)
+			.attr('cx', function(d){ return d.x; })
+			.attr('cy', function(d){ return d.y; });
+	};
+
+	function moveCircle(){
 		var m = d3.mouse(this);
 		var x, y;
 
