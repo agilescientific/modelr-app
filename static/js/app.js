@@ -973,6 +973,56 @@ function getCrossSection(matrix, value, sampleRate){
 
 }
 
+app.controller('buildCtrl', function ($scope, $rootScope) { 
+	$scope.type = 'none';
+
+	$scope.changeType = function(type){
+		$scope.type = type;
+	};
+
+});
+
+
+app.service('modelBuilder', function () { 
+	var lineFunction = d3.svg.line()                         
+		.x(function(d) { return d.x; })
+  	.y(function(d) { return d.y; });
+
+	this.drawPath = function(elem, path, index, color){
+		elem.append('path')
+			.attr('id', 'path' + index)
+			.attr('d', lineFunction(path))
+			.style('stroke-width', 1)
+			//.style('stroke', 'black')
+			.attr('fill', color);
+	};
+
+	this.drawCircles = function(elem, path, index){
+		for(var i = 0; i < path.length; i++){
+			if(path[i].hidden === false){
+				elem.append('circle')
+					.style('fill', 'black')
+					.attr('class', i)
+					.attr('id', 'circle' + index)
+					.attr('cx', path[i].x)
+					.attr('cy', path[i].y)
+					.attr('r', 7)
+					.style('cursor', 'move');
+			}
+		}
+		// elem.selectAll("circle" + index)
+		// 	.data(path)
+		// 	.enter().append("circle")
+		// 	.style('fill', 'black')
+		// 	.attr('class', function(d, j){ return j;})
+		// 	.attr('id', function(d, j){ return 'circle' + index;})
+		// 	.attr('cx', function(d){ return d.x; })
+		// 	.attr('cy', function(d){ return d.y; })
+		// 	.attr('r', 7)
+		// 	.style('cursor', 'move');
+	};
+
+});
 app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 	var width = $('.modelb').width();
 	var height = 400;
@@ -1037,7 +1087,9 @@ app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 	var area = d3.svg.area()
 	  .x(function(d) { return d.x; })
 	  .y0(height)
-	  .y1(function(d) { return d.y; });
+	  .y1(function(d) { return d.y; })
+	  .interpolate('cardinal');
+
 
 	// Drag functions
 	var circleDrag = d3.behavior.drag()
@@ -1055,7 +1107,6 @@ app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 		for(var i = $scope.paths.length - 1; i >= 0; i--){
 			console.log(i);
 			var top = vis.append('g')
-			.attr('class', i)
 			.on('click', function(d,i){ selectLayer(this);});
 
 
@@ -1213,5 +1264,380 @@ app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 		var path = d3.select(parent[0][0].childNodes[0]);
 		path.transition().duration(5).attr('d', area($scope.paths[i])).ease('linear');
 	};
+
+});
+app.controller('wMYCtrl', function ($scope, modelBuilder) {
+
+	var width = $('.wMY').width();
+	var height = 400;
+
+	// Create the base svg
+	$scope.yModel = d3.select(".wMY").append("svg")
+	  .attr('width', width)
+	  .attr('height', height)
+	  .style('border', '1px solid grey');
+
+	// Add a background color
+	$scope.yModel.append('rect')
+		.attr('width', width)
+		.attr('height', height)
+		.style('fill', '#00cc99');
+
+	var lineFunction = d3.svg.line()                         
+		.x(function(d) { return d.x; })
+  	.y(function(d) { return d.y; });
+
+ 	$scope.paths = [];
+ 	$scope.aBot = 100;
+ 	$scope.bTop = 300;
+ 	$scope.difAB = $scope.bTop - $scope.aBot;
+ 	$scope.count = 5;
+
+ 	$scope.changeValue = function(){
+ 		$scope.difAB = $scope.bTop - $scope.aBot;
+ 		if($scope.modelType === 'sym'){
+ 			$scope.createSymPaths();
+ 		} else if($scope.modelType === 'bot'){
+ 			$scope.createBotPaths();
+ 		} else {
+ 			$scope.createTopPaths();
+ 		}
+ 	};
+
+ 	$scope.changeType = function(type){
+ 		$scope.modelType = type;
+ 		if(type === 'sym'){
+ 			$scope.createSymPaths();
+ 		} else if(type === 'bot'){
+ 			$scope.createBotPaths();
+ 		} else {
+ 			$scope.createTopPaths();
+ 		}
+ 	};
+
+ 	$scope.createSymPaths = function(){
+ 		// Add default path
+ 		$scope.paths = [];
+		$scope.paths.push(
+			[
+				{"x":0, "y": (2*($scope.aBot) + $scope.difAB / $scope.count) / 2},
+				{"x":width, "y":$scope.aBot},
+				{"x":width, "y":$scope.aBot + $scope.difAB / $scope.count},
+			]
+		);
+
+	 	for(var i = 0; i < $scope.count - 1; i++){
+	 		var ll = $scope.paths[$scope.paths.length - 1];
+	 		if(i % 2 == 0){
+				var path = [
+				 	{"x":0, "y": ll[0].y},
+					{"x":width, "y":ll[2].y},
+					{"x":0, "y":ll[0].y + $scope.difAB / $scope.count},
+				];
+	 		} else {
+				var path = [
+				 	{"x":0, "y": ll[2].y},
+				 	{"x":width, "y":ll[1].y},
+					{"x":width, "y":ll[1].y + $scope.difAB / $scope.count},
+				];
+			}
+	 		$scope.paths.push(path);
+	 	}
+	 	$scope.drawPaths();
+ 	};
+
+ 	$scope.createTopPaths = function(){
+ 		// Add default bot path
+ 		$scope.paths = [];
+		$scope.paths.push(
+			[
+				{"x":width, "y": $scope.aBot + $scope.difAB / $scope.count},
+				{"x":width, "y":$scope.aBot},
+				{"x":0, "y":$scope.aBot + $scope.difAB / $scope.count},
+			]
+		);
+
+	 	for(var i = 0; i < $scope.count; i++){
+	 		var ll = $scope.paths[$scope.paths.length - 1];
+	 		if(i % 2 == 0){
+				var path = [
+				 	{"x":0, "y": ll[0].y},
+					{"x":width, "y":ll[2].y},
+					{"x":0, "y":ll[0].y + $scope.difAB / $scope.count},
+				];
+	 		} else {
+				var path = [
+				 	{"x":0, "y": ll[2].y},
+				 	{"x":width, "y":ll[1].y},
+					{"x":width, "y":ll[1].y + $scope.difAB / $scope.count},
+				];
+			}
+	 		$scope.paths.push(path);
+	 	}
+	 	$scope.drawPaths();
+ 	};
+
+ 	$scope.createBotPaths = function(){
+ 		// Add default bot path
+ 		$scope.paths = [];
+		$scope.paths.push(
+			[
+				{"x":0, "y": $scope.aBot},
+				{"x":width, "y":$scope.aBot},
+				{"x":width, "y":$scope.aBot + $scope.difAB / $scope.count},
+			]
+		);
+
+	 	for(var i = 0; i < $scope.count; i++){
+	 		var ll = $scope.paths[$scope.paths.length - 1];
+	 		if(i % 2 == 0){
+				var path = [
+				 	{"x":0, "y": ll[0].y},
+					{"x":width, "y":ll[2].y},
+					{"x":0, "y":ll[0].y + $scope.difAB / $scope.count},
+				];
+	 		} else {
+				var path = [
+				 	{"x":0, "y": ll[2].y},
+				 	{"x":width, "y":ll[1].y},
+					{"x":width, "y":ll[1].y + $scope.difAB / $scope.count},
+				];
+			}
+	 		$scope.paths.push(path);
+	 	}
+	 	$scope.drawPaths();
+ 	};
+
+ 	$scope.drawPaths = function(){
+ 		d3.selectAll('path').remove();
+	 	for(var i = 0; i < $scope.paths.length; i++){
+	 		var color = "";
+			if(i % 2 == 0){
+				color = '#996633'; 
+			} else {
+				color = '#ecd9c6';
+			}
+			$scope.yModel.append('path')
+				.attr('d', lineFunction($scope.paths[i]))
+				.style('stroke-width', 1)
+				.attr('fill', color);
+		}
+	};
+});
+app.controller('wedgeModelCtrl', function ($scope, $rootScope, modelBuilder) {
+
+	var width = $('.wModel').width();
+	var height = 600;
+	var topHeight = 50;
+
+	var lineFunction = d3.svg.line()                         
+		.x(function(d) { return d.x; })
+  	.y(function(d) { return d.y; });
+
+	$scope.vis = d3.select(".wModel").append("svg")
+	  .attr("width", width)
+	  .attr("height", height)
+	  .style('border', '1px solid grey');
+
+	// Drag functions
+	var circleDrag = d3.behavior.drag()
+	  .origin(Object)
+	  .on("drag", moveCircle);
+
+	$scope.paths = [];
+	var a = [
+		{"x":0, "y":0, "hidden": true},
+    {"x":width,"y":0, "hidden": true},
+    {"x":width,"y":height - height * 0.75, "hidden": true},
+    {"x":0, "y":height - height * 0.75, "hidden": true}
+	];
+
+	var b = [
+		{"x":0, "y":height - height * 0.75, "hidden": true},
+    {"x":width * 0.15,"y":height - height * 0.75, "hidden": false},
+    {"x":width * 0.85,"y":height - height * 0.25, "hidden": false},
+    {"x":width, "y":height - height * 0.25, "hidden": true},
+    {"x":width, "y":height, "hidden": true},
+    {"x":0, "y":height, "hidden": true},
+	];
+
+	var c = [
+    {"x":width * 0.15,"y":height - height * 0.75, "hidden": true},
+    {"x":width,"y":height - height * 0.75, "hidden": true},
+    {"x":width,"y":height - height * 0.25, "hidden": true},
+    {"x":width * 0.85,"y":height - height * 0.25, "hidden": true},
+	];
+
+	// var d = [
+ //    {"x":width * 0.15,"y":height - height * 0.75, "hidden": true},
+ //    {"x":width,"y":height - height * 0.75, "hidden": true},
+ //    {"x":width,"y":height - height * 0.65, "hidden": true},
+ //    {"x":width * 0.85,"y":height - height * 0.65, "hidden": true},
+	// ];
+
+	$scope.colors = ['pink', 'purple', 'green', 'grey'];
+	//$scope.paths.push(a);
+
+	// Add coupling
+	// $scope.paths[2][1].coupled = [
+	// 	{"i":2, "j": 0, "type":'y'},
+	// 	{"i":0, "j": 2, "type":'y'},
+	// 	{"i":0, "j": 3, "type":'y'},
+	// 	{"i":1, "j": 1, "type": 'y'},
+	// 	{"i":1, "j": 0, "type": 'both'}
+	// ];
+	// $scope.paths[2][2].coupled = [
+	// 	{"i": 2, "j": 3, "type":'y'},
+	// 	{"i": 1, "j": 2, "type": 'y'}, 
+	// 	{"i": 1, "j": 3, "type":'both'}
+	// ];
+
+// green #ccffcc
+	var count = 8;
+
+	var aBottom = height - height * 0.75;
+	var bTop = height - height * 0.25;
+	var difAB = bTop - aBottom;
+
+	var slice = [
+  	{"x":width * 0.15,"y":aBottom, "hidden": true},
+  	{"x":width * 0.85,"y":aBottom, "hidden": true},
+  	{"x":width,"y":aBottom, "hidden": true},
+  	{"x":width,"y":aBottom + difAB / count, "hidden": true},
+  	{"x":width * 0.85,"y":aBottom + difAB / count, "hidden": true},
+	];
+
+	$scope.paths.push(slice);
+	b[1].coupled = [{"i": 0, "j": 0, "type":'both'}];
+	b[2].coupled = [];
+
+	for(var i = 0; i < count - 1; i++){
+		var path = [];
+		var ll = $scope.paths[$scope.paths.length - 1];
+		for(var j = 0; j < ll.length; j++){
+			if(j == 0){
+				path.push({"x":ll[j].x, "y":ll[j].y, "hidden": true});
+				b[1].coupled.push({"i": i + 1, "j": j, "type":'both'});
+			} else {
+				path.push({"x":ll[j].x, "y":ll[j].y + difAB / count, "hidden": true});
+			}
+		}
+		$scope.paths.push(path);
+	}
+	$scope.paths.push(a);
+	b[1].coupled.push(
+		{"i": $scope.paths.length - 1, "j": 2, "type":'y'},
+		{"i": $scope.paths.length - 1, "j": 3, "type":'y'}
+	);
+
+	$scope.paths.push(b);
+	$scope.paths[$scope.paths.length - 1][1].coupled
+		.push({"i": $scope.paths.length - 1, "j": 0, "type":'y'});
+	$scope.paths[$scope.paths.length - 1][2].coupled
+		.push({"i": $scope.paths.length - 1, "j": 3, "type":'y'});
+
+	$scope.drawPaths = function(){
+		var color = '';
+		for(var i = 0; i < $scope.paths.length; i++){
+			if(i == $scope.paths.length - 2 || i == $scope.paths.length - 1){
+				color = '#00cc99';
+			} else {
+				if(i % 2 == 0){
+					color = '#996633'; 
+				} else {
+					color = '#ecd9c6';
+				}
+			}
+			//var color = '#'+Math.floor(Math.random()*16777215).toString(16)
+			var top = $scope.vis.append('g')
+				.attr('class', i);
+			modelBuilder.drawPath(top, $scope.paths[i], i, color);
+			modelBuilder.drawCircles(top, $scope.paths[i], i);
+			d3.selectAll('#circle' + i).call(circleDrag);
+		}
+	};
+
+	function moveCircle(){
+		var m = d3.mouse(this);
+		var x, y;
+
+		// Check to see if we are in bounds for x
+		if(m[0] > width){
+			x = width;
+		} else if(m[0] < 0){
+			x = 0;
+		} else {
+			x = m[0];
+		}
+
+		// Check to see if we are in bounds for y
+		if(m[1] > height){
+			y = height;
+		} else if(m[1] < 0){
+			y = 0;
+		} else {
+			y = m[1];
+		}
+
+		var obj = d3.select(this);
+			obj.attr('cx', x)
+			.attr('cy', y);
+
+		// Get the new bottom of the A section
+		var aBottom = $scope.paths[$scope.paths.length - 2][2].y;
+
+		// Get the new top of the B section
+		var bTop = $scope.paths[$scope.paths.length - 1][3].y;
+
+		// Get the difference between the top of the B section and bottom of the A section
+		var difAB = bTop - aBottom;
+
+		// Change root slice
+		for(var i = 0; i < $scope.paths[0].length; i++){
+			if(i < 3){
+				$scope.paths[0][i].y = aBottom;
+			} else {
+				$scope.paths[0][i].y = aBottom + difAB / count;
+			}
+			if(i === 1 || i === 4){
+				$scope.paths[0][i].x = $scope.paths[$scope.paths.length - 1][2].x;
+			}
+		}
+
+		for(var w = 1; w < $scope.paths.length - 2; w++){
+			for(var p = 1; p < $scope.paths[w].length; p++){
+				$scope.paths[w][p].y = $scope.paths[w - 1][p].y + difAB / count;
+				if(p === 1 || p === 4){
+					$scope.paths[w][p].x = $scope.paths[$scope.paths.length - 1][2].x;
+				}
+			}
+		}
+
+		var parent = d3.select(this.parentNode);
+		var i = parent.attr('class'), j = obj.attr('class');
+		$scope.paths[i][j].x = x;
+		$scope.paths[i][j].y = y;
+		if($scope.paths[i][j].coupled){
+			var cPaths = $scope.paths[i][j].coupled;
+			for(var k = 0; k < cPaths.length; k++){
+
+				if(cPaths[k].type == 'y'){
+					$scope.paths[cPaths[k].i][cPaths[k].j].y = y;
+				} else if(cPaths[k].type == 'x'){
+					$scope.paths[cPaths[k].i][cPaths[k].j].x = x;
+				} else {
+					$scope.paths[cPaths[k].i][cPaths[k].j].y = y;
+					$scope.paths[cPaths[k].i][cPaths[k].j].x = x;
+				}
+			}
+		}
+		
+		for(var i = 0; i < $scope.paths.length; i++){
+			var path = d3.select('#path' + i);
+			path.transition().duration(5).attr('d', lineFunction($scope.paths[i])).ease('linear');
+		}
+	};
+
+	$scope.drawPaths();
 
 });

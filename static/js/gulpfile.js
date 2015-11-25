@@ -8,10 +8,10 @@ gulp.task('default', ['jshint', 'concat']);
 var js;
 gulp.task('concat', function (cb) {
     var options = {};
-    watch('controllers/*.js', options, function (e) {
+    watch('controllers/**/*.js', options, function (e) {
          console.log('e:'+JSON.stringify(e));
          console.log('\n');
-        gulp.src(['controllers/start.js','controllers/!(start)*.js',])
+        gulp.src(['controllers/start.js','controllers/**/*.js',])
         .pipe(concat('app.js', {newLine: '\n'}))
         .pipe(gulp.dest('./'));
     });
@@ -20,7 +20,7 @@ gulp.task('concat', function (cb) {
 // Lint JavaScript
 gulp.task('jshint', function () {
   return gulp.src([
-      'controllers/*.js'
+      'controllers/**/*.js'
     ])
     .pipe(jshint())
     .pipe(jshint.reporter('jshint-stylish'));

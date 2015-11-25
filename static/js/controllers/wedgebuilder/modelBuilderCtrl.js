@@ -62,7 +62,9 @@ app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 	var area = d3.svg.area()
 	  .x(function(d) { return d.x; })
 	  .y0(height)
-	  .y1(function(d) { return d.y; });
+	  .y1(function(d) { return d.y; })
+	  .interpolate('cardinal');
+
 
 	// Drag functions
 	var circleDrag = d3.behavior.drag()
@@ -80,7 +82,6 @@ app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 		for(var i = $scope.paths.length - 1; i >= 0; i--){
 			console.log(i);
 			var top = vis.append('g')
-			.attr('class', i)
 			.on('click', function(d,i){ selectLayer(this);});
 
 
