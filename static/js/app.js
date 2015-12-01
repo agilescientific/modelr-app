@@ -1024,8 +1024,13 @@ app.service('modelBuilder', function () {
 
 });
 app.controller('fMCtrl', function ($scope, modelBuilder) {
+	
+	// Define default variables
+	var lineFunction = d3.svg.line()                         
+		.x(function(d) { return d.x; })
+  	.y(function(d) { return d.y; });
 
-	var margin = {top: 50, right: 40, bottom: 30, left: 40};
+  var margin = {top: 50, right: 40, bottom: 30, left: 40};
   $scope.wWidth = $('.fWM').width() - margin.left - margin.right;
     //yWidth = $('.fWM').width() * 0.40 - margin.left - margin.right,
   $scope.yHeight = 400 - margin.top - margin.bottom;
@@ -1041,7 +1046,14 @@ app.controller('fMCtrl', function ($scope, modelBuilder) {
 	var yAxis = d3.svg.axis().scale(yScale).orient('left').ticks(3);
 
 	$scope.leftLinePos = $scope.wWidth * 0.15;
-	$scope.rightLinePost = $scope.wWidth * 0.85;
+	$scope.rightLinePos = $scope.wWidth * 0.85;
+
+  $scope.wPaths = [];
+  //$scope.yPaths = [];
+ 	$scope.aBot = 75;
+ 	$scope.bTop = 250;
+ 	$scope.yDifAB = $scope.bTop - $scope.aBot;
+ 	$scope.count = 1;
 
 	var circleDrag = d3.behavior.drag()
 	  .origin(Object)
@@ -1049,11 +1061,161 @@ app.controller('fMCtrl', function ($scope, modelBuilder) {
 
 	$scope.linesOn = true;
 
+	$scope.addWedgePaths = function(){
+		$scope.wedgePaths = [];
+		// Draw W Paths
+		for(var i = 0; i < $scope.wPaths.length; i++){
+	 		var color = "";
+			if(i % 2 == 0){
+				color = '#996633'; 
+			} else {
+				color = '#ecd9c6';
+			}
+			var path = $scope.wModel.append('path')
+				.attr('id', 'path' + i)
+				.attr('d', lineFunction($scope.wPaths[i]))
+				.style('stroke-width', 1)
+				.attr('fill', color);
+			$scope.wedgePaths.push(path);
+		}
+	};
+
+	$scope.drawPaths = function(){
+
+ 		// Transition the paths
+		for(var i = 0; i < $scope.wedgePaths.length; i++){
+			//console.log($scope.wedgePaths[i]);
+			$scope.wedgePaths[i]
+				.transition()
+				.duration(5)
+				.attr('d', lineFunction($scope.wPaths[i]));
+		}
+
+		// Move the botLine
+		$scope.botLine
+			.attr('y1', $scope.bTop)
+			.attr('y2', $scope.bTop);
+
+		// Move the topLine
+		$scope.topLine
+			.attr('y1', $scope.aBot)
+			.attr('y2', $scope.aBot);
+
+		// Move the rightLine
+		$scope.rightLine
+			.attr('x1', $scope.rightLinePos)
+			.attr('x2', $scope.rightLinePos);
+
+		// Move the leftLine
+		$scope.leftLine
+			.attr('x1', $scope.leftLinePos)
+			.attr('x2', $scope.leftLinePos);
+
+		// Move the leftLineCir
+		$scope.leftLineCir
+			.attr('cx', $scope.leftLinePos)
+			.attr('cy', $scope.aBot);
+
+		// Move the rightLineCir
+		$scope.rightLineCir
+			.attr('cx', $scope.rightLinePos)
+			.attr('cy', $scope.bTop);
+	};
+
+	$scope.addMeasureLines = function(){
+		// Create left measure line
+		$scope.leftLine = $scope.wModel.append('line')
+			.attr('class', 'guideLine')
+			.attr('x1', $scope.leftLinePos)
+			.attr('y1', 0)
+			.attr('x2', $scope.leftLinePos)
+			.attr('y2', $scope.yHeight)
+			.style('stroke', 'black')
+			.style('stroke-dasharray', '4,4');
+
+		// Create right measure line
+		$scope.rightLine = $scope.wModel.append('line')
+			.attr('class', 'guideLine')
+			.attr('x1', $scope.rightLinePos)
+			.attr('y1', 0)
+			.attr('x2', $scope.rightLinePos)
+			.attr('y2', $scope.yHeight)
+			.style('stroke', 'black')
+			.style('stroke-dasharray', '4,4');
+
+		// Create top measure line
+		$scope.topLine = $scope.wModel.append('line')
+			.attr('class', 'guideLine')
+			.attr('x1', 0)
+			.attr('y1', $scope.aBot)
+			.attr('x2', $scope.wWidth)
+			.attr('y2', $scope.aBot)
+			.style('stroke', 'black')
+			.style('stroke-dasharray', '4,4');
+
+		// Create bottom measure line
+		$scope.botLine = $scope.wModel.append('line')
+			.attr('class', 'guideLine')
+			.attr('x1', 0)
+			.attr('y1', $scope.bTop)
+			.attr('x2', $scope.wWidth)
+			.attr('y2', $scope.bTop)
+			.style('stroke', 'black')
+			.style('stroke-dasharray', '4,4');
+	};
+
+	$scope.addMeasureHandles = function(){
+		// Create leftLine measure handle
+		$scope.leftLineCir = $scope.wModel.append('circle')
+			.attr('class', 'leftCircle')
+			.attr('cx', $scope.leftLinePos)
+			.attr('cy', $scope.aBot)
+			.attr('r', 7)
+			.style('cursor', 'move')
+			.call(circleDrag);
+
+		// Create right line measure handle
+		$scope.rightLineCir = $scope.wModel.append('circle')
+			.attr('class', 'rightCircle')
+			.attr('cx', $scope.rightLinePos)
+			.attr('cy', $scope.bTop)
+			.attr('r', 7)
+			.style('cursor', 'move')
+			.call(circleDrag);
+	};
+
+	$scope.createWedgePaths = function(){
+ 		$scope.wPaths = [];
+ 		$scope.wPaths.push(
+			[
+		  	{"x":$scope.leftLinePos,"y":$scope.aBot},
+		  	{"x":$scope.rightLinePos,"y":$scope.aBot},
+		  	{"x":$scope.wWidth,"y":$scope.aBot, "hidden": true},
+		  	{"x":$scope.wWidth,"y":$scope.aBot + $scope.yDifAB / $scope.count},
+		  	{"x":$scope.rightLinePos,"y":$scope.aBot + $scope.yDifAB / $scope.count},
+			]
+		);
+		for(var i = 0; i < $scope.count - 1; i++){
+		var path = [];
+		var ll = $scope.wPaths[$scope.wPaths.length - 1];
+		for(var j = 0; j < ll.length; j++){
+			if(j == 0){
+				path.push({"x":ll[j].x, "y":ll[j].y});
+			} else {
+				path.push({"x":ll[j].x, "y":ll[j].y + $scope.yDifAB / $scope.count});
+			}
+		}
+			$scope.wPaths.push(path);
+		}
+ 	};
+
 	$scope.toggleLines = function(){
 		if($scope.linesOn == true){
 			d3.selectAll('.guideLine').style('display', 'block');
+			d3.selectAll('circle').style('display', 'block');
 		} else {
 			d3.selectAll('.guideLine').style('display', 'none');
+			d3.selectAll('circle').style('display', 'none');
 		}
 	};
 
@@ -1105,6 +1267,7 @@ app.controller('fMCtrl', function ($scope, modelBuilder) {
 	  .attr('width', $scope.wWidth)
 	  .attr('height', $scope.yHeight)
 	  .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
 	// $scope.wModel.append('line')
 	// 	.attr('class', 'guideLine')
 	// 	.attr('x1', $scope.wWidth)
@@ -1121,27 +1284,26 @@ app.controller('fMCtrl', function ($scope, modelBuilder) {
 		.attr('height', $scope.yHeight)
 		.style('fill', '#00cc99');
 
-	// Create left measure line
-	$scope.leftLinePos = $scope.wWidth * 0.15;
-	$scope.leftLine = $scope.wModel.append('line')
-		.attr('class', 'guideLine')
-		.attr('x1', $scope.leftLinePos)
-		.attr('y1', 0)
-		.attr('x2', $scope.leftLinePos)
-		.attr('y2', $scope.yHeight)
-		.style('stroke', 'black')
-		.style('stroke-dasharray', '4,4');
+	$scope.createWedgePaths();
+	console.log($scope.wPaths);
+	$scope.addWedgePaths();
+	$scope.addMeasureLines();
+	$scope.addMeasureHandles();
+	$scope.drawPaths();
 
-	// Create right measure line
-	$scope.rightLinePos = $scope.wWidth * 0.85;
-	$scope.rightLine = $scope.wModel.append('line')
-		.attr('class', 'guideLine')
-		.attr('x1', $scope.rightLinePos)
-		.attr('y1', 0)
-		.attr('x2', $scope.rightLinePos)
-		.attr('y2', $scope.yHeight)
-		.style('stroke', 'black')
-		.style('stroke-dasharray', '4,4');
+	// Draw paths and collect them in an array 		// Draw Y Paths
+	 // 	for(var i = 0; i < $scope.yPaths.length; i++){
+	 // 		var color = "";
+		// 	if(i % 2 == 0){
+		// 		color = '#996633'; 
+		// 	} else {
+		// 		color = '#ecd9c6';
+		// 	}
+		// 	$scope.yModel.append('path')
+		// 		.attr('d', lineFunction($scope.yPaths[i]))
+		// 		.style('stroke-width', 1)
+		// 		.attr('fill', color);
+		// }
 
 	// Create Y Model SVG
 	// $scope.yModel = $scope.container.append("g")
@@ -1156,18 +1318,6 @@ app.controller('fMCtrl', function ($scope, modelBuilder) {
 	// 	.attr('$scope.yHeight', $scope.yHeight)
 	// 	.style('fill', '#00cc99');
 
-	// Create default variables
-	var lineFunction = d3.svg.line()                         
-		.x(function(d) { return d.x; })
-  	.y(function(d) { return d.y; });
-
-  $scope.wPaths = [];
-  $scope.yPaths = [];
- 	$scope.aBot = 75;
- 	$scope.bTop = 250;
- 	$scope.yDifAB = $scope.bTop - $scope.aBot;
- 	$scope.count = 1;
-
 	$scope.changeValue = function(){
  		$scope.yDifAB = $scope.bTop - $scope.aBot;
  		// if($scope.modelType === 'sym'){
@@ -1178,6 +1328,7 @@ app.controller('fMCtrl', function ($scope, modelBuilder) {
  		// 	$scope.createTopPaths();
  		// }
  		$scope.createWedgePaths();
+ 		$scope.drawPaths();
  	};
 
  	$scope.changeType = function(type){
@@ -1316,97 +1467,6 @@ app.controller('fMCtrl', function ($scope, modelBuilder) {
 
 	};
 
- 	$scope.drawPaths = function(){
- 		d3.selectAll('path').remove();
- 		d3.selectAll('.guideLine').remove();
- 		//d3.selectAll('circle').remove();
-
- 		$scope.linesOn = true ;
-
- 		// Draw Y Paths
-	 	for(var i = 0; i < $scope.yPaths.length; i++){
-	 		var color = "";
-			if(i % 2 == 0){
-				color = '#996633'; 
-			} else {
-				color = '#ecd9c6';
-			}
-			$scope.yModel.append('path')
-				.attr('d', lineFunction($scope.yPaths[i]))
-				.style('stroke-width', 1)
-				.attr('fill', color);
-		}
-		
-		// Draw W Paths
-		for(var i = 0; i < $scope.wPaths.length; i++){
-	 		var color = "";
-			if(i % 2 == 0){
-				color = '#996633'; 
-			} else {
-				color = '#ecd9c6';
-			}
-			$scope.wModel.append('path')
-				.attr('d', lineFunction($scope.wPaths[i]))
-				.style('stroke-width', 1)
-				.attr('fill', color);
-		}
-
-		// Create left measure line
-
-		$scope.leftLine = $scope.wModel.append('line')
-			.attr('class', 'guideLine')
-			.attr('x1', $scope.leftLinePos)
-			.attr('y1', 0)
-			.attr('x2', $scope.leftLinePos)
-			.attr('y2', $scope.yHeight)
-			.style('stroke', 'black')
-			.style('stroke-dasharray', '4,4');
-
-		// Create right measure line
-		$scope.rightLine = $scope.wModel.append('line')
-			.attr('class', 'guideLine')
-			.attr('x1', $scope.rightLinePos)
-			.attr('y1', 0)
-			.attr('x2', $scope.rightLinePos)
-			.attr('y2', $scope.yHeight)
-			.style('stroke', 'black')
-			.style('stroke-dasharray', '4,4');
-
-		$scope.topLine = $scope.wModel.append('line')
-			.attr('class', 'guideLine')
-			.attr('x1', 0)
-			.attr('y1', $scope.aBot)
-			.attr('x2', $scope.wWidth)
-			.attr('y2', $scope.aBot)
-			.style('stroke', 'black')
-			.style('stroke-dasharray', '4,4');
-
-		$scope.botLine = $scope.wModel.append('line')
-			.attr('class', 'guideLine')
-			.attr('x1', 0)
-			.attr('y1', $scope.bTop)
-			.attr('x2', $scope.wWidth)
-			.attr('y2', $scope.bTop)
-			.style('stroke', 'black')
-			.style('stroke-dasharray', '4,4');
-
-		// $scope.leftLineCir = $scope.wModel.append('circle')
-		// 	.attr('class', 'leftCircle')
-		// 	.attr('cx', $scope.leftLinePos)
-		// 	.attr('cy', $scope.aBot)
-		// 	.attr('r', 7)
-		// 	.style('cursor', 'move')
-		// 	.call(circleDrag);
-
-		// $scope.rightLineCir = $scope.wModel.append('circle')
-		// 	.attr('class', 'rightCircle')
-		// 	.attr('cx', $scope.rightLinePos)
-		// 	.attr('cy', $scope.wPaths[$scope.wPaths.length - 1][4].y)
-		// 	.attr('r', 7)
-		// 	.style('cursor', 'move')
-		// 	.call(circleDrag);
-	};
-
 	function moveCircle(){
 		var m = d3.mouse(this);
 		var x, y;
@@ -1430,46 +1490,31 @@ app.controller('fMCtrl', function ($scope, modelBuilder) {
 		}
 
 		var obj = d3.select(this);
-			obj.attr('cx', x)
+		obj.attr('cx', x)
 			.attr('cy', y);
 
 		if(obj.attr('class') === 'leftCircle'){
-			$scope.aBot = y;
-			$scope.leftLinePos = x;
+			$scope.$apply(function(){
+				$scope.aBot = y;
+				if(x < $scope.rightLinePos){
+					$scope.leftLinePos = x;
+				} else {
+					$scope.leftLinePos = $scope.rightLinePos;
+				}
+			});
 		} else {
-			//$scope.a
+			$scope.$apply(function(){
+				$scope.bTop = y;
+
+				if(x > $scope.leftLinePos){
+					$scope.rightLinePos = x;
+				} else {
+					$scope.rightLinePos = $scope.leftLinePos;
+				}
+			});
 		}
 		$scope.changeValue();
 	};
-
-	$scope.createWedgePaths = function(){
- 		$scope.wPaths = [];
- 		$scope.wPaths.push(
-			[
-		  	{"x":$scope.leftLinePos,"y":$scope.aBot},
-		  	{"x":$scope.rightLinePos,"y":$scope.aBot},
-		  	{"x":$scope.wWidth,"y":$scope.aBot, "hidden": true},
-		  	{"x":$scope.wWidth,"y":$scope.aBot + $scope.yDifAB / $scope.count},
-		  	{"x":$scope.rightLinePos,"y":$scope.aBot + $scope.yDifAB / $scope.count},
-			]
-		);
-		for(var i = 0; i < $scope.count - 1; i++){
-		var path = [];
-		var ll = $scope.wPaths[$scope.wPaths.length - 1];
-		for(var j = 0; j < ll.length; j++){
-			if(j == 0){
-				path.push({"x":ll[j].x, "y":ll[j].y});
-			} else {
-				path.push({"x":ll[j].x, "y":ll[j].y + $scope.yDifAB / $scope.count});
-			}
-		}
-		$scope.wPaths.push(path);
-	}
-		$scope.drawPaths();
- 	};
- 	$scope.createWedgePaths();
-
-
 });
 app.controller('modelBuilderCtrl', function ($scope, $http, $alert, $timeout) {
 	var width = $('.modelb').width();
