@@ -1,0 +1,151 @@
+{% extends "base_template.html" %} 
+{% block title %}Modelr &middot; Model builder{% endblock %} 
+
+{% block content %}
+<div ng-cloak class="container" ng-controller="buildCtrl">
+	<div class="panel panel-default">
+	  <div class="panel-heading">
+	    <h3 class="panel-title">Model</h3>
+<!-- 	    <button ng-click="changeType('wedgeModel')" class="btn btn-primary">Wedge Model</button>
+	    <button ng-click="changeType('wMY')" class="btn btn-primary">Y Model</button>
+	    <button ng-click="changeType('fM')" class="btn btn-primary">Full Model</button> -->
+	  </div>
+
+	  <div class="panel-body">
+	  	<!-- FREE MODEL -->
+	  	<div ng-show="type == 'freeModel'" class="col-xs-12">
+	    	<div class="col-xs-8 modelb"></div>
+        <div class="col-xs-4">
+        	<div class="col-xs-12">
+        		<label>Edit Lines</label>
+        		<input ng-change="editToggle()" ng-model="editLines" type="checkbox">
+        	</div>
+        	<div class="col-xs-12">
+        		<button class="btn btn-primary" ng-click="addTop()">Add Layer</button>
+        	</div>
+					<div ng-repeat="top in tops">
+						<div style="padding-top: 5px;" class="col-xs-8">	
+							<input data-jq-colorpicker class="col-xs-12" ng-model="top.color" ng-style="{'background-color': top.color}">
+						</div>
+						<div class="col-xs-4 remove-padding">
+        			<i class="fa fa-pencil-square-o"></i>
+        			<i ng-click="deleteTop(top)" class="fa fa-times"></i>
+        		</div>
+        	</div>
+    		</div>
+	    </div>
+
+		  <!-- FIRST WEDGE MODEL -->
+		  <div ng-show="type == 'wedgeModel'" class="col-xs-12" ng-controller="wedgeModelCtrl">
+		  	<div class="wModel col-xs-8"></div>
+		  </div>
+
+		  <!-- Y WEDGE MODEL -->
+		  <div ng-show="type == 'wMY'" class="col-xs-12" ng-controller="wMYCtrl">
+		  	<div class="wMY col-xs-8"></div>
+		  	<div class="col-xs-4">
+		  		<div class="col-xs-12">
+			  		<button ng-click="changeType('sym')" class="btn btn-primary">symmetric</button>
+			  		<button ng-click="changeType('top')" class="btn btn-primary">top-flat</button>
+			  		<button ng-click="changeType('bot')" class="btn btn-primary">bot-flat</button>
+			  	</div>
+		  		<div class="col-xs-12">
+		  			<label class="label label-default">Count</label>
+		  			<input type='number' ng-model="count" ng-change="changeValue()"/>
+		  		</div>
+		  		<div class="col-xs-12">
+		  			<label class="label label-default">Top Position</label>
+		  			<input type='number' ng-model="aBot" ng-change="changeValue()"/>
+		  		</div>
+		  		<div class="col-xs-12">
+		  			<label class="label label-default">Bottom Position</label>
+		  			<input type='number' ng-model="bTop" ng-change="changeValue()"/>
+		  		</div>
+		  	</div>
+		  </div>
+
+		  <!-- FULL WEDGE MODEL -->
+		  <div class="col-xs-12" ng-init="aBot = 75; bTop = 250" ng-controller="fMCtrl">
+		  	<div class="fWM col-xs-12 col-md-8">
+		  	</div>
+<!-- 		  	<div class="col-xs-12">
+		  		<button ng-click="changeType('sym')" class="btn btn-primary">symmetric</button>
+		  		<button ng-click="changeType('top')" class="btn btn-primary">top-flat</button>
+		  		<button ng-click="changeType('bot')" class="btn btn-primary">bot-flat</button>
+		  	</div>
+	  		<div class="col-xs-12">
+	  			<label>Count</label>
+	  			<input type='number' ng-model="count" ng-change="changeValue()"/>
+	  		</div> -->
+	  		<div class="col-md-4 col-xs-12">
+		  		<div class="panel panel-default">
+		  			<div class="panel-heading">
+		    			<h3 class="panel-title">Guide Line Positions</h3>
+		    		</div>
+		    		<div class="panel-body">
+				  		<div class="col-xs-12">
+				  			<div class="col-xs-7">
+				  				<h4>
+				  					<label class="label label-default">Top Pos</label>
+				  				</h4>
+				  			</div>
+				  			<div class="col-xs-5">
+				  				<input class="form-control" type='number' min='0' max='{[yHeight]}' ng-model="aBot" ng-change="changeValue()"/>
+				  			</div>
+				  		</div>
+				  		<div class="col-xs-12">
+				  			<div class="col-xs-7">
+				  				<h4>
+				  					<label class="label label-default">Bottom Pos</label>
+				  				</h4>
+				  			</div>
+				  			<div class="col-xs-5">
+				  				<input class="form-control" type='number' min='0' max='{[yHeight]}' ng-model="bTop" ng-change="changeValue()"/>
+				  			</div>
+				  		</div>
+				  		<div class="col-xs-12">
+				  			<div class="col-xs-7">
+				  				<h4>
+				  					<label class="label label-default">Right Pos</label>
+				  				</h4>
+				  			</div>
+				  			<div class="col-xs-5">
+				  				<input class="form-control" type='number' min='{[leftLinePos]}' max='{[wWidth]}' ng-model="rightLinePos" ng-change="changeValue()"/>
+				  			</div>
+				  		</div>
+				  		<div class="col-xs-12">
+				  			<div class="col-xs-7">
+				  				<h4>
+				  					<label class="label label-default">Left Pos</label>
+				  				</h4>
+				  			</div>
+				  			<div class="col-xs-5">
+				  				<input  class="form-control" type='number' min='0' max='{[rightLinePos]}' ng-model="leftLinePos" ng-change="changeValue()"/>
+				  			</div>
+				  		</div>
+				  	</div>
+				  </div>
+				  <div class="panel panel-default">
+		  			<div class="panel-heading">
+		    			<h3 class="panel-title">Options</h3>
+		    		</div>
+		    		<div class="panel-body">
+				  		<div class="col-xs-12">
+				  			<div class="col-xs-7">
+				  				<h4>
+				  					<label class="label label-default">Toggle Lines</label>
+				  				</h4>
+				  			</div>
+				  			<div class="col-xs-5">
+				  				<input type='checkbox' ng-model="linesOn" ng-change="toggleLines()"/>
+				  			</div>
+				  		</div>
+				  	</div>
+				  </div>
+				  <button type="button" ng-click="saveModel()" class="btn btn-primary pull-right col-xs-6">Save Model</button>
+		  	</div>
+		  </div>
+	  </div>
+	</div>
+</div>
+{% endblock %}
