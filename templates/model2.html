@@ -69,7 +69,7 @@
 				  <div class="panel-body">
 
 				    <!-- PRELOADED MODELS -->
-				    <button type="button" ng-change="loadSaved()" class="btn btn-default col-xs-12 model_select" placeholder="Load saved earth model" placement="bottom-right" ng-model="savedEarthModel"bs-options="em.name for em in curImage.earth_models" bs-select>
+				    <button type="button" ng-change="loadSaved()" class="btn btn-default col-xs-12 model_select" placeholder="Load saved earth model" placement="bottom-right" ng-model="savedEarthModel" bs-options="em.name for em in curImage.earth_models" bs-select>
 				    	Action
 				    	<span class="caret">
 				    	</span>
@@ -108,12 +108,10 @@
 				      <input class="form-control col-xs-8" ng-model="zRange" type="number" min="1"/>
 				    </div>
 				    <div class="col-xs-7 remove-padding">
-				      <input class="form-control" type="text" placeholder="Earth model name" ng-model="earthModelName"
-                                             {% if not user %} disabled {% endif %}/>
+				      <input class="form-control" type="text" placeholder="Earth model name" ng-model="earthModelName" {% if not user %} disabled {% endif %}/>
 				    </div>
 				    <div class="col-xs-4 col-xs-offset-1 remove-padding">
-				      <button type="button" {% if not user %} disabled ng-click="saveModel()" class="btn btn-primary col-xs-12"
-                                              {% endif %}>
+				      <button type="button" {% if not user %} disabled {% endif %} ng-click="saveModel()" class="btn btn-primary col-xs-12">
 				      	Save
 				      </button>
 				    </div>
