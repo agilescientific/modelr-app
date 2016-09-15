@@ -73,7 +73,7 @@ def get_all_items_user(entity, user):
         group_items = []
 
     # flatten the lists
-    return (default_items + user_items + list(itertools.chain(*group_items)))
+    return (user_items + list(itertools.chain(*group_items)) + default_items)
 
             
 def check_read_permission(entity, user):
